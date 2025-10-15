@@ -736,4 +736,4 @@ For technical support or questions:
 ---
 
 **Crypto Portal** - Premium cryptocurrency research and analysis platform
-Built with ❤️ using Next.js, Prisma, and modern web technologies.
+Built with ❤️ using Next.js, Prisma, and modern web technologies.# Force deployment update
