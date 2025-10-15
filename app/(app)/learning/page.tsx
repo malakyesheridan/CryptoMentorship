@@ -31,8 +31,8 @@ import { EnhancedStats } from '@/components/learning/EnhancedStats'
 import { CourseRecommendations } from '@/components/learning/CourseRecommendations'
 import { ProgressTimeline } from '@/components/learning/ProgressTimeline'
 import { SmartNotifications } from '@/components/learning/SmartNotifications'
-// import { LearningAnalytics } from '@/components/learning/LearningAnalytics'
-// import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
+import { LearningAnalytics } from '@/components/learning/LearningAnalytics'
+import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
 
 export const dynamic = 'force-dynamic'
 
@@ -404,7 +404,7 @@ export default async function LearningDashboardPage() {
         </div>
 
         {/* Real-Time Progress */}
-        {/* <div className="mb-12">
+        <div className="mb-12">
           <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
             <Activity className="h-6 w-6 text-green-600" />
             Live Progress
@@ -414,10 +414,10 @@ export default async function LearningDashboardPage() {
             showAchievements={true}
             showStreak={true}
           />
-        </div> */}
+        </div>
 
         {/* Analytics Section */}
-        {/* <div className="mb-12">
+        <div className="mb-12">
           <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
             <BarChart3 className="h-6 w-6 text-blue-600" />
             Learning Analytics
@@ -425,7 +425,7 @@ export default async function LearningDashboardPage() {
           <Suspense fallback={<div className="text-center py-8">Loading analytics...</div>}>
             <LearningAnalytics />
           </Suspense>
-        </div> */}
+        </div>
 
         {/* Enrolled Tracks */}
         <div className="mb-12">
