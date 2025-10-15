@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run prisma:deploy && next build",
+  "buildCommand": "next build",
   "env": {
     "DATABASE_URL": "postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
     "DIRECT_URL": "postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
