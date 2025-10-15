@@ -1,0 +1,163 @@
+@import '../src/styles/theme.css';
+@import '../src/styles/typography.css';
+
+/* Custom animations for Macro page */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 1s ease-out 0.2s both;
+}
+
+/* Video Player Custom Styles */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+  
+  /* Custom CSS variables */
+  --gold-solid: #E0B040;
+  --gold-gradient-start: #F2C94C;
+  --gold-gradient-end: #D4A017;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  color: hsl(var(--foreground));
+  background: linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%);
+  font-family: var(--font-inter);
+}
+
+/* Custom utility classes */
+.btn-gold {
+  @apply bg-gradient-to-r from-gold-500 to-gold-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:from-gold-600 hover:to-gold-800;
+}
+
+.card {
+  @apply bg-white/90 backdrop-blur border border-[color:var(--border-subtle)] rounded-2xl shadow-lg;
+}
+
+.text-gold {
+  color: var(--gold-solid);
+}
+
+.bg-ivory {
+  background-color: #FBF9F3;
+}
+
+.bg-surface {
+  background-color: rgba(255, 255, 255, 0.92);
+}
+
+/* Custom shadow utilities */
+.shadow-soft {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Typography utilities */
+.heading-xl {
+  @apply text-4xl sm:text-5xl lg:text-6xl font-serif font-bold leading-tight;
+}
+
+.heading-lg {
+  @apply text-3xl sm:text-4xl lg:text-5xl font-serif font-bold leading-tight;
+}
+
+.heading-md {
+  @apply text-2xl sm:text-3xl lg:text-4xl font-serif font-semibold leading-tight;
+}
+
+.heading-sm {
+  @apply text-xl sm:text-2xl lg:text-3xl font-serif font-semibold leading-tight;
+}
+
+/* Focus styles for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2;
+}

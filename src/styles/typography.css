@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .logo-type { 
+    @apply font-logo uppercase tracking-logo; 
+  }
+  
+  .heading-hero { 
+    @apply font-serif leading-tight; 
+    font-weight: 800; 
+  }
+  
+  .heading-1 { 
+    @apply font-serif font-bold leading-snug; 
+  }
+  
+  .heading-2 { 
+    @apply font-serif font-semibold leading-snug; 
+  }
+  
+  .subhead { 
+    @apply font-sans text-neutral-600; 
+  }
+  
+  .body { 
+    @apply font-sans text-[15px] leading-7; 
+  }
+}

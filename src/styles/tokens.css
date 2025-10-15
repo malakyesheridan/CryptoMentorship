@@ -1,0 +1,10 @@
+:root {
+  --bg-ivory: #FBF9F3;
+  --gold-400: #F2C94C;
+  --gold-600: #D4A017;
+  --text-strong: #1F2937;      /* slate-800 */
+  --text-muted: #6B7280;       /* slate-500 */
+  --border-subtle: #00000014;
+  --success: #10B981;
+  --danger: #EF4444;
+}

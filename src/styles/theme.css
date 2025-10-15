@@ -1,0 +1,46 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: var(--bg-ivory);
+    color: var(--text-strong);
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white/90 backdrop-blur border border-[color:var(--border-subtle)] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.06)];
+  }
+
+  .btn-gold {
+    @apply bg-gradient-to-r from-[var(--gold-400)] to-[var(--gold-600)] text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:brightness-95;
+  }
+
+  .badge-preview {
+    @apply bg-gradient-to-r from-[var(--gold-400)] to-[var(--gold-600)] text-white px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-locked {
+    @apply bg-slate-500 text-white px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .heading-two-tone {
+    @apply font-serif font-bold;
+  }
+
+  .heading-two-tone .gold {
+    @apply bg-gradient-to-r from-[var(--gold-400)] to-[var(--gold-600)] bg-clip-text text-transparent;
+  }
+
+  .container-main {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+}

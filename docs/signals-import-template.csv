@@ -1,0 +1,6 @@
+symbol,direction,entryTime,entryPrice,stopLoss,takeProfit,exitTime,exitPrice,conviction,riskPct,tags,notes
+BTC,LONG,2024-01-15T10:30:00Z,42000.50,40000.00,45000.00,2024-01-20T14:45:00Z,44800.25,4,2.5,"[""crypto"", ""btc""]","Strong breakout above resistance"
+ETH,SHORT,2024-01-18T09:15:00Z,2650.75,2700.00,2500.00,,,,3,1.8,"[""crypto"", ""eth""]","Bearish divergence on daily chart"
+SOL,LONG,2024-01-22T16:20:00Z,95.40,90.00,105.00,,,,5,3.0,"[""crypto"", ""sol"", ""alt""]","Major support bounce with volume"
+AVAX,LONG,2024-01-25T11:45:00Z,32.15,30.00,36.00,2024-01-28T13:20:00Z,35.80,3,2.0,"[""crypto"", ""avax"", ""alt""]","Breakout from consolidation"
+MATIC,SHORT,2024-01-30T08:30:00Z,0.85,0.88,0.75,,,,2,1.5,"[""crypto"", ""matic"", ""alt""]","Resistance rejection with volume"

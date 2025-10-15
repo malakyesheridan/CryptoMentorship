@@ -1,0 +1,20 @@
+# Node/Next
+node_modules/
+.next/
+out/
+dist/
+.vercel/
+
+# OS/editor
+.DS_Store
+*.log
+
+# Env
+.env
+.env.*
+
+# User uploads – keep folders, not files
+uploads/**
+!uploads/.gitkeep
+public/uploads/**
+!public/uploads/.gitkeep
