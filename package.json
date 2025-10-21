@@ -57,7 +57,7 @@
     "@uiw/react-md-editor": "^3.22.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
-    "date-fns": "^3.6.0",
+    "date-fns": "^2.30.0",
     "decimal.js": "^10.6.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.303.0",
