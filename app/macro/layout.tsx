@@ -1,10 +1,10 @@
 import { ReactNode } from 'react'
 
-interface MacroLayoutProps {
+interface CryptoCompassLayoutProps {
   children: ReactNode
 }
 
-export default function MacroLayout({ children }: MacroLayoutProps) {
+export default function CryptoCompassLayout({ children }: CryptoCompassLayoutProps) {
   return (
     <div className="min-h-screen bg-slate-50">
       {children}

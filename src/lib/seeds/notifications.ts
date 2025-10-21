@@ -33,7 +33,7 @@ export async function seedNotifications() {
       type: 'episode_published',
       entityType: 'episode',
       entityId: 'sample-episode-1',
-      title: 'New Macro Minute Episode',
+      title: 'New Crypto Compass Episode',
       body: 'Weekly cryptocurrency market analysis is now available.',
       url: '/macro/sample-episode-1',
       channel: 'inapp'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import MacroVideoUpload from './MacroVideoUpload'
+import CryptoCompassVideoUpload from './CryptoCompassVideoUpload'
 
 interface AdminVideoUploadWrapperProps {
   userRole?: string
@@ -24,5 +24,5 @@ export default function AdminVideoUploadWrapper({ userRole }: AdminVideoUploadWr
     return null
   }
 
-  return <MacroVideoUpload />
+  return <CryptoCompassVideoUpload />
 }

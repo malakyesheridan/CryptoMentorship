@@ -7,7 +7,7 @@ A comprehensive cryptocurrency research and analysis platform built with Next.js
 ### Core Platform
 - **Authentication**: Google OAuth, Email, and Credentials providers with JWT sessions
 - **Role-Based Access**: Guest, Member, Editor, Admin roles with tiered content access
-- **Content Management**: Research articles, Macro Minute episodes, Trading signals, Resources
+- **Content Management**: Research articles, Crypto Compass episodes, Trading signals, Resources
 - **Community**: Real-time chat with channels, message management, and rate limiting
 - **Admin Panel**: Complete CMS for content, episodes, users, and audit management
 - **Responsive Design**: Mobile-first design with unified design system

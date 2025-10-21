@@ -53,7 +53,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
       <nav className="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-8">
         <Link href="/" className="hover:text-[var(--text-strong)]">Home</Link>
         <span>/</span>
-        <Link href="/macro" className="hover:text-[var(--text-strong)]">Macro Minute</Link>
+        <Link href="/macro" className="hover:text-[var(--text-strong)]">Crypto Compass</Link>
         <span>/</span>
         <span className="text-[var(--text-strong)]">{episode.title}</span>
       </nav>
@@ -62,7 +62,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
       <Link href="/macro">
         <Button variant="ghost" className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Macro Minute
+          Back to Crypto Compass
         </Button>
       </Link>
 

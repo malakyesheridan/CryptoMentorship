@@ -80,7 +80,7 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{episodeCount}</div>
-            <p className="text-xs text-slate-500">Macro Minute episodes</p>
+            <p className="text-xs text-slate-500">Crypto Compass episodes</p>
           </CardContent>
         </Card>
 

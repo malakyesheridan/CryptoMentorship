@@ -9,7 +9,7 @@ export default function NewEpisodePage() {
         <h1 className="heading-two-tone text-3xl mb-2">
           <span>Create</span> <span className="gold">Episode</span>
         </h1>
-        <p className="text-slate-600">Add new Macro Minute episode</p>
+        <p className="text-slate-600">Add new Crypto Compass episode</p>
       </div>
 
       {/* Form */}

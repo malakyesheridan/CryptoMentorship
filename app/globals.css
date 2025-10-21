@@ -1,7 +1,7 @@
 @import '../src/styles/theme.css';
 @import '../src/styles/typography.css';
 
-/* Custom animations for Macro page */
+/* Custom animations for Crypto Compass page */
 @keyframes fade-in {
   from {
     opacity: 0;

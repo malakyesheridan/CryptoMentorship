@@ -93,7 +93,7 @@ export default function EpisodeUpload() {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Play className="w-5 h-5" />
-          <span>Create New Macro Episode</span>
+          <span>Create New Crypto Compass Episode</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -203,7 +203,7 @@ export default function EpisodeUpload() {
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
             disabled={isUploading || !formData.title}
           >
-            {isUploading ? 'Creating Episode...' : 'Create Macro Episode'}
+            {isUploading ? 'Creating Episode...' : 'Create Crypto Compass Episode'}
           </Button>
         </form>
       </CardContent>

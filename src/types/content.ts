@@ -1,4 +1,4 @@
-export type MacroEpisodeListItem = {
+export type CryptoCompassEpisodeListItem = {
   slug: string
   title: string
   publishedAt: string | Date

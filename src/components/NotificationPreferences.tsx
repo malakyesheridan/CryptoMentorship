@@ -161,10 +161,10 @@ export function NotificationPreferences() {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="onEpisode" className="text-base font-medium">
-                Macro Minute Episodes
+                Crypto Compass Episodes
               </Label>
               <p className="text-sm text-slate-600">
-                New Macro Minute episodes
+                New Crypto Compass episodes
               </p>
             </div>
             <Switch

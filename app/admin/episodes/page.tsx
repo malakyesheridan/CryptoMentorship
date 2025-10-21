@@ -29,7 +29,7 @@ export default async function EpisodesPage() {
           <h1 className="heading-two-tone text-3xl mb-2">
             <span>Episode</span> <span className="gold">Manager</span>
           </h1>
-          <p className="text-slate-600">Manage Macro Minute episodes</p>
+          <p className="text-slate-600">Manage Crypto Compass episodes</p>
         </div>
         <Button asChild className="btn-gold">
           <Link href="/admin/episodes/new">

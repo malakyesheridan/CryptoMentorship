@@ -9,7 +9,7 @@ import { formatDate } from '@/lib/dates'
 
 export const dynamic = 'force-dynamic'
 
-export default async function MacroPage() {
+export default async function CryptoCompassPage() {
   try {
     // Fetch episodes from database
     const episodesRaw = await prisma.episode.findMany({
@@ -37,7 +37,7 @@ export default async function MacroPage() {
       locked: episode.locked,
     }))
 
-  // Fetch videos for macro section
+  // Fetch videos for Crypto Compass section
   let videos: any[] = []
   try {
     videos = await prisma.video.findMany({
@@ -65,11 +65,11 @@ export default async function MacroPage() {
           <div className="relative container mx-auto px-4 py-20 text-center">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
-                <span className="text-white">Macro</span>
-                <span className="text-yellow-400 ml-4">Minute</span>
+                <span className="text-white">Crypto </span>
+                <span className="text-yellow-400">Compass</span>
               </h1>
               <p className="text-xl text-slate-300 mb-8">
-                Weekly insights on macroeconomics, market trends, and investment strategies
+                Weekly insights on crypto market trends, macroeconomics, and investment strategies
               </p>
               <div className="flex items-center justify-center gap-6 text-slate-400">
                 <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export default async function MacroPage() {
                   <Play className="w-12 h-12 text-slate-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">No Episodes Yet</h3>
-                <p className="text-slate-600">Check back soon for new macro insights!</p>
+                <p className="text-slate-600">Check back soon for new Crypto Compass insights!</p>
               </div>
             )}
           </div>
@@ -215,7 +215,7 @@ export default async function MacroPage() {
           {videos.length > 0 && (
             <div className="mb-16">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-slate-900">Macro Videos</h2>
+                <h2 className="text-3xl font-bold text-slate-900">Crypto Compass Videos</h2>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Eye className="w-5 h-5" />
                   <span className="font-medium">{videos.length} Videos</span>
@@ -292,12 +292,12 @@ export default async function MacroPage() {
       </div>
     )
   } catch (error) {
-    console.error('Error in MacroPage:', error)
+    console.error('Error in CryptoCompassPage:', error)
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Error Loading Macro Page</h1>
-          <p className="text-slate-600 mb-8">Something went wrong while loading the macro page.</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Error Loading Crypto Compass Page</h1>
+          <p className="text-slate-600 mb-8">Something went wrong while loading the Crypto Compass page.</p>
           <button 
             onClick={() => window.location.reload()} 
             className="bg-yellow-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-yellow-600 transition-colors"

@@ -84,7 +84,7 @@ export default function AccountPage() {
             <h4 className="font-semibold text-slate-800 mb-2">Membership Benefits</h4>
             <ul className="text-sm text-slate-600 space-y-1">
               <li>• Access to all research reports</li>
-              <li>• Weekly Macro Minute episodes</li>
+              <li>• Weekly Crypto Compass episodes</li>
               <li>• Trading signals and model portfolio</li>
               <li>• Community access and support</li>
             </ul>

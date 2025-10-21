@@ -9,7 +9,7 @@ const CHANNELS = [
   { slug: 'bitcoin', name: 'Bitcoin', description: 'Bitcoin-specific discussions and analysis' },
   { slug: 'defi', name: 'DeFi', description: 'Decentralized finance protocols and yield farming' },
   { slug: 'nft', name: 'NFTs & Web3', description: 'Non-fungible tokens and Web3 ecosystem' },
-  { slug: 'macro', name: 'Macro Economics', description: 'Global economic trends and their impact on crypto' },
+  { slug: 'macro', name: 'Crypto Compass Economics', description: 'Global economic trends and their impact on crypto' },
   { slug: 'technical-analysis', name: 'Technical Analysis', description: 'Chart analysis and trading patterns' },
 ];
 
@@ -24,7 +24,7 @@ const SEED_MESSAGES = [
     id: 'welcome-general-2',
     channelSlug: 'general',
     authorEmail: 'member@demo.com',
-    body: 'Excited to dive into the new macro report and share takeaways here.',
+    body: 'Excited to dive into the new Crypto Compass report and share takeaways here.',
   },
   {
     id: 'research-kickoff-1',

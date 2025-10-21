@@ -110,8 +110,8 @@ async function handleEpisodePublished(episodeId: string) {
       type: 'episode_published' as const,
       entityType: 'episode' as const,
       entityId: episodeId,
-      title: 'New Macro Minute Episode',
-      body: 'A new Macro Minute episode has been published',
+      title: 'New Crypto Compass Episode',
+      body: 'A new Crypto Compass episode has been published',
       url: `/macro/${episodeId}`,
       channel: 'inapp' as const,
     }))
