@@ -111,21 +111,27 @@ export default async function DashboardPage() {
   // Get learning data if user is logged in
   let learningData = null
   if (session?.user) {
-    const [enrollments, progress, certificates, learningActivity, bookmarks] = await Promise.all([
-      getUserEnrollments(session.user.id),
-      getUserProgress(session.user.id),
-      getUserCertificates(session.user.id),
-      getLearningActivity(session.user.id),
-      getSaved(6), // Get 6 recent bookmarks
-    ])
-    
-    learningData = {
-      totalEnrollments: enrollments.length,
-      completedTracks: enrollments.filter(e => e.progressPct === 100).length,
-      totalLessonsCompleted: progress.length,
-      totalCertificates: certificates.length,
-      learningActivity,
-      bookmarks
+    try {
+      const [enrollments, progress, certificates, learningActivity, bookmarks] = await Promise.all([
+        getUserEnrollments(session.user.id),
+        getUserProgress(session.user.id),
+        getUserCertificates(session.user.id),
+        getLearningActivity(session.user.id),
+        getSaved(6), // Get 6 recent bookmarks
+      ])
+      
+      learningData = {
+        totalEnrollments: enrollments.length,
+        completedTracks: enrollments.filter(e => e.progressPct === 100).length,
+        totalLessonsCompleted: progress.length,
+        totalCertificates: certificates.length,
+        learningActivity,
+        bookmarks
+      }
+    } catch (error) {
+      console.error('Error fetching learning data:', error)
+      // Continue with null learningData to prevent page crash
+      learningData = null
     }
   }
   return (
