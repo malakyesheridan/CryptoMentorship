@@ -17,8 +17,6 @@ import type {
 } from '@/lib/community/types'
 
 const channelsKey = '/api/channels-minimal'
-const testKey = '/api/test'
-const simpleKey = '/api/channels-simple'
 const messagesKey = (channelId: string | null) =>
   channelId ? `/api/community/messages?channelId=${encodeURIComponent(channelId)}` : null
 
@@ -33,10 +31,6 @@ function useChannels() {
   console.log('Channels data:', data)
   console.log('Channels error:', error)
   console.log('Channels loading:', isLoading)
-  
-  // Test other API routes
-  fetch(testKey).then(r => r.json()).then(d => console.log('Test API:', d)).catch(e => console.error('Test API error:', e))
-  fetch(simpleKey).then(r => r.json()).then(d => console.log('Simple API:', d)).catch(e => console.error('Simple API error:', e))
 
   return {
     channels: data?.items ?? [],
