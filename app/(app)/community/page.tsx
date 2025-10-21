@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useCallback, useMemo, useRef, useState } from 'react'
+
+export const dynamic = 'force-dynamic'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
 

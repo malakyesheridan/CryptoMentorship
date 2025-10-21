@@ -255,18 +255,19 @@ export default async function LearningDashboardPage() {
     redirect('/login')
   }
 
-  const [enrollments, progress, certificates, learningActivity, allCourses, enhancedMetrics] = await Promise.all([
-    getUserEnrollments(session.user.id),
-    getUserProgress(session.user.id),
-    getUserCertificates(session.user.id),
-    getLearningActivity(session.user.id),
-    getAllCourses(session.user.id),
-    getEnhancedProgressMetrics(session.user.id),
-  ])
+  try {
+    const [enrollments, progress, certificates, learningActivity, allCourses, enhancedMetrics] = await Promise.all([
+      getUserEnrollments(session.user.id),
+      getUserProgress(session.user.id),
+      getUserCertificates(session.user.id),
+      getLearningActivity(session.user.id),
+      getAllCourses(session.user.id),
+      getEnhancedProgressMetrics(session.user.id),
+    ])
 
-  // Calculate stats
-  const totalEnrollments = enrollments.length
-  const completedTracks = enrollments.filter(e => e.progressPct === 100).length
+    // Calculate stats
+    const totalEnrollments = enrollments.length
+    const completedTracks = enrollments.filter(e => e.progressPct === 100).length
   const totalLessonsCompleted = progress.length
   const totalCertificates = certificates.length
 
@@ -603,4 +604,15 @@ export default async function LearningDashboardPage() {
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('Error fetching learning data:', error)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="container mx-auto px-4 py-12">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Learning Dashboard</h1>
+          <p className="text-slate-600 mb-8">Unable to load learning data at this time. Please try again later.</p>
+        </div>
+      </div>
+    )
+  }
 }
