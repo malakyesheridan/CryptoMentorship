@@ -14,20 +14,21 @@ import ResourcesClient from '@/components/ResourcesClient'
 export const dynamic = 'force-dynamic'
 
 export default async function ResourcesPage() {
-  const resourceRecords = await prisma.content.findMany({
-    where: { kind: 'resource' },
-    orderBy: { publishedAt: 'desc' },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      excerpt: true,
-      coverUrl: true,
-      tags: true,
-      publishedAt: true,
-      locked: true,
-      kind: true,
-      minTier: true,
+  try {
+    const resourceRecords = await prisma.content.findMany({
+      where: { kind: 'resource' },
+      orderBy: { publishedAt: 'desc' },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        coverUrl: true,
+        tags: true,
+        publishedAt: true,
+        locked: true,
+        kind: true,
+        minTier: true,
     }
   })
   const session = await getSession()
@@ -101,4 +102,15 @@ export default async function ResourcesPage() {
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('Error fetching resources data:', error)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="container mx-auto px-4 py-12">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Resources</h1>
+          <p className="text-slate-600 mb-8">Unable to load resources at this time. Please try again later.</p>
+        </div>
+      </div>
+    )
+  }
 }

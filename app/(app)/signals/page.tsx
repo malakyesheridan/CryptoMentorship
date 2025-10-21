@@ -11,11 +11,12 @@ import AdminSignalUploadWrapper from '@/components/AdminSignalUploadWrapper'
 export const dynamic = 'force-dynamic'
 
 export default async function SignalsPage() {
-  const signalsResult = await getContent({ kind: 'signal' })
-  const signals = Array.isArray(signalsResult) ? signalsResult : signalsResult.data
-  const session = await getSession()
-  const userRole = session?.user?.role || 'guest'
-  const userTier = (session?.user as any)?.membershipTier || null
+  try {
+    const signalsResult = await getContent({ kind: 'signal' })
+    const signals = Array.isArray(signalsResult) ? signalsResult : signalsResult.data
+    const session = await getSession()
+    const userRole = session?.user?.role || 'guest'
+    const userTier = (session?.user as any)?.membershipTier || null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -236,4 +237,15 @@ export default async function SignalsPage() {
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('Error fetching signals data:', error)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="container mx-auto px-4 py-12">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Trading Signals</h1>
+          <p className="text-slate-600 mb-8">Unable to load trading signals at this time. Please try again later.</p>
+        </div>
+      </div>
+    )
+  }
 }

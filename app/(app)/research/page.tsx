@@ -32,18 +32,19 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
     ...pagination,
   }
   
-  const result = await getContent(filters)
-  const researchContent = Array.isArray(result) ? result : result.data
-  const paginationInfo = Array.isArray(result) ? null : result.pagination
-  
-  const session = await getSession()
-  const userRole = session?.user?.role || 'guest'
-  const userTier = (session?.user as any)?.membershipTier || null
+  try {
+    const result = await getContent(filters)
+    const researchContent = Array.isArray(result) ? result : result.data
+    const paginationInfo = Array.isArray(result) ? null : result.pagination
+    
+    const session = await getSession()
+    const userRole = session?.user?.role || 'guest'
+    const userTier = (session?.user as any)?.membershipTier || null
 
-  // Calculate research stats
-  const totalResearch = researchContent.length
-  const publicResearch = researchContent.filter(r => !r.locked).length
-  const memberResearch = researchContent.filter(r => r.locked).length
+    // Calculate research stats
+    const totalResearch = researchContent.length
+    const publicResearch = researchContent.filter(r => !r.locked).length
+    const memberResearch = researchContent.filter(r => r.locked).length
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -176,4 +177,15 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
       </div>
     </div>
   )
+  } catch (error) {
+    console.error('Error fetching research data:', error)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="container mx-auto px-4 py-12">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Research</h1>
+          <p className="text-slate-600 mb-8">Unable to load research content at this time. Please try again later.</p>
+        </div>
+      </div>
+    )
+  }
 }
