@@ -133,7 +133,7 @@ export default async function ClosedTradesPage() {
               <span className="text-yellow-400 ml-4">Trades</span>
             </h1>
             <p className="text-xl text-slate-300 mb-8">
-              Historical performance of completed trading signals
+              Historical performance of completed portfolio positions
             </p>
             <div className="flex items-center justify-center gap-6 text-slate-400">
               <div className="flex items-center gap-2">

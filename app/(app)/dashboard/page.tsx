@@ -175,8 +175,8 @@ export default async function DashboardPage() {
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
               <TrendingUp className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Signals</h3>
-            <p className="text-sm text-slate-600">Trading recommendations</p>
+            <h3 className="font-semibold text-slate-900 mb-2">Portfolio</h3>
+            <p className="text-sm text-slate-600">Portfolio positions</p>
           </Link>
 
           <Link href="/resources" className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">

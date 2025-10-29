@@ -26,8 +26,7 @@ export default async function SignalsPage() {
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
-              <span className="text-white">Trading</span>
-              <span className="text-yellow-400 ml-4">Signals</span>
+              <span className="text-white">Portfolio</span>
             </h1>
             <p className="text-xl text-slate-300 mb-8">
               Model portfolio and position recommendations for members
@@ -133,7 +132,7 @@ export default async function SignalsPage() {
           </div>
         </div>
       
-        {/* Signals Grid */}
+        {/* Portfolio Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {signals.map((signal) => {
             const canView = canViewContent(userRole, userTier, (signal as any).minTier, signal.locked)
@@ -171,7 +170,7 @@ export default async function SignalsPage() {
                         </div>
                         <div className="flex items-center gap-1">
                           <TrendingUp className="w-3 h-3" />
-                          <span>Trading Signal</span>
+                          <span>Portfolio</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-slate-400 group-hover:text-yellow-500 transition-colors">
@@ -230,8 +229,8 @@ export default async function SignalsPage() {
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="w-8 h-8 text-slate-400" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Trading Signals Available</h3>
-            <p className="text-slate-500">Check back soon for new trading recommendations.</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Portfolio Items Available</h3>
+            <p className="text-slate-500">Check back soon for new portfolio recommendations.</p>
           </div>
         )}
       </div>
@@ -242,8 +241,8 @@ export default async function SignalsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="container mx-auto px-4 py-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Trading Signals</h1>
-          <p className="text-slate-600 mb-8">Unable to load trading signals at this time. Please try again later.</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Portfolio</h1>
+          <p className="text-slate-600 mb-8">Unable to load portfolio at this time. Please try again later.</p>
         </div>
       </div>
     )

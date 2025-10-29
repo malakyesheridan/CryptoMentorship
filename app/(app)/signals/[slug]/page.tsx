@@ -143,7 +143,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
           <Link href="/signals">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Signals
+              Back to Portfolio
             </Button>
           </Link>
           <div className="flex-1">
@@ -189,7 +189,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Related Signals
+            Related Portfolio Items
           </CardTitle>
         </CardHeader>
         <CardContent>

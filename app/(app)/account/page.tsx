@@ -85,7 +85,7 @@ export default function AccountPage() {
             <ul className="text-sm text-slate-600 space-y-1">
               <li>• Access to all research reports</li>
               <li>• Weekly Crypto Compass episodes</li>
-              <li>• Trading signals and model portfolio</li>
+              <li>• Portfolio positions and model portfolio</li>
               <li>• Community access and support</li>
             </ul>
           </div>

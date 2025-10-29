@@ -16,7 +16,7 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Crypto Compass', href: '/macro', icon: Play },
-  { name: 'Signals', href: '/signals', icon: TrendingUp },
+  { name: 'Portfolio', href: '/signals', icon: TrendingUp },
   { name: 'Resources', href: '/resources', icon: BookOpen },
   { name: 'My Learning', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
