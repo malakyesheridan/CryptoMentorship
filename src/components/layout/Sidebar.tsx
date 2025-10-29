@@ -5,23 +5,19 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { 
   LayoutDashboard, 
-  FileText, 
   Play, 
   TrendingUp, 
   BookOpen, 
   MessageSquare, 
   User,
-  GraduationCap,
-  Calendar
+  GraduationCap
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Research', href: '/research', icon: FileText },
   { name: 'Crypto Compass', href: '/macro', icon: Play },
   { name: 'Signals', href: '/signals', icon: TrendingUp },
   { name: 'Resources', href: '/resources', icon: BookOpen },
-  { name: 'Events', href: '/events', icon: Calendar },
   { name: 'My Learning', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
   { name: 'Account', href: '/account', icon: User },
