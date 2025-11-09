@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getStripe } from '@/lib/stripe'
 import { Button } from '@/components/ui/button'
@@ -66,7 +66,7 @@ const INTERVALS = [
   { key: 'year' as const, label: '1 Year', savings: 22 },
 ]
 
-export default function SubscribePage() {
+function SubscribePageContent() {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [interval, setInterval] = useState<'month' | '3month' | '6month' | 'year'>('month')
@@ -341,5 +341,22 @@ export default function SubscribePage() {
         </p>
       </section>
     </div>
+  )
+}
+
+export default function SubscribePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 text-center shadow-sm">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-400" />
+            <p className="text-slate-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <SubscribePageContent />
+    </Suspense>
   )
 }

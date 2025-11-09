@@ -3,6 +3,9 @@ import { requireUser } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
+// Force dynamic rendering since this uses authentication headers
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/me/account
  * Get current user's account information including membership details
