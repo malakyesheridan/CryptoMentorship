@@ -44,6 +44,7 @@
     "fix:prisma": "node scripts/fix-prisma-windows.mjs",
     "clean:prisma": "node scripts/clean-prisma.mjs",
     "make-admin": "node scripts/make-admin.mjs",
+    "ensure-admin": "node scripts/ensure-admin.mjs",
     "export:data": "node scripts/export-data.mjs",
     "import:data": "node scripts/import-data.mjs"
   },
