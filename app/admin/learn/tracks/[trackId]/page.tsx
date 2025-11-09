@@ -50,6 +50,18 @@ async function getTrack(trackId: string) {
           order: 'asc'
         }
       },
+      lessons: {
+        where: {
+          sectionId: null
+        },
+        include: {
+          quiz: true,
+          progresses: true
+        },
+        orderBy: {
+          order: 'asc'
+        }
+      },
       enrollments: {
         include: {
           user: {
