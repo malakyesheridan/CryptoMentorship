@@ -177,26 +177,43 @@ export default function LoginPage() {
           }
           
           // Check if user has active subscription
-          const subscriptionRes = await fetch('/api/me/subscription-status', {
-            credentials: 'include',
-            cache: 'no-store',
-          })
-          
-          const subscriptionData = await subscriptionRes.json()
-          console.log('Subscription status:', subscriptionData)
-          
-          if (!subscriptionData.hasActiveSubscription) {
-            // User doesn't have subscription - redirect smoothly to subscribe page
-            console.log('❌ No active subscription, redirecting to subscribe')
+          try {
+            const subscriptionRes = await fetch('/api/me/subscription-status', {
+              credentials: 'include',
+              cache: 'no-store',
+            })
+            
+            if (!subscriptionRes.ok) {
+              // If subscription check fails, redirect to subscribe page to be safe
+              console.log('⚠️ Subscription check failed, redirecting to subscribe')
+              setIsLoading(false)
+              window.location.href = '/subscribe?required=true'
+              return
+            }
+            
+            const subscriptionData = await subscriptionRes.json()
+            console.log('Subscription status:', subscriptionData)
+            
+            if (!subscriptionData.hasActiveSubscription) {
+              // User doesn't have subscription - redirect smoothly to subscribe page
+              console.log('❌ No active subscription, redirecting to subscribe')
+              setIsLoading(false)
+              // Smooth redirect without alert popup
+              window.location.href = '/subscribe?required=true'
+              return
+            }
+            
+            console.log('✅ Session verified, subscription active, redirecting to:', finalCallbackUrl)
+            // Use window.location for hard redirect - ensures cookies are sent
+            window.location.href = finalCallbackUrl
+          } catch (subError) {
+            // If subscription check throws an error, redirect to subscribe page
+            console.error('Subscription check error:', subError)
+            console.log('⚠️ Subscription check error, redirecting to subscribe')
             setIsLoading(false)
-            // Smooth redirect without alert popup
             window.location.href = '/subscribe?required=true'
             return
           }
-          
-          console.log('✅ Session verified, subscription active, redirecting to:', finalCallbackUrl)
-          // Use window.location for hard redirect - ensures cookies are sent
-          window.location.href = finalCallbackUrl
         } else {
           console.error('❌ Session not found after login')
           setError('Login succeeded but session could not be verified. Please try refreshing.')
