@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ interface NewLessonPageProps {
   }
 }
 
-export default function NewLessonPage({ params }: NewLessonPageProps) {
+function NewLessonPageContent({ params }: NewLessonPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const sectionId = searchParams.get('sectionId')
@@ -236,6 +236,20 @@ export default function NewLessonPage({ params }: NewLessonPageProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function NewLessonPage({ params }: NewLessonPageProps) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <NewLessonPageContent params={params} />
+    </Suspense>
   )
 }
 
