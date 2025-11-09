@@ -76,8 +76,8 @@ test.describe('Authentication Flow', () => {
     await page.click('text=Sign in as Demo Member')
     await expect(page).toHaveURL('/dashboard')
     
-    // Navigate to signals page
-    await page.goto('/signals')
+    // Navigate to portfolio page
+    await page.goto('/portfolio')
     await expect(page.locator('text=MEMBERS ONLY')).toBeVisible()
     
     // Should see upgrade CTA

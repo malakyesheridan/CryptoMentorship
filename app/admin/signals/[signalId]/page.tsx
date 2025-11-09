@@ -237,7 +237,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                   </Button>
                 </Link>
                 
-                <Link href={`/signals/${signal.slug}`} className="block">
+                <Link href={`/portfolio/${signal.slug}`} className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <Target className="h-4 w-4 mr-2" />
                     View Public

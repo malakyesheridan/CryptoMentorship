@@ -85,7 +85,7 @@ export default async function EpisodesPage() {
                   <Trash2 className="w-4 h-4" />
                 </Button>
                 <Button asChild variant="ghost" size="sm">
-                  <Link href={`/macro/${episode.slug}`}>
+                  <Link href={`/crypto-compass/${episode.slug}`}>
                     <Play className="w-4 h-4" />
                   </Link>
                 </Button>

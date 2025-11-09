@@ -18,14 +18,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function ContentPage() {
   const content = await prisma.content.findMany({
-    orderBy: { publishedAt: 'desc' },
-    include: {
-      _count: {
-        select: {
-          // Add any relations if needed
-        }
-      }
-    }
+    orderBy: { publishedAt: 'desc' }
   })
 
   return (

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
+import { handleError } from '@/lib/errors'
 import { z } from 'zod'
 
 const episodeSchema = z.object({
@@ -11,6 +12,7 @@ const episodeSchema = z.object({
   videoUrl: z.string().url('Valid video URL is required'),
   body: z.string().optional(),
   coverUrl: z.string().optional(),
+  category: z.enum(['daily-update', 'analysis', 'breakdown']).default('daily-update'),
   locked: z.boolean().default(false),
 })
 
@@ -33,28 +35,31 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const episode = await prisma.episode.create({
-      data: {
-        ...validatedData,
-        publishedAt: new Date(),
-      }
+    // Wrap in transaction for atomicity
+    const episode = await prisma.$transaction(async (tx) => {
+      const created = await tx.episode.create({
+        data: {
+          ...validatedData,
+          publishedAt: new Date(),
+        }
+      })
+      
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        user.id,
+        'create',
+        'episode',
+        created.id,
+        { title: created.title }
+      )
+      
+      return created
     })
-    
-    await logAudit(
-      user.id,
-      'create',
-      'episode',
-      episode.id,
-      { title: episode.title }
-    )
     
     return NextResponse.json(episode)
   } catch (error) {
-    console.error('Error creating episode:', error)
-    return NextResponse.json(
-      { error: 'Failed to create episode' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }
 
@@ -99,25 +104,28 @@ export async function PUT(request: NextRequest) {
       }
     }
     
-    const episode = await prisma.episode.update({
-      where: { id },
-      data: validatedData
+    // Wrap in transaction for atomicity
+    const episode = await prisma.$transaction(async (tx) => {
+      const updated = await tx.episode.update({
+        where: { id },
+        data: validatedData
+      })
+      
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        user.id,
+        'update',
+        'episode',
+        updated.id,
+        { title: updated.title }
+      )
+      
+      return updated
     })
-    
-    await logAudit(
-      user.id,
-      'update',
-      'episode',
-      episode.id,
-      { title: episode.title }
-    )
     
     return NextResponse.json(episode)
   } catch (error) {
-    console.error('Error updating episode:', error)
-    return NextResponse.json(
-      { error: 'Failed to update episode' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }

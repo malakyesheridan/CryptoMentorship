@@ -8,8 +8,15 @@ import { NotificationDropdown } from '@/components/NotificationDropdown'
 export function Topbar() {
   const { data: session } = useSession()
 
+  const handleSignOut = async () => {
+    // Sign out without redirect (NextAuth will use NEXTAUTH_URL which might be wrong port)
+    await signOut({ redirect: false })
+    // Manually redirect to login page using current origin (same port)
+    window.location.href = '/login'
+  }
+
   return (
-    <div className="bg-white/90 backdrop-blur border-b border-[color:var(--border-subtle)]">
+    <div className="bg-white/90 backdrop-blur border-b border-[color:var(--border-subtle)] relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-1">
@@ -43,7 +50,7 @@ export function Topbar() {
                   <a href="/account">Account Settings</a>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem onClick={handleSignOut}>
                   Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>

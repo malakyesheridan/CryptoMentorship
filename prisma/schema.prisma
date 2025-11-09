@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -38,52 +38,55 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("guest")
-  passwordHash  String?
-  lastLoginAt   DateTime?
-  loginCount    Int       @default(0)
-  isActive      Boolean   @default(true)
-  profileCompleted Boolean @default(false)
-  onboardingCompleted Boolean @default(false)
-  timezone      String?
-  preferences   String?
-  clientId      String?   // Multi-tenant support
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  name                String?
+  email               String    @unique
+  emailVerified       DateTime?
+  image               String?
+  role                String    @default("guest")
+  passwordHash        String?
+  lastLoginAt         DateTime?
+  loginCount          Int       @default(0)
+  isActive            Boolean   @default(true)
+  lockedUntil         DateTime? // Account lockout expiration
+  failedLoginAttempts Int       @default(0) // Track failed attempts for lockout
+  profileCompleted    Boolean   @default(false)
+  onboardingCompleted Boolean   @default(false)
+  timezone            String?
+  preferences         String?
+  clientId            String? // Multi-tenant support
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  memberships   Membership[]
-  messages      Message[]
-  audits        Audit[]
-  media         Media[]
-  revisions     Revision[]
-  bookmarks     Bookmark[]
-  interests     UserInterest[]
-  viewEvents    ViewEvent[]
-  notifications Notification[]
+  accounts               Account[]
+  sessions               Session[]
+  memberships            Membership[]
+  messages               Message[]
+  audits                 Audit[]
+  media                  Media[]
+  revisions              Revision[]
+  bookmarks              Bookmark[]
+  interests              UserInterest[]
+  viewEvents             ViewEvent[]
+  notifications          Notification[]
   notificationPreference NotificationPreference?
-  hostedEvents  Event[]
-  rsvps         RSVP[]
-  questions     Question[]
-  votes         Vote[]
-  signalTrades  SignalTrade[]
-  enrollments   Enrollment[]
-  lessonProgress LessonProgress[]
-  quizSubmissions QuizSubmission[]
-  certificates  Certificate[]
-  learningSessions LearningSession[]
-  cohortEnrollments CohortEnrollment[]
-  videos        Video[]
-  videoViews    VideoView[]
-  securityEvents SecurityEvent[]
-  userSessions  UserSession[]
-  client        Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  hostedEvents           Event[]
+  rsvps                  RSVP[]
+  questions              Question[]
+  votes                  Vote[]
+  signalTrades           SignalTrade[]
+  enrollments            Enrollment[]
+  lessonProgress         LessonProgress[]
+  quizSubmissions        QuizSubmission[]
+  certificates           Certificate[]
+  learningSessions       LearningSession[]
+  cohortEnrollments      CohortEnrollment[]
+  videos                 Video[]
+  videoViews             VideoView[]
+  securityEvents         SecurityEvent[]
+  userSessions           UserSession[]
+  client                 Client?                 @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  payments               Payment[]
 
   @@index([email])
   @@index([role])
@@ -98,13 +101,13 @@ model Client {
   name        String
   slug        String   @unique
   description String?
-  domain      String?  // Custom domain for client
-  settings    String?  // JSON string for client-specific settings
+  domain      String? // Custom domain for client
+  settings    String? // JSON string for client-specific settings
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users       User[]
+  users User[]
 
   @@index([slug])
   @@index([isActive])
@@ -144,70 +147,144 @@ model UserSession {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Membership {
+model LoginAttempt {
   id        String   @id @default(cuid())
-  userId    String
-  tier      String
-  status    String   @default("trial")
+  email     String
+  ipAddress String?
+  success   Boolean
+  reason    String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+  @@index([createdAt])
+}
+
+model Membership {
+  id                   String    @id @default(cuid())
+  userId               String
+  tier                 String
+  status               String    @default("trial")
+  stripeCustomerId     String? // Stripe Customer ID
+  stripeSubscriptionId String? // Stripe Subscription ID
+  stripePriceId        String? // Stripe Price ID
+  currentPeriodStart   DateTime? // Current billing period start
+  currentPeriodEnd     DateTime? // Current billing period end
+  cancelAtPeriodEnd    Boolean   @default(false) // Cancel at period end
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
 
   @@unique([userId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  membershipId    String?
+  stripePaymentId String   @unique // Stripe Payment Intent ID
+  stripeInvoiceId String? // Stripe Invoice ID
+  amount          Decimal
+  currency        String   @default("usd")
+  status          String // succeeded, pending, failed, refunded
+  paymentMethod   String? // card, bank_transfer, etc.
+  description     String?
+  metadata        String? // JSON string for additional metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([membershipId])
+  @@index([stripePaymentId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model StripeWebhookEvent {
+  id            String    @id @default(cuid())
+  stripeEventId String    @unique // Stripe Event ID
+  eventType     String // payment_intent.succeeded, customer.subscription.updated, etc.
+  processed     Boolean   @default(false)
+  processedAt   DateTime?
+  payload       String // JSON string of full event payload
+  error         String?
+  createdAt     DateTime  @default(now())
+
+  @@index([stripeEventId])
+  @@index([eventType])
+  @@index([processed])
+  @@index([createdAt])
 }
 
 model Content {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String    @id @default(cuid())
+  slug        String    @unique
   kind        String
   title       String
   excerpt     String?
   body        String?
   coverUrl    String?
-  publishedAt DateTime @default(now())
+  publishedAt DateTime  @default(now())
   publishAt   DateTime?
-  locked      Boolean  @default(false)
+  locked      Boolean   @default(false)
   minTier     String?
-  tags        String   // JSON string array
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  tags        String // JSON string array
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   revisions Revision[]
   bookmarks Bookmark[]
   videos    Video[]
+
+  @@index([kind])
+  @@index([publishedAt])
+  @@index([locked])
+  @@index([minTier])
+  @@index([kind, publishedAt(sort: Desc)])
+  @@index([kind, locked])
 }
 
 model Episode {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String    @id @default(cuid())
+  slug        String    @unique
   title       String
   excerpt     String?
   videoUrl    String?
   body        String?
   coverUrl    String?
-  publishedAt DateTime @default(now())
+  category    String    @default("daily-update") // daily-update | analysis | breakdown
+  publishedAt DateTime  @default(now())
   publishAt   DateTime?
-  locked      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  locked      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   bookmarks Bookmark[]
+
+  @@index([category])
+  @@index([publishedAt])
 }
 
 model Channel {
-  id          String    @id @default(cuid())
-  slug        String    @unique
+  id          String   @id @default(cuid())
+  slug        String   @unique
   name        String
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   messages Message[]
 }
 
 model Message {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   channelId String
   userId    String
   body      String
@@ -216,30 +293,34 @@ model Message {
 
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([createdAt(sort: Desc)])
+  @@index([channelId, createdAt(sort: Desc)])
 }
 
 model Audit {
-  id         String   @id @default(cuid())
-  actorId    String
-  action     String
+  id          String   @id @default(cuid())
+  actorId     String
+  action      String
   subjectType String
-  subjectId  String?
-  metadata   String?  // JSON string for additional data
-  createdAt  DateTime @default(now())
+  subjectId   String?
+  metadata    String? // JSON string for additional data
+  createdAt   DateTime @default(now())
 
   actor User @relation(fields: [actorId], references: [id], onDelete: Cascade)
 }
 
 model Media {
-  id          String   @id @default(cuid())
-  url         String
-  filename    String
-  mime        String
-  size        Int
-  alt         String?
-  title       String?
+  id           String   @id @default(cuid())
+  url          String
+  filename     String
+  mime         String
+  size         Int
+  alt          String?
+  title        String?
   uploadedById String
-  createdAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   uploader User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
 }
@@ -271,14 +352,14 @@ model Bookmark {
   id        String   @id @default(cuid())
   userId    String
   // Only one of these will be set:
-  contentId String?  // Research/Resource/Signal content
-  episodeId String?  // Crypto Compass episode
+  contentId String? // Research/Resource/Signal content
+  episodeId String? // Crypto Compass episode
   note      String?
   createdAt DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content  Content? @relation(fields: [contentId], references: [id], onDelete: Cascade)
-  episode  Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content? @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 
   @@index([userId, contentId])
   @@index([userId, episodeId])
@@ -293,16 +374,17 @@ model UserInterest {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tag])
+  @@index([tag])
 }
 
 model ViewEvent {
   id         String   @id @default(cuid())
   userId     String
-  entityType String   // 'content' | 'episode'
+  entityType String // 'content' | 'episode'
   entityId   String
   createdAt  DateTime @default(now())
   // optional dwell time if we ever send it:
-  durationMs Int?     
+  durationMs Int?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -311,42 +393,44 @@ model ViewEvent {
 }
 
 model NotificationPreference {
-  userId     String  @id
+  userId        String  @id
   // channels
-  inApp      Boolean @default(true)
-  email      Boolean @default(false)
+  inApp         Boolean @default(true)
+  email         Boolean @default(false)
   // events
-  onResearch Boolean @default(true)
-  onEpisode  Boolean @default(true)
-  onSignal   Boolean @default(true)
-  onMention  Boolean @default(true)
-  onReply    Boolean @default(true)
+  onResearch    Boolean @default(true)
+  onEpisode     Boolean @default(true)
+  onSignal      Boolean @default(true)
+  onMention     Boolean @default(true)
+  onReply       Boolean @default(true)
   // digest
-  digestEnabled  Boolean @default(false)
-  digestFreq     String  @default("weekly") // 'daily' | 'weekly'
-  digestHourUTC  Int     @default(9)
+  digestEnabled Boolean @default(false)
+  digestFreq    String  @default("weekly") // 'daily' | 'weekly'
+  digestHourUTC Int     @default(9)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   userId     String
-  type       String   // 'research_published' | 'episode_published' | 'signal_published' | 'mention' | 'reply' | 'announcement'
-  entityType String?  // 'content' | 'episode' | 'message'
+  type       String // 'research_published' | 'episode_published' | 'signal_published' | 'mention' | 'reply' | 'announcement'
+  entityType String? // 'content' | 'episode' | 'message'
   entityId   String?
   title      String
   body       String?
   url        String?
-  channel    String   // 'inapp' | 'email' | 'push'
+  channel    String // 'inapp' | 'email' | 'push'
   readAt     DateTime?
   sentAt     DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([userId, readAt])
+  @@index([type])
+  @@index([userId, type])
 }
 
 // Live Sessions & Events v1 Models
@@ -356,74 +440,74 @@ model Event {
   slug         String   @unique
   title        String
   summary      String?
-  description  String?  // MDX allowed
+  description  String? // MDX allowed
   startAt      DateTime
   endAt        DateTime
-  timezone     String   // IANA, e.g., "Australia/Sydney"
+  timezone     String // IANA, e.g., "Australia/Sydney"
   visibility   String   @default("member") // 'public' | 'member' | 'admin'
   locationType String   @default("online") // 'online' | 'in_person'
-  locationText String?  // address or "Zoom"
-  joinUrl      String?  // meeting link (shown near start time)
+  locationText String? // address or "Zoom"
+  joinUrl      String? // meeting link (shown near start time)
   capacity     Int?
   hostUserId   String?
-  recordingUrl String?  // after event
-  resources    String?  // JSON string for [{title,url}] after event
+  recordingUrl String? // after event
+  resources    String? // JSON string for [{title,url}] after event
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  host         User?    @relation(fields: [hostUserId], references: [id], onDelete: SetNull)
-  rsvps        RSVP[]
-  questions    Question[]
-  chapters     Chapter[]
-  transcript   Transcript?
+  host       User?       @relation(fields: [hostUserId], references: [id], onDelete: SetNull)
+  rsvps      RSVP[]
+  questions  Question[]
+  chapters   Chapter[]
+  transcript Transcript?
 
   @@index([startAt])
   @@index([visibility, startAt])
 }
 
 model RSVP {
-  id        String   @id @default(cuid())
-  userId    String
-  eventId   String
-  status    String   @default("going") // 'going' | 'interested' | 'declined'
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(cuid())
+  userId      String
+  eventId     String
+  status      String    @default("going") // 'going' | 'interested' | 'declined'
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   checkedInAt DateTime?
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventId])
   @@index([eventId, status])
 }
 
 model Question {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   eventId    String
   userId     String
   body       String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
   answeredAt DateTime?
   answer     String?
   answeredBy String?
   archivedAt DateTime?
 
-  event  Event @relation(fields: [eventId], references: [id])
-  user   User  @relation(fields: [userId], references: [id])
-  votes  Vote[]
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes Vote[]
 
   @@index([eventId, createdAt])
 }
 
 model Vote {
-  id        String   @id @default(cuid())
-  userId    String
+  id         String   @id @default(cuid())
+  userId     String
   questionId String
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id])
-  question Question @relation(fields: [questionId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId])
 }
@@ -435,12 +519,12 @@ model Transcript {
   createdAt  DateTime @default(now())
   uploadedBy String?
 
-  event Event @relation(fields: [eventId], references: [id])
+  event    Event               @relation(fields: [eventId], references: [id])
   segments TranscriptSegment[]
 }
 
 model TranscriptSegment {
-  id           String   @id @default(cuid())
+  id           String @id @default(cuid())
   transcriptId String
   startMs      Int
   endMs        Int?
@@ -464,31 +548,31 @@ model Chapter {
 }
 
 model SignalTrade {
-  id           String   @id @default(cuid())
-  slug         String   @unique
-  symbol       String   // e.g., BTC, ETH
-  market       String   @default("crypto:spot") // 'crypto:spot' | 'crypto:perp' | ...
-  direction    String   // 'long' | 'short'
-  thesis       String?  // MDX supported
-  tags         String   @default("[]") // JSON string array
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  symbol    String // e.g., BTC, ETH
+  market    String  @default("crypto:spot") // 'crypto:spot' | 'crypto:perp' | ...
+  direction String // 'long' | 'short'
+  thesis    String? // MDX supported
+  tags      String  @default("[]") // JSON string array
 
-  entryTime    DateTime
-  entryPrice   Decimal
-  stopLoss     Decimal?
-  takeProfit   Decimal?
-  conviction   Int?     // 1-5
-  riskPct      Decimal? // % of portfolio risked
+  entryTime  DateTime
+  entryPrice Decimal
+  stopLoss   Decimal?
+  takeProfit Decimal?
+  conviction Int? // 1-5
+  riskPct    Decimal? // % of portfolio risked
 
-  status       String   @default("open") // 'open' | 'closed'
-  exitTime     DateTime?
-  exitPrice    Decimal?
-  notes        String?
+  status    String    @default("open") // 'open' | 'closed'
+  exitTime  DateTime?
+  exitPrice Decimal?
+  notes     String?
 
-  createdById  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  createdBy    User?    @relation(fields:[createdById], references:[id])
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([status, symbol, entryTime])
   @@index([createdAt])
@@ -496,21 +580,21 @@ model SignalTrade {
 }
 
 model PortfolioSetting {
-  id              String  @id @default(cuid())
+  id             String   @id @default(cuid())
   // Global backtest-like params to compute equity curve from trades
-  baseCapitalUsd  Decimal // e.g., 10000.00
-  positionModel   String  @default("risk_pct") // 'risk_pct' | 'fixed_fraction'
-  slippageBps     Int     @default(5)  // 0.05%
-  feeBps          Int     @default(10) // 0.10%
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  baseCapitalUsd Decimal // e.g., 10000.00
+  positionModel  String   @default("risk_pct") // 'risk_pct' | 'fixed_fraction'
+  slippageBps    Int      @default(5) // 0.05%
+  feeBps         Int      @default(10) // 0.10%
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model PerfSnapshot {
   id        String   @id @default(cuid())
-  scope     String   // 'ALL'|'YTD'|'1Y'|'90D' and/or a date range key
-  hash      String   // hash of trades + settings for cache key
-  payload   String   // JSON string of precomputed KPIs + series (equity, drawdown, heatmap bins)
+  scope     String // 'ALL'|'YTD'|'1Y'|'90D' and/or a date range key
+  hash      String // hash of trades + settings for cache key
+  payload   String // JSON string of precomputed KPIs + series (equity, drawdown, heatmap bins)
   createdAt DateTime @default(now())
 
   @@index([scope, hash])
@@ -518,63 +602,63 @@ model PerfSnapshot {
 }
 
 model Track {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String    @id @default(cuid())
+  slug        String    @unique
   title       String
   summary     String?
   coverUrl    String?
-  minTier     String   @default("member") // member | editor | admin
-  description String?  // MDX
+  minTier     String    @default("member") // member | editor | admin
+  description String? // MDX
   publishedAt DateTime?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  sections      TrackSection[]
-  lessons       Lesson[]
-  enrollments   Enrollment[]
-  certificates  Certificate[]
-  cohorts       Cohort[]
-  
+  sections     TrackSection[]
+  lessons      Lesson[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+  cohorts      Cohort[]
+
   @@index([publishedAt, order])
 }
 
 model TrackSection {
-  id        String  @id @default(cuid())
-  trackId   String
-  title     String
-  summary   String?
-  order     Int     @default(0)
-  
-  track     Track   @relation(fields: [trackId], references: [id], onDelete: Cascade)
-  lessons   Lesson[]
+  id      String  @id @default(cuid())
+  trackId String
+  title   String
+  summary String?
+  order   Int     @default(0)
+
+  track   Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
 
   @@index([trackId, order])
 }
 
 model Lesson {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   trackId     String
   sectionId   String?
   slug        String
   title       String
-  contentMDX  String   // source MDX
-  durationMin Int?     // estimated
+  contentMDX  String // source MDX
+  durationMin Int? // estimated
   videoUrl    String?
-  resources   String?  // JSON string array of {title,url}
+  resources   String? // JSON string array of {title,url}
   quizId      String?
   publishedAt DateTime?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  track       Track         @relation(fields: [trackId], references: [id], onDelete: Cascade)
-  section     TrackSection? @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  quiz        Quiz?
-  progresses  LessonProgress[]
-  quizSubmissions QuizSubmission[]
-  releases    LessonRelease[]
-  videos      Video[]
+  track            Track             @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  section          TrackSection?     @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  quiz             Quiz?
+  progresses       LessonProgress[]
+  quizSubmissions  QuizSubmission[]
+  releases         LessonRelease[]
+  videos           Video[]
   learningSessions LearningSession[]
 
   @@unique([trackId, slug])
@@ -583,12 +667,12 @@ model Lesson {
 }
 
 model Enrollment {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   trackId     String
-  startedAt   DateTime @default(now())
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
-  progressPct Int      @default(0)
+  progressPct Int       @default(0)
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
@@ -597,16 +681,18 @@ model Enrollment {
 }
 
 model LessonProgress {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   lessonId    String
   completedAt DateTime?
-  timeSpentMs Int      @default(0)
+  timeSpentMs Int       @default(0)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
+  @@index([completedAt])
+  @@index([userId, completedAt])
 }
 
 model Quiz {
@@ -624,22 +710,24 @@ model QuizSubmission {
   lessonId  String
   scorePct  Int
   passed    Boolean
-  answers   String   // JSON string array of {qId, selectedIndexes:[...]}
+  answers   String // JSON string array of {qId, selectedIndexes:[...]}
   createdAt DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@index([userId, lessonId, createdAt])
+  @@index([passed])
+  @@index([userId, passed])
 }
 
 model Certificate {
-  id        String   @id @default(cuid())
-  userId    String
-  trackId   String
-  code      String   @unique // shareable code
-  issuedAt  DateTime @default(now())
-  meta      String?  // JSON string
+  id       String   @id @default(cuid())
+  userId   String
+  trackId  String
+  code     String   @unique // shareable code
+  issuedAt DateTime @default(now())
+  meta     String? // JSON string
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
@@ -649,15 +737,15 @@ model Certificate {
 }
 
 model LearningSession {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   lessonId    String
   startTime   DateTime
   endTime     DateTime?
-  timeSpentMs Int      @default(0)
-  sessionType String   @default("lesson") // lesson | quiz | review
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  timeSpentMs Int       @default(0)
+  sessionType String    @default("lesson") // lesson | quiz | review
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
@@ -667,19 +755,19 @@ model LearningSession {
 }
 
 model Cohort {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   trackId     String
-  slug        String   @unique
+  slug        String    @unique
   title       String
   description String?
   startsAt    DateTime
   endsAt      DateTime?
-  timezone    String   @default("Australia/Sydney") // IANA timezone
-  visibility  String   @default("member") // member | admin
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  timezone    String    @default("Australia/Sydney") // IANA timezone
+  visibility  String    @default("member") // member | admin
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  track       Track            @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  track       Track              @relation(fields: [trackId], references: [id], onDelete: Cascade)
   enrollments CohortEnrollment[]
   releases    LessonRelease[]
 
@@ -688,11 +776,11 @@ model Cohort {
 }
 
 model CohortEnrollment {
-  id        String   @id @default(cuid())
-  cohortId  String
-  userId    String
-  joinedAt  DateTime @default(now())
-  role      String   @default("member") // member | coach
+  id       String   @id @default(cuid())
+  cohortId String
+  userId   String
+  joinedAt DateTime @default(now())
+  role     String   @default("member") // member | coach
 
   cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -717,29 +805,29 @@ model LessonRelease {
 }
 
 model Video {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String?
-  filename    String    // Original uploaded filename
-  filePath    String    // Path to video file on disk
-  thumbnail   String?   // Path to thumbnail image
-  duration    Int?      // Duration in seconds
-  fileSize    Int?      // File size in bytes
-  mimeType    String    @default("video/mp4")
-  resolution  String?   // e.g., "1920x1080"
-  status      String    @default("processing") // processing | ready | error
-  visibility  String    @default("member") // member | admin | public
-  uploadedBy  String    // User ID who uploaded
-  contentId   String?   // Optional link to content piece
-  lessonId    String?   // Optional link to lesson
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  filename    String // Original uploaded filename
+  filePath    String // Path to video file on disk
+  thumbnail   String? // Path to thumbnail image
+  duration    Int? // Duration in seconds
+  fileSize    Int? // File size in bytes
+  mimeType    String   @default("video/mp4")
+  resolution  String? // e.g., "1920x1080"
+  status      String   @default("processing") // processing | ready | error
+  visibility  String   @default("member") // member | admin | public
+  uploadedBy  String // User ID who uploaded
+  contentId   String? // Optional link to content piece
+  lessonId    String? // Optional link to lesson
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relationships
-  uploader    User      @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
-  content     Content?  @relation(fields: [contentId], references: [id], onDelete: SetNull)
-  lesson      Lesson?   @relation(fields: [lessonId], references: [id], onDelete: SetNull)
-  views       VideoView[]
+  uploader User        @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  content  Content?    @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  lesson   Lesson?     @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  views    VideoView[]
 
   @@index([uploadedBy])
   @@index([status])
@@ -752,13 +840,15 @@ model VideoView {
   videoId   String
   userId    String?
   viewedAt  DateTime @default(now())
-  duration  Int?     // How long they watched (in seconds)
+  duration  Int? // How long they watched (in seconds)
   completed Boolean  @default(false) // Did they watch the whole video?
 
   video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
-  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([videoId])
   @@index([userId])
   @@index([viewedAt])
+  @@index([completed])
+  @@index([videoId, completed])
 }

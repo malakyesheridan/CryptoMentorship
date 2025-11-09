@@ -2,29 +2,38 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { 
   LayoutDashboard, 
   Play, 
   TrendingUp, 
-  BookOpen, 
   MessageSquare, 
   User,
-  GraduationCap
+  GraduationCap,
+  Shield
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Crypto Compass', href: '/macro', icon: Play },
-  { name: 'Portfolio', href: '/signals', icon: TrendingUp },
-  { name: 'Resources', href: '/resources', icon: BookOpen },
-  { name: 'My Learning', href: '/learning', icon: GraduationCap },
+  { name: 'Crypto Compass', href: '/crypto-compass', icon: Play },
+  { name: 'Portfolio', href: '/portfolio', icon: TrendingUp },
+  { name: 'Learning Hub', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
   { name: 'Account', href: '/account', icon: User },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  
+  // Check if user has admin or editor role
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
+  
+  // Add admin link if user is admin/editor
+  const allNavigation = isAdmin 
+    ? [...navigation, { name: 'Admin', href: '/admin', icon: Shield }]
+    : navigation
 
   return (
     <div className="flex flex-col w-64 bg-white/90 backdrop-blur border-r border-[color:var(--border-subtle)] h-full">
@@ -35,8 +44,8 @@ export function Sidebar() {
       </div>
       
       <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href
+        {allNavigation.map((item) => {
+          const isActive = pathname === item.href || (item.href === '/admin' && pathname?.startsWith('/admin'))
           return (
             <Link
               key={item.name}

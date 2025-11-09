@@ -1,9 +1,10 @@
 {
   "buildCommand": "next build",
+  "comment": "⚠️ DO NOT store credentials here - set all environment variables in Vercel Dashboard",
   "env": {
-    "DATABASE_URL": "postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-    "DIRECT_URL": "postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-    "NEXTAUTH_SECRET": "dev-secret-key-for-local-development-only",
-    "NEXTAUTH_URL": "https://stewartandco.vercel.app"
+    "DATABASE_URL": "⚠️ Set in Vercel Dashboard",
+    "DIRECT_URL": "⚠️ Set in Vercel Dashboard",
+    "NEXTAUTH_SECRET": "⚠️ Set in Vercel Dashboard (use: npm run generate-secret)",
+    "NEXTAUTH_URL": "⚠️ Set in Vercel Dashboard (your production URL)"
   }
 }

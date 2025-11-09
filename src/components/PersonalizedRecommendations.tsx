@@ -107,7 +107,7 @@ export function PersonalizedRecommendations({
       case 'content':
         return `/content/${rec.slug}`
       case 'episode':
-        return `/macro/${rec.slug}`
+        return `/crypto-compass/${rec.slug}`
       case 'track':
         return `/learn/${rec.slug}`
       case 'lesson':

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { formatCurrency, formatPercentage, formatDate, formatNumber } from '@/lib/perf/format'
 import { MDXRenderer } from '@/components/MDXRenderer'
 import { ArrowLeft, TrendingUp, TrendingDown, Clock, Target, Shield } from 'lucide-react'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface Trade {
   id: string
@@ -251,7 +252,7 @@ export function TradeDetail({ trade, onBack }: TradeDetailProps) {
           </CardHeader>
           <CardContent>
             <div className="prose prose-slate max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: trade.thesis || '' }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(trade.thesis || '') }} />
             </div>
           </CardContent>
         </Card>

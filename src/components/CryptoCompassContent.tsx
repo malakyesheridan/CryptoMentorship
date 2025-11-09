@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Play, Lock, Eye, Calendar, ArrowRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import CryptoCompassSearchFilter from './CryptoCompassSearchFilter'
-import { formatContentDate } from '@/lib/content'
+import { formatContentDate } from '@/lib/content-utils'
 
 interface CryptoCompassContentProps {
   episodes: any[]
@@ -45,7 +45,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
               const canView = !episode.locked || userRole === 'admin' || (userTier && ['T2', 'T3'].includes(userTier))
 
               return (
-                <Link key={episode.slug} href={`/macro/${episode.slug}`}>
+                <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>
                   <article className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100 overflow-hidden">
                     <div className="flex items-center space-x-6 p-6">
                       <div className="flex-shrink-0">

@@ -3,6 +3,8 @@ import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { generateSlug } from '@/lib/content'
+import { handleError } from '@/lib/errors'
+import { emit } from '@/lib/events'
 import { z } from 'zod'
 
 const contentSchema = z.object({
@@ -36,29 +38,45 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const content = await prisma.content.create({
-      data: {
-        ...validatedData,
-        tags: JSON.stringify(validatedData.tags),
-        publishedAt: new Date(),
-      }
+    // Wrap in transaction for atomicity
+    const content = await prisma.$transaction(async (tx) => {
+      const created = await tx.content.create({
+        data: {
+          ...validatedData,
+          tags: JSON.stringify(validatedData.tags),
+          publishedAt: new Date(),
+        }
+      })
+      
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        user.id,
+        'create',
+        'content',
+        created.id,
+        { title: created.title, kind: created.kind }
+      )
+      
+      return created
     })
     
-    await logAudit(
-      user.id,
-      'create',
-      'content',
-      content.id,
-      { title: content.title, kind: content.kind }
-    )
+    // Emit notification event for published content
+    if (content.publishedAt) {
+      const eventType = content.kind === 'research' ? 'research_published' : 
+                        content.kind === 'signal' ? 'signal_published' : null
+      
+      if (eventType) {
+        // Fire and forget - don't wait for notification creation
+        emit({ type: eventType, contentId: content.id }).catch(err => {
+          console.error('Failed to emit notification event:', err)
+        })
+      }
+    }
     
     return NextResponse.json(content)
   } catch (error) {
-    console.error('Error creating content:', error)
-    return NextResponse.json(
-      { error: 'Failed to create content' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }
 
@@ -103,28 +121,45 @@ export async function PUT(request: NextRequest) {
       }
     }
     
-    const content = await prisma.content.update({
-      where: { id },
-      data: {
-        ...validatedData,
-        tags: validatedData.tags ? JSON.stringify(validatedData.tags) : undefined
-      }
+    // Wrap in transaction for atomicity
+    const content = await prisma.$transaction(async (tx) => {
+      const updated = await tx.content.update({
+        where: { id },
+        data: {
+          ...validatedData,
+          tags: validatedData.tags ? JSON.stringify(validatedData.tags) : undefined
+        }
+      })
+      
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        user.id,
+        'update',
+        'content',
+        updated.id,
+        { title: updated.title, kind: updated.kind }
+      )
+      
+      return updated
     })
     
-    await logAudit(
-      user.id,
-      'update',
-      'content',
-      content.id,
-      { title: content.title, kind: content.kind }
-    )
+    // Emit notification event if content was just published (wasn't published before, now is)
+    const wasJustPublished = !existingContent.publishedAt && content.publishedAt
+    if (wasJustPublished) {
+      const eventType = content.kind === 'research' ? 'research_published' : 
+                        content.kind === 'signal' ? 'signal_published' : null
+      
+      if (eventType) {
+        // Fire and forget - don't wait for notification creation
+        emit({ type: eventType, contentId: content.id }).catch(err => {
+          console.error('Failed to emit notification event:', err)
+        })
+      }
+    }
     
     return NextResponse.json(content)
   } catch (error) {
-    console.error('Error updating content:', error)
-    return NextResponse.json(
-      { error: 'Failed to update content' },
-      { status: 500 }
-    )
+    return handleError(error)
   }
 }

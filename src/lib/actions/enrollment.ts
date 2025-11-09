@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
 import { nanoid } from 'nanoid'
 import { validateQuizQuestions, validateQuizAnswers, serializeQuizAnswers, type QuizAnswer } from '@/lib/schemas/learning'
+import { logAudit } from '@/lib/audit'
 
 // Enrollment schemas
 const EnrollTrackSchema = z.object({
@@ -70,23 +71,38 @@ export async function enrollInTrack(data: z.infer<typeof EnrollTrackSchema>) {
       throw new Error('Insufficient access level')
     }
 
-    const enrollment = await prisma.enrollment.create({
-      data: {
-        userId: session.user.id,
-        trackId: validatedData.trackId,
-      },
-    })
+    // Wrap in transaction for atomicity
+    const { enrollment, notification } = await prisma.$transaction(async (tx) => {
+      const created = await tx.enrollment.create({
+        data: {
+          userId: session.user.id,
+          trackId: validatedData.trackId,
+        },
+      })
 
-    // Create notification
-    await prisma.notification.create({
-      data: {
-        userId: session.user.id,
-        type: 'announcement',
-        title: 'Learning Started',
-        body: `You've started the track. Begin your learning journey!`,
-        url: `/learn/${track.slug}`,
-        channel: 'inapp',
-      },
+      // Create notification within transaction
+      const notif = await tx.notification.create({
+        data: {
+          userId: session.user.id,
+          type: 'announcement',
+          title: 'Learning Started',
+          body: `You've started the track. Begin your learning journey!`,
+          url: `/learn/${track.slug}`,
+          channel: 'inapp',
+        },
+      })
+
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        session.user.id,
+        'enroll',
+        'enrollment',
+        created.id,
+        { trackId: validatedData.trackId, trackSlug: track.slug }
+      )
+
+      return { enrollment: created, notification: notif }
     })
 
     revalidatePath('/learn')
@@ -244,15 +260,36 @@ export async function submitQuiz(data: z.infer<typeof SubmitQuizSchema>) {
     // Serialize answers for storage
     const answersJson = serializeQuizAnswers(validatedData.answers)
 
-    // Create quiz submission
-    const submission = await prisma.quizSubmission.create({
-      data: {
-        userId: session.user.id,
-        lessonId: validatedData.lessonId,
-        scorePct,
-        passed,
-        answers: answersJson,
-      },
+    // Wrap in transaction for atomicity
+    const submission = await prisma.$transaction(async (tx) => {
+      // Create quiz submission
+      const created = await tx.quizSubmission.create({
+        data: {
+          userId: session.user.id,
+          lessonId: validatedData.lessonId,
+          scorePct,
+          passed,
+          answers: answersJson,
+        },
+      })
+
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        session.user.id,
+        'submit',
+        'quiz',
+        created.id,
+        { 
+          lessonId: validatedData.lessonId, 
+          scorePct, 
+          passed,
+          correctAnswers,
+          totalQuestions 
+        }
+      )
+
+      return created
     })
 
     revalidatePath(`/learn/${lesson.track.slug}/lesson/${lesson.slug}`)

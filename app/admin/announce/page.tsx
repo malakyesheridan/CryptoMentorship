@@ -108,7 +108,7 @@ export default function AdminAnnouncePage() {
                   id="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Optional link (e.g., /research, /macro)"
+                  placeholder="Optional link (e.g., /research, /crypto-compass)"
                   className="mt-2"
                 />
               </div>

@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       return createdTrades
     })
 
-    // Invalidate performance cache
+    // Invalidate performance cache (outside transaction for efficiency)
     await prisma.perfSnapshot.deleteMany({})
 
     return NextResponse.json({

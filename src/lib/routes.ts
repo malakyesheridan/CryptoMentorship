@@ -10,7 +10,7 @@ export const routes = {
     login: () => '/login',
     dashboard: () => '/dashboard',
     research: () => '/research',
-    resources: () => '/resources',
+    resources: () => '/learning', // Resources now integrated into Learning Hub
     community: () => '/community',
     notifications: () => '/notifications',
     account: () => '/account',
@@ -35,12 +35,12 @@ export const routes = {
       certificate: (code: string) => `/learn/cert/${code}`
     },
     
-    // Signals
-    signals: {
-      list: () => '/signals',
-      detail: (slug: string) => `/signals/${slug}`,
-      performance: () => '/signals/performance',
-      closed: () => '/signals/closed'
+    // Portfolio (formerly signals)
+    portfolio: {
+      list: () => '/portfolio',
+      detail: (slug: string) => `/portfolio/${slug}`,
+      performance: () => '/portfolio/performance',
+      closed: () => '/portfolio/closed'
     },
     
     // Content
@@ -48,10 +48,10 @@ export const routes = {
       detail: (slug: string) => `/content/${slug}`
     },
     
-    // Macro
-    macro: {
-      list: () => '/macro',
-      detail: (slug: string) => `/macro/${slug}`
+    // Crypto Compass (formerly macro)
+    cryptoCompass: {
+      list: () => '/crypto-compass',
+      detail: (slug: string) => `/crypto-compass/${slug}`
     }
   },
   

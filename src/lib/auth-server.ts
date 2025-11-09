@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
+import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -52,6 +53,56 @@ export async function requireRole(roleOrPredicate: string | string[] | ((user: a
   }
   
   return user
+}
+
+/**
+ * API-safe version of requireRole
+ * Throws NextResponse errors that Next.js handles automatically
+ * 
+ * Usage:
+ * ```typescript
+ * try {
+ *   const { user } = await requireRoleAPI(['admin', 'editor'])
+ *   // Use user directly
+ * } catch (error) {
+ *   // Next.js handles the error automatically
+ * }
+ * ```
+ */
+export async function requireRoleAPI(
+  roleOrPredicate: string | string[] | ((user: any) => boolean)
+): Promise<{ user: any }> {
+  const session = await getSession()
+  
+  if (!session?.user) {
+    // Next.js will catch and return this as JSON response
+    throw NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    ) as any
+  }
+  
+  const user = session.user
+  
+  let hasRole = false
+  
+  if (typeof roleOrPredicate === 'function') {
+    hasRole = roleOrPredicate(user)
+  } else if (Array.isArray(roleOrPredicate)) {
+    hasRole = roleOrPredicate.includes(user.role)
+  } else {
+    hasRole = user.role === roleOrPredicate
+  }
+  
+  if (!hasRole) {
+    // Next.js will catch and return this as JSON response
+    throw NextResponse.json(
+      { error: 'Forbidden' },
+      { status: 403 }
+    ) as any
+  }
+  
+  return { user }
 }
 
 export function hasRole(user: any, role: 'guest' | 'member' | 'editor' | 'admin'): boolean {

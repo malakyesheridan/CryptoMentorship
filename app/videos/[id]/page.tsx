@@ -55,16 +55,17 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Increment view count (simple implementation)
+  // Increment view count (non-blocking - don't fail page load if this fails)
   try {
     await prisma.videoView.create({
       data: {
         videoId: video.id,
-        // userId: null for now since we don't have auth
+        userId: null, // Anonymous views supported
       }
     })
   } catch (error) {
-    console.error('View count error:', error)
+    // Log but don't throw - view tracking failure shouldn't break page rendering
+    console.error('Failed to track video view:', error)
   }
 
   return (

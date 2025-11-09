@@ -8,6 +8,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.ytimg.com' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'vercel.app' },
+      { protocol: 'https', hostname: 'i.imgur.com' },
       // add storage host when used:
       { protocol: 'https', hostname: '**.amazonaws.com' }
     ]

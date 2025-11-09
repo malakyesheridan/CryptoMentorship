@@ -46,34 +46,45 @@ export function rateLimit(limit: number = 10, windowMs: number = 60000) {
 // CSRF protection
 export function csrfProtection(req: NextRequest) {
   const method = req.method
-  const contentType = req.headers.get('content-type') || ''
+  const pathname = req.nextUrl.pathname
   
-  // Skip CSRF for safe methods and non-form content
+  // Skip CSRF for safe methods
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
     return null
   }
+
+  // ✅ NextAuth handles CSRF automatically - don't interfere
+  if (pathname.startsWith('/api/auth/')) {
+    return null
+  }
+
+  // For other API routes, basic origin check
+  const contentType = req.headers.get('content-type') || ''
   
   if (!contentType.includes('application/json') && !contentType.includes('application/x-www-form-urlencoded')) {
     return null
   }
 
-  // Check for CSRF token in headers
-  const csrfToken = req.headers.get('x-csrf-token')
   const origin = req.headers.get('origin')
   const referer = req.headers.get('referer')
   
-  // Allow requests from same origin
-  if (origin && referer && new URL(origin).origin === new URL(referer).origin) {
-    return null
+  // Allow same-origin requests (Next.js pages)
+  if (origin && referer) {
+    try {
+      const originUrl = new URL(origin)
+      const refererUrl = new URL(referer)
+      
+      if (originUrl.origin === refererUrl.origin) {
+        return null
+      }
+    } catch {
+      // Invalid URLs - reject
+    }
   }
 
-  // In development, be more lenient
-  if (process.env.NODE_ENV === 'development') {
-    return null
-  }
-
+  // Block cross-origin requests to API routes (except NextAuth)
   return NextResponse.json(
-    { error: 'CSRF token missing or invalid' },
+    { error: 'Cross-origin request blocked' },
     { status: 403 }
   )
 }
@@ -91,11 +102,12 @@ export function securityHeaders(req: NextRequest) {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://js.clover.stripe.com",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https:",
+    "img-src 'self' data: https: https://*.stripe.com",
     "font-src 'self'",
-    "connect-src 'self' https://api.neon.tech",
+    "connect-src 'self' https://api.neon.tech https://api.stripe.com https://api.clover.stripe.com",
+    "frame-src https://js.stripe.com https://hooks.stripe.com",
     "frame-ancestors 'none'"
   ].join('; ')
   

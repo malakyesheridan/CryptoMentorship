@@ -73,7 +73,7 @@ export default async function SavedPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-lg leading-tight group-hover:text-gold-600 transition-colors">
-                      <Link href={entityType === 'content' ? `/content/${entity.id}` : `/macro/${entity.id}`}>
+                      <Link href={entityType === 'content' ? `/content/${entity.id}` : `/crypto-compass/${entity.id}`}>
                         {entity.title}
                       </Link>
                     </CardTitle>

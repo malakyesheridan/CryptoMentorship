@@ -11,7 +11,7 @@ import {
   RotateCcw,
   Send
 } from 'lucide-react'
-import { submitQuiz } from '@/lib/actions/learning'
+import { submitQuiz } from '@/lib/actions/enrollment'
 import { validateQuizQuestions, validateQuizAnswers, type QuizQuestion, type QuizAnswer } from '@/lib/schemas/learning'
 
 interface QuizProps {
@@ -68,15 +68,15 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
 
       const response = await submitQuiz({
         lessonId,
-        answers: answersRecord,
+        answers: answersArray, // enrollment.ts expects array format
       })
 
-      if (response.ok) {
+      if (response.success && response.submission) {
         setResult({
-          scorePct: response.scorePct ?? 100,
-          passed: response.passed ?? true,
-          correctAnswers: answersArray.length,
-          totalQuestions: answersArray.length,
+          scorePct: response.submission.scorePct,
+          passed: response.submission.passed,
+          correctAnswers: response.submission.correctAnswers || 0,
+          totalQuestions: response.submission.totalQuestions || questions.length,
         })
       }
     } catch (error) {

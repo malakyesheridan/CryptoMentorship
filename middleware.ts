@@ -3,6 +3,17 @@ import { getToken } from 'next-auth/jwt'
 import type { NextRequest } from 'next/server'
 import { rateLimit, csrfProtection, securityHeaders } from '@/lib/security'
 
+// Import the validated env to ensure secret matches
+// Note: We can't import env.ts directly in middleware (runs at edge)
+// So we'll replicate the logic but ensure it matches exactly
+function getNextAuthSecret(): string {
+  const secret = process.env.NEXTAUTH_SECRET
+  if (!secret || secret.length < 32) {
+    return 'dev-secret-key-for-local-development-only-not-for-production-use'
+  }
+  return secret
+}
+
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   
@@ -27,6 +38,10 @@ export default async function middleware(req: NextRequest) {
   const publicRoutes = [
     '/',
     '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/subscribe',
     '/api/auth',
     '/api/auth/signin',
     '/api/auth/signout',
@@ -39,6 +54,10 @@ export default async function middleware(req: NextRequest) {
     '/api/auth/signin/google',
     '/api/auth/signin/email',
     '/api/auth/signin/demo',
+    '/api/auth/register',
+    '/api/auth/reset-password',
+    '/api/stripe',
+    '/api/me/subscription-status',
     '/api/test',
     '/api/basic-test',
     '/api/test-auth',
@@ -75,28 +94,65 @@ export default async function middleware(req: NextRequest) {
   )
 
   if (isPublicRoute) {
-    return NextResponse.next()
+    return response
   }
 
   // Get session token
+  // Use the same secret logic as NextAuth (from src/lib/env.ts)
+  const nextAuthSecret = getNextAuthSecret()
+  
+  // Debug: Log what we're using (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Middleware] Using secret:', nextAuthSecret.substring(0, 10) + '...', 'Length:', nextAuthSecret.length)
+    console.log('[Middleware] Cookies in request:', req.cookies.getAll().map(c => c.name))
+  }
+  
   const token = await getToken({ 
     req, 
-    secret: process.env.NEXTAUTH_SECRET 
+    secret: nextAuthSecret,
   })
+  
+  // Debug: Log token result
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Middleware] Token found:', !!token, 'Token sub:', token?.sub || 'none')
+  }
 
-  // TEMPORARILY DISABLE AUTH CHECK FOR TESTING
-  // TODO: Re-enable after fixing JWT token creation
-  // if (!token) {
-  //   const loginUrl = new URL('/login', req.url)
-  //   loginUrl.searchParams.set('callbackUrl', pathname)
-  //   return NextResponse.redirect(loginUrl)
-  // }
+  // ✅ Re-enable authentication check
+  if (!token) {
+    const loginUrl = new URL('/login', req.url)
+    loginUrl.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
 
+  // Define routes that don't require subscription
+  const subscriptionExemptRoutes = [
+    '/subscribe',
+    '/account',
+    '/account/subscription',
+    '/api/stripe',
+    '/api/auth',
+    '/api/me/account',
+    '/api/me/subscription-status',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+  ]
+  
+  // Check if current route requires subscription
+  const requiresSubscription = !subscriptionExemptRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  )
+  
+  // If route requires subscription, check membership status
+  // Note: We can't do async DB calls in middleware, so we'll check in the page/API route itself
+  // Middleware just allows authenticated users through - subscription check happens at page level
+  
   // Add user info to headers for server components
   response.headers.set('x-user-id', token?.sub || '')
   response.headers.set('x-user-role', token?.role || 'guest')
   response.headers.set('x-user-email', token?.email || '')
-
+  
   return response
 }
 

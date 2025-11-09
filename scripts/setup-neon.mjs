@@ -9,8 +9,9 @@ import { writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
 const envContent = `# Production Database (Neon PostgreSQL)
-DATABASE_URL="postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-DIRECT_URL="postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# ⚠️ Replace with your actual Neon connection string from https://console.neon.tech
+DATABASE_URL="postgresql://user:password@host:port/database?sslmode=require"
+DIRECT_URL="postgresql://user:password@host:port/database?sslmode=require"
 
 # Development Database (SQLite - for local development)
 DATABASE_URL_DEV="file:./dev.db"

@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { broadcastMessage } from '@/lib/community/sse'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 const getQuery = z.object({
   channelId: z.string().min(1),
@@ -93,22 +94,21 @@ export async function POST(req: Request) {
     )
   }
 
-  // Create a demo user for messages
-  const demoUser = await prisma.user.upsert({
-    where: { email: 'demo-member@example.com' },
-    update: {},
-    create: {
-      email: 'demo-member@example.com',
-      name: 'Demo User',
-      role: 'member',
-    },
-  })
+  // ✅ Require authentication
+  const session = await getServerSession(authOptions)
+  
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { ok: false, code: 'UNAUTH', message: 'Authentication required' },
+      { status: 401 },
+    )
+  }
 
   const saved = await prisma.message.create({
     data: {
       channelId,
-      userId: demoUser.id,
-      body: text,
+      userId: session.user.id, // ✅ Use authenticated user
+      body: sanitizeHtml(text), // ✅ Sanitize before storage
     },
     include: {
       user: { select: { id: true, name: true, image: true } },
@@ -132,7 +132,7 @@ export async function POST(req: Request) {
   broadcastMessage(channelId, {
     message: item,
     channelId,
-    userId: demoUser.id
+    userId: session.user.id // ✅ Use authenticated user
   })
 
   return NextResponse.json({ ok: true, item })

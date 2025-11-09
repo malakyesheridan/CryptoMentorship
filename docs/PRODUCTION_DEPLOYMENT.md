@@ -64,8 +64,8 @@ Add these to your Vercel dashboard:
 
 ```bash
 # Required
-DATABASE_URL=postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-DIRECT_URL=postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
+DIRECT_URL=postgresql://user:password@host:port/database?sslmode=require
 NEXTAUTH_URL=https://your-app.vercel.app
 NEXTAUTH_SECRET=your-secure-secret-here
 

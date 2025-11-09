@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/dates'
-import { canViewContent } from '@/lib/content'
+import { canViewContent } from '@/lib/content-utils'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { FollowTagButton } from '@/components/FollowTagButton'
 import { useBookmarks } from '@/hooks/usePersonalization'

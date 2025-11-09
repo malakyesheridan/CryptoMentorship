@@ -51,11 +51,11 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
       description: 'Peak to trough'
     },
     {
-      title: 'Win Rate',
+      title: 'Success Rate',
       value: formatWinRate(stats.winRate),
       icon: Target,
       color: stats.winRate >= 50 ? 'text-green-600' : 'text-red-600',
-      description: 'Winning trades'
+      description: 'Profitable investments'
     },
     {
       title: 'Profit Factor',
@@ -72,7 +72,7 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
       description: 'Risk-adjusted return'
     },
     {
-      title: 'Total Trades',
+      title: 'Total Investments',
       value: formatTradeCount(stats.totalTrades),
       icon: BarChart3,
       color: 'text-slate-600',
@@ -169,7 +169,7 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Win Rate</span>
+              <span className="text-sm text-slate-600">Success Rate</span>
               <span className={`font-medium ${stats.winRate >= 50 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatWinRate(stats.winRate)}
               </span>
@@ -190,7 +190,7 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Total Trades</span>
+              <span className="text-sm text-slate-600">Total Investments</span>
               <span className="font-medium text-slate-800">
                 {formatTradeCount(stats.totalTrades)}
               </span>

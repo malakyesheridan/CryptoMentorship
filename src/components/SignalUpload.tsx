@@ -97,7 +97,7 @@ export default function SignalUpload() {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <TrendingUp className="w-5 h-5" />
-          <span>Create New Trading Signal</span>
+          <span>Create New Investment Signal</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -230,7 +230,7 @@ export default function SignalUpload() {
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
             disabled={isUploading || !formData.title}
           >
-            {isUploading ? 'Creating Signal...' : 'Create Trading Signal'}
+            {isUploading ? 'Creating Signal...' : 'Create Investment Signal'}
           </Button>
         </form>
       </CardContent>

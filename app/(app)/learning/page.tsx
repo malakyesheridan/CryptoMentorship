@@ -20,7 +20,9 @@ import {
   Flame,
   ArrowRight,
   BarChart3,
-  Activity
+  Activity,
+  FileText,
+  Plus
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -33,8 +35,48 @@ import { ProgressTimeline } from '@/components/learning/ProgressTimeline'
 import { SmartNotifications } from '@/components/learning/SmartNotifications'
 import { LearningAnalytics } from '@/components/learning/LearningAnalytics'
 import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
+import { LearningHubContent } from '@/components/learning/LearningHubContent'
+import { getEnhancedMetrics } from '@/lib/analytics'
 
 export const dynamic = 'force-dynamic'
+
+// Fetch resources for Learning Hub
+async function getResources() {
+  try {
+    const resources = await prisma.content.findMany({
+      where: { kind: 'resource' },
+      orderBy: { publishedAt: 'desc' },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        coverUrl: true,
+        tags: true,
+        publishedAt: true,
+        locked: true,
+        kind: true,
+        minTier: true,
+      }
+    })
+
+    return resources.map((resource) => ({
+      id: resource.id,
+      slug: resource.slug ?? resource.id,
+      title: resource.title,
+      description: resource.excerpt ?? null,
+      coverUrl: resource.coverUrl ?? '/images/placeholders/resource-cover.jpg',
+      tags: resource.tags ?? null,
+      publishedAt: resource.publishedAt ?? null,
+      locked: resource.locked,
+      kind: resource.kind,
+      minTier: resource.minTier,
+    }))
+  } catch (error) {
+    console.error('Error fetching resources:', error)
+    return []
+  }
+}
 
 async function getUserEnrollments(userId: string) {
   const enrollments = await prisma.enrollment.findMany({
@@ -200,52 +242,9 @@ async function getAllCourses(userId: string) {
   }))
 }
 
-// Enhanced progress metrics calculations
 async function getEnhancedProgressMetrics(userId: string) {
-  const progress = await getUserProgress(userId)
-  
-  // Calculate learning velocity (lessons per week)
-  const now = new Date()
-  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const recentProgress = progress.filter(p => p.completedAt && p.completedAt >= oneWeekAgo)
-  const learningVelocity = recentProgress.length
-
-  // Calculate total time spent
-  const totalTimeSpent = progress.reduce((total, p) => {
-    return total + (p.lesson.durationMin || 0)
-  }, 0)
-
-  // Calculate consistency score (days with activity vs total days)
-  const completedDates = new Set(
-    progress
-      .map(p => p.completedAt?.toDateString())
-      .filter(Boolean)
-  )
-  
-  const enrollmentDate = await prisma.enrollment.findFirst({
-    where: { userId },
-    select: { startedAt: true },
-    orderBy: { startedAt: 'asc' }
-  })
-  
-  const daysSinceStart = enrollmentDate 
-    ? Math.ceil((now.getTime() - enrollmentDate.startedAt.getTime()) / (1000 * 60 * 60 * 24))
-    : 1
-  
-  const consistencyScore = daysSinceStart > 0 
-    ? Math.round((completedDates.size / Math.min(daysSinceStart, 30)) * 100)
-    : 0
-
-  // Calculate retention rate (based on quiz scores if available)
-  const retentionRate = 85 // Placeholder - would need quiz data
-
-  return {
-    learningVelocity,
-    totalTimeSpent,
-    consistencyScore,
-    retentionRate,
-    totalDays: completedDates.size
-  }
+  // Use shared analytics function for consistency
+  return await getEnhancedMetrics(userId)
 }
 
 export default async function LearningDashboardPage() {
@@ -256,13 +255,14 @@ export default async function LearningDashboardPage() {
   }
 
   try {
-    const [enrollments, progress, certificates, learningActivity, allCourses, enhancedMetrics] = await Promise.all([
+    const [enrollments, progress, certificates, learningActivity, allCourses, enhancedMetrics, resources] = await Promise.all([
       getUserEnrollments(session.user.id),
       getUserProgress(session.user.id),
       getUserCertificates(session.user.id),
       getLearningActivity(session.user.id),
       getAllCourses(session.user.id),
       getEnhancedProgressMetrics(session.user.id),
+      getResources(),
     ])
 
     // Calculate stats
@@ -298,16 +298,21 @@ export default async function LearningDashboardPage() {
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
-              <span className="text-white">My</span>
-              <span className="text-yellow-400 ml-4">Learning</span>
+              <span className="text-white">Learning</span>
+              <span className="text-yellow-400 ml-4">Hub</span>
             </h1>
             <p className="text-xl text-slate-300 mb-8">
-              Track your progress and continue your learning journey
+              Your central hub for learning tracks, resources, and progress
             </p>
-            <div className="flex items-center justify-center gap-6 text-slate-400">
+            <div className="flex items-center justify-center gap-6 text-slate-400 flex-wrap">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
-                <span className="font-medium">{totalEnrollments} Enrolled Tracks</span>
+                <span className="font-medium">{totalEnrollments} Learning Tracks</span>
+              </div>
+              <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                <span className="font-medium">{resources.length} Resources</span>
               </div>
               <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
               <div className="flex items-center gap-2">
@@ -330,277 +335,49 @@ export default async function LearningDashboardPage() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-
-        {/* Enhanced Stats */}
-        <div className="mb-12">
-          <EnhancedStats 
-            totalEnrollments={totalEnrollments}
-            completedTracks={completedTracks}
-            totalLessonsCompleted={totalLessonsCompleted}
-            totalCertificates={totalCertificates}
-            enhancedMetrics={enhancedMetrics}
-          />
-        </div>
-
-        {/* Learning Streak */}
-        {streak > 0 && (
-          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-6 mb-12">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 bg-yellow-500 rounded-xl flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">Learning Streak</h3>
-                <p className="text-slate-600">
-                  {streak} day{streak !== 1 ? 's' : ''} in a row! Keep it up!
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Course Carousel */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Continue Learning</h2>
-          <CourseCarousel courses={transformEnrollmentsForCarousel(enrollments)} />
-        </div>
-
-        {/* Learning Streak Widget */}
-        <div className="mb-12">
-          <StreakWidget 
-            streak={streak}
-            totalLessonsCompleted={totalLessonsCompleted}
-            nextLessonUrl={enrollments.length > 0 ? `/learn/${enrollments[0].track.slug}` : undefined}
-          />
-        </div>
-
-        {/* Smart Notifications */}
-        <div className="mb-12">
-          <SmartNotifications 
-            streak={streak}
-            totalLessonsCompleted={totalLessonsCompleted}
-            completedTracks={completedTracks}
-            nextLessonUrl={enrollments.length > 0 ? `/learn/${enrollments[0].track.slug}` : undefined}
-          />
-        </div>
-
-        {/* Progress Timeline */}
-        <div className="mb-12">
-          <ProgressTimeline 
-            enrollments={enrollments}
-            progress={progress}
-            certificates={certificates}
-            streak={streak}
-          />
-        </div>
-
-        {/* Course Recommendations */}
-        <div className="mb-12">
-          <CourseRecommendations courses={allCourses} />
-        </div>
-
-        {/* Course Search */}
-        <div className="mb-12">
-          <CourseSearch courses={allCourses} />
-        </div>
-
-        {/* Real-Time Progress */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-            <Activity className="h-6 w-6 text-green-600" />
-            Live Progress
-          </h2>
-          <RealTimeProgress 
-            userId={session.user.id}
-            showAchievements={true}
-            showStreak={true}
-          />
-        </div>
-
-        {/* Analytics Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-blue-600" />
-            Learning Analytics
-          </h2>
-          <Suspense fallback={<div className="text-center py-8">Loading analytics...</div>}>
-            <LearningAnalytics />
-          </Suspense>
-        </div>
-
-        {/* Enrolled Tracks */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Learning Tracks</h2>
-          
-          {enrollments.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {enrollments.map((enrollment) => {
-                const track = enrollment.track
-                const totalLessons = track.lessons.length
-                const totalDuration = track.lessons.reduce((sum, lesson) => sum + (lesson.durationMin || 0), 0)
-                
-                return (
-                  <Card key={enrollment.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200">
-                    <CardHeader className="pb-4">
-                      {track.coverUrl && (
-                        <div className="aspect-video relative mb-4 rounded-xl overflow-hidden">
-                          <Image
-                            src={track.coverUrl}
-                            alt={track.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-200"
-                          />
-                        </div>
-                      )}
-                      
-                      <CardTitle className="text-xl font-semibold mb-2 text-slate-900">{track.title}</CardTitle>
-                      <CardDescription className="text-sm text-slate-600 line-clamp-2">
-                        {track.summary}
-                      </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="pt-0">
-                      {/* Progress */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-slate-600">Progress</span>
-                          <span className="font-medium">{enrollment.progressPct}%</span>
-                        </div>
-                        <div className="w-full bg-slate-200 rounded-full h-3">
-                          <div 
-                            className="bg-yellow-500 h-3 rounded-full transition-all duration-300"
-                            style={{ width: `${enrollment.progressPct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-4 text-sm text-slate-600 mb-4">
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="h-4 w-4" />
-                          <span>{totalLessons} lessons</span>
-                        </div>
-                        {totalDuration > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{Math.round(totalDuration / 60)}h {totalDuration % 60}m</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Status Badge */}
-                      <div className="mb-4">
-                        <Badge 
-                          variant={enrollment.progressPct === 100 ? 'default' : 'secondary'}
-                          className={enrollment.progressPct === 100 ? 'bg-green-600' : ''}
-                        >
-                          {enrollment.progressPct === 100 ? 'Completed' : 'In Progress'}
-                        </Badge>
-                      </div>
-
-                      {/* Action Button */}
-                      <Link href={`/learn/${track.slug}`} className="block">
-                        <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
-                          {enrollment.progressPct === 100 ? (
-                            <>
-                              <Award className="h-4 w-4 mr-2" />
-                              View Certificate
-                            </>
-                          ) : (
-                            <>
-                              <Play className="h-4 w-4 mr-2" />
-                              Continue Learning
-                            </>
-                          )}
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="w-12 h-12 text-slate-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No Enrolled Tracks</h3>
-              <p className="text-slate-600 mb-6">
-                Start your learning journey by enrolling in a track.
-              </p>
-              <Link href="/learn">
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Browse Tracks
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Recent Activity */}
-        {progress.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Recent Activity</h2>
-            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-              <div className="divide-y divide-slate-200">
-                {progress.slice(0, 10).map((p) => (
-                  <div key={p.id} className="p-6 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-                    <div className="h-10 w-10 bg-green-100 rounded-xl flex items-center justify-center">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-slate-900">{p.lesson.title}</p>
-                      <p className="text-sm text-slate-600">
-                        Completed {p.completedAt ? formatDate(p.completedAt, 'MMM d, yyyy') : 'Unknown'}
-                      </p>
-                    </div>
-                    {p.lesson.durationMin && (
-                      <div className="text-sm text-slate-500 flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {p.lesson.durationMin}m
-                      </div>
-                    )}
-                  </div>
-                ))}
+        {/* Admin Quick Actions Widget */}
+        {['admin', 'editor'].includes(session.user.role || '') && (
+          <div className="mb-8">
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 mb-2">Admin Quick Actions</h2>
+                  <p className="text-sm text-slate-600">
+                    Manage learning tracks, sections, and lessons
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Link href="/admin/learn/tracks">
+                    <Button variant="outline">
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Manage Tracks
+                    </Button>
+                  </Link>
+                  <Link href="/admin/learn/tracks/new">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Track
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Certificates */}
-        {certificates.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Certificates</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {certificates.map((certificate) => (
-                <Card key={certificate.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200">
-                  <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                        <Award className="h-6 w-6 text-yellow-600" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg font-semibold text-slate-900">{certificate.track.title}</CardTitle>
-                        <CardDescription className="text-slate-600">
-                          Completed {formatDate(certificate.issuedAt, 'MMM d, yyyy')}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Link href={`/learn/cert/${certificate.code}`}>
-                      <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
-                        <Award className="h-4 w-4 mr-2" />
-                        View Certificate
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
+        <LearningHubContent
+          enrollments={enrollments}
+          progress={progress}
+          certificates={certificates}
+          learningActivity={learningActivity}
+          allCourses={allCourses}
+          enhancedMetrics={enhancedMetrics}
+          resources={resources}
+          streak={streak}
+          userId={session.user.id}
+          userRole={session.user.role || 'guest'}
+          userTier={(session.user as any)?.membershipTier || null}
+        />
       </div>
     </div>
   )
@@ -609,7 +386,7 @@ export default async function LearningDashboardPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="container mx-auto px-4 py-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Learning Dashboard</h1>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">Learning Hub</h1>
           <p className="text-slate-600 mb-8">Unable to load learning data at this time. Please try again later.</p>
         </div>
       </div>

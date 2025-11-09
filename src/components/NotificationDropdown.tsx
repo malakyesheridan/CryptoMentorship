@@ -118,7 +118,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
   }
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={`relative z-[10000] ${className}`} ref={dropdownRef}>
       <Button
         variant="ghost"
         size="icon"
@@ -138,7 +138,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
       </Button>
 
       {isOpen && (
-        <Card className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-hidden z-50">
+        <Card className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-hidden z-[9999] shadow-2xl">
           <CardContent className="p-0">
             <div className="p-4 border-b border-slate-200">
               <div className="flex items-center justify-between">

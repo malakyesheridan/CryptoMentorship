@@ -33,7 +33,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/signals`,
+      url: `${baseUrl}/portfolio`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/crypto-compass`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.8,
@@ -93,9 +99,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }))
 
-    // Signal pages
+    // Portfolio (signal) pages
     const signalPages = signals.map((signal) => ({
-      url: `${baseUrl}/signals/${signal.slug}`,
+      url: `${baseUrl}/portfolio/${signal.slug}`,
       lastModified: signal.updatedAt,
       changeFrequency: 'weekly' as const,
       priority: 0.7,

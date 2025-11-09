@@ -244,7 +244,7 @@ export function BookmarkOrganization({ bookmarks, className = '' }: BookmarkOrga
                         <div className="flex items-center justify-between text-xs text-slate-500">
                           <span>Saved {formatDate(bookmark.savedAt)}</span>
                           <Link 
-                            href={bookmark.type === 'content' ? `/content/${bookmark.slug}` : `/macro/${bookmark.slug}`}
+                            href={bookmark.type === 'content' ? `/content/${bookmark.slug}` : `/crypto-compass/${bookmark.slug}`}
                             className="text-blue-600 hover:text-blue-700 transition-colors"
                           >
                             View →

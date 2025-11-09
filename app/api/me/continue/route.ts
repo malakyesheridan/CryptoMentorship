@@ -24,50 +24,77 @@ export async function GET(request: NextRequest) {
       distinct: ['entityType', 'entityId'], // Remove duplicates
     })
 
-    // Fetch the actual content/episodes for these view events
-    const continueItems = []
-    
-    for (const event of viewEvents.slice(0, limit)) {
-      if (event.entityType === 'content') {
-        const content = await prisma.content.findUnique({
-          where: { id: event.entityId },
-          select: {
-            id: true,
-            title: true,
-            excerpt: true,
-            kind: true,
-            publishedAt: true,
-            locked: true,
-            tags: true,
-          }
-        })
-        if (content) {
-          continueItems.push({
-            type: 'content',
-            entity: content,
-            lastViewed: event.createdAt,
+    // Separate content and episode IDs
+    const limitedEvents = viewEvents.slice(0, limit)
+    const contentIds = limitedEvents
+      .filter(e => e.entityType === 'content')
+      .map(e => e.entityId)
+      .filter((id, index, self) => self.indexOf(id) === index) // Remove duplicates
+
+    const episodeIds = limitedEvents
+      .filter(e => e.entityType === 'episode')
+      .map(e => e.entityId)
+      .filter((id, index, self) => self.indexOf(id) === index) // Remove duplicates
+
+    // Batch fetch all content and episodes in parallel
+    const [contents, episodes] = await Promise.all([
+      contentIds.length > 0
+        ? prisma.content.findMany({
+            where: { id: { in: contentIds } },
+            select: {
+              id: true,
+              title: true,
+              excerpt: true,
+              kind: true,
+              publishedAt: true,
+              locked: true,
+              tags: true,
+            }
           })
-        }
-      } else if (event.entityType === 'episode') {
-        const episode = await prisma.episode.findUnique({
-          where: { id: event.entityId },
-          select: {
-            id: true,
-            title: true,
-            excerpt: true,
-            publishedAt: true,
-            locked: true,
-          }
-        })
-        if (episode) {
-          continueItems.push({
-            type: 'episode',
-            entity: episode,
-            lastViewed: event.createdAt,
+        : [],
+      episodeIds.length > 0
+        ? prisma.episode.findMany({
+            where: { id: { in: episodeIds } },
+            select: {
+              id: true,
+              title: true,
+              excerpt: true,
+              publishedAt: true,
+              locked: true,
+            }
           })
+        : []
+    ])
+
+    // Create lookup maps for O(1) access
+    const contentMap = new Map(contents.map(c => [c.id, c]))
+    const episodeMap = new Map(episodes.map(e => [e.id, e]))
+
+    // Build response maintaining original order from viewEvents
+    const continueItems = limitedEvents
+      .map(event => {
+        if (event.entityType === 'content') {
+          const content = contentMap.get(event.entityId)
+          if (content) {
+            return {
+              type: 'content' as const,
+              entity: content,
+              lastViewed: event.createdAt,
+            }
+          }
+        } else if (event.entityType === 'episode') {
+          const episode = episodeMap.get(event.entityId)
+          if (episode) {
+            return {
+              type: 'episode' as const,
+              entity: episode,
+              lastViewed: event.createdAt,
+            }
+          }
         }
-      }
-    }
+        return null
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
 
     return NextResponse.json(continueItems)
   } catch (error) {

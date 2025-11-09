@@ -59,43 +59,48 @@ export async function createSignal(data: z.infer<typeof createSignalSchema>) {
     const dateStr = validatedData.entryTime.toISOString().split('T')[0]
     const slug = `${validatedData.symbol.toLowerCase()}-${validatedData.direction}-${dateStr}`
 
-    // Create signal
-    const signal = await prisma.signalTrade.create({
-      data: {
-        ...validatedData,
-        tags: JSON.stringify(validatedData.tags),
-        slug,
-        createdById: session.user.id
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    // Wrap in transaction for atomicity
+    const signal = await prisma.$transaction(async (tx) => {
+      const created = await tx.signalTrade.create({
+        data: {
+          ...validatedData,
+          tags: JSON.stringify(validatedData.tags),
+          slug,
+          createdById: session.user.id
+        },
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            }
           }
         }
-      }
+      })
+
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        session.user.id,
+        'create',
+        'signal',
+        created.id,
+        {
+          symbol: created.symbol,
+          direction: created.direction,
+          entryPrice: Number(created.entryPrice)
+        }
+      )
+
+      return created
     })
 
-    // Emit signal published event
+    // Emit signal published event (outside transaction - event system)
     await emit({
       type: 'signal_published',
       contentId: signal.id
     })
-
-    // Audit log
-    await logAudit(
-      session.user.id,
-      'create',
-      'content',
-      signal.id,
-      {
-        symbol: signal.symbol,
-        direction: signal.direction,
-        entryPrice: Number(signal.entryPrice)
-      }
-    )
 
     return { success: true, signal }
   } catch (error) {
@@ -125,47 +130,55 @@ export async function updateSignal(signalId: string, data: z.infer<typeof update
       return { error: 'Signal not found' }
     }
 
-    // Update signal
-    const updatedSignal = await prisma.signalTrade.update({
-      where: { id: signalId },
-      data: {
-        ...validatedData,
-        tags: validatedData.tags ? JSON.stringify(validatedData.tags) : undefined,
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    // Wrap in transaction for atomicity
+    const updatedSignal = await prisma.$transaction(async (tx) => {
+      const updated = await tx.signalTrade.update({
+        where: { id: signalId },
+        data: {
+          ...validatedData,
+          tags: validatedData.tags ? JSON.stringify(validatedData.tags) : undefined,
+        },
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            }
           }
         }
-      }
+      })
+
+      // Invalidate performance cache
+      await tx.perfSnapshot.deleteMany({})
+
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        session.user.id,
+        'update',
+        'signal',
+        signalId,
+        {
+          symbol: updated.symbol,
+          direction: updated.direction,
+          status: updated.status,
+          changes: validatedData
+        }
+      )
+
+      return updated
     })
 
-    // Emit notification if signal was closed
+    // Emit notification if signal was closed (outside transaction - event system)
     if (validatedData.status === 'closed' && existingSignal.status === 'open') {
       await emit({
         type: 'announcement',
         title: `Signal closed: ${updatedSignal.symbol} ${updatedSignal.direction}`,
         body: `The ${updatedSignal.symbol} ${updatedSignal.direction} signal has been closed.`,
-        url: `/signals/${updatedSignal.slug}`
+        url: `/portfolio/${updatedSignal.slug}`
       })
     }
-
-    // Audit log
-    await logAudit(
-      session.user.id,
-      'update',
-      'content',
-      signalId,
-      {
-        symbol: updatedSignal.symbol,
-        direction: updatedSignal.direction,
-        status: updatedSignal.status,
-        changes: validatedData
-      }
-    )
 
     return { success: true, signal: updatedSignal }
   } catch (error) {
@@ -193,22 +206,28 @@ export async function deleteSignal(signalId: string) {
       return { error: 'Signal not found' }
     }
 
-    // Delete signal
-    await prisma.signalTrade.delete({
-      where: { id: signalId }
-    })
+    // Wrap in transaction for atomicity
+    await prisma.$transaction(async (tx) => {
+      await tx.signalTrade.delete({
+        where: { id: signalId }
+      })
 
-    // Audit log
-    await logAudit(
-      session.user.id,
-      'delete',
-      'content',
-      signalId,
-      {
-        symbol: existingSignal.symbol,
-        direction: existingSignal.direction
-      }
-    )
+      // Invalidate performance cache
+      await tx.perfSnapshot.deleteMany({})
+
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        session.user.id,
+        'delete',
+        'signal',
+        signalId,
+        {
+          symbol: existingSignal.symbol,
+          direction: existingSignal.direction
+        }
+      )
+    })
 
     return { success: true }
   } catch (error) {
@@ -226,32 +245,40 @@ export async function updatePortfolioSettings(data: z.infer<typeof portfolioSett
 
     const validatedData = portfolioSettingsSchema.parse(data)
 
-    // Create or update portfolio settings
-    const settings = await prisma.portfolioSetting.upsert({
-      where: { id: 'default' },
-      update: {
-        baseCapitalUsd: validatedData.baseCapitalUsd,
-        positionModel: validatedData.positionModel,
-        slippageBps: validatedData.slippageBps,
-        feeBps: validatedData.feeBps,
-      },
-      create: {
-        id: 'default',
-        baseCapitalUsd: validatedData.baseCapitalUsd,
-        positionModel: validatedData.positionModel,
-        slippageBps: validatedData.slippageBps,
-        feeBps: validatedData.feeBps,
-      }
-    })
+    // Wrap in transaction for atomicity
+    const settings = await prisma.$transaction(async (tx) => {
+      const updated = await tx.portfolioSetting.upsert({
+        where: { id: 'default' },
+        update: {
+          baseCapitalUsd: validatedData.baseCapitalUsd,
+          positionModel: validatedData.positionModel,
+          slippageBps: validatedData.slippageBps,
+          feeBps: validatedData.feeBps,
+        },
+        create: {
+          id: 'default',
+          baseCapitalUsd: validatedData.baseCapitalUsd,
+          positionModel: validatedData.positionModel,
+          slippageBps: validatedData.slippageBps,
+          feeBps: validatedData.feeBps,
+        }
+      })
 
-    // Audit log
-    await logAudit(
-      session.user.id,
-      'update',
-      'content',
-      settings.id,
-      validatedData
-    )
+      // Invalidate performance cache
+      await tx.perfSnapshot.deleteMany({})
+
+      // Audit log within transaction
+      await logAudit(
+        tx,
+        session.user.id,
+        'update',
+        'signal',
+        updated.id,
+        validatedData
+      )
+
+      return updated
+    })
 
     return { 
       success: true, 

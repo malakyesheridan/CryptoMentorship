@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileUpload } from './FileUpload'
 import { X, Plus, Save, Eye } from 'lucide-react'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface ContentFormProps {
   initialData?: {
@@ -252,7 +253,7 @@ export function ContentForm({ initialData }: ContentFormProps) {
           <CardContent>
             <div 
               className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: formData.body }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(formData.body || '') }}
             />
           </CardContent>
         </Card>

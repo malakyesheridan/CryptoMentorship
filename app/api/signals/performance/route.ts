@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { handleError } from '@/lib/errors'
 import { 
   buildEquityCurve, 
   calculatePerformanceStats, 
@@ -10,10 +11,10 @@ import {
   filterTradesByScope,
   serializePerformanceData,
   deserializePerformanceData,
-  isCacheValid,
-  PerformanceScope,
-  CachedPerformanceData
+  isCacheValid
 } from '@/lib/perf'
+import type { PerformanceScope, CachedPerformanceData } from '@/lib/perf'
+import { buildTradeScopeWhere } from '@/lib/perf/filter'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,17 +39,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Portfolio settings not found' }, { status: 404 })
     }
 
-    // Get all trades
-    const allTrades = await prisma.signalTrade.findMany({
+    // Build WHERE clause for scope filtering (filter in database, not in memory)
+    const scopeWhere = buildTradeScopeWhere(scope)
+    
+    // Get filtered trades directly from database
+    const filteredTrades = await prisma.signalTrade.findMany({
+      where: scopeWhere,
       orderBy: { entryTime: 'asc' }
     })
 
-    // Filter trades by scope
-    const filteredTrades = filterTradesByScope(allTrades as any, scope)
-
     // Check cache first (unless refresh is requested)
     if (!refresh) {
-      const cacheKey = computeHash(filteredTrades, settings as any)
+      const cacheKey = computeHash(filteredTrades as any, settings as any)
       const cachedSnapshot = await prisma.perfSnapshot.findFirst({
         where: {
           scope,
@@ -69,8 +71,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Compute performance data
-    const equitySeries = buildEquityCurve(filteredTrades, settings as any)
-    const stats = calculatePerformanceStats(filteredTrades, equitySeries, settings.baseCapitalUsd)
+    const equitySeries = buildEquityCurve(filteredTrades as any, settings as any)
+    const stats = calculatePerformanceStats(filteredTrades as any, equitySeries, settings.baseCapitalUsd)
     // Calculate monthly returns from equity series
     const monthlyReturns = calculateMonthlyReturns(equitySeries)
 
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Cache the results
-    const cacheKey = computeHash(filteredTrades, settings as any)
+      const cacheKey = computeHash(filteredTrades as any, settings as any)
     const serializedData = serializePerformanceData(performanceData)
     
     await prisma.perfSnapshot.create({
@@ -127,10 +129,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error fetching performance data:', error)
-    return NextResponse.json({
-      error: 'Failed to fetch performance data'
-    }, { status: 500 })
+    return handleError(error)
   }
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import useSWR from 'swr'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import {
   LineChart
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { json } from '@/lib/http'
 
 interface AnalyticsData {
   overview: {
@@ -63,68 +65,25 @@ interface LearningAnalyticsProps {
 
 export function LearningAnalytics({ trackId, className = '' }: LearningAnalyticsProps) {
   const { data: session } = useSession()
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
   const [timeframe, setTimeframe] = useState('30d')
-  const [error, setError] = useState<string | null>(null)
 
-  const fetchAnalytics = async () => {
-    if (!session?.user?.id) return
+  // Build analytics API URL
+  const analyticsKey = session?.user?.id
+    ? `/api/learning/analytics?type=${trackId ? 'track' : 'overview'}&timeframe=${timeframe}${trackId ? `&trackId=${trackId}` : ''}`
+    : null
 
-    try {
-      setLoading(true)
-      setError(null)
-
-      const params = new URLSearchParams()
-      params.set('type', trackId ? 'track' : 'overview')
-      params.set('timeframe', timeframe)
-      if (trackId) params.set('trackId', trackId)
-
-      const response = await fetch(`/api/learning/analytics?${params.toString()}`)
-      
-      if (!response.ok) {
-        // Return mock data instead of throwing error
-        setAnalytics({
-          overview: {
-            totalEnrollments: 3,
-            completedTracks: 1,
-            totalLessonsCompleted: 15,
-            totalTimeSpent: 7200000, // 2 hours
-            certificates: 1,
-            streak: 5
-          },
-          recentActivity: [],
-          progressOverTime: [],
-          topTracks: []
-        })
-        return
-      }
-
-      const data = await response.json()
-      setAnalytics(data)
-    } catch (err) {
-      // Return mock data instead of showing error
-      setAnalytics({
-        overview: {
-          totalEnrollments: 3,
-          completedTracks: 1,
-          totalLessonsCompleted: 15,
-          totalTimeSpent: 7200000, // 2 hours
-          certificates: 1,
-          streak: 5
-        },
-        recentActivity: [],
-        progressOverTime: [],
-        topTracks: []
-      })
-    } finally {
-      setLoading(false)
+  // Use SWR for data fetching with automatic caching and revalidation
+  const { data: analytics, error, isLoading: loading, mutate } = useSWR<AnalyticsData>(
+    analyticsKey,
+    (url) => json<AnalyticsData>(url),
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      shouldRetryOnError: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000
     }
-  }
-
-  useEffect(() => {
-    fetchAnalytics()
-  }, [session?.user?.id, timeframe, trackId])
+  )
 
   const formatTimeSpent = (ms: number) => {
     const hours = Math.floor(ms / 3600000)
@@ -164,9 +123,24 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
     return (
       <Card className={className}>
         <CardContent className="p-6 text-center">
-          <div className="text-red-500 mb-2">Failed to load analytics</div>
-          <Button onClick={fetchAnalytics} variant="outline" size="sm">
+          <div className="text-red-500 mb-2">
+            {error instanceof Error ? error.message : 'Failed to load analytics'}
+          </div>
+          <Button onClick={() => mutate()} variant="outline" size="sm">
             Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!analytics && !loading) {
+    return (
+      <Card className={className}>
+        <CardContent className="p-6 text-center">
+          <div className="text-slate-500 mb-2">No analytics data available</div>
+          <Button onClick={() => mutate()} variant="outline" size="sm">
+            Refresh
           </Button>
         </CardContent>
       </Card>

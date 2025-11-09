@@ -17,9 +17,9 @@ interface Trade {
   stopLoss?: number
   takeProfit?: number
   status: 'open' | 'closed'
-  exitTime?: Date
+  exitTime?: Date | null
   exitPrice?: number
-  rMultiple?: number
+  rMultiple?: number | null
   pnl?: number
   tags: string[]
   conviction?: number
@@ -342,7 +342,7 @@ export function TradeTable({
                     </td>
                   )}
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm`}>
-                    {trade.rMultiple !== undefined ? (
+                    {trade.rMultiple !== null && trade.rMultiple !== undefined ? (
                       <span className={trade.rMultiple > 0 ? 'text-green-600' : 'text-red-600'}>
                         {formatNumber(trade.rMultiple, 2)}
                       </span>

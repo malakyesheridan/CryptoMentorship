@@ -112,7 +112,7 @@ async function handleEpisodePublished(episodeId: string) {
       entityId: episodeId,
       title: 'New Crypto Compass Episode',
       body: 'A new Crypto Compass episode has been published',
-      url: `/macro/${episodeId}`,
+      url: `/crypto-compass/${episodeId}`,
       channel: 'inapp' as const,
     }))
 

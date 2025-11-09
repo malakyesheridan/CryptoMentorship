@@ -16,7 +16,8 @@ import {
   ArrowLeft,
   Play,
   CheckCircle,
-  Lock
+  Lock,
+  Plus
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -159,44 +160,135 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
             {/* Sections & Lessons */}
             <Card>
               <CardHeader>
-                <CardTitle>Course Structure</CardTitle>
-                <CardDescription>
-                  {track.sections.length} sections with {totalLessons} lessons
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Course Structure</CardTitle>
+                    <CardDescription>
+                      {track.sections.length} sections with {totalLessons} lessons
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link href={`/admin/learn/tracks/${track.id}/sections/new`}>
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Section
+                      </Button>
+                    </Link>
+                    <Link href={`/admin/learn/tracks/${track.id}/lessons/new`}>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Lesson
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {track.sections.map((section) => (
-                    <div key={section.id} className="border-l-2 border-slate-200 pl-4">
-                      <h4 className="font-medium text-slate-900 mb-2">{section.title}</h4>
-                      {section.summary && (
-                        <p className="text-sm text-slate-600 mb-3">{section.summary}</p>
-                      )}
-                      
+                  {track.sections.length > 0 ? (
+                    track.sections.map((section) => (
+                      <div key={section.id} className="border-l-2 border-slate-200 pl-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <h4 className="font-medium text-slate-900">{section.title}</h4>
+                            {section.summary && (
+                              <p className="text-sm text-slate-600 mt-1">{section.summary}</p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Link href={`/admin/learn/tracks/${track.id}/sections/${section.id}/edit`}>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </Link>
+                            <Link href={`/admin/learn/tracks/${track.id}/lessons/new?sectionId=${section.id}`}>
+                              <Button variant="ghost" size="sm">
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {section.lessons.length > 0 ? (
+                            section.lessons.map((lesson) => (
+                              <div key={lesson.id} className="flex items-center justify-between group">
+                                <div className="flex items-center gap-2 text-sm">
+                                  {lesson.publishedAt ? (
+                                    <Play className="h-3 w-3 text-green-500" />
+                                  ) : (
+                                    <Lock className="h-3 w-3 text-slate-400" />
+                                  )}
+                                  <Link 
+                                    href={`/admin/learn/tracks/${track.id}/lessons/${lesson.id}/edit`}
+                                    className={lesson.publishedAt ? 'text-slate-700 hover:text-gold-600' : 'text-slate-400'}
+                                  >
+                                    {lesson.title}
+                                  </Link>
+                                  {lesson.durationMin && (
+                                    <span className="text-slate-500">({lesson.durationMin}m)</span>
+                                  )}
+                                  {lesson.quiz && (
+                                    <Badge variant="outline" className="text-xs">
+                                      Quiz
+                                    </Badge>
+                                  )}
+                                </div>
+                                <Link href={`/admin/learn/tracks/${track.id}/lessons/${lesson.id}/edit`}>
+                                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                </Link>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-slate-400 italic">No lessons in this section</p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <p className="mb-4">No sections yet. Create your first section to get started.</p>
+                      <Link href={`/admin/learn/tracks/${track.id}/sections/new`}>
+                        <Button variant="outline">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add First Section
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                  
+                  {/* Lessons without sections */}
+                  {track.lessons.length > 0 && (
+                    <div className="border-t pt-6 mt-6">
+                      <h4 className="font-medium text-slate-900 mb-3">Lessons (No Section)</h4>
                       <div className="space-y-2">
-                        {section.lessons.map((lesson) => (
-                          <div key={lesson.id} className="flex items-center gap-2 text-sm">
-                            {lesson.publishedAt ? (
-                              <Play className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Lock className="h-3 w-3 text-slate-400" />
-                            )}
-                            <span className={lesson.publishedAt ? 'text-slate-700' : 'text-slate-400'}>
-                              {lesson.title}
-                            </span>
-                            {lesson.durationMin && (
-                              <span className="text-slate-500">({lesson.durationMin}m)</span>
-                            )}
-                            {lesson.quiz && (
-                              <Badge variant="outline" className="text-xs">
-                                Quiz
-                              </Badge>
-                            )}
+                        {track.lessons.map((lesson) => (
+                          <div key={lesson.id} className="flex items-center justify-between group">
+                            <div className="flex items-center gap-2 text-sm">
+                              {lesson.publishedAt ? (
+                                <Play className="h-3 w-3 text-green-500" />
+                              ) : (
+                                <Lock className="h-3 w-3 text-slate-400" />
+                              )}
+                              <Link 
+                                href={`/admin/learn/tracks/${track.id}/lessons/${lesson.id}/edit`}
+                                className={lesson.publishedAt ? 'text-slate-700 hover:text-gold-600' : 'text-slate-400'}
+                              >
+                                {lesson.title}
+                              </Link>
+                            </div>
+                            <Link href={`/admin/learn/tracks/${track.id}/lessons/${lesson.id}/edit`}>
+                              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </Link>
                           </div>
                         ))}
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>

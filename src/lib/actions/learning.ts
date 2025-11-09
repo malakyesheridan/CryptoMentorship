@@ -18,9 +18,59 @@ const EnrollSchema = z.object({ trackId: z.string().min(1) })
 const CreateTrackSchema = z.object({
   title: z.string().min(1, "Title is required"),
   slug: z.string().min(1, "Slug is required"),
+  summary: z.string().optional(),
   description: z.string().optional(),
   coverUrl: z.string().optional(),
-  publishedAt: z.date().optional(),
+  minTier: z.enum(['guest', 'member', 'editor', 'admin']).optional(),
+  publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
+})
+
+const UpdateTrackSchema = z.object({
+  title: z.string().min(1).optional(),
+  slug: z.string().min(1).optional(),
+  summary: z.string().optional(),
+  description: z.string().optional(),
+  coverUrl: z.string().optional(),
+  minTier: z.enum(['guest', 'member', 'editor', 'admin']).optional(),
+  publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
+  order: z.number().optional(),
+})
+
+const CreateSectionSchema = z.object({
+  trackId: z.string().min(1),
+  title: z.string().min(1, "Title is required"),
+  summary: z.string().optional(),
+  order: z.number().optional(),
+})
+
+const UpdateSectionSchema = z.object({
+  title: z.string().min(1).optional(),
+  summary: z.string().optional(),
+  order: z.number().optional(),
+})
+
+const CreateLessonSchema = z.object({
+  trackId: z.string().min(1),
+  sectionId: z.string().optional(),
+  slug: z.string().min(1, "Slug is required"),
+  title: z.string().min(1, "Title is required"),
+  contentMDX: z.string().min(1, "Content is required"),
+  durationMin: z.number().optional(),
+  videoUrl: z.string().optional(),
+  resources: z.string().optional(), // JSON string
+  publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
+  order: z.number().optional(),
+})
+
+const UpdateLessonSchema = z.object({
+  slug: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  contentMDX: z.string().optional(),
+  durationMin: z.number().optional(),
+  videoUrl: z.string().optional(),
+  resources: z.string().optional(),
+  publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
+  order: z.number().optional(),
 })
 
 export async function completeLesson(input: unknown) {
@@ -152,8 +202,10 @@ export async function createTrack(input: unknown) {
     data: {
       title: data.title,
       slug: data.slug,
+      summary: data.summary,
       description: data.description,
       coverUrl: data.coverUrl,
+      minTier: data.minTier || 'member',
       publishedAt: data.publishedAt,
     }
   })
@@ -166,6 +218,325 @@ export async function createTrack(input: unknown) {
       slug: track.slug
     }
   }
+}
+
+export async function updateTrack(trackId: string, input: unknown) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to update tracks')
+  }
+
+  const data = UpdateTrackSchema.parse(input)
+
+  // Check if track exists
+  const existingTrack = await prisma.track.findUnique({
+    where: { id: trackId }
+  })
+
+  if (!existingTrack) {
+    throw new Error('Track not found')
+  }
+
+  // Check slug uniqueness if slug is being updated
+  if (data.slug && data.slug !== existingTrack.slug) {
+    const slugExists = await prisma.track.findUnique({
+      where: { slug: data.slug }
+    })
+
+    if (slugExists) {
+      throw new Error('A track with this slug already exists')
+    }
+  }
+
+  const track = await prisma.track.update({
+    where: { id: trackId },
+    data: {
+      ...data,
+      publishedAt: data.publishedAt,
+    }
+  })
+
+  return { 
+    success: true, 
+    track: {
+      id: track.id,
+      title: track.title,
+      slug: track.slug
+    }
+  }
+}
+
+export async function createSection(input: unknown) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to create sections')
+  }
+
+  const data = CreateSectionSchema.parse(input)
+
+  // Check if track exists
+  const track = await prisma.track.findUnique({
+    where: { id: data.trackId }
+  })
+
+  if (!track) {
+    throw new Error('Track not found')
+  }
+
+  // Get max order if not provided
+  let order = data.order
+  if (order === undefined) {
+    const maxOrder = await prisma.trackSection.findFirst({
+      where: { trackId: data.trackId },
+      orderBy: { order: 'desc' },
+      select: { order: true }
+    })
+    order = (maxOrder?.order ?? -1) + 1
+  }
+
+  const section = await prisma.trackSection.create({
+    data: {
+      trackId: data.trackId,
+      title: data.title,
+      summary: data.summary,
+      order: order,
+    }
+  })
+
+  return { 
+    success: true, 
+    section: {
+      id: section.id,
+      title: section.title,
+      order: section.order
+    }
+  }
+}
+
+export async function updateSection(sectionId: string, input: unknown) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to update sections')
+  }
+
+  const data = UpdateSectionSchema.parse(input)
+
+  const section = await prisma.trackSection.update({
+    where: { id: sectionId },
+    data
+  })
+
+  return { 
+    success: true, 
+    section: {
+      id: section.id,
+      title: section.title,
+      order: section.order
+    }
+  }
+}
+
+export async function deleteSection(sectionId: string) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to delete sections')
+  }
+
+  await prisma.trackSection.delete({
+    where: { id: sectionId }
+  })
+
+  return { success: true }
+}
+
+export async function createLesson(input: unknown) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to create lessons')
+  }
+
+  const data = CreateLessonSchema.parse(input)
+
+  // Check if track exists
+  const track = await prisma.track.findUnique({
+    where: { id: data.trackId }
+  })
+
+  if (!track) {
+    throw new Error('Track not found')
+  }
+
+  // Check if section exists (if provided)
+  if (data.sectionId) {
+    const section = await prisma.trackSection.findUnique({
+      where: { id: data.sectionId }
+    })
+
+    if (!section || section.trackId !== data.trackId) {
+      throw new Error('Section not found or does not belong to this track')
+    }
+  }
+
+  // Check slug uniqueness within track
+  const existingLesson = await prisma.lesson.findUnique({
+    where: { 
+      trackId_slug: {
+        trackId: data.trackId,
+        slug: data.slug
+      }
+    }
+  })
+
+  if (existingLesson) {
+    throw new Error('A lesson with this slug already exists in this track')
+  }
+
+  // Get max order if not provided
+  let order = data.order
+  if (order === undefined) {
+    const maxOrder = await prisma.lesson.findFirst({
+      where: { 
+        trackId: data.trackId,
+        sectionId: data.sectionId || null
+      },
+      orderBy: { order: 'desc' },
+      select: { order: true }
+    })
+    order = (maxOrder?.order ?? -1) + 1
+  }
+
+  const lesson = await prisma.lesson.create({
+    data: {
+      trackId: data.trackId,
+      sectionId: data.sectionId || null,
+      slug: data.slug,
+      title: data.title,
+      contentMDX: data.contentMDX,
+      durationMin: data.durationMin,
+      videoUrl: data.videoUrl,
+      resources: data.resources,
+      publishedAt: data.publishedAt,
+      order: order,
+    }
+  })
+
+  return { 
+    success: true, 
+    lesson: {
+      id: lesson.id,
+      title: lesson.title,
+      slug: lesson.slug
+    }
+  }
+}
+
+export async function updateLesson(lessonId: string, input: unknown) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to update lessons')
+  }
+
+  const data = UpdateLessonSchema.parse(input)
+
+  // Check if lesson exists
+  const existingLesson = await prisma.lesson.findUnique({
+    where: { id: lessonId }
+  })
+
+  if (!existingLesson) {
+    throw new Error('Lesson not found')
+  }
+
+  // Check slug uniqueness if slug is being updated
+  if (data.slug && data.slug !== existingLesson.slug) {
+    const slugExists = await prisma.lesson.findUnique({
+      where: { 
+        trackId_slug: {
+          trackId: existingLesson.trackId,
+          slug: data.slug
+        }
+      }
+    })
+
+    if (slugExists) {
+      throw new Error('A lesson with this slug already exists in this track')
+    }
+  }
+
+  const lesson = await prisma.lesson.update({
+    where: { id: lessonId },
+    data: {
+      ...data,
+      publishedAt: data.publishedAt,
+    }
+  })
+
+  return { 
+    success: true, 
+    lesson: {
+      id: lesson.id,
+      title: lesson.title,
+      slug: lesson.slug
+    }
+  }
+}
+
+export async function deleteLesson(lessonId: string) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to delete lessons')
+  }
+
+  await prisma.lesson.delete({
+    where: { id: lessonId }
+  })
+
+  return { success: true }
+}
+
+export async function reorderSections(trackId: string, sectionOrders: Array<{ id: string, order: number }>) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to reorder sections')
+  }
+
+  await prisma.$transaction(
+    sectionOrders.map(({ id, order }) =>
+      prisma.trackSection.update({
+        where: { id },
+        data: { order }
+      })
+    )
+  )
+
+  return { success: true }
+}
+
+export async function reorderLessons(lessons: Array<{ id: string, order: number, sectionId?: string | null }>) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to reorder lessons')
+  }
+
+  await prisma.$transaction(
+    lessons.map(({ id, order, sectionId }) =>
+      prisma.lesson.update({
+        where: { id },
+        data: { order, sectionId: sectionId || null }
+      })
+    )
+  )
+
+  return { success: true }
 }
 
 // Helper function to update track progress

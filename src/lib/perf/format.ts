@@ -242,8 +242,25 @@ export function formatWinRate(value: Decimal | number): string {
  * Format profit factor
  */
 export function formatProfitFactor(value: Decimal | number): string {
-  const numValue = typeof value === 'number' ? value : toNum(value)
-  return numValue.toFixed(2)
+  if (value == null) {
+    return '0.00'
+  }
+  try {
+    let numValue: number
+    if (typeof value === 'number') {
+      numValue = value
+    } else if (value && typeof value === 'object' && 'toNumber' in value) {
+      numValue = (value as any).toNumber()
+    } else if (value && typeof value === 'object' && 'toSignificantDigits' in value) {
+      numValue = toNum(value as Decimal)
+    } else {
+      numValue = Number(value)
+    }
+    return numValue.toFixed(2)
+  } catch (error) {
+    console.error('Error formatting profit factor:', error, value)
+    return '0.00'
+  }
 }
 
 /**

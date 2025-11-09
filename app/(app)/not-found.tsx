@@ -41,9 +41,9 @@ export default function NotFound() {
           <p>Looking for something specific?</p>
           <div className="flex justify-center gap-4 mt-2">
             <Link href="/research" className="hover:text-gold-600">Research</Link>
-            <Link href="/macro" className="hover:text-gold-600">Crypto Compass</Link>
-            <Link href="/signals" className="hover:text-gold-600">Portfolio</Link>
-            <Link href="/resources" className="hover:text-gold-600">Resources</Link>
+            <Link href="/crypto-compass" className="hover:text-gold-600">Crypto Compass</Link>
+            <Link href="/portfolio" className="hover:text-gold-600">Portfolio</Link>
+            <Link href="/learning" className="hover:text-gold-600">Learning Hub</Link>
           </div>
         </div>
       </div>

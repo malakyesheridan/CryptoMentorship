@@ -221,7 +221,7 @@ export function BookmarksGrid({
               <div className="flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-600 transition-colors duration-300">
                 <span>Saved {formatDate(bookmark.savedAt)}</span>
                 <Link 
-                  href={bookmark.type === 'content' ? `/content/${bookmark.slug}` : `/macro/${bookmark.slug}`}
+                  href={bookmark.type === 'content' ? `/content/${bookmark.slug}` : `/crypto-compass/${bookmark.slug}`}
                   className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors duration-300 group-hover:scale-105 transform-gpu"
                 >
                   <span>View</span>

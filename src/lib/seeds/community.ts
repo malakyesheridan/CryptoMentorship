@@ -3,14 +3,10 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const CHANNELS = [
-  { slug: 'general', name: 'General Discussion', description: 'General community discussions and announcements' },
-  { slug: 'research', name: 'Research Talk', description: 'Deep dive into market research and analysis' },
-  { slug: 'signals', name: 'Signals & Strategy', description: 'Trading signals and strategy discussions' },
-  { slug: 'bitcoin', name: 'Bitcoin', description: 'Bitcoin-specific discussions and analysis' },
-  { slug: 'defi', name: 'DeFi', description: 'Decentralized finance protocols and yield farming' },
-  { slug: 'nft', name: 'NFTs & Web3', description: 'Non-fungible tokens and Web3 ecosystem' },
-  { slug: 'macro', name: 'Crypto Compass Economics', description: 'Global economic trends and their impact on crypto' },
-  { slug: 'technical-analysis', name: 'Technical Analysis', description: 'Chart analysis and trading patterns' },
+  { slug: 'general', name: 'General Discussion', description: 'Community discussions and announcements for long-term investors' },
+  { slug: 'research', name: 'Research Talk', description: 'Deep dive into market research, investment analysis, and fundamental analysis' },
+  { slug: 'portfolio-strategy', name: 'Portfolio Strategy', description: 'Portfolio allocation, diversification strategies, and risk management for long-term investors' },
+  { slug: 'market-analysis', name: 'Market Analysis', description: 'Fundamental analysis, market trends, and investment opportunities' },
 ];
 
 const SEED_MESSAGES = [
@@ -39,76 +35,28 @@ const SEED_MESSAGES = [
     body: 'The section on institutional demand was spot on—seeing similar data in Glassnode metrics.',
   },
   {
-    id: 'signals-kickoff-1',
-    channelSlug: 'signals',
+    id: 'portfolio-strategy-1',
+    channelSlug: 'portfolio-strategy',
     authorEmail: 'admin@demo.com',
-    body: 'Signal desk just closed SOL at 1R. Posting notes in the signal card now.',
+    body: 'Diversification question: What percentage of your crypto portfolio are you allocating to BTC vs. altcoins for long-term holding?',
   },
   {
-    id: 'signals-kickoff-2',
-    channelSlug: 'signals',
+    id: 'portfolio-strategy-2',
+    channelSlug: 'portfolio-strategy',
     authorEmail: 'member@demo.com',
-    body: 'Appreciate the risk sizing breakdown—helped me stay disciplined on the trade.',
+    body: 'I\'m at 70% BTC, 20% ETH, 10% selected altcoins. Following a risk-adjusted approach for the long term.',
   },
   {
-    id: 'bitcoin-discussion-1',
-    channelSlug: 'bitcoin',
+    id: 'market-analysis-1',
+    channelSlug: 'market-analysis',
     authorEmail: 'admin@demo.com',
-    body: 'Bitcoin hitting new ATHs this week. What is everyones take on the current momentum?',
+    body: 'Fundamental analysis suggests we\'re in the early stages of a multi-year crypto adoption cycle. Network effects are accelerating.',
   },
   {
-    id: 'bitcoin-discussion-2',
-    channelSlug: 'bitcoin',
+    id: 'market-analysis-2',
+    channelSlug: 'market-analysis',
     authorEmail: 'member@demo.com',
-    body: 'The ETF inflows are insane. BlackRock alone added 10k+ BTC yesterday.',
-  },
-  {
-    id: 'defi-yield-1',
-    channelSlug: 'defi',
-    authorEmail: 'admin@demo.com',
-    body: 'Anyone farming the new Pendle pools? APYs looking attractive but want to understand the risks.',
-  },
-  {
-    id: 'defi-yield-2',
-    channelSlug: 'defi',
-    authorEmail: 'member@demo.com',
-    body: 'Been in Pendle for a few months. The yield is real but watch out for impermanent loss on volatile assets.',
-  },
-  {
-    id: 'nft-trends-1',
-    channelSlug: 'nft',
-    authorEmail: 'admin@demo.com',
-    body: 'NFT market showing signs of life again. Ordinals and Bitcoin NFTs leading the charge.',
-  },
-  {
-    id: 'nft-trends-2',
-    channelSlug: 'nft',
-    authorEmail: 'member@demo.com',
-    body: 'The Bitcoin Ordinals ecosystem is fascinating. Much more utility-focused than the 2021 NFT boom.',
-  },
-  {
-    id: 'macro-fed-1',
-    channelSlug: 'macro',
-    authorEmail: 'admin@demo.com',
-    body: 'Fed meeting next week. Rate cuts on the table could be huge for crypto adoption.',
-  },
-  {
-    id: 'macro-fed-2',
-    channelSlug: 'macro',
-    authorEmail: 'member@demo.com',
-    body: 'Agreed. The correlation between Fed policy and crypto has been strong lately.',
-  },
-  {
-    id: 'ta-btc-1',
-    channelSlug: 'technical-analysis',
-    authorEmail: 'admin@demo.com',
-    body: 'BTC breaking out of the ascending triangle. Target around $75k if this holds.',
-  },
-  {
-    id: 'ta-btc-2',
-    channelSlug: 'technical-analysis',
-    authorEmail: 'member@demo.com',
-    body: 'RSI showing overbought but momentum is strong. Could see a pullback before continuation.',
+    body: 'The on-chain metrics support this view. Active addresses and transaction volume trends look very positive.',
   },
 ];
 
@@ -125,6 +73,29 @@ export async function seedCommunity() {
     return;
   }
 
+  // First, get all existing channel slugs that should be removed
+  const validSlugs = CHANNELS.map(ch => ch.slug)
+  const oldChannels = await prisma.channel.findMany({
+    where: {
+      slug: {
+        notIn: validSlugs
+      }
+    }
+  })
+
+  // Delete old channels that are no longer in the list (trading/DeFi channels)
+  if (oldChannels.length > 0) {
+    console.log(`🗑️  Removing ${oldChannels.length} old channels: ${oldChannels.map(c => c.name).join(', ')}`)
+    await prisma.channel.deleteMany({
+      where: {
+        slug: {
+          notIn: validSlugs
+        }
+      }
+    })
+  }
+
+  // Upsert channels (update existing or create new)
   const channels = await Promise.all(
     CHANNELS.map((ch) =>
       prisma.channel.upsert({

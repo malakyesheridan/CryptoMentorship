@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Play, Search, Clock, FileText } from 'lucide-react'
 import { seekPlayer, updateUrlWithTime, getTimeFromUrl, msToTime } from '@/lib/player'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface Chapter {
   id: string
@@ -246,9 +247,11 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
                             {searchTerm ? (
                               <span
                                 dangerouslySetInnerHTML={{
-                                  __html: segment.text.replace(
-                                    new RegExp(`(${searchTerm})`, 'gi'),
-                                    '<mark class="bg-yellow-200">$1</mark>'
+                                  __html: sanitizeHtml(
+                                    segment.text.replace(
+                                      new RegExp(`(${searchTerm})`, 'gi'),
+                                      '<mark class="bg-yellow-200">$1</mark>'
+                                    )
                                   )
                                 }}
                               />
