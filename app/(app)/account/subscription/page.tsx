@@ -124,7 +124,7 @@ export default function SubscriptionPage() {
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <CreditCard className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-600 mb-4">You don't have an active subscription.</p>
+              <p className="text-slate-600 mb-4">You don&apos;t have an active subscription.</p>
               <Button onClick={() => router.push('/subscribe')}>
                 Subscribe Now
               </Button>
