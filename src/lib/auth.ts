@@ -376,10 +376,14 @@ export const authOptions: NextAuthOptions = {
               token.membershipTier = membership?.tier || 'T1'
             } catch (membershipError) {
               // If membership query fails (e.g., missing columns), use default
+              const error = membershipError instanceof Error ? membershipError : new Error(String(membershipError))
               logger.warn(
                 'Error fetching membership, using default tier',
-                membershipError instanceof Error ? membershipError : new Error(String(membershipError)),
-                { userId: token.sub }
+                { 
+                  userId: token.sub,
+                  error: error.message,
+                  stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+                }
               )
               token.membershipTier = 'T1'
             }
