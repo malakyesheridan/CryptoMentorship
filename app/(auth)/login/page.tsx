@@ -152,13 +152,17 @@ export default function LoginPage() {
       }
 
       // If no error, login succeeded
-      // Verify session was created and check subscription
-      console.log('Login successful, verifying session and subscription...')
+      // In production, cookies may take longer to propagate, so we'll use a more robust approach
+      console.log('Login successful, redirecting...')
       
-      // Wait a moment for cookie to be set
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // For production, use a simpler redirect flow that relies on middleware/page-level checks
+      // The session will be verified on the destination page
+      setIsLoading(false)
       
-      // Verify session exists and check subscription
+      // Wait a brief moment to ensure cookie is set, then redirect
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Verify session exists before redirecting
       try {
         const sessionRes = await fetch('/api/auth/session', {
           credentials: 'include',
@@ -166,62 +170,50 @@ export default function LoginPage() {
         })
         
         const session = await sessionRes.json()
-        console.log('Session verification:', session)
         
         if (session?.user?.id) {
-          // Admins bypass subscription requirements
+          // Admins bypass subscription requirements - redirect directly
           if (session.user.role === 'admin') {
-            console.log('✅ Admin user, bypassing subscription check')
+            console.log('✅ Admin user, redirecting to dashboard')
             window.location.href = finalCallbackUrl
             return
           }
           
-          // Check if user has active subscription
+          // For non-admins, check subscription status
           try {
             const subscriptionRes = await fetch('/api/me/subscription-status', {
               credentials: 'include',
               cache: 'no-store',
             })
             
-            if (!subscriptionRes.ok) {
-              // If subscription check fails, redirect to subscribe page to be safe
-              console.log('⚠️ Subscription check failed, redirecting to subscribe')
-              setIsLoading(false)
-              window.location.href = '/subscribe?required=true'
-              return
+            if (subscriptionRes.ok) {
+              const subscriptionData = await subscriptionRes.json()
+              
+              if (subscriptionData.hasActiveSubscription) {
+                console.log('✅ User has subscription, redirecting to:', finalCallbackUrl)
+                window.location.href = finalCallbackUrl
+                return
+              }
             }
             
-            const subscriptionData = await subscriptionRes.json()
-            console.log('Subscription status:', subscriptionData)
-            
-            if (!subscriptionData.hasActiveSubscription) {
-              // User doesn't have subscription - redirect smoothly to subscribe page
-              console.log('❌ No active subscription, redirecting to subscribe')
-              setIsLoading(false)
-              // Smooth redirect without alert popup
-              window.location.href = '/subscribe?required=true'
-              return
-            }
-            
-            console.log('✅ Session verified, subscription active, redirecting to:', finalCallbackUrl)
-            // Use window.location for hard redirect - ensures cookies are sent
-            window.location.href = finalCallbackUrl
+            // No subscription or check failed - redirect to subscribe
+            console.log('❌ No active subscription, redirecting to subscribe')
+            window.location.href = '/subscribe?required=true'
+            return
           } catch (subError) {
-            // If subscription check throws an error, redirect to subscribe page
+            // If subscription check fails, redirect to subscribe to be safe
             console.error('Subscription check error:', subError)
-            console.log('⚠️ Subscription check error, redirecting to subscribe')
-            setIsLoading(false)
             window.location.href = '/subscribe?required=true'
             return
           }
         } else {
-          console.error('❌ Session not found after login')
-          setError('Login succeeded but session could not be verified. Please try refreshing.')
-          setIsLoading(false)
+          // Session not found - might need more time, try redirect anyway
+          console.warn('⚠️ Session not immediately available, redirecting anyway')
+          window.location.href = finalCallbackUrl
         }
       } catch (sessionErr) {
-        console.error('Session verification failed:', sessionErr)
-        // Try redirect anyway - cookie might be set
+        // If session check fails, try redirect anyway - cookie might be set
+        console.error('Session verification failed, redirecting anyway:', sessionErr)
         window.location.href = finalCallbackUrl
       }
     } catch (err) {
