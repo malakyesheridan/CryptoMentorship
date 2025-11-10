@@ -84,9 +84,14 @@ function SubscribePageContent() {
         if (res.ok) {
           const data = await res.json()
           setPrices(data.prices)
+        } else {
+          // If prices API fails, set error but don't crash
+          console.error('Failed to fetch prices:', res.status, res.statusText)
+          setError('Unable to load pricing information. Please refresh the page.')
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error)
+        setError('Unable to load pricing information. Please refresh the page.')
       } finally {
         setLoadingPrices(false)
       }
@@ -99,6 +104,11 @@ function SubscribePageContent() {
     setError(null)
     
     try {
+      // Ensure we're in the browser before accessing window
+      if (typeof window === 'undefined') {
+        throw new Error('This action requires a browser environment')
+      }
+
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
