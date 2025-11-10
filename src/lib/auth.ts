@@ -342,24 +342,47 @@ export const authOptions: NextAuthOptions = {
       // ✅ Fetch fresh user data from database
       if (token.sub) {
         try {
+          // First, try to get user without memberships to avoid column errors
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
-            include: {
-              memberships: {
-                where: { status: 'active' },
-                orderBy: { createdAt: 'desc' },
-                take: 1,
-              },
+            select: {
+              id: true,
+              role: true,
+              name: true,
+              email: true,
+              image: true,
             },
           })
 
           if (dbUser) {
             token.role = dbUser.role as 'guest' | 'member' | 'editor' | 'admin'
-            token.membershipTier = dbUser.memberships[0]?.tier || 'T1'
             token.name = dbUser.name
             token.email = dbUser.email
             token.picture = dbUser.image
             token.lastRefreshed = now
+
+            // Try to get membership separately to avoid column errors
+            try {
+              const membership = await prisma.membership.findFirst({
+                where: { 
+                  userId: token.sub,
+                  status: 'active',
+                },
+                orderBy: { createdAt: 'desc' },
+                select: {
+                  tier: true,
+                },
+              })
+              token.membershipTier = membership?.tier || 'T1'
+            } catch (membershipError) {
+              // If membership query fails (e.g., missing columns), use default
+              logger.warn(
+                'Error fetching membership, using default tier',
+                membershipError instanceof Error ? membershipError : new Error(String(membershipError)),
+                { userId: token.sub }
+              )
+              token.membershipTier = 'T1'
+            }
           }
         } catch (error) {
           // ✅ Improved error handling with logger
