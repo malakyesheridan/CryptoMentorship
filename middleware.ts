@@ -14,6 +14,14 @@ function getNextAuthSecret(): string {
   return secret
 }
 
+// Get the cookie name - must match the cookie name configured in auth.ts
+// Edge runtime doesn't always auto-detect __Secure- prefixed cookies
+function getCookieName(): string {
+  return process.env.NODE_ENV === 'production'
+    ? '__Secure-next-auth.session-token'
+    : 'next-auth.session-token'
+}
+
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   
@@ -110,6 +118,7 @@ export default async function middleware(req: NextRequest) {
   const token = await getToken({ 
     req, 
     secret: nextAuthSecret,
+    cookieName: getCookieName(), // Explicitly specify cookie name for Edge runtime
   })
   
   // Debug: Log token result
