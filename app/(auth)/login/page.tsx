@@ -152,68 +152,85 @@ export default function LoginPage() {
       }
 
       // If no error, login succeeded
-      // In production, cookies may take longer to propagate, so we'll use a more robust approach
-      console.log('Login successful, redirecting...')
+      // Poll for session availability to ensure cookie is set and readable
+      console.log('Login successful, verifying session...')
       
-      // For production, use a simpler redirect flow that relies on middleware/page-level checks
-      // The session will be verified on the destination page
       setIsLoading(false)
       
-      // Wait a brief moment to ensure cookie is set, then redirect
-      await new Promise(resolve => setTimeout(resolve, 300))
+      // Poll for session availability (up to 2 seconds)
+      let sessionAvailable = false
+      let session: any = null
+      let attempts = 0
+      const maxAttempts = 10
+      const pollInterval = 200 // 200ms between attempts
       
-      // Verify session exists before redirecting
-      try {
-        const sessionRes = await fetch('/api/auth/session', {
-          credentials: 'include',
-          cache: 'no-store',
-        })
+      while (!sessionAvailable && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, pollInterval))
         
-        const session = await sessionRes.json()
+        try {
+          const sessionRes = await fetch('/api/auth/session', {
+            credentials: 'include',
+            cache: 'no-store',
+          })
+          
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json()
+            if (sessionData?.user?.id) {
+              session = sessionData
+              sessionAvailable = true
+              console.log('✅ Session verified after', attempts + 1, 'attempts')
+              break
+            }
+          }
+        } catch (e) {
+          // Continue polling
+          console.log('Session check attempt', attempts + 1, 'failed, retrying...')
+        }
         
-        if (session?.user?.id) {
-          // Admins bypass subscription requirements - redirect directly
-          if (session.user.role === 'admin') {
-            console.log('✅ Admin user, redirecting to dashboard')
-            window.location.href = finalCallbackUrl
-            return
+        attempts++
+      }
+      
+      // If session is available, proceed with redirect logic
+      if (sessionAvailable && session?.user?.id) {
+        // Admins bypass subscription requirements - redirect directly
+        if (session.user.role === 'admin') {
+          console.log('✅ Admin user, redirecting to dashboard')
+          window.location.href = finalCallbackUrl
+          return
+        }
+        
+        // For non-admins, check subscription status
+        try {
+          const subscriptionRes = await fetch('/api/me/subscription-status', {
+            credentials: 'include',
+            cache: 'no-store',
+          })
+          
+          if (subscriptionRes.ok) {
+            const subscriptionData = await subscriptionRes.json()
+            
+            if (subscriptionData.hasActiveSubscription) {
+              console.log('✅ User has subscription, redirecting to:', finalCallbackUrl)
+              window.location.href = finalCallbackUrl
+              return
+            }
           }
           
-          // For non-admins, check subscription status
-          try {
-            const subscriptionRes = await fetch('/api/me/subscription-status', {
-              credentials: 'include',
-              cache: 'no-store',
-            })
-            
-            if (subscriptionRes.ok) {
-              const subscriptionData = await subscriptionRes.json()
-              
-              if (subscriptionData.hasActiveSubscription) {
-                console.log('✅ User has subscription, redirecting to:', finalCallbackUrl)
-                window.location.href = finalCallbackUrl
-                return
-              }
-            }
-            
-            // No subscription or check failed - redirect to subscribe
-            console.log('❌ No active subscription, redirecting to subscribe')
-            window.location.href = '/subscribe?required=true'
-            return
-          } catch (subError) {
-            // If subscription check fails, redirect to subscribe to be safe
-            console.error('Subscription check error:', subError)
-            window.location.href = '/subscribe?required=true'
-            return
-          }
-        } else {
-          // Session not found - might need more time, try redirect anyway
-          console.warn('⚠️ Session not immediately available, redirecting anyway')
-          window.location.href = finalCallbackUrl
+          // No subscription or check failed - redirect to subscribe
+          console.log('❌ No active subscription, redirecting to subscribe')
+          window.location.href = '/subscribe?required=true'
+          return
+        } catch (subError) {
+          // If subscription check fails, redirect to subscribe to be safe
+          console.error('Subscription check error:', subError)
+          window.location.href = '/subscribe?required=true'
+          return
         }
-      } catch (sessionErr) {
-        // If session check fails, try redirect anyway - cookie might be set
-        console.error('Session verification failed, redirecting anyway:', sessionErr)
+      } else {
+        // Session not available after polling - this shouldn't happen, but try redirect anyway
+        console.warn('⚠️ Session not available after polling, but redirecting anyway (cookie may be set)')
+        // Use a small delay before redirect to give cookie more time
+        await new Promise(resolve => setTimeout(resolve, 500))
         window.location.href = finalCallbackUrl
       }
     } catch (err) {
