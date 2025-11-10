@@ -15,11 +15,22 @@ export default async function DashboardPage() {
   
   // Check subscription for dashboard access
   if (session?.user) {
-    const { hasActiveSubscription } = await import('@/lib/access')
-    const hasSubscription = await hasActiveSubscription(session.user.id)
-    
-    if (!hasSubscription) {
-      redirect('/subscribe?required=true')
+    // Admins bypass subscription requirements
+    if (session.user.role === 'admin') {
+      // Allow admin access
+    } else {
+      try {
+        const { hasActiveSubscription } = await import('@/lib/access')
+        const hasSubscription = await hasActiveSubscription(session.user.id)
+        
+        if (!hasSubscription) {
+          redirect('/subscribe?required=true')
+        }
+      } catch (error) {
+        // If subscription check fails (e.g., database schema issues), redirect to subscribe
+        console.error('Subscription check error:', error)
+        redirect('/subscribe?required=true')
+      }
     }
   }
   return (
