@@ -1,13 +1,31 @@
 import Stripe from 'stripe'
 import { loadStripe, Stripe as StripeType } from '@stripe/stripe-js'
-import { env } from '@/lib/env'
+
+// Lazy import env only for server-side code to avoid client-side validation errors
+let env: any = null
+function getEnv() {
+  if (typeof window === 'undefined' && !env) {
+    // Only import env on server-side
+    env = require('@/lib/env').env
+  }
+  return env
+}
 
 /**
  * Server-side Stripe client
  * Used in API routes and server components
  * Only initialized if STRIPE_SECRET_KEY is configured
  */
-const stripeSecretKey = env.STRIPE_SECRET_KEY
+function getStripeSecretKey(): string | undefined {
+  if (typeof window !== 'undefined') {
+    // Client-side: env vars not available
+    return undefined
+  }
+  const serverEnv = getEnv()
+  return serverEnv?.STRIPE_SECRET_KEY
+}
+
+const stripeSecretKey = getStripeSecretKey()
 
 export const stripe: Stripe | null = stripeSecretKey && stripeSecretKey.length > 0
   ? new Stripe(stripeSecretKey, {
@@ -23,12 +41,15 @@ export const stripe: Stripe | null = stripeSecretKey && stripeSecretKey.length >
 let stripePromise: Promise<StripeType | null> | null = null
 
 export function getStripe(): Promise<StripeType | null> {
-  if (!env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+  // Use process.env directly for client-side (NEXT_PUBLIC_ vars are available)
+  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  
+  if (!publishableKey) {
     return Promise.resolve(null)
   }
   
   if (!stripePromise) {
-    stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+    stripePromise = loadStripe(publishableKey)
   }
   return stripePromise
 }
@@ -40,6 +61,16 @@ export function getStripe(): Promise<StripeType | null> {
  * @returns Price ID or null if not configured
  */
 export function getPriceId(tier: string, interval: 'month' | '3month' | '6month' | 'year'): string | null {
+  // This function should only be called server-side, but handle client-side gracefully
+  if (typeof window !== 'undefined') {
+    return null // Client-side: price IDs not available
+  }
+  
+  const serverEnv = getEnv()
+  if (!serverEnv) {
+    return null
+  }
+  
   // Special handling for T3 tier - price IDs are swapped in Stripe
   // Monthly ($2,000) is stored as ANNUAL, 3month ($5,750) as MONTHLY, 6month ($10,500) as 3MONTH, Annual ($20,000) as 6MONTH
   if (tier === 'T3') {
@@ -49,8 +80,8 @@ export function getPriceId(tier: string, interval: 'month' | '3month' | '6month'
       '6month': 'STRIPE_PRICE_T3_3MONTH',   // $10,500 6-month -> uses 3MONTH price ID
       'year': 'STRIPE_PRICE_T3_6MONTH',     // $20,000 annual -> uses 6MONTH price ID
     }
-    const key = t3Mapping[interval] as keyof typeof env
-    const priceId = env[key]
+    const key = t3Mapping[interval] as keyof typeof serverEnv
+    const priceId = serverEnv[key]
     return typeof priceId === 'string' && priceId.length > 0 ? priceId : null
   }
   
@@ -62,8 +93,8 @@ export function getPriceId(tier: string, interval: 'month' | '3month' | '6month'
       '6month': 'STRIPE_PRICE_T2_3MONTH',   // 6-month uses 3-month price ID
       'year': 'STRIPE_PRICE_T2_ANNUAL',
     }
-    const key = t2Mapping[interval] as keyof typeof env
-    const priceId = env[key]
+    const key = t2Mapping[interval] as keyof typeof serverEnv
+    const priceId = serverEnv[key]
     return typeof priceId === 'string' && priceId.length > 0 ? priceId : null
   }
   
@@ -79,8 +110,8 @@ export function getPriceId(tier: string, interval: 'month' | '3month' | '6month'
     intervalKey = 'MONTHLY'
   }
   
-  const key = `STRIPE_PRICE_${tier}_${intervalKey}` as keyof typeof env
-  const priceId = env[key]
+  const key = `STRIPE_PRICE_${tier}_${intervalKey}` as keyof typeof serverEnv
+  const priceId = serverEnv[key]
   return typeof priceId === 'string' && priceId.length > 0 ? priceId : null
 }
 
@@ -90,13 +121,23 @@ export function getPriceId(tier: string, interval: 'month' | '3month' | '6month'
  * @returns Tier (T1, T2, T3) or null if not found
  */
 export function getTierFromPriceId(priceId: string): string | null {
+  // This function should only be called server-side
+  if (typeof window !== 'undefined') {
+    return null
+  }
+  
+  const serverEnv = getEnv()
+  if (!serverEnv) {
+    return null
+  }
+  
   const tiers = ['T1', 'T2', 'T3'] as const
   const intervals = ['MONTHLY', '3MONTH', '6MONTH', 'ANNUAL'] as const
   
   for (const tier of tiers) {
     for (const interval of intervals) {
-      const key = `STRIPE_PRICE_${tier}_${interval}` as keyof typeof env
-      if (env[key] === priceId) {
+      const key = `STRIPE_PRICE_${tier}_${interval}` as keyof typeof serverEnv
+      if (serverEnv[key] === priceId) {
         return tier
       }
     }
@@ -107,14 +148,25 @@ export function getTierFromPriceId(priceId: string): string | null {
 
 /**
  * Check if Stripe is configured
+ * Server-side only - checks both secret and publishable keys
  */
 export function isStripeConfigured(): boolean {
+  if (typeof window !== 'undefined') {
+    // Client-side: only check publishable key
+    return !!(
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.length > 0
+    )
+  }
+  
+  // Server-side: check both keys
+  const serverEnv = getEnv()
   return !!(
     stripe &&
-    env.STRIPE_SECRET_KEY &&
-    env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
-    env.STRIPE_SECRET_KEY.length > 0 &&
-    env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.length > 0
+    serverEnv?.STRIPE_SECRET_KEY &&
+    serverEnv?.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
+    serverEnv.STRIPE_SECRET_KEY.length > 0 &&
+    serverEnv.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.length > 0
   )
 }
 
