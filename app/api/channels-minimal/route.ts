@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+// Cache for 5 minutes - channels don't change frequently
+export const revalidate = 300
 
 export async function GET() {
   try {
-    // Ultra-minimal query - just get all channels without any filters
-    const channels = await prisma.channel.findMany()
+    // ✅ Return all channels - no longer filtering by name since channels can be renamed/created with any name
+    const channels = await prisma.channel.findMany({
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+      }
+    })
     
     return NextResponse.json({ 
       ok: true, 

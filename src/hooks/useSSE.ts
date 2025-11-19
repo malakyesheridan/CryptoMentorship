@@ -25,6 +25,18 @@ export function useSSE({ channelId, onMessage, onTyping, onConnected }: UseSSEOp
   const eventSourceRef = useRef<EventSource | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
+  
+  // Use refs for callbacks to prevent infinite reconnection loops
+  const onMessageRef = useRef(onMessage)
+  const onTypingRef = useRef(onTyping)
+  const onConnectedRef = useRef(onConnected)
+  
+  // Update refs when callbacks change (but don't trigger reconnection)
+  useEffect(() => {
+    onMessageRef.current = onMessage
+    onTypingRef.current = onTyping
+    onConnectedRef.current = onConnected
+  }, [onMessage, onTyping, onConnected])
 
   const connect = useCallback(() => {
     if (!channelId || !session?.user?.id) return
@@ -32,6 +44,7 @@ export function useSSE({ channelId, onMessage, onTyping, onConnected }: UseSSEOp
     // Close existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
+      eventSourceRef.current = null
     }
 
     const url = `/api/community/events?channelId=${encodeURIComponent(channelId)}`
@@ -41,7 +54,7 @@ export function useSSE({ channelId, onMessage, onTyping, onConnected }: UseSSEOp
     eventSource.onopen = () => {
       setIsConnected(true)
       setConnectionError(null)
-      onConnected?.()
+      onConnectedRef.current?.()
     }
 
     eventSource.onmessage = (event) => {
@@ -55,36 +68,35 @@ export function useSSE({ channelId, onMessage, onTyping, onConnected }: UseSSEOp
             break
           case 'message':
             if (data.message) {
-              onMessage?.(data.message)
+              onMessageRef.current?.(data.message)
             }
             break
           case 'typing':
             if (data.userId && data.userName !== undefined && data.isTyping !== undefined) {
-              onTyping?.(data.userId, data.userName, data.isTyping)
+              onTypingRef.current?.(data.userId, data.userName, data.isTyping)
             }
             break
           case 'heartbeat':
-            // Keep connection alive
+            // Keep connection alive - no action needed
             break
         }
       } catch (error) {
-        console.error('Error parsing SSE event:', error)
+        // Silently fail - don't spam console
       }
     }
 
     eventSource.onerror = (error) => {
-      console.error('SSE connection error:', error)
+      // Only set error state, don't auto-reconnect (prevents flickering)
       setIsConnected(false)
-      setConnectionError('Connection lost. Attempting to reconnect...')
+      setConnectionError('Connection lost')
       
-      // Attempt to reconnect after 3 seconds
-      setTimeout(() => {
-        if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
-          connect()
-        }
-      }, 3000)
+      // Clean up
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
+      }
     }
-  }, [channelId, session?.user?.id, onMessage, onTyping, onConnected])
+  }, [channelId, session?.user?.id]) // ✅ Removed callbacks from dependencies
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -105,7 +117,8 @@ export function useSSE({ channelId, onMessage, onTyping, onConnected }: UseSSEOp
     return () => {
       disconnect()
     }
-  }, [channelId, connect, disconnect])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelId]) // Only depend on channelId - connect/disconnect are stable
 
   // Cleanup on unmount
   useEffect(() => {

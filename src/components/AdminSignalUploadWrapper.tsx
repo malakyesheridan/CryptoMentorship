@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import SignalUpload from './SignalUpload'
+import DailySignalUploadWrapper from './admin/DailySignalUploadWrapper'
 
 interface AdminSignalUploadWrapperProps {
   userRole?: string
@@ -19,10 +19,10 @@ export default function AdminSignalUploadWrapper({ userRole }: AdminSignalUpload
     return <div className="h-32" /> // Placeholder to prevent layout shift
   }
 
-  // Only show upload form for admin users
-  if (userRole !== 'admin') {
+  // Only show upload form for admin/editor users
+  if (userRole !== 'admin' && userRole !== 'editor') {
     return null
   }
 
-  return <SignalUpload />
+  return <DailySignalUploadWrapper userRole={userRole} />
 }

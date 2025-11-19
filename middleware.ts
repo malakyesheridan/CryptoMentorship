@@ -105,26 +105,16 @@ export default async function middleware(req: NextRequest) {
     return response
   }
 
-  // Get session token
+  // Get session token - optimize for speed
   // Use the same secret logic as NextAuth (from src/lib/env.ts)
   const nextAuthSecret = getNextAuthSecret()
   
-  // Debug: Log what we're using (only in development)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[Middleware] Using secret:', nextAuthSecret.substring(0, 10) + '...', 'Length:', nextAuthSecret.length)
-    console.log('[Middleware] Cookies in request:', req.cookies.getAll().map(c => c.name))
-  }
-  
+  // Get token - this is fast in Edge runtime (reads from cookie)
   const token = await getToken({ 
     req, 
     secret: nextAuthSecret,
     cookieName: getCookieName(), // Explicitly specify cookie name for Edge runtime
   })
-  
-  // Debug: Log token result
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[Middleware] Token found:', !!token, 'Token sub:', token?.sub || 'none')
-  }
 
   // ✅ Re-enable authentication check
   if (!token) {

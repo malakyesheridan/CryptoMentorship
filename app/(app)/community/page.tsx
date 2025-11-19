@@ -2,14 +2,16 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 
-export const dynamic = 'force-dynamic'
+// Client component - no server-side caching needed
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
 
 import MessageList from '@/components/chat/MessageList'
 import MessageInput from '@/components/chat/MessageInput'
+import { ChannelAdminControls } from '@/components/community/ChannelAdminControls'
 import { json } from '@/lib/http'
 import { useSSE, useTypingIndicator } from '@/hooks/useSSE'
+import { toast } from 'sonner'
 import type {
   Channel,
   ChatMessage,
@@ -23,21 +25,18 @@ const messagesKey = (channelId: string | null) =>
   channelId ? `/api/community/messages?channelId=${encodeURIComponent(channelId)}` : null
 
 function useChannels() {
-  const { data, error, isLoading } = useSWR<ListChannelsResponse>(channelsKey, (key) => json<ListChannelsResponse>(key), {
-    revalidateOnFocus: true,
+  const { data, error, isLoading, mutate } = useSWR<ListChannelsResponse>(channelsKey, (key) => json<ListChannelsResponse>(key), {
+    revalidateOnFocus: false, // Channels don't change frequently
     revalidateOnReconnect: true,
     shouldRetryOnError: true,
+    dedupingInterval: 5000, // Dedupe requests within 5 seconds
   })
-
-  // Debug logging
-  console.log('Channels data:', data)
-  console.log('Channels error:', error)
-  console.log('Channels loading:', isLoading)
 
   return {
     channels: data?.items ?? [],
     error,
     isLoading,
+    refresh: mutate,
   }
 }
 
@@ -47,11 +46,12 @@ function useChannelMessages(channelId: string | null) {
     key,
     key ? (url) => json<ListMessagesResponse>(url) : null,
     {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: channelId ? 12_000 : 0,
+      revalidateOnFocus: false, // Disable - SSE handles real-time updates
+      revalidateOnReconnect: false, // Disable - SSE handles reconnection
+      refreshInterval: 0, // Disable polling - SSE handles real-time updates
       keepPreviousData: true,
       shouldRetryOnError: true,
+      dedupingInterval: 5000, // Increase deduping to prevent spam
     },
   )
 
@@ -65,9 +65,10 @@ function useChannelMessages(channelId: string | null) {
 
 export default function CommunityPage() {
   const { data: session } = useSession()
-  const { channels, isLoading: channelsLoading, error: channelsError } = useChannels()
+  const { channels, isLoading: channelsLoading, error: channelsError, refresh: refreshChannels } = useChannels()
   const [activeChannelId, setActiveChannelId] = useState<string | null>(channels[0]?.id ?? null)
   const [replyTo, setReplyTo] = useState<{ author: string; body: string } | null>(null)
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
 
   React.useEffect(() => {
     if (!activeChannelId && channels.length > 0) {
@@ -79,7 +80,7 @@ export default function CommunityPage() {
 
   const optimisticMessages = useRef<Record<string, ChatMessage[]>>({})
 
-  // Real-time messaging with SSE
+  // Real-time messaging with SSE - use stable callback
   const handleNewMessage = useCallback((message: ChatMessage) => {
     // Remove from optimistic messages if it exists
     if (optimisticMessages.current[message.channelId]) {
@@ -88,9 +89,17 @@ export default function CommunityPage() {
       )
     }
     
-    // Update the messages list
+    // Update the messages list immediately (optimistic update)
     mutate((current) => {
-      if (!current) return current
+      if (!current) {
+        // If no current data, create initial state
+        return { ok: true, items: [message] }
+      }
+      
+      // Check if message already exists (prevent duplicates)
+      const exists = current.items.some(m => m.id === message.id)
+      if (exists) return current
+      
       return {
         ...current,
         items: [...current.items, message]
@@ -98,14 +107,14 @@ export default function CommunityPage() {
     }, { revalidate: false })
   }, [mutate])
 
-  const { isConnected, connectionError } = useSSE({
+  const { isConnected, connectionError, reconnect } = useSSE({
     channelId: activeChannelId,
     onMessage: handleNewMessage,
     onTyping: (userId, userName, isTyping) => {
       handleTyping(userId, userName, isTyping)
     },
     onConnected: () => {
-      console.log('Connected to real-time updates')
+      // Connection established - no logging needed
     }
   })
 
@@ -119,6 +128,23 @@ export default function CommunityPage() {
     merged.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     return merged
   }, [activeChannelId, items])
+
+  // Auto-scroll to bottom when channel changes (initial load)
+  const prevChannelRef = React.useRef<string | null>(null)
+  React.useEffect(() => {
+    const container = document.getElementById('messages-container')
+    const channelChanged = prevChannelRef.current !== activeChannelId
+    
+    // Always update the ref to track current channel, regardless of container existence
+    prevChannelRef.current = activeChannelId
+    
+    if (channelChanged && container) {
+      // Scroll to bottom when switching channels
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight
+      }, 150)
+    }
+  }, [activeChannelId])
 
   const handleSend = useCallback(
     async (text: string) => {
@@ -150,29 +176,36 @@ export default function CommunityPage() {
       await mutate((current) => current, { revalidate: false })
 
       try {
-        await json<CreateMessageResponse>('/api/community/messages', {
+        const response = await json<CreateMessageResponse>('/api/community/messages', {
           method: 'POST',
           body: JSON.stringify({ channelId: activeChannelId, body: messageText }),
         })
 
+        // Remove optimistic message
         optimisticMessages.current[activeChannelId] = (
           optimisticMessages.current[activeChannelId] ?? []
         ).filter((message) => message.id !== temp.id)
 
-        await mutate()
+        // If SSE is working, it will update via handleNewMessage
+        // If SSE is not working, manually add the message from response
+        if (response?.item) {
+          handleNewMessage(response.item)
+        }
         
         // Clear reply after sending
         setReplyTo(null)
       } catch (error) {
+        // Remove optimistic message on error
         optimisticMessages.current[activeChannelId] = (
           optimisticMessages.current[activeChannelId] ?? []
         ).filter((message) => message.id !== temp.id)
 
-        await mutate((current) => current, { revalidate: false })
+        // Trigger UI update to remove failed message
+        mutate((current) => current, { revalidate: false })
         throw error
       }
     },
-    [activeChannelId, mutate, replyTo],
+    [activeChannelId, mutate, replyTo, handleNewMessage],
   )
 
   const handleReply = useCallback((message: ChatMessage) => {
@@ -185,6 +218,27 @@ export default function CommunityPage() {
   const handleCancelReply = useCallback(() => {
     setReplyTo(null)
   }, [])
+
+  const handleDeleteMessage = useCallback(async (message: ChatMessage) => {
+    if (!confirm('Are you sure you want to delete this message?')) {
+      return
+    }
+
+    try {
+      const response = await json(`/api/community/messages/${message.id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        toast.success('Message deleted')
+        mutate() // Refresh messages
+      } else {
+        throw new Error('Failed to delete message')
+      }
+    } catch (error) {
+      toast.error('Failed to delete message')
+    }
+  }, [mutate])
 
   const activeChannel = channels.find((channel) => channel.id === activeChannelId)
 
@@ -237,16 +291,25 @@ export default function CommunityPage() {
 
         {/* Chat Interface */}
         <div className="flex h-[700px] bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
-          <aside className="w-80 bg-slate-50 border-r border-slate-200 p-6">
+          <aside className="w-80 bg-slate-50 border-r border-slate-200 p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-slate-900">Channels</h3>
               <div className="flex items-center gap-2">
                 {activeChannelId ? (
                   <>
-                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                     <span className="text-xs text-slate-500">
-                      {isConnected ? 'Connected' : 'Connecting...'}
+                      {isConnected ? 'Connected' : connectionError || 'Connecting...'}
                     </span>
+                    {!isConnected && connectionError && (
+                      <button
+                        onClick={() => reconnect()}
+                        className="text-xs text-yellow-600 hover:text-yellow-700 underline"
+                        title="Reconnect"
+                      >
+                        Reconnect
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>
@@ -256,6 +319,16 @@ export default function CommunityPage() {
                 )}
               </div>
             </div>
+            
+            {/* Admin Controls */}
+            {isAdmin && (
+              <ChannelAdminControls
+                channels={channels}
+                isAdmin={isAdmin}
+                onChannelChange={refreshChannels}
+              />
+            )}
+            
             <div className="space-y-2">
               {channelsError ? (
                 <div className="text-sm text-red-500 text-center py-4 bg-red-50 rounded-lg">
@@ -315,12 +388,17 @@ export default function CommunityPage() {
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-slate-50">
+            <div 
+              id="messages-container"
+              className="flex-1 overflow-y-auto bg-slate-50"
+            >
               <MessageList 
                 messages={mergedMessages} 
                 isLoading={isLoading}
                 currentUserId={session?.user?.id}
+                isAdmin={isAdmin}
                 onReply={handleReply}
+                onDelete={handleDeleteMessage}
               />
             </div>
 
@@ -333,6 +411,7 @@ export default function CommunityPage() {
                 onTyping={async (isTyping) => {
                   if (!activeChannelId || !session?.user?.id) return
                   
+                  // Silently fail - typing indicators are not critical
                   try {
                     await json('/api/community/typing', {
                       method: 'POST',
@@ -342,7 +421,7 @@ export default function CommunityPage() {
                       }),
                     })
                   } catch (error) {
-                    console.error('Failed to send typing indicator:', error)
+                    // Silently fail - typing indicators are not critical
                   }
                 }}
               />

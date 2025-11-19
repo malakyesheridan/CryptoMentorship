@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
@@ -18,6 +18,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react'
+import { toNum } from '@/lib/num/dec'
 
 interface PerformanceData {
   stats: any
@@ -55,24 +56,65 @@ export function EnhancedPerformanceCharts({
     }
   }
 
-  // Transform data for our new charts
-  const equityData = data.equitySeries.map(point => ({
-    date: point.date,
-    equity: point.equity,
-    drawdown: point.drawdown
-  }))
+  // Defensive checks for data
+  if (!data || !data.stats || !data.equitySeries || !data.drawdownSeries || !data.monthlyReturns) {
+    return (
+      <div className="text-center py-12">
+        <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Performance Data Unavailable</h3>
+        <p className="text-slate-600">
+          Unable to load performance data. Please try again later.
+        </p>
+      </div>
+    )
+  }
 
-  const drawdownData = data.drawdownSeries.map(point => ({
-    date: point.date,
-    drawdown: point.drawdown,
-    equity: point.equity
-  }))
+  // Helper to safely convert to number
+  const safeToNumber = (val: any): number => {
+    if (val == null) return 0
+    if (typeof val === 'number') return val
+    if (typeof val === 'string') {
+      const parsed = Number(val)
+      return isNaN(parsed) ? 0 : parsed
+    }
+    // Try toNum for Decimal objects
+    try {
+      return toNum(val as any)
+    } catch {
+      const num = Number(val)
+      return isNaN(num) ? 0 : num
+    }
+  }
 
-  const monthlyData = data.monthlyReturns.map(point => ({
-    month: point.month,
-    return: point.return,
-    trades: point.trades
-  }))
+  // Transform data for our new charts (memoized to prevent re-renders)
+  const equityData = useMemo(() => {
+    return (data.equitySeries || []).map(point => ({
+      date: point.date,
+      equity: safeToNumber(point.equity),
+      drawdown: safeToNumber(point.drawdown)
+    }))
+  }, [data.equitySeries])
+
+  const drawdownData = useMemo(() => {
+    return (data.drawdownSeries || []).map(point => ({
+      date: point.date,
+      drawdown: safeToNumber(point.drawdown),
+      equity: safeToNumber(point.equity)
+    }))
+  }, [data.drawdownSeries])
+
+  const monthlyData = useMemo(() => {
+    return (data.monthlyReturns || []).map(point => ({
+      month: point.month,
+      return: safeToNumber(point.return),
+      trades: safeToNumber(point.trades)
+    }))
+  }, [data.monthlyReturns])
+
+  // Convert stats to numbers safely
+  const totalReturn = safeToNumber(data.stats.totalReturn)
+  const maxDrawdown = safeToNumber(data.stats.maxDrawdown)
+  const winRate = safeToNumber(data.stats.winRate)
 
   return (
     <div className="space-y-8">
@@ -144,9 +186,9 @@ export function EnhancedPerformanceCharts({
                   <div>
                     <p className="text-sm font-medium text-slate-600">Total Return</p>
                     <p className={`text-2xl font-bold ${
-                      data.stats.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'
+                      totalReturn >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {data.stats.totalReturn >= 0 ? '+' : ''}{data.stats.totalReturn?.toFixed(2) || 0}%
+                      {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
                     </p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-slate-400" />
@@ -160,7 +202,7 @@ export function EnhancedPerformanceCharts({
                   <div>
                     <p className="text-sm font-medium text-slate-600">Max Drawdown</p>
                     <p className="text-2xl font-bold text-red-600">
-                      -{data.stats.maxDrawdown?.toFixed(2) || 0}%
+                      -{maxDrawdown.toFixed(2)}%
                     </p>
                   </div>
                   <TrendingDown className="h-8 w-8 text-slate-400" />
@@ -174,7 +216,7 @@ export function EnhancedPerformanceCharts({
                   <div>
                     <p className="text-sm font-medium text-slate-600">Win Rate</p>
                     <p className="text-2xl font-bold text-blue-600">
-                      {data.stats.winRate?.toFixed(1) || 0}%
+                      {winRate.toFixed(1)}%
                     </p>
                   </div>
                   <Target className="h-8 w-8 text-slate-400" />

@@ -124,12 +124,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const data = createSignalSchema.parse(body)
+    let body
+    try {
+      body = await request.json()
+      console.log('POST /api/admin/signals - Request body:', body)
+    } catch (error) {
+      console.error('JSON parse error:', error)
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+    }
 
-    // Generate slug
+    let data
+    try {
+      data = createSignalSchema.parse(body)
+      console.log('POST /api/admin/signals - Parsed data:', data)
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.issues)
+        return NextResponse.json({ 
+          error: 'Invalid input', 
+          details: error.issues.map(issue => ({
+            path: issue.path,
+            message: issue.message
+          }))
+        }, { status: 400 })
+      }
+      throw error
+    }
+
+    // Generate slug with collision handling
     const dateStr = data.entryTime.toISOString().split('T')[0]
-    const slug = `${data.symbol.toLowerCase()}-${data.direction}-${dateStr}`
+    let baseSlug = `${data.symbol.toLowerCase()}-${data.direction}-${dateStr}`
+    let slug = baseSlug
+    let attempt = 0
+
+    // Check for existing slug and append number if needed
+    while (attempt < 100) {
+      const existing = await prisma.signalTrade.findUnique({
+        where: { slug },
+        select: { id: true }
+      })
+
+      if (!existing) {
+        break // Slug is available
+      }
+
+      attempt++
+      slug = `${baseSlug}-${attempt}`
+    }
+
+    if (attempt >= 100) {
+      // Fallback to timestamp-based slug
+      slug = `${baseSlug}-${Date.now()}`
+    }
+
+    console.log('Creating signal with slug:', slug)
 
     // Create signal
     const signal = await prisma.signalTrade.create({
@@ -150,11 +198,27 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('Signal created successfully:', signal.id)
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.issues }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Invalid input', 
+        details: error.issues.map(issue => ({
+          path: issue.path,
+          message: issue.message
+        }))
+      }, { status: 400 })
     }
+    
+    // Handle Prisma unique constraint errors
+    if (error instanceof Error && error.message.includes('Unique constraint')) {
+      console.error('Slug collision error:', error)
+      return NextResponse.json({ 
+        error: 'A signal with this slug already exists. Please try again.' 
+      }, { status: 409 })
+    }
+    
     console.error('Error creating signal:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

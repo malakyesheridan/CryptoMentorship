@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { formatRelative } from 'date-fns'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal, Edit, Trash2, Reply } from 'lucide-react'
 import type { ChatMessage } from '@/lib/community/types'
@@ -11,6 +11,7 @@ interface MessageListProps {
   messages: ChatMessage[]
   isLoading?: boolean
   currentUserId?: string
+  isAdmin?: boolean
   onEdit?: (message: ChatMessage) => void
   onDelete?: (message: ChatMessage) => void
   onReply?: (message: ChatMessage) => void
@@ -20,11 +21,29 @@ export default function MessageList({
   messages, 
   isLoading, 
   currentUserId,
+  isAdmin = false,
   onEdit,
   onDelete,
   onReply 
 }: MessageListProps) {
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const prevMessagesLengthRef = useRef(0)
+
+  // Auto-scroll to bottom when messages change (new messages added)
+  useEffect(() => {
+    const hasNewMessages = messages.length > prevMessagesLengthRef.current
+    const isInitialLoad = prevMessagesLengthRef.current === 0 && messages.length > 0
+    
+    if ((hasNewMessages || isInitialLoad) && messagesEndRef.current) {
+      // Use instant scroll for initial load, smooth for new messages
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: isInitialLoad ? 'auto' : 'smooth' 
+      })
+    }
+    
+    prevMessagesLengthRef.current = messages.length
+  }, [messages])
 
   if (isLoading) {
     return (
@@ -57,7 +76,7 @@ export default function MessageList({
         const isTemp = message.id.startsWith('tmp:')
         const timestamp = new Date(message.createdAt)
         const isOwnMessage = currentUserId && message.userId === currentUserId
-        const canModify = isOwnMessage && !isTemp
+        const canModify = (isOwnMessage || isAdmin) && !isTemp
 
         return (
           <div 
@@ -133,6 +152,8 @@ export default function MessageList({
           </div>
         )
       })}
+      {/* Invisible element at the bottom for scroll target */}
+      <div ref={messagesEndRef} />
     </div>
   )
 }

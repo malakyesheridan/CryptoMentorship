@@ -9,48 +9,118 @@ import { Button } from '@/components/ui/button'
 import AdminSignalUploadWrapper from '@/components/AdminSignalUploadWrapper'
 import { PortfolioContent } from '@/components/signals/PortfolioContent'
 import { getOpenPositions, getClosedTrades } from '@/lib/portfolio/metrics'
+import { unstable_cache } from 'next/cache'
+import { Suspense } from 'react'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes (300 seconds) - portfolio data is historical, not real-time
+export const revalidate = 300
+
+// Cache portfolio metrics for 5 minutes
+const getCachedPortfolioMetrics = unstable_cache(
+  async () => {
+    try {
+      const { getPortfolioMetrics } = await import('@/lib/portfolio/metrics')
+      return await getPortfolioMetrics('ALL')
+    } catch (error) {
+      console.error('Error fetching portfolio metrics:', error)
+      return null
+    }
+  },
+  ['portfolio-metrics'],
+  { revalidate: 300 } // 5 minutes
+)
 
 async function getPortfolioMetrics() {
-  try {
-    const { getPortfolioMetrics } = await import('@/lib/portfolio/metrics')
-    return await getPortfolioMetrics('ALL')
-  } catch (error) {
-    console.error('Error fetching portfolio metrics:', error)
-    return null
-  }
+  return getCachedPortfolioMetrics()
 }
 
-async function getPerformanceData() {
-  try {
-    const { getServerSession } = await import('next-auth')
-    const { authOptions } = await import('@/lib/auth-server')
-    const { prisma } = await import('@/lib/prisma')
-    const { 
-      buildEquityCurve, 
-      calculatePerformanceStats, 
-      calculateMonthlyReturns,
-      filterTradesByScope
-    } = await import('@/lib/perf')
-
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user) {
-      return null
+// ✅ Cache getContent() calls for signals - CRITICAL: This was causing slow initial loads
+const getCachedSignals = unstable_cache(
+  async () => {
+    try {
+      const { getContent } = await import('@/lib/content')
+      const signalsResult = await getContent({ kind: 'signal' })
+      return Array.isArray(signalsResult) ? signalsResult : signalsResult.data
+    } catch (error) {
+      console.error('Error fetching signals:', error)
+      return []
     }
+  },
+  ['portfolio-signals'],
+  { revalidate: 300 } // 5 minutes
+)
 
-    const settings = await prisma.portfolioSetting.findFirst({
-      orderBy: { createdAt: 'desc' }
-    })
-
-    if (!settings) {
-      return null
+// ✅ Cache open positions for 5 minutes - CRITICAL: This was causing slow initial loads
+const getCachedOpenPositions = unstable_cache(
+  async () => {
+    try {
+      const { getOpenPositions } = await import('@/lib/portfolio/metrics')
+      return await getOpenPositions()
+    } catch (error) {
+      console.error('Error fetching open positions:', error)
+      return []
     }
+  },
+  ['portfolio-open-positions'],
+  { revalidate: 300 } // 5 minutes
+)
 
-    const allTrades = await prisma.signalTrade.findMany({
-      orderBy: { entryTime: 'asc' }
-    })
+// ✅ Cache closed trades for 5 minutes - CRITICAL: This was causing slow initial loads
+// Create cached function at module level (not inside function) to ensure proper caching
+// Since we only use limit=50, create a cached function for that specific limit
+const getCachedClosedTrades = unstable_cache(
+  async () => {
+    try {
+      const { getClosedTrades } = await import('@/lib/portfolio/metrics')
+      return await getClosedTrades(50)
+    } catch (error) {
+      console.error('Error fetching closed trades:', error)
+      return []
+    }
+  },
+  ['portfolio-closed-trades-50'], // Stable cache key with limit in the key
+  { revalidate: 300 } // 5 minutes
+)
+
+// Cache performance data for 5 minutes
+const getCachedPerformanceData = unstable_cache(
+  async () => {
+    try {
+      const { getServerSession } = await import('next-auth')
+      const { authOptions } = await import('@/lib/auth-server')
+      const { prisma } = await import('@/lib/prisma')
+      const { 
+        buildEquityCurve, 
+        calculatePerformanceStats, 
+        calculateMonthlyReturns,
+        filterTradesByScope
+      } = await import('@/lib/perf')
+
+      const session = await getServerSession(authOptions)
+      
+      if (!session?.user) {
+        return null
+      }
+
+      const settings = await prisma.portfolioSetting.findFirst({
+        orderBy: { createdAt: 'desc' }
+      })
+
+      if (!settings) {
+        return null
+      }
+
+      // Limit to last 2 years OR 10,000 trades max (whichever is more restrictive)
+      const twoYearsAgo = new Date()
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+      
+      const allTrades = await prisma.signalTrade.findMany({
+        where: {
+          entryTime: { gte: twoYearsAgo }
+        },
+        orderBy: { entryTime: 'asc' },
+        take: 10000 // Safety limit
+      })
 
     const filteredTrades = filterTradesByScope(allTrades as any, 'ALL')
 
@@ -99,30 +169,37 @@ async function getPerformanceData() {
       }))
     }
 
-    return {
-      success: true,
-      data: performanceData
+      return {
+        success: true,
+        data: performanceData
+      }
+    } catch (error) {
+      console.error('Error fetching performance data:', error)
+      return null
     }
-  } catch (error) {
-    console.error('Error fetching performance data:', error)
-    return null
-  }
+  },
+  ['portfolio-performance'],
+  { revalidate: 300 } // 5 minutes
+)
+
+async function getPerformanceData() {
+  return getCachedPerformanceData()
 }
 
 export default async function PortfolioPage() {
   try {
-    const signalsResult = await getContent({ kind: 'signal' })
-    const signals = Array.isArray(signalsResult) ? signalsResult : signalsResult.data
     const session = await getSession()
     const userRole = session?.user?.role || 'guest'
     const userTier = (session?.user as any)?.membershipTier || null
     
-    // Fetch all portfolio data in parallel
-    const [metrics, openPositions, closedTrades, performanceData] = await Promise.all([
+    // ✅ OPTIMIZED: All data fetching is now cached - this should dramatically improve initial load times
+    // All queries are cached for 5 minutes, so subsequent loads will be instant
+    const [signals, metrics, openPositions, closedTrades] = await Promise.all([
+      getCachedSignals(),
       getPortfolioMetrics(),
-      getOpenPositions().catch(() => []),
-      getClosedTrades(50).catch(() => []),
-      getPerformanceData()
+      getCachedOpenPositions(),
+      getCachedClosedTrades(),
+      // performanceData removed - loads client-side via API route
     ])
 
   return (
@@ -133,49 +210,12 @@ export default async function PortfolioPage() {
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
+              <span className="text-white">My </span>
               <span className="text-yellow-400">Portfolio</span>
             </h1>
             <p className="text-xl text-slate-300 mb-8">
-              Long-term investment portfolio and holdings for members
+              View Daily Updates to Coen&apos;s Portfolio
             </p>
-            {metrics ? (
-              <div className="flex items-center justify-center gap-6 text-slate-400 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  <span className="font-medium">
-                    {openPositions.length} Active Holdings
-                  </span>
-                </div>
-                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-                <div className="flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  <span className="font-medium">{closedTrades.length} Investments</span>
-                </div>
-                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  <span className="font-medium">Long-term Focus</span>
-                </div>
-                {metrics.totalReturn > 0 && (
-                  <>
-                    <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-400 text-lg font-bold">●</span>
-                      <span className="font-medium">
-                        {metrics.totalReturn >= 0 ? '+' : ''}{metrics.totalReturn.toFixed(1)}% All Time Return
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-6 text-slate-400">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  <span className="font-medium">Loading portfolio...</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -185,15 +225,20 @@ export default async function PortfolioPage() {
         <AdminSignalUploadWrapper userRole={userRole} />
 
         {/* Unified Portfolio Content with Tabs */}
-        <PortfolioContent
-          metrics={metrics}
-          openPositions={openPositions}
-          closedTrades={closedTrades}
-          performanceData={performanceData}
-          signals={signals}
-          userRole={userRole}
-          userTier={userTier}
-        />
+        <Suspense fallback={
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+          </div>
+        }>
+          <PortfolioContent
+            metrics={metrics}
+            openPositions={openPositions}
+            closedTrades={closedTrades}
+            signals={signals}
+            userRole={userRole}
+            userTier={userTier}
+          />
+        </Suspense>
 
         {/* Disclaimer */}
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mt-12">

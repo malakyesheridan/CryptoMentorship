@@ -27,9 +27,43 @@ export const D = (x: number | string | Decimal): Decimal => {
 /**
  * Convert Decimal to number with controlled precision
  * Uses 15 significant digits to avoid floating point precision issues
+ * Handles various input types safely
  */
-export const toNum = (d: Decimal): number => {
-  return Number(d.toSignificantDigits(15).toString())
+export const toNum = (d: Decimal | number | string | null | undefined): number => {
+  // Handle null/undefined
+  if (d == null) {
+    return 0
+  }
+  
+  // If already a number, return it
+  if (typeof d === 'number') {
+    return d
+  }
+  
+  // If it's a string, try to parse it
+  if (typeof d === 'string') {
+    const parsed = Number(d)
+    return isNaN(parsed) ? 0 : parsed
+  }
+  
+  // If it's a Decimal object, convert it
+  if (d instanceof Decimal) {
+    return Number(d.toSignificantDigits(15).toString())
+  }
+  
+  // If it has toSignificantDigits method (Prisma Decimal type), use it
+  if (d && typeof d === 'object' && 'toSignificantDigits' in d && typeof (d as any).toSignificantDigits === 'function') {
+    return Number((d as any).toSignificantDigits(15).toString())
+  }
+  
+  // If it has toNumber method (Prisma Decimal type), use it
+  if (d && typeof d === 'object' && 'toNumber' in d && typeof (d as any).toNumber === 'function') {
+    return (d as any).toNumber()
+  }
+  
+  // Fallback: try to convert to number
+  const num = Number(d)
+  return isNaN(num) ? 0 : num
 }
 
 /**

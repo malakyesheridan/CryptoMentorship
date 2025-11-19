@@ -4,7 +4,8 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 30 seconds - notifications need to be relatively fresh
+export const revalidate = 30
 
 // GET /api/notifications - Get user's notifications with pagination
 export async function GET(request: NextRequest) {

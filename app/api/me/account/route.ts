@@ -3,8 +3,8 @@ import { requireUser } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
-// Force dynamic rendering since this uses authentication headers
-export const dynamic = 'force-dynamic'
+// Cache for 60 seconds - account data doesn't change frequently
+export const revalidate = 60
 
 /**
  * GET /api/me/account
@@ -13,6 +13,8 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: NextRequest) {
   try {
     const user = await requireUser()
+    
+    logger.info('Fetching account data', { userId: user.id, userEmail: user.email })
 
     // Fetch user with membership data
     const userData = await prisma.user.findUnique({
@@ -34,8 +36,21 @@ export async function GET(req: NextRequest) {
     })
 
     if (!userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      logger.warn('User not found in database', { 
+        userId: user.id, 
+        userEmail: user.email,
+        sessionUser: user 
+      })
+      return NextResponse.json(
+        { 
+          error: 'User not found',
+          details: `User ID ${user.id} from session not found in database. This may indicate a session/database mismatch.`
+        },
+        { status: 404 }
+      )
     }
+    
+    logger.info('User found, fetching membership', { userId: userData.id })
 
     // Fetch membership data
     const membership = await prisma.membership.findUnique({
@@ -59,10 +74,27 @@ export async function GET(req: NextRequest) {
       membership: membership || null,
     })
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error(
       'Get account data error',
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+        errorMessage,
+      }
     )
+    
+    // Return more detailed error in development
+    if (process.env.NODE_ENV === 'development') {
+      return NextResponse.json(
+        { 
+          error: 'Failed to get account data',
+          details: errorMessage,
+        },
+        { status: 500 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Failed to get account data' },
       { status: 500 }

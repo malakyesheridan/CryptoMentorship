@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Send, Paperclip, Smile } from 'lucide-react'
+import { Send } from 'lucide-react'
 
 interface MessageInputProps {
   onSend: (text: string) => Promise<void> | void
@@ -26,6 +26,9 @@ export default function MessageInput({
   const [busy, setBusy] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const typingDebounceRef = useRef<NodeJS.Timeout | null>(null)
+  const lastTypingCallRef = useRef<number>(0)
+  const isTypingRef = useRef<boolean>(false)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -42,26 +45,39 @@ export default function MessageInput({
     }
   }, [replyTo])
 
-  // Handle typing indicators
+  // Handle typing indicators with aggressive debouncing (2 second minimum between calls)
   const handleTextChange = (value: string) => {
     setText(value)
     
     if (onTyping && !disabled && !busy) {
-      // Clear existing timeout
+      // Clear existing timeouts
+      if (typingDebounceRef.current) {
+        clearTimeout(typingDebounceRef.current)
+      }
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
       }
       
-      // Send typing start if there's text
       if (value.trim()) {
-        onTyping(true)
+        const now = Date.now()
+        // Only send typing indicator if 2 seconds have passed since last call
+        if (!isTypingRef.current || now - lastTypingCallRef.current > 2000) {
+          onTyping(true)
+          lastTypingCallRef.current = now
+          isTypingRef.current = true
+        }
         
-        // Send typing stop after 2 seconds of inactivity
+        // Send typing stop after 3 seconds of inactivity
         typingTimeoutRef.current = setTimeout(() => {
           onTyping(false)
-        }, 2000)
+          isTypingRef.current = false
+        }, 3000)
       } else {
-        onTyping(false)
+        // Immediately stop typing if text is cleared
+        if (isTypingRef.current) {
+          onTyping(false)
+          isTypingRef.current = false
+        }
       }
     }
   }
@@ -84,11 +100,14 @@ export default function MessageInput({
     }
   }
 
-  // Cleanup typing timeout on unmount
+  // Cleanup typing timeouts on unmount
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
+      }
+      if (typingDebounceRef.current) {
+        clearTimeout(typingDebounceRef.current)
       }
     }
   }, [])
@@ -133,29 +152,9 @@ export default function MessageInput({
             onKeyDown={handleKeyDown}
             disabled={disabled || busy}
             placeholder={disabled ? 'Select a channel…' : placeholder}
-            className="min-h-[44px] max-h-[120px] resize-none pr-12 border-slate-200 focus:border-yellow-500 focus:ring-yellow-500 rounded-lg"
+            className="min-h-[44px] max-h-[120px] resize-none border-slate-200 focus:border-yellow-500 focus:ring-yellow-500 rounded-lg"
             rows={1}
           />
-          <div className="absolute right-3 bottom-3 flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
-              disabled={disabled || busy}
-            >
-              <Paperclip className="w-3 h-3" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
-              disabled={disabled || busy}
-            >
-              <Smile className="w-3 h-3" />
-            </Button>
-          </div>
         </div>
         <Button
           type="submit"

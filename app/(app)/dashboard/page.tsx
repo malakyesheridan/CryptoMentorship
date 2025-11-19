@@ -6,37 +6,29 @@ import {
   ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
+import { SubscriptionGuard } from '@/components/SubscriptionGuard'
+
+// Revalidate every 5 minutes - dashboard is mostly static
+export const revalidate = 300
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   
   // Check subscription for dashboard access
-  if (session?.user) {
-    // Admins bypass subscription requirements
-    if (session.user.role === 'admin') {
-      // Allow admin access
-    } else {
-      try {
-        const { hasActiveSubscription } = await import('@/lib/access')
-        const hasSubscription = await hasActiveSubscription(session.user.id)
-        
-        if (!hasSubscription) {
-          redirect('/subscribe?required=true')
-        }
-      } catch (error) {
-        // If subscription check fails (e.g., database schema issues), redirect to subscribe
-        console.error('Subscription check error:', error)
-        redirect('/subscribe?required=true')
-      }
-    }
+  // ✅ OPTIMIZED: Admins bypass, others checked via client-side (non-blocking)
+  // Subscription check moved to client-side to avoid blocking page load
+  // The /api/me/subscription-status endpoint is cached and fast
+  if (session?.user && session.user.role !== 'admin') {
+    // For non-admins, we'll check subscription client-side
+    // This allows the page to render immediately while check happens in background
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <SubscriptionGuard userRole={session?.user?.role}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
@@ -53,15 +45,7 @@ export default async function DashboardPage() {
 
       <div className="container mx-auto px-4 py-12">
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Link href="/research" className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-            </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Research</h3>
-            <p className="text-sm text-slate-600">Market analysis & insights</p>
-          </Link>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <Link href="/crypto-compass" className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-200 transition-colors">
               <Play className="h-6 w-6 text-yellow-600" />
@@ -74,8 +58,8 @@ export default async function DashboardPage() {
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
               <TrendingUp className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Portfolio</h3>
-            <p className="text-sm text-slate-600">Portfolio positions</p>
+            <h3 className="font-semibold text-slate-900 mb-2">My Portfolio</h3>
+            <p className="text-sm text-slate-600">View Daily Updates to Coen&apos;s Portfolio</p>
           </Link>
 
           <Link href="/learning" className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
@@ -112,5 +96,6 @@ export default async function DashboardPage() {
         </div>
       </div>
     </div>
+    </SubscriptionGuard>
   )
 }

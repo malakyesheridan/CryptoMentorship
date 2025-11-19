@@ -58,9 +58,12 @@ export async function getContent(filters: ContentFilters = {}) {
     take: limit,
     select: {
       id: true,
+      slug: true,
       kind: true,
       title: true,
       excerpt: true,
+      coverUrl: true,
+      minTier: true,
       publishedAt: true,
       locked: true,
     }

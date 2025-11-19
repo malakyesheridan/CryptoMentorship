@@ -18,13 +18,15 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - learning tracks are published content
+export const revalidate = 300
 
 async function getTracks() {
   const tracks = await prisma.track.findMany({
     where: {
       publishedAt: { not: null },
     },
+    take: 50, // Limit to 50 tracks max
     include: {
       sections: {
         include: {
@@ -59,6 +61,7 @@ async function getTracks() {
 async function getUserEnrollments(userId: string) {
   const enrollments = await prisma.enrollment.findMany({
     where: { userId },
+    take: 50, // Limit to 50 enrollments max
     include: {
       track: {
         select: { id: true, slug: true, title: true },

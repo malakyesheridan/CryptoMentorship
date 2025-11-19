@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Calendar, User, Tag } from 'lucide-react'
+import { ArrowLeft, Calendar, User, Tag, Edit } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 import { ViewTracker } from '@/components/ViewTracker'
@@ -14,7 +14,8 @@ import { MDXRenderer } from '@/components/MDXRenderer'
 import { renderMDX } from '@/lib/mdx'
 import { BookmarkButton } from '@/components/BookmarkButton'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - content is published, not real-time
+export const revalidate = 300
 
 async function getContent(slug: string) {
   const content = await prisma.content.findUnique({
@@ -83,16 +84,26 @@ export default async function ContentPage({
         <ViewTracker entityType="content" entityId={content.id} disabled={!session.user?.id} />
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Link href="/resources">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Resources
-              </Button>
-            </Link>
-            <Badge variant="secondary" className="capitalize">
-              {content.kind}
-            </Badge>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Link href="/resources">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Resources
+                </Button>
+              </Link>
+              <Badge variant="secondary" className="capitalize">
+                {content.kind}
+              </Badge>
+            </div>
+            {['admin', 'editor'].includes(session.user.role || '') && (
+              <Link href={`/admin/content/${content.id}/edit`}>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Edit className="h-4 w-4" />
+                  Edit Content
+                </Button>
+              </Link>
+            )}
           </div>
           
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">

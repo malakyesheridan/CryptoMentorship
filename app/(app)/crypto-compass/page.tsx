@@ -1,11 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth-server'
-import { Play, Calendar, Clock } from 'lucide-react'
+import { Play, Calendar } from 'lucide-react'
 import AdminCryptoCompassUploadWrapper from '@/components/AdminCryptoCompassUploadWrapper'
 import { CryptoCompassContent } from '@/components/cryptocompass/CryptoCompassContent'
 import { CryptoCompassError } from '@/components/cryptocompass/CryptoCompassError'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - episodes are published content, not real-time
+export const revalidate = 300
 
 export default async function CryptoCompassPage({ 
   searchParams 
@@ -87,11 +88,6 @@ export default async function CryptoCompassPage({
                 <div className="flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
                   <span className="font-medium">Weekly Updates</span>
-                </div>
-                <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  <span className="font-medium">15min Episodes</span>
                 </div>
               </div>
             </div>

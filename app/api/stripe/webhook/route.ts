@@ -3,6 +3,7 @@ import { stripe, isStripeConfigured } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { env } from '@/lib/env'
 import { logger } from '@/lib/logger'
+import { createCommissionIfReferred } from '@/lib/referrals'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -231,7 +232,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   }
   
   // Create payment record
-  await prisma.payment.create({
+  const payment = await prisma.payment.create({
     data: {
       userId: membership.userId,
       membershipId: membership.id,
@@ -253,6 +254,43 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       status: 'active',
     },
   })
+
+  // Create commission if user was referred (NON-BLOCKING: errors don't fail payment processing)
+  try {
+    const commissionResult = await createCommissionIfReferred(
+      membership.userId,
+      payment.id,
+      invoice.amount_paid / 100
+    )
+    if (commissionResult.success) {
+      logger.info('Commission created from payment', {
+        commissionId: commissionResult.commissionId,
+        userId: membership.userId,
+        paymentId: payment.id,
+        amount: invoice.amount_paid / 100,
+      })
+    } else {
+      // User wasn't referred - this is fine, not an error
+      if (commissionResult.error !== 'User was not referred') {
+        logger.warn('Commission creation failed (non-blocking)', {
+          userId: membership.userId,
+          paymentId: payment.id,
+          error: commissionResult.error,
+        })
+      }
+    }
+  } catch (error) {
+    // Log error but don't fail webhook - payment processing succeeded
+    logger.error(
+      'Commission creation error (non-blocking)',
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        userId: membership.userId,
+        paymentId: payment.id,
+        amount: invoice.amount_paid / 100,
+      }
+    )
+  }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {

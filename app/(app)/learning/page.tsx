@@ -37,148 +37,194 @@ import { LearningAnalytics } from '@/components/learning/LearningAnalytics'
 import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
 import { LearningHubContent } from '@/components/learning/LearningHubContent'
 import { getEnhancedMetrics } from '@/lib/analytics'
+import { unstable_cache } from 'next/cache'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - learning content is not real-time
+export const revalidate = 300
 
-// Fetch resources for Learning Hub
-async function getResources() {
-  try {
-    const resources = await prisma.content.findMany({
-      where: { kind: 'resource' },
-      orderBy: { publishedAt: 'desc' },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        coverUrl: true,
-        tags: true,
-        publishedAt: true,
-        locked: true,
-        kind: true,
-        minTier: true,
-      }
-    })
-
-    return resources.map((resource) => ({
-      id: resource.id,
-      slug: resource.slug ?? resource.id,
-      title: resource.title,
-      description: resource.excerpt ?? null,
-      coverUrl: resource.coverUrl ?? '/images/placeholders/resource-cover.jpg',
-      tags: resource.tags ?? null,
-      publishedAt: resource.publishedAt ?? null,
-      locked: resource.locked,
-      kind: resource.kind,
-      minTier: resource.minTier,
-    }))
-  } catch (error) {
-    console.error('Error fetching resources:', error)
-    return []
-  }
-}
-
-async function getUserEnrollments(userId: string) {
-  const enrollments = await prisma.enrollment.findMany({
-    where: { userId },
-    include: {
-      track: {
+// Cache resources for 5 minutes
+const getCachedResources = unstable_cache(
+  async () => {
+    try {
+      const { prisma } = await import('@/lib/prisma')
+      const resources = await prisma.content.findMany({
+        where: { kind: 'resource' },
+        orderBy: { publishedAt: 'desc' },
+        take: 50, // Limit to 50 most recent resources
         select: {
           id: true,
           slug: true,
           title: true,
-          summary: true,
+          excerpt: true,
           coverUrl: true,
-          minTier: true,
+          tags: true,
           publishedAt: true,
-          sections: {
-            include: {
+          locked: true,
+          kind: true,
+          minTier: true,
+        }
+      })
+
+      return resources.map((resource) => ({
+        id: resource.id,
+        slug: resource.slug ?? resource.id,
+        title: resource.title,
+        description: resource.excerpt ?? null,
+        coverUrl: resource.coverUrl ?? '/images/placeholders/resource-cover.jpg',
+        tags: resource.tags ?? null,
+        publishedAt: resource.publishedAt ?? null,
+        locked: resource.locked,
+        kind: resource.kind,
+        minTier: resource.minTier,
+      }))
+    } catch (error) {
+      console.error('Error fetching resources:', error)
+      return []
+    }
+  },
+  ['learning-resources'],
+  { revalidate: 300 }
+)
+
+// Fetch resources for Learning Hub
+async function getResources() {
+  return getCachedResources()
+}
+
+// ✅ Cache enrollments query for 5 minutes (per-user)
+async function getUserEnrollments(userId: string) {
+  const getCachedEnrollments = unstable_cache(
+    async () => {
+      const { prisma } = await import('@/lib/prisma')
+      return await prisma.enrollment.findMany({
+        where: { userId },
+        take: 50, // Limit to 50 most recent enrollments
+        include: {
+          track: {
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              summary: true,
+              coverUrl: true,
+              minTier: true,
+              publishedAt: true,
+              sections: {
+                include: {
+                  lessons: {
+                    where: { publishedAt: { not: null } },
+                    select: { id: true, durationMin: true },
+                  },
+                },
+              },
               lessons: {
                 where: { publishedAt: { not: null } },
                 select: { id: true, durationMin: true },
               },
             },
           },
-          lessons: {
-            where: { publishedAt: { not: null } },
-            select: { id: true, durationMin: true },
+        },
+        orderBy: [
+          { progressPct: 'desc' }, // In-progress first
+          { startedAt: 'desc' }   // Then by most recent
+        ],
+      })
+    },
+    [`user-enrollments-${userId}`],
+    { revalidate: 300 } // 5 minutes
+  )
+  return getCachedEnrollments()
+}
+
+// ✅ Cache progress query for 5 minutes (per-user)
+async function getUserProgress(userId: string) {
+  const getCachedProgress = unstable_cache(
+    async () => {
+      const { prisma } = await import('@/lib/prisma')
+      return await prisma.lessonProgress.findMany({
+        where: { userId },
+        take: 100, // Limit to 100 most recent progress records
+        include: {
+          lesson: {
+            select: {
+              id: true,
+              trackId: true,
+              title: true,
+              durationMin: true,
+            },
           },
         },
-      },
+        orderBy: { completedAt: 'desc' },
+      })
     },
-    orderBy: [
-      { progressPct: 'desc' }, // In-progress first
-      { startedAt: 'desc' }   // Then by most recent
-    ],
-  })
-
-  return enrollments
+    [`user-progress-${userId}`],
+    { revalidate: 300 } // 5 minutes
+  )
+  return getCachedProgress()
 }
 
-async function getUserProgress(userId: string) {
-  const progress = await prisma.lessonProgress.findMany({
-    where: { userId },
-    include: {
-      lesson: {
-        select: {
-          id: true,
-          trackId: true,
-          title: true,
-          durationMin: true,
-        },
-      },
-    },
-    orderBy: { completedAt: 'desc' },
-  })
-
-  return progress
-}
-
+// ✅ Cache certificates query for 5 minutes (per-user)
 async function getUserCertificates(userId: string) {
-  const certificates = await prisma.certificate.findMany({
-    where: { userId },
-    include: {
-      track: {
-        select: {
-          title: true,
-          slug: true,
+  const getCachedCertificates = unstable_cache(
+    async () => {
+      const { prisma } = await import('@/lib/prisma')
+      return await prisma.certificate.findMany({
+        where: { userId },
+        take: 50, // Limit to 50 most recent certificates
+        include: {
+          track: {
+            select: {
+              title: true,
+              slug: true,
+            },
+          },
         },
-      },
+        orderBy: { issuedAt: 'desc' },
+      })
     },
-    orderBy: { issuedAt: 'desc' },
-  })
-
-  return certificates
+    [`user-certificates-${userId}`],
+    { revalidate: 300 } // 5 minutes
+  )
+  return getCachedCertificates()
 }
 
+// ✅ Cache learning activity query for 5 minutes (per-user)
 async function getLearningActivity(userId: string, days: number = 7) {
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() - days)
-  
-  const activity = await prisma.lessonProgress.findMany({
-    where: {
-      userId,
-      completedAt: { gte: startDate }
-    },
-    select: {
-      completedAt: true
-    },
-    orderBy: { completedAt: 'asc' }
-  })
+  const getCachedLearningActivity = unstable_cache(
+    async () => {
+      const { prisma } = await import('@/lib/prisma')
+      const startDate = new Date()
+      startDate.setDate(startDate.getDate() - days)
+      
+      const activity = await prisma.lessonProgress.findMany({
+        where: {
+          userId,
+          completedAt: { gte: startDate }
+        },
+        select: {
+          completedAt: true
+        },
+        orderBy: { completedAt: 'asc' }
+      })
 
-  // Group by date and count lessons per day
-  const activityByDate = activity.reduce((acc, item) => {
-    if (item.completedAt) {
-      const date = item.completedAt.toISOString().split('T')[0]
-      acc[date] = (acc[date] || 0) + 1
-    }
-    return acc
-  }, {} as Record<string, number>)
+      // Group by date and count lessons per day
+      const activityByDate = activity.reduce((acc, item) => {
+        if (item.completedAt) {
+          const date = item.completedAt.toISOString().split('T')[0]
+          acc[date] = (acc[date] || 0) + 1
+        }
+        return acc
+      }, {} as Record<string, number>)
 
-  return Object.entries(activityByDate).map(([date, count]) => ({
-    date,
-    count
-  }))
+      return Object.entries(activityByDate).map(([date, count]) => ({
+        date,
+        count
+      }))
+    },
+    [`learning-activity-${userId}-${days}`],
+    { revalidate: 300 } // 5 minutes
+  )
+  return getCachedLearningActivity()
 }
 
 // Helper function to transform enrollment data for CourseCarousel
@@ -202,49 +248,66 @@ function transformEnrollmentsForCarousel(enrollments: any[]) {
   })
 }
 
-// Function to get all available courses for search
+// ✅ Cache all courses query for 5 minutes (per-user for enrollment data)
 async function getAllCourses(userId: string) {
-  const [tracks, enrollments] = await Promise.all([
-    prisma.track.findMany({
-      where: {
-        publishedAt: { not: null }
-      },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        summary: true,
-        coverUrl: true,
-        publishedAt: true,
-      },
-      orderBy: { publishedAt: 'desc' }
-    }),
-    prisma.enrollment.findMany({
-      where: { userId },
-      select: {
-        trackId: true,
-        progressPct: true
-      }
-    })
-  ])
+  const getCachedAllCourses = unstable_cache(
+    async () => {
+      const { prisma } = await import('@/lib/prisma')
+      const [tracks, enrollments] = await Promise.all([
+        prisma.track.findMany({
+          where: {
+            publishedAt: { not: null }
+          },
+          take: 100, // Limit to 100 most recent tracks
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            summary: true,
+            coverUrl: true,
+            publishedAt: true,
+          },
+          orderBy: { publishedAt: 'desc' }
+        }),
+        prisma.enrollment.findMany({
+          where: { userId },
+          select: {
+            trackId: true,
+            progressPct: true
+          }
+        })
+      ])
 
-  const enrollmentMap = new Map(enrollments.map(e => [e.trackId, e.progressPct]))
+      const enrollmentMap = new Map(enrollments.map(e => [e.trackId, e.progressPct]))
 
-  return tracks.map(track => ({
-    id: track.id,
-    slug: track.slug,
-    title: track.title,
-    description: track.summary,
-    coverUrl: track.coverUrl,
-    publishedAt: track.publishedAt,
-    isEnrolled: enrollmentMap.has(track.id),
-    progressPct: enrollmentMap.get(track.id) || 0
-  }))
+      return tracks.map(track => ({
+        id: track.id,
+        slug: track.slug,
+        title: track.title,
+        description: track.summary,
+        coverUrl: track.coverUrl,
+        publishedAt: track.publishedAt,
+        isEnrolled: enrollmentMap.has(track.id),
+        progressPct: enrollmentMap.get(track.id) || 0
+      }))
+    },
+    [`all-courses-${userId}`],
+    { revalidate: 300 } // 5 minutes
+  )
+  return getCachedAllCourses()
 }
 
+// ✅ Cache enhanced metrics query for 5 minutes (per-user)
 async function getEnhancedProgressMetrics(userId: string) {
-  // Use shared analytics function for consistency
-  return await getEnhancedMetrics(userId)
+  const getCachedEnhancedMetrics = unstable_cache(
+    async () => {
+      const { getEnhancedMetrics } = await import('@/lib/analytics')
+      return await getEnhancedMetrics(userId)
+    },
+    [`enhanced-metrics-${userId}`],
+    { revalidate: 300 } // 5 minutes
+  )
+  return getCachedEnhancedMetrics()
 }
 
 export default async function LearningDashboardPage() {

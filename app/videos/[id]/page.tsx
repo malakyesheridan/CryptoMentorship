@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Eye, Clock, Calendar, User } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - videos are published content
+export const revalidate = 300
 
 export default async function VideoPage({ params }: { params: { id: string } }) {
   // Test database query

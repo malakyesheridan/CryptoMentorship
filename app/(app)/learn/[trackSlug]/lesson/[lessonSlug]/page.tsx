@@ -8,7 +8,8 @@ import { ViewTracker } from '@/components/ViewTracker'
 import { renderMDX } from '@/lib/mdx'
 import { checkLessonAccess } from '@/lib/cohorts'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - lesson content is published, not real-time
+export const revalidate = 300
 
 async function getTrack(slug: string) {
   const track = await prisma.track.findUnique({

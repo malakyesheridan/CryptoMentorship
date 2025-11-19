@@ -3,6 +3,11 @@ const nextConfig = {
   // App Router is stable in Next.js 14+
   // No experimental flags needed
   
+  // Production optimizations
+  compress: true,
+  poweredByHeader: false,
+  
+  // Optimize images
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'i.ytimg.com' },
@@ -11,7 +16,17 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.imgur.com' },
       // add storage host when used:
       { protocol: 'https', hostname: '**.amazonaws.com' }
-    ]
+    ],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
+  },
+  
+  // Optimize bundle size
+  swcMinify: true,
+  
+  // Experimental features for performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dropdown-menu'],
   },
 
   async redirects() {

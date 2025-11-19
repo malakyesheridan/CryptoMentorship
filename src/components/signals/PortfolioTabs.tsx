@@ -2,9 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { TrendingUp, TrendingDown, BarChart3, PieChart } from 'lucide-react'
+import { TrendingUp, BarChart3 } from 'lucide-react'
 
-type TabType = 'open' | 'closed' | 'performance' | 'analytics'
+type TabType = 'open' | 'performance'
 
 interface PortfolioTabsProps {
   activeTab: TabType
@@ -23,19 +23,9 @@ export function PortfolioTabs({ activeTab, onTabChange, stats }: PortfolioTabsPr
       icon: TrendingUp 
     },
     { 
-      id: 'closed' as TabType, 
-      name: `Realized${stats ? ` (${stats.closedTrades})` : ''}`, 
-      icon: TrendingDown 
-    },
-    { 
       id: 'performance' as TabType, 
       name: 'Performance', 
       icon: BarChart3 
-    },
-    { 
-      id: 'analytics' as TabType, 
-      name: 'Analytics', 
-      icon: PieChart 
     },
   ]
 

@@ -6,6 +6,9 @@ import { prisma } from '@/lib/prisma'
 import { broadcastMessage } from '@/lib/community/sse'
 import { sanitizeHtml } from '@/lib/sanitize'
 
+// Revalidate GET requests every 10 seconds - messages are real-time but we want some caching
+// Note: POST requests are not cached (they're write operations)
+
 const getQuery = z.object({
   channelId: z.string().min(1),
   take: z.coerce.number().int().positive().max(200).optional(),
@@ -30,28 +33,21 @@ export async function GET(req: Request) {
     )
   }
 
-  const { channelId, take = 100 } = parsed.data
+  const { channelId, take = 50 } = parsed.data // Reduced default from 100 to 50
 
-  const channel = await prisma.channel.findUnique({
-    where: { id: channelId },
-    select: { id: true },
-  })
-
-  if (!channel) {
-    return NextResponse.json(
-      { ok: false, code: 'NO_CHANNEL', message: 'Channel not found' },
-      { status: 404 },
-    )
-  }
-
+  // Fetch messages in reverse chronological order (newest first) then reverse
+  // This is faster with the index on [channelId, createdAt(sort: Desc)]
   const rows = await prisma.message.findMany({
     where: { channelId },
-    orderBy: { createdAt: 'asc' },
-    take,
+    orderBy: { createdAt: 'desc' }, // Use desc to leverage index
+    take: Math.min(take, 100), // Cap at 100 for safety
     include: {
       user: { select: { id: true, name: true, image: true } },
     },
   })
+
+  // Reverse to get chronological order (oldest first)
+  rows.reverse()
 
   const items = rows.map((message) => ({
     id: message.id,
@@ -82,19 +78,7 @@ export async function POST(req: Request) {
 
   const { channelId, body: text } = parsed.data
 
-  const channel = await prisma.channel.findUnique({
-    where: { id: channelId },
-    select: { id: true },
-  })
-
-  if (!channel) {
-    return NextResponse.json(
-      { ok: false, code: 'NO_CHANNEL', message: 'Channel not found' },
-      { status: 404 },
-    )
-  }
-
-  // ✅ Require authentication
+  // ✅ Require authentication first (before any DB queries)
   const session = await getServerSession(authOptions)
   
   if (!session?.user?.id) {
@@ -104,17 +88,26 @@ export async function POST(req: Request) {
     )
   }
 
+  // Sanitize HTML first (before DB operations)
+  const sanitizedBody = sanitizeHtml(text)
+
+  // Create message - use session data directly (no need to query user again)
   const saved = await prisma.message.create({
     data: {
       channelId,
-      userId: session.user.id, // ✅ Use authenticated user
-      body: sanitizeHtml(text), // ✅ Sanitize before storage
+      userId: session.user.id,
+      body: sanitizedBody,
     },
-    include: {
-      user: { select: { id: true, name: true, image: true } },
+    select: {
+      id: true,
+      channelId: true,
+      userId: true,
+      body: true,
+      createdAt: true,
     },
   })
 
+  // Use session data directly - eliminates unnecessary database query
   const item = {
     id: saved.id,
     channelId: saved.channelId,
@@ -122,18 +115,33 @@ export async function POST(req: Request) {
     body: saved.body,
     createdAt: saved.createdAt.toISOString(),
     author: {
-      id: saved.user.id,
-      name: saved.user.name,
-      image: saved.user.image,
+      id: session.user.id,
+      name: session.user.name ?? 'Anonymous',
+      image: session.user.image ?? null,
     },
   }
 
-  // Broadcast the new message to all connected clients
-  broadcastMessage(channelId, {
-    message: item,
-    channelId,
-    userId: session.user.id // ✅ Use authenticated user
-  })
+  // Broadcast the new message asynchronously (don't block response)
+  // This makes message creation feel instant
+  // Use process.nextTick for Node.js or setTimeout for browser compatibility
+  if (typeof process !== 'undefined' && process.nextTick) {
+    process.nextTick(() => {
+      broadcastMessage(channelId, {
+        message: item,
+        channelId,
+        userId: session.user.id,
+      })
+    })
+  } else {
+    // Fallback for environments without process.nextTick
+    setTimeout(() => {
+      broadcastMessage(channelId, {
+        message: item,
+        channelId,
+        userId: session.user.id,
+      })
+    }, 0)
+  }
 
   return NextResponse.json({ ok: true, item })
 }

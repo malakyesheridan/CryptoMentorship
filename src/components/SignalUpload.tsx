@@ -1,92 +1,106 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, X, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react'
+import { FileUpload } from '@/components/admin/FileUpload'
+import { CheckCircle, AlertCircle, TrendingUp } from 'lucide-react'
+import { json } from '@/lib/http'
+import { toast } from 'sonner'
 
 export default function SignalUpload() {
+  const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
   const [formData, setFormData] = useState({
-    title: '',
+    symbol: '',
     description: '',
-    visibility: 'member',
     tags: '',
-    signalType: 'long',
-    conviction: '3',
-    riskPct: '',
+    entryPrice: '',
+    coverUrl: '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log('🚀 Starting signal upload...')
-    console.log('📋 Form data:', formData)
-
-    if (!formData.title) {
-      console.log('❌ Missing required fields')
-      setErrorMessage('Please enter a signal title')
+    if (!formData.symbol.trim()) {
+      setErrorMessage('Please enter a symbol (e.g., BTC, ETH)')
+      setUploadStatus('error')
+      return
+    }
+    
+    if (!formData.entryPrice || parseFloat(formData.entryPrice) <= 0) {
+      setErrorMessage('Please enter a valid entry price (greater than 0)')
+      setUploadStatus('error')
       return
     }
 
     setIsUploading(true)
     setUploadStatus('uploading')
+    setErrorMessage('')
 
     try {
-      console.log('🌐 Sending request to /api/admin/signals...')
-      const response = await fetch('/api/admin/signals', {
+      // Parse tags
+      const tagsArray = formData.tags
+        ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+        : []
+
+      const requestBody = {
+        symbol: formData.symbol.toUpperCase().trim(),
+        market: 'crypto:spot',
+        direction: 'long' as const, // Default to long
+        thesis: formData.description.trim() || undefined,
+        tags: tagsArray,
+        entryTime: new Date().toISOString(),
+        entryPrice: parseFloat(formData.entryPrice),
+      }
+
+      console.log('Creating signal with body:', requestBody)
+
+      // Use json helper for better error handling
+      const result = await json<{ id: string; symbol: string } | { error: string; details?: any[] }>('/api/admin/signals', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          visibility: formData.visibility,
-          tags: formData.tags,
-          signalType: formData.signalType,
-          conviction: parseInt(formData.conviction),
-          riskPct: formData.riskPct ? parseFloat(formData.riskPct) : null,
-          kind: 'signal',
-        }),
+        body: JSON.stringify(requestBody),
       })
 
-      console.log('📡 Response received:', response.status, response.statusText)
-      const result = await response.json()
-      console.log('📄 Response data:', result)
+      console.log('Signal creation response:', result)
 
-      if (response.ok && result.ok) {
-        console.log('✅ Signal upload successful!')
-        setUploadStatus('success')
-        setFormData({
-          title: '',
-          description: '',
-          visibility: 'member',
-          tags: '',
-          signalType: 'long',
-          conviction: '3',
-          riskPct: '',
-        })
-        // Refresh the page to show the new signal
-        setTimeout(() => {
-          window.location.reload()
-        }, 2000)
-      } else {
-        console.log('❌ Upload failed:', result.message)
-        setUploadStatus('error')
-        setErrorMessage(result.message || `Upload failed (${response.status})`)
-        return
+      // Check if it's an error response
+      if ('error' in result) {
+        const errorDetails = result.details?.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ') || result.error
+        throw new Error(errorDetails)
       }
+
+      // Success!
+      toast.success('Signal created successfully!')
+      setUploadStatus('success')
+      setFormData({
+        symbol: '',
+        description: '',
+        tags: '',
+        entryPrice: '',
+        coverUrl: '',
+      })
+      
+      // Refresh the page data without full reload
+      router.refresh()
+      
+      // Reset status after 2 seconds
+      setTimeout(() => {
+        setUploadStatus('idle')
+      }, 2000)
     } catch (error) {
-      console.error('❌ Upload error:', error)
+      console.error('Signal creation error:', error)
       setUploadStatus('error')
-      setErrorMessage(error instanceof Error ? error.message : 'Upload failed')
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create signal'
+      setErrorMessage(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsUploading(false)
     }
@@ -102,17 +116,40 @@ export default function SignalUpload() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
+          {/* Symbol */}
           <div className="space-y-2">
-            <Label htmlFor="title">Signal Title *</Label>
+            <Label htmlFor="symbol">Symbol *</Label>
             <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="e.g., BTC Long Entry - Technical Breakout"
+              id="symbol"
+              value={formData.symbol}
+              onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
+              placeholder="e.g., BTC, ETH, SOL"
+              required
+              disabled={isUploading}
+              maxLength={10}
+            />
+            <p className="text-xs text-slate-500">
+              The cryptocurrency or asset symbol
+            </p>
+          </div>
+
+          {/* Entry Price */}
+          <div className="space-y-2">
+            <Label htmlFor="entryPrice">Entry Price *</Label>
+            <Input
+              id="entryPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.entryPrice}
+              onChange={(e) => setFormData({ ...formData, entryPrice: e.target.value })}
+              placeholder="e.g., 45000.00"
               required
               disabled={isUploading}
             />
+            <p className="text-xs text-slate-500">
+              The entry price for this position
+            </p>
           </div>
 
           {/* Description */}
@@ -128,55 +165,13 @@ export default function SignalUpload() {
             />
           </div>
 
-          {/* Signal Type */}
+          {/* Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="signalType">Signal Type</Label>
-            <select
-              value={formData.signalType}
-              onChange={(e) => setFormData({ ...formData, signalType: e.target.value })}
-              disabled={isUploading}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-            >
-              <option value="long">Long Position</option>
-              <option value="short">Short Position</option>
-              <option value="neutral">Neutral/Hold</option>
-            </select>
-          </div>
-
-          {/* Conviction Level */}
-          <div className="space-y-2">
-            <Label htmlFor="conviction">Conviction Level (1-5)</Label>
-            <select
-              value={formData.conviction}
-              onChange={(e) => setFormData({ ...formData, conviction: e.target.value })}
-              disabled={isUploading}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-            >
-              <option value="1">1 - Low Conviction</option>
-              <option value="2">2 - Below Average</option>
-              <option value="3">3 - Average</option>
-              <option value="4">4 - High Conviction</option>
-              <option value="5">5 - Maximum Conviction</option>
-            </select>
-          </div>
-
-          {/* Risk Percentage */}
-          <div className="space-y-2">
-            <Label htmlFor="riskPct">Risk Percentage (Optional)</Label>
-            <Input
-              id="riskPct"
-              type="number"
-              step="0.1"
-              min="0"
-              max="100"
-              value={formData.riskPct}
-              onChange={(e) => setFormData({ ...formData, riskPct: e.target.value })}
-              placeholder="e.g., 2.5"
-              disabled={isUploading}
+            <FileUpload
+              value={formData.coverUrl}
+              onChange={(url) => setFormData({ ...formData, coverUrl: url })}
+              label="Signal Image (Optional)"
             />
-            <p className="text-xs text-slate-500">
-              Recommended risk percentage of portfolio for this position
-            </p>
           </div>
 
           {/* Tags/Categories */}
@@ -194,20 +189,6 @@ export default function SignalUpload() {
             </p>
           </div>
 
-          {/* Visibility */}
-          <div className="space-y-2">
-            <Label htmlFor="visibility">Visibility</Label>
-            <select
-              value={formData.visibility}
-              onChange={(e) => setFormData({ ...formData, visibility: e.target.value })}
-              disabled={isUploading}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-            >
-              <option value="public">Public - Everyone can view</option>
-              <option value="member">Member - Members only</option>
-              <option value="admin">Admin - Admins only</option>
-            </select>
-          </div>
 
           {/* Status Messages */}
           {uploadStatus === 'success' && (
@@ -228,7 +209,7 @@ export default function SignalUpload() {
           <Button
             type="submit"
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
-            disabled={isUploading || !formData.title}
+            disabled={isUploading || !formData.symbol || !formData.entryPrice}
           >
             {isUploading ? 'Creating Signal...' : 'Create Investment Signal'}
           </Button>

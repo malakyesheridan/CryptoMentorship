@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
+import { json } from '@/lib/http'
 
 interface PortfolioSettings {
-  id: string
   baseCapitalUsd: number
   positionModel: 'risk_pct' | 'fixed_fraction'
   slippageBps: number
@@ -19,7 +20,6 @@ interface PortfolioSettings {
 export default function PortfolioSettingsPage() {
   const router = useRouter()
   const [settings, setSettings] = useState<PortfolioSettings>({
-    id: '',
     baseCapitalUsd: 10000,
     positionModel: 'risk_pct',
     slippageBps: 5,
@@ -29,23 +29,33 @@ export default function PortfolioSettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    // TODO: Fetch settings from API
-    // For now, use default values
-    setIsLoading(false)
+    const fetchSettings = async () => {
+      try {
+        const data = await json<PortfolioSettings>('/api/admin/signals/settings')
+        setSettings(data)
+      } catch (error) {
+        console.error('Error fetching portfolio settings:', error)
+        toast.error('Failed to load portfolio settings')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchSettings()
   }, [])
 
   const handleSave = async () => {
     setIsSubmitting(true)
     try {
-      // TODO: Implement actual API call to save settings
-      console.log('Saving portfolio settings:', settings)
+      await json('/api/admin/signals/settings', {
+        method: 'POST',
+        body: JSON.stringify(settings),
+      })
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      router.push('/admin/signals')
+      toast.success('Portfolio settings saved successfully')
+      router.push('/admin/settings')
     } catch (error) {
       console.error('Error saving settings:', error)
+      toast.error('Failed to save portfolio settings')
     } finally {
       setIsSubmitting(false)
     }
@@ -68,16 +78,16 @@ export default function PortfolioSettingsPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <Link href="/admin/signals">
+            <Link href="/admin/settings">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Signals
+                Back to Settings
               </Button>
             </Link>
             <div>
               <h1 className="text-3xl font-bold text-slate-900">Portfolio Settings</h1>
               <p className="text-slate-600 mt-2">
-                Configure global parameters for performance calculations
+                Configure parameters for portfolio performance calculations
               </p>
             </div>
           </div>
@@ -207,7 +217,7 @@ export default function PortfolioSettingsPage() {
 
           {/* Actions */}
           <div className="flex justify-end gap-4">
-            <Link href="/admin/signals">
+            <Link href="/admin/settings">
               <Button type="button" variant="outline">
                 Cancel
               </Button>

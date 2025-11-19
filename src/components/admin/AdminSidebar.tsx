@@ -5,25 +5,13 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { 
   LayoutDashboard,
-  FileText,
-  Play,
   Users,
-  MessageSquare,
-  Settings,
-  Upload,
-  Hash,
-  Video
+  Settings
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Content', href: '/admin/content', icon: FileText },
-  { name: 'Episodes', href: '/admin/episodes', icon: Play },
-  { name: 'Videos', href: '/admin/videos', icon: Video },
-  { name: 'Community', href: '/admin/community', icon: Hash },
   { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
-  { name: 'Media', href: '/admin/media', icon: Upload },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
@@ -68,7 +56,7 @@ export function AdminSidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-[color:var(--border-subtle)]">
           <Link 
-            href="/" 
+            href="/dashboard" 
             className="flex items-center space-x-2 text-sm text-slate-500 hover:text-slate-700"
           >
             ← Back to Portal

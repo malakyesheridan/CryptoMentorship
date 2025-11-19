@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
-export const dynamic = 'force-dynamic'
+// Cache for 5 minutes - channels don't change frequently
+export const revalidate = 300
 
 export async function GET() {
   try {

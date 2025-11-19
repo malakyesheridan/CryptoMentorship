@@ -17,7 +17,7 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Crypto Compass', href: '/crypto-compass', icon: Play },
-  { name: 'Portfolio', href: '/portfolio', icon: TrendingUp },
+  { name: 'My Portfolio', href: '/portfolio', icon: TrendingUp },
   { name: 'Learning Hub', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
   { name: 'Account', href: '/account', icon: User },
@@ -50,6 +50,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              prefetch={true}
               className={cn(
                 'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
                 isActive

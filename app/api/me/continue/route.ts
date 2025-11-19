@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+// Cache for 30 seconds - continue reading updates frequently
+export const revalidate = 30
 
 // GET /api/me/continue - Get user's continue reading items
 export async function GET(request: NextRequest) {

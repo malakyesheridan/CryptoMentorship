@@ -28,10 +28,19 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Fetch unread count
+  // Fetch unread count - refresh every 30 seconds (matches API cache)
+  // Use keepPreviousData to prevent UI flicker during navigation
   const { data: unreadData, mutate: mutateUnread } = useSWR(
     '/api/notifications/unread-count',
-    (url) => fetch(url).then(res => res.json())
+    (url) => fetch(url).then(res => res.json()),
+    {
+      refreshInterval: 30000, // 30 seconds
+      revalidateOnFocus: false, // Don't refetch on window focus
+      revalidateOnReconnect: false, // Don't refetch on reconnect (prevents blocking)
+      dedupingInterval: 10000, // Increase dedupe to 10 seconds
+      keepPreviousData: true, // Keep previous data during navigation
+      fallbackData: { count: 0 }, // Fallback to prevent undefined
+    }
   )
 
   // Fetch recent notifications

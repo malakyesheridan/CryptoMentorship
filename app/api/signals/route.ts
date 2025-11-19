@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+// Cache for 60 seconds - signals update periodically
+export const revalidate = 60
 
 // GET /api/signals - Get signals for members (respects minTier)
 export async function GET(request: NextRequest) {

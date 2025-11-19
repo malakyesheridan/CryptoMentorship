@@ -9,11 +9,12 @@ import { MDXRenderer } from '@/components/MDXRenderer'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { ViewTracker } from '@/components/ViewTracker'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, Lock, Eye, Play } from 'lucide-react'
+import { ArrowLeft, Calendar, Lock, Eye, Play, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - episodes are published content
+export const revalidate = 300
 
 interface EpisodePageProps {
   params: {
@@ -58,13 +59,23 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
         <span className="text-[var(--text-strong)]">{episode.title}</span>
       </nav>
 
-      {/* Back button */}
-      <Link href="/crypto-compass">
-        <Button variant="ghost" className="mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Crypto Compass
-        </Button>
-      </Link>
+      {/* Back button and Edit */}
+      <div className="flex items-center justify-between mb-6">
+        <Link href="/crypto-compass">
+          <Button variant="ghost">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Crypto Compass
+          </Button>
+        </Link>
+        {['admin', 'editor'].includes(userRole) && (
+          <Link href={`/admin/episodes/${episode.id}/edit`}>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Edit className="h-4 w-4" />
+              Edit Episode
+            </Button>
+          </Link>
+        )}
+      </div>
 
       <div className="max-w-4xl mx-auto">
         {/* Header */}

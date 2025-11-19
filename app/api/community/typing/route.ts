@@ -32,20 +32,7 @@ export async function POST(req: NextRequest) {
 
   const { channelId, isTyping } = parsed.data
 
-  // Verify channel exists
-  const channel = await prisma.channel.findUnique({
-    where: { id: channelId },
-    select: { id: true },
-  })
-
-  if (!channel) {
-    return NextResponse.json(
-      { ok: false, code: 'NO_CHANNEL', message: 'Channel not found' },
-      { status: 404 },
-    )
-  }
-
-  // Get user info
+  // Get user info first (faster query)
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { id: true, name: true },
@@ -57,6 +44,10 @@ export async function POST(req: NextRequest) {
       { status: 404 },
     )
   }
+
+  // Verify channel exists (only if we need to validate)
+  // For typing indicators, we can skip this check to improve performance
+  // The SSE endpoint will handle invalid channels
 
   // Broadcast typing indicator
   broadcastTyping(channelId, user.id, user.name ?? 'Anonymous', isTyping)

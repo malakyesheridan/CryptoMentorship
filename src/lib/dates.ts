@@ -16,11 +16,20 @@ export function toDate(v: Dateish): Date | null {
   return null;
 }
 
-export function formatDate(v: Dateish, fmt = 'PPP'): string {
+export function formatDate(v: Dateish, fmt: string = 'PPP'): string {
   const d = toDate(v);
   if (!d) return '—';
-  return format(d, fmt);
-  // Examples: 'PPP' → Jan 5, 2025; 'PPpp' → Jan 5, 2025 at 3:04 PM
+  
+  // Handle custom format aliases
+  const formatMap: Record<string, string> = {
+    'short': 'MMM d', // Jan 5
+    'long': 'PPP', // Jan 5, 2025
+    'full': 'PPpp', // Jan 5, 2025 at 3:04 PM
+  };
+  
+  const actualFormat = formatMap[fmt] || fmt;
+  return format(d, actualFormat);
+  // Examples: 'PPP' → Jan 5, 2025; 'PPpp' → Jan 5, 2025 at 3:04 PM; 'short' → Jan 5
 }
 
 export function formatDateTime(v: Dateish): string {

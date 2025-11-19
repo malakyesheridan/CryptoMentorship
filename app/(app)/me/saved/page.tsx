@@ -9,7 +9,8 @@ import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 import { EmptyState } from '@/components/EmptyState'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 2 minutes - bookmarks can change but don't need to be real-time
+export const revalidate = 120
 
 export default async function SavedPage() {
   const session = await getServerSession(authOptions)
@@ -27,6 +28,7 @@ export default async function SavedPage() {
 
   const bookmarks = await prisma.bookmark.findMany({
     where: { userId: session.user.id },
+    take: 100, // Limit to 100 most recent bookmarks
     include: {
       content: {
         select: {

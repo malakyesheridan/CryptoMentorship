@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser } from '@/lib/auth-server'
 import { hasActiveSubscription } from '@/lib/access'
+import { unstable_cache } from 'next/cache'
+
+// Revalidate every 60 seconds - subscription status doesn't change frequently
+export const revalidate = 60
+
+// Cache subscription status per user for 60 seconds
+async function getSubscriptionStatusCached(userId: string): Promise<boolean> {
+  return unstable_cache(
+    async () => {
+      return await hasActiveSubscription(userId)
+    },
+    [`subscription-status-${userId}`],
+    { revalidate: 60 }
+  )()
+}
 
 /**
  * Check if current user has an active subscription
@@ -19,7 +34,7 @@ export async function GET(req: NextRequest) {
       })
     }
     
-    const isActive = await hasActiveSubscription(user.id)
+    const isActive = await getSubscriptionStatusCached(user.id)
     
     return NextResponse.json({
       hasActiveSubscription: isActive,

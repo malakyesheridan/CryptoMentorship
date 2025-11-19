@@ -120,18 +120,11 @@ export function TradeTable({
     return sortDirection === 'asc' ? '↑' : '↓'
   }
 
-  const getDirectionColor = (direction: 'long' | 'short') => {
-    return direction === 'long' ? 'text-green-600' : 'text-red-600'
-  }
 
   const getStatusColor = (status: 'open' | 'closed') => {
     return status === 'open' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-800'
   }
 
-  const getConvictionStars = (conviction?: number) => {
-    if (!conviction) return '—'
-    return '★'.repeat(conviction) + '☆'.repeat(5 - conviction)
-  }
 
   return (
     <Card>
@@ -233,50 +226,18 @@ export function TradeTable({
                 </th>
                 <th 
                   className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100`}
-                  onClick={() => handleSort('direction')}
-                >
-                  Direction {getSortIcon('direction')}
-                </th>
-                <th 
-                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100`}
                   onClick={() => handleSort('entryTime')}
                 >
-                  Entry {getSortIcon('entryTime')}
+                  Entry Date {getSortIcon('entryTime')}
                 </th>
-                <th className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider`}>
-                  Entry Price
-                </th>
-                {!compact && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    SL/TP
-                  </th>
-                )}
-                {!compact && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Conviction
-                  </th>
-                )}
-                {!compact && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Risk %
-                  </th>
-                )}
                 <th 
                   className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100`}
                   onClick={() => handleSort('status')}
                 >
                   Status {getSortIcon('status')}
                 </th>
-                {!compact && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Exit
-                  </th>
-                )}
                 <th className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider`}>
                   R-Multiple
-                </th>
-                <th className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider`}>
-                  P&L
                 </th>
                 {!compact && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -295,63 +256,18 @@ export function TradeTable({
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm font-medium text-slate-900`}>
                     {trade.symbol}
                   </td>
-                  <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm`}>
-                    <span className={`font-medium ${getDirectionColor(trade.direction)}`}>
-                      {trade.direction.toUpperCase()}
-                    </span>
-                  </td>
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm text-slate-500`}>
                     {formatDate(trade.entryTime, 'short')}
                   </td>
-                  <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm text-slate-900`}>
-                    {formatCurrency(trade.entryPrice)}
-                  </td>
-                  {!compact && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      <div className="space-y-1">
-                        {trade.stopLoss && (
-                          <div className="text-red-600">SL: {formatCurrency(trade.stopLoss)}</div>
-                        )}
-                        {trade.takeProfit && (
-                          <div className="text-green-600">TP: {formatCurrency(trade.takeProfit)}</div>
-                        )}
-                        {!trade.stopLoss && !trade.takeProfit && (
-                          <span className="text-slate-400">—</span>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                  {!compact && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {getConvictionStars(trade.conviction)}
-                    </td>
-                  )}
-                  {!compact && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {trade.riskPct ? formatPercentage(trade.riskPct / 100) : '—'}
-                    </td>
-                  )}
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap`}>
                     <Badge className={getStatusColor(trade.status)}>
                       {trade.status}
                     </Badge>
                   </td>
-                  {!compact && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {trade.exitTime ? formatDate(trade.exitTime, 'short') : '—'}
-                    </td>
-                  )}
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm`}>
                     {trade.rMultiple !== null && trade.rMultiple !== undefined ? (
                       <span className={trade.rMultiple > 0 ? 'text-green-600' : 'text-red-600'}>
                         {formatNumber(trade.rMultiple, 2)}
-                      </span>
-                    ) : '—'}
-                  </td>
-                  <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm`}>
-                    {trade.pnl !== undefined ? (
-                      <span className={trade.pnl > 0 ? 'text-green-600' : 'text-red-600'}>
-                        {formatCurrency(trade.pnl)}
                       </span>
                     ) : '—'}
                   </td>

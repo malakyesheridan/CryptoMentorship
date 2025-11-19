@@ -77,8 +77,16 @@ export async function getPortfolioMetrics(scope: PerformanceScope = 'ALL'): Prom
   })
   
   // Get all trades for YTD/MTD calculations
+  // Limit to last 2 years OR 10,000 trades max for performance
+  const twoYearsAgo = new Date()
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2)
+  
   const allTrades = await prisma.signalTrade.findMany({
-    orderBy: { entryTime: 'asc' }
+    where: {
+      entryTime: { gte: twoYearsAgo }
+    },
+    orderBy: { entryTime: 'asc' },
+    take: 10000 // Safety limit - should cover 2+ years of daily trades
   })
   
   // Calculate equity curve

@@ -22,7 +22,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { enrollInTrack } from '@/lib/actions/enrollment'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - track content is published, not real-time
+export const revalidate = 300
 
 async function getTrack(slug: string) {
   const track = await prisma.track.findUnique({

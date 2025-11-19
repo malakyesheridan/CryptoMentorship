@@ -11,7 +11,8 @@ import { EmptyState } from '@/components/EmptyState'
 import { NotificationFilters } from '@/components/NotificationFilters'
 import { NotificationList } from '@/components/NotificationList'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 2 minutes - notifications need to be relatively fresh
+export const revalidate = 120
 
 interface NotificationsPageProps {
   searchParams: {

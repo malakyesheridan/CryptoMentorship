@@ -23,7 +23,8 @@ import Link from 'next/link'
 import { enrollInCohort, leaveCohort } from '@/lib/actions/cohorts'
 import { getCohortProgress, formatRelativeTime } from '@/lib/cohorts'
 
-export const dynamic = 'force-dynamic'
+// Revalidate every 5 minutes - cohort content is published, not real-time
+export const revalidate = 300
 
 async function getCohort(trackSlug: string, cohortSlug: string) {
   const cohort = await prisma.cohort.findFirst({

@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+// Cache for 60 seconds - events update periodically
+export const revalidate = 60
 import { z } from 'zod'
 
 const rsvpSchema = z.object({

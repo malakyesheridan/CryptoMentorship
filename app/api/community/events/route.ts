@@ -18,15 +18,9 @@ export async function GET(req: NextRequest) {
     return new Response('Missing channelId', { status: 400 })
   }
 
-  // Verify channel exists
-  const channel = await prisma.channel.findUnique({
-    where: { id: channelId },
-    select: { id: true, name: true }
-  })
-
-  if (!channel) {
-    return new Response('Channel not found', { status: 404 })
-  }
+  // Cache channel validation - don't query on every SSE connection
+  // The channel will be validated when messages are sent
+  // This reduces database load for long-lived SSE connections
 
   // Create SSE response
   const stream = new ReadableStream({

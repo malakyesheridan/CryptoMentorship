@@ -3,13 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   Settings, 
-  Database,
   Shield,
-  Bell,
-  Mail,
-  CreditCard,
-  FileText,
-  Globe
+  CreditCard
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -58,38 +53,6 @@ export default async function SettingsPage() {
             </div>
             <Button variant="outline" className="w-full" disabled>
               Edit Settings
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Database Settings */}
-        <Card className="card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Database
-            </CardTitle>
-            <CardDescription>
-              Database connection and management
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Provider</p>
-                <p className="text-xs text-slate-500">SQLite</p>
-              </div>
-              <Badge variant="outline">Active</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Status</p>
-                <p className="text-xs text-slate-500">Connected</p>
-              </div>
-              <Badge className="badge-preview">Healthy</Badge>
-            </div>
-            <Button variant="outline" className="w-full" disabled>
-              Database Tools
             </Button>
           </CardContent>
         </Card>
@@ -152,112 +115,47 @@ export default async function SettingsPage() {
               </div>
               <Badge className="badge-preview">Live</Badge>
             </div>
-            <Link href="/admin/signals/settings">
-              <Button variant="outline" className="w-full">
-                Payment Settings
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Content Settings */}
-        <Card className="card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Content Management
-            </CardTitle>
-            <CardDescription>
-              Content types and publishing
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Content Types</p>
-                <p className="text-xs text-slate-500">Research, Signals, Resources</p>
-              </div>
-              <Badge variant="outline">Active</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Episodes</p>
-                <p className="text-xs text-slate-500">Crypto Compass</p>
-              </div>
-              <Badge variant="outline">Active</Badge>
-            </div>
-            <Link href="/admin/content">
-              <Button variant="outline" className="w-full">
-                Manage Content
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Notification Settings */}
-        <Card className="card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </CardTitle>
-            <CardDescription>
-              Notification preferences and channels
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">In-App</p>
-                <p className="text-xs text-slate-500">Enabled</p>
-              </div>
-              <Badge className="badge-preview">Active</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Email</p>
-                <p className="text-xs text-slate-500">Configured</p>
-              </div>
-              <Badge variant="outline">Available</Badge>
-            </div>
             <Button variant="outline" className="w-full" disabled>
-              Notification Settings
+              Payment Settings
             </Button>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Quick Links */}
-      <Card className="card">
-        <CardHeader>
-          <CardTitle>Quick Links</CardTitle>
-          <CardDescription>
-            Common administrative tasks
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/admin/announce">
-              <Button variant="outline" className="w-full justify-start">
-                <Mail className="h-4 w-4 mr-2" />
-                Send Announcement
-              </Button>
-            </Link>
-            <Link href="/admin/signals/settings">
-              <Button variant="outline" className="w-full justify-start">
-                <Settings className="h-4 w-4 mr-2" />
-                Portfolio Settings
-              </Button>
-            </Link>
-            <Link href="/admin/media">
-              <Button variant="outline" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-2" />
-                Media Library
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Portfolio Settings */}
+        <Card className="card opacity-60">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Portfolio Settings
+            </CardTitle>
+            <CardDescription>
+              Configure performance calculation parameters
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Base Capital</p>
+                <p className="text-xs text-slate-500">For performance calculations</p>
+              </div>
+              <Badge variant="outline">Locked</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Position Sizing</p>
+                <p className="text-xs text-slate-500">Risk-based calculations</p>
+              </div>
+              <Badge variant="outline">Locked</Badge>
+            </div>
+            <Button variant="outline" className="w-full" disabled>
+              Portfolio Settings (Locked)
+            </Button>
+            <p className="text-xs text-slate-400 text-center">
+              Performance stats are not currently displayed
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

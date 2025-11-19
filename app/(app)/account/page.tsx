@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { SectionHeader } from '@/components/SectionHeader'
 import { Badge } from '@/components/ui/badge'
 import { User, Mail, Shield, Calendar, CheckCircle, XCircle, Loader2 } from 'lucide-react'
@@ -256,6 +257,27 @@ export default function AccountPage() {
               </a>
             </div>
           )}
+        </div>
+
+        {/* Quick Links */}
+        <div className="card p-6">
+          <h3 className="heading-2 text-xl mb-6">Quick Links</h3>
+          <div className="space-y-3">
+            <Link
+              href="/account/subscription"
+              className="flex items-center justify-between p-3 rounded-lg border hover:bg-slate-50 transition-colors"
+            >
+              <span className="font-medium">Subscription Management</span>
+              <span className="text-slate-400">→</span>
+            </Link>
+            <Link
+              href="/account/referrals"
+              className="flex items-center justify-between p-3 rounded-lg border hover:bg-slate-50 transition-colors"
+            >
+              <span className="font-medium">Referral Program</span>
+              <span className="text-slate-400">→</span>
+            </Link>
+          </div>
         </div>
       </div>
 

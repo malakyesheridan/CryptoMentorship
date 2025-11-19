@@ -62,6 +62,13 @@ const envSchema = z.object({
   // Public vars
   NEXT_PUBLIC_GOOGLE_ENABLED: z.string().optional(),
   NEXT_PUBLIC_EMAIL_ENABLED: z.string().optional(),
+  
+  // Referral System Configuration (optional)
+  REFERRAL_SYSTEM_ENABLED: z.string().optional(), // 'false' to disable, otherwise enabled
+  REFERRAL_COMMISSION_RATE: z.string().optional(), // Default: 0.15 (15%)
+  REFERRAL_COOKIE_EXPIRY_DAYS: z.string().optional(), // Default: 30
+  REFERRAL_CODE_EXPIRY_DAYS: z.string().optional(), // Optional expiration
+  NEXT_PUBLIC_APP_URL: z.string().url().optional(), // Base URL for affiliate links
 })
 
 export type Env = z.infer<typeof envSchema>
@@ -107,4 +114,58 @@ function validateEnv(): Env {
 }
 
 export const env = validateEnv()
+
+// Referral system configuration helpers
+function getAppUrl(): string {
+  // Priority: NEXT_PUBLIC_APP_URL > NEXTAUTH_URL > localhost (dev only)
+  const publicUrl = process.env.NEXT_PUBLIC_APP_URL
+  const authUrl = process.env.NEXTAUTH_URL
+  
+  // In production, prefer NEXT_PUBLIC_APP_URL
+  if (process.env.NODE_ENV === 'production') {
+    if (publicUrl && publicUrl.startsWith('http')) {
+      return publicUrl.replace(/\/$/, '') // Remove trailing slash
+    }
+    if (authUrl && authUrl.startsWith('http')) {
+      return authUrl.replace(/\/$/, '')
+    }
+    // Production should have a URL set
+    console.warn('[Referral] No production URL configured. Using fallback.')
+  }
+  
+  // Development: use NEXT_PUBLIC_APP_URL if set, otherwise try to detect current port
+  if (publicUrl && publicUrl.startsWith('http')) {
+    return publicUrl.replace(/\/$/, '')
+  }
+  
+  // In development, try to use the current request URL or fallback to common dev ports
+  // Check if we're in a server context and can detect the port
+  if (typeof window === 'undefined' && process.env.PORT) {
+    const port = process.env.PORT
+    return `http://localhost:${port}`
+  }
+  
+  // Try NEXTAUTH_URL but prefer port 5000 (common dev port)
+  if (authUrl && authUrl.startsWith('http')) {
+    // If NEXTAUTH_URL is on a different port, use port 5000 for consistency
+    const url = new URL(authUrl)
+    if (url.port === '5001' || url.port === '3000') {
+      return `http://localhost:5000`
+    }
+    return authUrl.replace(/\/$/, '')
+  }
+  
+  // Last resort: localhost:5000 (common dev port)
+  return 'http://localhost:5000'
+}
+
+export const referralConfig = {
+  enabled: process.env.REFERRAL_SYSTEM_ENABLED !== 'false', // Default: enabled
+  commissionRate: parseFloat(process.env.REFERRAL_COMMISSION_RATE || '0.15'),
+  cookieExpiryDays: parseInt(process.env.REFERRAL_COOKIE_EXPIRY_DAYS || '30', 10),
+  codeExpiryDays: process.env.REFERRAL_CODE_EXPIRY_DAYS 
+    ? parseInt(process.env.REFERRAL_CODE_EXPIRY_DAYS, 10) 
+    : null,
+  appUrl: getAppUrl(),
+}
 

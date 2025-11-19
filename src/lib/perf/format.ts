@@ -52,7 +52,28 @@ export function formatInteger(value: Decimal | number): string {
 /**
  * Format date
  */
-export function formatDate(date: Date, format: 'short' | 'long' | 'full' = 'short'): string {
+export function formatDate(date: Date | string | null | undefined, format: 'short' | 'long' | 'full' = 'short'): string {
+  // Handle null/undefined
+  if (!date) {
+    return '—'
+  }
+
+  // Convert string to Date if needed
+  let dateObj: Date
+  if (typeof date === 'string') {
+    dateObj = new Date(date)
+  } else if (date instanceof Date) {
+    dateObj = date
+  } else {
+    return '—'
+  }
+
+  // Validate date
+  if (isNaN(dateObj.getTime())) {
+    console.warn('Invalid date passed to formatDate:', date)
+    return '—'
+  }
+
   const formatOptions: Record<string, Intl.DateTimeFormatOptions> = {
     short: { month: 'short', day: 'numeric' },
     long: { year: 'numeric', month: 'long', day: 'numeric' },
@@ -61,13 +82,34 @@ export function formatDate(date: Date, format: 'short' | 'long' | 'full' = 'shor
   
   const options = formatOptions[format]
 
-  return new Intl.DateTimeFormat('en-US', options).format(date)
+  return new Intl.DateTimeFormat('en-US', options).format(dateObj)
 }
 
 /**
  * Format date and time
  */
-export function formatDateTime(date: Date): string {
+export function formatDateTime(date: Date | string | null | undefined): string {
+  // Handle null/undefined
+  if (!date) {
+    return '—'
+  }
+
+  // Convert string to Date if needed
+  let dateObj: Date
+  if (typeof date === 'string') {
+    dateObj = new Date(date)
+  } else if (date instanceof Date) {
+    dateObj = date
+  } else {
+    return '—'
+  }
+
+  // Validate date
+  if (isNaN(dateObj.getTime())) {
+    console.warn('Invalid date passed to formatDateTime:', date)
+    return '—'
+  }
+
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
@@ -75,15 +117,36 @@ export function formatDateTime(date: Date): string {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true
-  }).format(date)
+  }).format(dateObj)
 }
 
 /**
  * Format relative time (e.g., "2 days ago")
  */
-export function formatRelativeTime(date: Date): string {
+export function formatRelativeTime(date: Date | string | null | undefined): string {
+  // Handle null/undefined
+  if (!date) {
+    return '—'
+  }
+
+  // Convert string to Date if needed
+  let dateObj: Date
+  if (typeof date === 'string') {
+    dateObj = new Date(date)
+  } else if (date instanceof Date) {
+    dateObj = date
+  } else {
+    return '—'
+  }
+
+  // Validate date
+  if (isNaN(dateObj.getTime())) {
+    console.warn('Invalid date passed to formatRelativeTime:', date)
+    return '—'
+  }
+
   const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
+  const diffMs = now.getTime() - dateObj.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffMinutes = Math.floor(diffMs / (1000 * 60))

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -14,8 +14,18 @@ export default function RegisterPage() {
     email: '',
     password: '',
     name: '',
+    referralCode: '',
   })
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Capture referral code from URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref')
+    if (refCode) {
+      setFormData((prev) => ({ ...prev, referralCode: refCode }))
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,10 +34,20 @@ export default function RegisterPage() {
     setSuccess(false)
 
     try {
+      // Only send referralCode if it exists
+      const registerData: any = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name || undefined,
+      }
+      if (formData.referralCode) {
+        registerData.referralCode = formData.referralCode
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(registerData),
       })
 
       const data = await res.json()
@@ -287,6 +307,35 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem'
+      }}>
+        <div style={{ maxWidth: '28rem', width: '100%' }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
+            padding: '2rem',
+            textAlign: 'center',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          }}>
+            <p style={{ color: '#64748b' }}>Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   )
 }
 

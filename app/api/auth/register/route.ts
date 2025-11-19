@@ -5,17 +5,20 @@ import { validatePassword } from '@/lib/password-validation'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
 import { handleError } from '@/lib/errors'
+import { linkReferralToUser } from '@/lib/referrals'
+import { referralConfig } from '@/lib/env'
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(12, 'Password must be at least 12 characters'),
   name: z.string().min(2).max(100).optional(),
+  referralCode: z.string().optional(), // Optional referral code
 })
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { email, password, name } = registerSchema.parse(body)
+    const { email, password, name, referralCode } = registerSchema.parse(body)
 
     // Validate password strength
     const passwordValidation = validatePassword(password)
@@ -61,6 +64,34 @@ export async function POST(req: NextRequest) {
           status: 'trial',
         },
       })
+
+      // Link referral if code provided (defensive: errors don't block registration)
+      if (referralCode && referralConfig.enabled) {
+        try {
+          const referralResult = await linkReferralToUser(referralCode, newUser.id, tx)
+          if (referralResult.success) {
+            logger.info('Referral linked during registration', {
+              userId: newUser.id,
+              referralCode,
+              referralId: referralResult.referralId,
+            })
+          } else {
+            // Log but don't fail registration
+            logger.warn('Referral linking failed during registration (non-blocking)', {
+              userId: newUser.id,
+              referralCode,
+              error: referralResult.error,
+            })
+          }
+        } catch (error) {
+          // Log but don't fail registration - referral is optional
+          logger.warn('Referral linking error during registration (non-blocking)', {
+            error: error instanceof Error ? error.message : String(error),
+            userId: newUser.id,
+            referralCode,
+          })
+        }
+      }
 
       return { user: newUser, membership: newMembership }
     })
