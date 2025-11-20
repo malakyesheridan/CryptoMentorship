@@ -80,12 +80,12 @@ export async function POST(req: Request) {
   const parsed = postBody.safeParse(body)
 
   if (!parsed.success) {
-    console.error('POST Validation error:', JSON.stringify(parsed.error.errors, null, 2))
+    console.error('POST Validation error:', JSON.stringify(parsed.error.issues, null, 2))
     console.error('POST Received body:', JSON.stringify(body, null, 2))
     console.error('POST Body type:', typeof body)
     console.error('POST Body keys:', Object.keys(body || {}))
     
-    const errorMessages = parsed.error.errors.map((err: any) => 
+    const errorMessages = parsed.error.issues.map((err: any) => 
       `${err.path.join('.')}: ${err.message}`
     ).join(', ')
     
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
         ok: false, 
         code: 'BAD_BODY', 
         message: `Validation failed: ${errorMessages}`,
-        errors: parsed.error.errors 
+        errors: parsed.error.issues 
       },
       { status: 400 },
     )
@@ -221,14 +221,14 @@ export async function PUT(req: Request) {
   const parsed = updateBody.safeParse(body)
 
   if (!parsed.success) {
-    console.error('Validation error:', parsed.error.errors)
+    console.error('Validation error:', parsed.error.issues)
     console.error('Received body:', body)
     return NextResponse.json(
       { 
         ok: false, 
         code: 'BAD_BODY', 
         message: 'Invalid payload',
-        errors: parsed.error.errors 
+        errors: parsed.error.issues 
       },
       { status: 400 },
     )
