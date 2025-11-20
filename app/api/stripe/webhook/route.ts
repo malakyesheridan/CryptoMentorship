@@ -231,6 +231,13 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     throw new Error(`Membership not found for customer ${customerId}`)
   }
   
+  // Determine if this is an initial payment or recurring payment
+  // Stripe sets billing_reason to 'subscription_create' for initial payments
+  const isInitial = invoice.billing_reason === 'subscription_create'
+  
+  // Get tier from membership (default to T1 if not set)
+  const tier = (membership.tier as 'T1' | 'T2' | 'T3') || 'T1'
+  
   // Create payment record
   const payment = await prisma.payment.create({
     data: {
@@ -243,7 +250,12 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       status: 'succeeded',
       paymentMethod: ((invoice as any).payment_method_types?.[0] || 'card') as string,
       description: invoice.description || undefined,
-      metadata: invoice.metadata ? JSON.stringify(invoice.metadata) : null,
+      metadata: JSON.stringify({
+        ...invoice.metadata,
+        billing_reason: invoice.billing_reason,
+        isInitial,
+        tier,
+      }),
     },
   })
   
@@ -260,7 +272,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     const commissionResult = await createCommissionIfReferred(
       membership.userId,
       payment.id,
-      invoice.amount_paid / 100
+      invoice.amount_paid / 100,
+      isInitial,
+      tier
     )
     if (commissionResult.success) {
       logger.info('Commission created from payment', {
@@ -268,6 +282,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         userId: membership.userId,
         paymentId: payment.id,
         amount: invoice.amount_paid / 100,
+        isInitial,
+        tier,
+        commissionRate: isInitial ? '25%' : '10%',
       })
     } else {
       // User wasn't referred - this is fine, not an error
@@ -288,6 +305,8 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         userId: membership.userId,
         paymentId: payment.id,
         amount: invoice.amount_paid / 100,
+        isInitial,
+        tier,
       }
     )
   }

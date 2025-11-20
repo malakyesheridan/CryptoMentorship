@@ -161,6 +161,11 @@ function getAppUrl(): string {
 
 export const referralConfig = {
   enabled: process.env.REFERRAL_SYSTEM_ENABLED !== 'false', // Default: enabled
+  // Commission rates: 25% for initial payments, 10% for recurring payments
+  // These are hardcoded in calculateCommission() but kept here for documentation
+  initialCommissionRate: 0.25, // 25% commission on initial payment
+  recurringCommissionRate: 0.10, // 10% commission on recurring payments
+  // Legacy: kept for backward compatibility, but not used anymore
   commissionRate: parseFloat(process.env.REFERRAL_COMMISSION_RATE || '0.15'),
   cookieExpiryDays: parseInt(process.env.REFERRAL_COOKIE_EXPIRY_DAYS || '30', 10),
   codeExpiryDays: process.env.REFERRAL_CODE_EXPIRY_DAYS 

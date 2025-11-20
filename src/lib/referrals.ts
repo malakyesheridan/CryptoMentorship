@@ -18,7 +18,8 @@ export async function generateReferralCode(userId: string): Promise<string> {
   const code = `REF-${userPrefix}-${timestamp}`
 
   // Ensure uniqueness (very unlikely collision, but safety first)
-  const existing = await prisma.referral.findUnique({
+  // Now using findFirst since referralCode is no longer unique
+  const existing = await prisma.referral.findFirst({
     where: { referralCode: code },
   })
 
@@ -33,27 +34,30 @@ export async function generateReferralCode(userId: string): Promise<string> {
 
 /**
  * Get or create a referral code for a user
- * Returns existing code if one exists, otherwise creates a new one
+ * Returns existing master template code if one exists, otherwise creates a new one
+ * The master template (status: 'pending', referredUserId: null) can be reused for multiple referrals
  */
 export async function getOrCreateReferralCode(userId: string): Promise<string> {
   if (!referralConfig.enabled) {
     throw new Error('Referral system is disabled')
   }
 
-  // Check if user already has a referral code
-  const existingReferral = await prisma.referral.findFirst({
+  // Find the master template referral code (the reusable one)
+  // This is the original record with status 'pending' and no referredUserId
+  const masterReferral = await prisma.referral.findFirst({
     where: {
       referrerId: userId,
-      status: { in: ['pending', 'completed'] },
+      status: 'pending',
+      referredUserId: null, // Master template hasn't been used
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' }, // Get the original one
   })
 
-  if (existingReferral) {
-    return existingReferral.referralCode
+  if (masterReferral) {
+    return masterReferral.referralCode
   }
 
-  // Create new referral code
+  // Create new master template referral code
   const referralCode = await generateReferralCode(userId)
   const expiresAt = referralConfig.codeExpiryDays
     ? new Date(Date.now() + referralConfig.codeExpiryDays * 24 * 60 * 60 * 1000)
@@ -65,6 +69,7 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
       referralCode,
       expiresAt,
       status: 'pending',
+      referredUserId: null, // Master template
     },
   })
 
@@ -74,6 +79,7 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
 /**
  * Validate a referral code
  * Returns true if code is valid and can be used
+ * Codes can be reused multiple times - we find the master template or any valid referral
  */
 export async function validateReferralCode(code: string): Promise<{
   valid: boolean
@@ -88,22 +94,54 @@ export async function validateReferralCode(code: string): Promise<{
     return { valid: false, error: 'Referral code is required' }
   }
 
-  const referral = await prisma.referral.findUnique({
-    where: { referralCode: code },
+  // First, try to find the master template (reusable one)
+  let referral = await prisma.referral.findFirst({
+    where: {
+      referralCode: code,
+      status: 'pending',
+      referredUserId: null, // Master template
+    },
+    orderBy: { createdAt: 'asc' }, // Get the original one
   })
 
+  // If no master template found, check if any referral with this code exists
+  // (to validate the code exists and get referrerId)
   if (!referral) {
-    return { valid: false, error: 'Invalid referral code' }
+    referral = await prisma.referral.findFirst({
+      where: { referralCode: code },
+      orderBy: { createdAt: 'asc' }, // Get the original one
+    })
+
+    if (!referral) {
+      return { valid: false, error: 'Invalid referral code' }
+    }
+
+    // Check if cancelled (applies to all referrals with this code)
+    if (referral.status === 'cancelled') {
+      return { valid: false, error: 'Referral code has been cancelled' }
+    }
+
+    // Check expiration from the original referral
+    if (referral.expiresAt && referral.expiresAt < new Date()) {
+      return { valid: false, error: 'Referral code has expired' }
+    }
+
+    // Code exists and is valid, but master template was already used
+    // This is fine - we'll create a new record when linking
+    return {
+      valid: true,
+      referral: {
+        id: referral.id, // Use as reference, but we'll create a new record
+        referrerId: referral.referrerId,
+        status: 'pending', // Treat as valid for reuse
+      },
+    }
   }
 
+  // Master template found - validate it
   // Check if expired
   if (referral.expiresAt && referral.expiresAt < new Date()) {
     return { valid: false, error: 'Referral code has expired' }
-  }
-
-  // Check if already used
-  if (referral.status === 'completed' && referral.referredUserId) {
-    return { valid: false, error: 'Referral code has already been used' }
   }
 
   // Check if cancelled
@@ -159,23 +197,29 @@ export async function linkReferralToUser(
       return { success: false, error: 'This account is already linked to a referral' }
     }
 
-    // Link referral to user
-    const updatedReferral = await prismaClient.referral.update({
-      where: { id: referral.id },
+    // Create a NEW referral record (don't update the existing one)
+    // This allows the same code to be reused for multiple people
+    // The master template stays as 'pending' for future use
+    const newReferral = await prismaClient.referral.create({
       data: {
-        referredUserId: userId,
+        referrerId: referral.referrerId, // Same referrer
+        referralCode: referralCode, // Same code
+        referredUserId: userId, // New user being referred
         status: 'completed',
         completedAt: new Date(),
+        // Don't copy expiration - new records are already completed
+        expiresAt: null,
       },
     })
 
     logger.info('Referral linked to user', {
-      referralId: updatedReferral.id,
+      referralId: newReferral.id,
       referrerId: referral.referrerId,
       referredUserId: userId,
+      referralCode,
     })
 
-    return { success: true, referralId: updatedReferral.id }
+    return { success: true, referralId: newReferral.id }
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       // Handle unique constraint violation (user already referred)
@@ -195,10 +239,17 @@ export async function linkReferralToUser(
 }
 
 /**
- * Calculate commission amount (15% of payment)
+ * Calculate commission amount based on payment type and tier
+ * - Initial payment: 25% commission
+ * - Recurring payment: 10% commission (based on tier)
  */
-export function calculateCommission(paymentAmount: number, rate?: number): number {
-  const commissionRate = rate || referralConfig.commissionRate
+export function calculateCommission(
+  paymentAmount: number,
+  isInitial: boolean,
+  tier?: 'T1' | 'T2' | 'T3'
+): number {
+  // 25% for initial payments, 10% for recurring payments
+  const commissionRate = isInitial ? 0.25 : 0.10
   const amount = new Decimal(paymentAmount)
     .times(commissionRate)
     .toDecimalPlaces(2, Decimal.ROUND_DOWN)
@@ -212,11 +263,19 @@ export function calculateCommission(paymentAmount: number, rate?: number): numbe
  * Create commission if user was referred
  * This is called after payment is successfully created
  * NON-BLOCKING: Errors are logged but don't fail payment processing
+ * 
+ * @param userId - User who made the payment
+ * @param paymentId - Payment record ID
+ * @param paymentAmount - Payment amount in dollars
+ * @param isInitial - Whether this is the initial payment (true) or recurring (false)
+ * @param tier - User's subscription tier (T1, T2, or T3)
  */
 export async function createCommissionIfReferred(
   userId: string,
   paymentId: string,
-  paymentAmount: number
+  paymentAmount: number,
+  isInitial: boolean = false,
+  tier?: 'T1' | 'T2' | 'T3'
 ): Promise<{ success: boolean; commissionId?: string; error?: string }> {
   if (!referralConfig.enabled) {
     return { success: false, error: 'Referral system is disabled' }
@@ -247,8 +306,8 @@ export async function createCommissionIfReferred(
       return { success: true, commissionId: existingCommission.id }
     }
 
-    // Calculate commission
-    const commissionAmount = calculateCommission(paymentAmount)
+    // Calculate commission with tiered rates
+    const commissionAmount = calculateCommission(paymentAmount, isInitial, tier)
 
     // Create commission
     const commission = await prisma.commission.create({
@@ -259,6 +318,9 @@ export async function createCommissionIfReferred(
         amount: commissionAmount,
         currency: 'usd', // TODO: Get from payment if multi-currency
         status: 'pending',
+        notes: isInitial
+          ? `Initial payment commission (25%)`
+          : `Recurring payment commission (10%) - Tier: ${tier || 'unknown'}`,
       },
     })
 
@@ -268,6 +330,9 @@ export async function createCommissionIfReferred(
       referrerId: referral.referrerId,
       paymentId,
       amount: commissionAmount,
+      isInitial,
+      tier,
+      rate: isInitial ? '25%' : '10%',
     })
 
     return { success: true, commissionId: commission.id }
@@ -276,7 +341,7 @@ export async function createCommissionIfReferred(
     logger.error(
       'Failed to create commission (non-blocking)',
       error instanceof Error ? error : new Error(String(error)),
-      { userId, paymentId, paymentAmount }
+      { userId, paymentId, paymentAmount, isInitial, tier }
     )
 
     return { success: false, error: 'Failed to create commission' }

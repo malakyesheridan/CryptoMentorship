@@ -880,7 +880,7 @@ model Referral {
   id             String    @id @default(cuid())
   referrerId     String // User who created the referral link
   referredUserId String?   @unique // User who signed up via the link (null until signup) - unique so user can only be referred once
-  referralCode   String    @unique // Unique code for the affiliate link
+  referralCode   String    // Reusable code - same code can be used by multiple people
   status         String    @default("pending") // pending | completed | expired | cancelled
   expiresAt      DateTime? // Optional expiration date
   createdAt      DateTime  @default(now())
