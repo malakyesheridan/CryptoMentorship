@@ -225,16 +225,13 @@ export default function CommunityPage() {
     }
 
     try {
-      const response = await json(`/api/community/messages/${message.id}`, {
+      // json helper throws on error, so if it returns, it succeeded
+      await json(`/api/community/messages/${message.id}`, {
         method: 'DELETE',
       })
 
-      if (response.ok) {
-        toast.success('Message deleted')
-        mutate() // Refresh messages
-      } else {
-        throw new Error('Failed to delete message')
-      }
+      toast.success('Message deleted')
+      mutate() // Refresh messages
     } catch (error) {
       toast.error('Failed to delete message')
     }
