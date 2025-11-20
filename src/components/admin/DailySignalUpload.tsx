@@ -113,7 +113,7 @@ export default function DailySignalUpload({ tier, userRole }: DailySignalUploadP
             maxLength={500}
           />
           <p className="text-xs text-slate-500">
-            Main signal text (e.g., "100% Cash", "50% BTC / 50% ETH")
+            Main signal text (e.g., &quot;100% Cash&quot;, &quot;50% BTC / 50% ETH&quot;)
           </p>
         </div>
 

@@ -19,12 +19,8 @@ export function SubscriptionGuard({ children, userRole }: SubscriptionGuardProps
   const { data: session } = useSession()
   const router = useRouter()
   
-  // Admins bypass subscription requirements
-  if (userRole === 'admin' || session?.user?.role === 'admin') {
-    return <>{children}</>
-  }
-  
   // Check subscription status using cached API endpoint
+  // Hooks must be called before any conditional returns
   const { data, error } = useSWR(
     session?.user?.id ? '/api/me/subscription-status' : null,
     (url) => fetch(url).then(res => res.json()),
@@ -42,6 +38,11 @@ export function SubscriptionGuard({ children, userRole }: SubscriptionGuardProps
       router.push('/subscribe?required=true')
     }
   }, [data, error, router])
+  
+  // Admins bypass subscription requirements
+  if (userRole === 'admin' || session?.user?.role === 'admin') {
+    return <>{children}</>
+  }
   
   // Show children while checking (optimistic rendering)
   return <>{children}</>

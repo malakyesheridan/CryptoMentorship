@@ -56,19 +56,6 @@ export function EnhancedPerformanceCharts({
     }
   }
 
-  // Defensive checks for data
-  if (!data || !data.stats || !data.equitySeries || !data.drawdownSeries || !data.monthlyReturns) {
-    return (
-      <div className="text-center py-12">
-        <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Performance Data Unavailable</h3>
-        <p className="text-slate-600">
-          Unable to load performance data. Please try again later.
-        </p>
-      </div>
-    )
-  }
-
   // Helper to safely convert to number
   const safeToNumber = (val: any): number => {
     if (val == null) return 0
@@ -87,29 +74,46 @@ export function EnhancedPerformanceCharts({
   }
 
   // Transform data for our new charts (memoized to prevent re-renders)
+  // Hooks must be called before any conditional returns
   const equityData = useMemo(() => {
-    return (data.equitySeries || []).map(point => ({
+    if (!data?.equitySeries) return []
+    return data.equitySeries.map(point => ({
       date: point.date,
       equity: safeToNumber(point.equity),
       drawdown: safeToNumber(point.drawdown)
     }))
-  }, [data.equitySeries])
+  }, [data?.equitySeries])
 
   const drawdownData = useMemo(() => {
-    return (data.drawdownSeries || []).map(point => ({
+    if (!data?.drawdownSeries) return []
+    return data.drawdownSeries.map(point => ({
       date: point.date,
       drawdown: safeToNumber(point.drawdown),
       equity: safeToNumber(point.equity)
     }))
-  }, [data.drawdownSeries])
+  }, [data?.drawdownSeries])
 
   const monthlyData = useMemo(() => {
-    return (data.monthlyReturns || []).map(point => ({
+    if (!data?.monthlyReturns) return []
+    return data.monthlyReturns.map(point => ({
       month: point.month,
       return: safeToNumber(point.return),
       trades: safeToNumber(point.trades)
     }))
-  }, [data.monthlyReturns])
+  }, [data?.monthlyReturns])
+
+  // Defensive checks for data (after hooks)
+  if (!data || !data.stats || !data.equitySeries || !data.drawdownSeries || !data.monthlyReturns) {
+    return (
+      <div className="text-center py-12">
+        <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Performance Data Unavailable</h3>
+        <p className="text-slate-600">
+          Unable to load performance data. Please try again later.
+        </p>
+      </div>
+    )
+  }
 
   // Convert stats to numbers safely
   const totalReturn = safeToNumber(data.stats.totalReturn)
