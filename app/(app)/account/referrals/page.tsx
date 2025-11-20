@@ -144,7 +144,7 @@ export default function ReferralsPage() {
     <div className="space-y-8">
       <SectionHeader 
         title="Referral Program" 
-        subtitle="Share your link and earn 15% commission on referrals"
+        subtitle="Share your link and earn up to 25% commission on referrals"
       />
 
       {/* Affiliate Link Card */}
@@ -218,7 +218,7 @@ export default function ReferralsPage() {
             </div>
             
             <p className="text-sm text-slate-600">
-              Share this link with others. When they sign up and make a payment, you&apos;ll earn 15% commission!
+              Share this link with others. When they sign up and make a payment, you&apos;ll earn 25% on their first payment and 10% on all recurring payments!
             </p>
           </div>
         </CardContent>
@@ -269,12 +269,12 @@ export default function ReferralsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Commission Rate</p>
-                <p className="text-3xl font-bold mt-2">15%</p>
+                <p className="text-3xl font-bold mt-2">25% / 10%</p>
               </div>
               <CheckCircle className="h-8 w-8 text-blue-500" />
             </div>
             <p className="text-sm text-slate-600 mt-4">
-              Earn 15% on every payment from your referrals
+              Earn 25% on initial payments and 10% on recurring payments from your referrals
             </p>
           </CardContent>
         </Card>
@@ -370,7 +370,7 @@ export default function ReferralsPage() {
                 <ul className="text-sm space-y-1 text-slate-600">
                   <li>• Share your referral link with others</li>
                   <li>• When they sign up using your link, they become your referral</li>
-                  <li>• You earn 15% commission on every payment they make</li>
+                  <li>• You earn 25% commission on their first payment and 10% on all recurring payments</li>
                   <li>• Commissions appear here once payments are processed</li>
                 </ul>
               </div>
