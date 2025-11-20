@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Shield, CheckCircle2, XCircle } from 'lucide-react'
 import { UsersTable } from '@/components/admin/UsersTable'
+import { CreateUserButton } from '@/components/admin/CreateUserButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,11 +40,14 @@ export default async function UsersPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="heading-hero text-4xl mb-2">
-          <span>User</span> <span className="gold">Management</span>
-        </h1>
-        <p className="subhead">Manage users, roles, and memberships</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="heading-hero text-4xl mb-2">
+            <span>User</span> <span className="gold">Management</span>
+          </h1>
+          <p className="subhead">Manage users, roles, and memberships</p>
+        </div>
+        <CreateUserButton />
       </div>
 
       {/* Stats */}

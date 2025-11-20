@@ -135,3 +135,32 @@ export async function getUserWithMembership(userId: string) {
     }
   })
 }
+
+/**
+ * Require admin access for API routes
+ * Throws NextResponse error if user is not admin
+ */
+export async function requireAdmin() {
+  const session = await getSession()
+  
+  if (!session?.user?.id) {
+    throw NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    ) as any
+  }
+  
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, role: true, email: true, name: true },
+  })
+  
+  if (!user || user.role !== 'admin') {
+    throw NextResponse.json(
+      { error: 'Admin access required' },
+      { status: 403 }
+    ) as any
+  }
+  
+  return user
+}

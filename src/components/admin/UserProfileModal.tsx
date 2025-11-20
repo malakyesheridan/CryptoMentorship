@@ -8,6 +8,7 @@ import { X, Mail, Calendar, Shield, CheckCircle2, XCircle, BookOpen, MessageSqua
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { RoleSelector } from './RoleSelector'
+import { CreateTrialModal } from './CreateTrialModal'
 
 interface UserProfileModalProps {
   userId: string
@@ -66,6 +67,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
   const [data, setData] = useState<UserProfileData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showTrialModal, setShowTrialModal] = useState(false)
 
   useEffect(() => {
     if (isOpen && userId) {
@@ -163,6 +165,19 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
                         className="mt-1"
                       />
                     </div>
+                    {data.membership && (
+                      <div>
+                        <p className="text-sm text-slate-500 mb-2">Membership</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowTrialModal(true)}
+                          className="w-full"
+                        >
+                          Create Trial Subscription
+                        </Button>
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm text-slate-500">Status</p>
                       {data.user.isActive ? (
@@ -344,6 +359,19 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
           )}
         </CardContent>
       </Card>
+
+      {/* Create Trial Modal */}
+      {showTrialModal && data && (
+        <CreateTrialModal
+          userId={data.user.id}
+          userName={data.user.name}
+          userEmail={data.user.email}
+          onSuccess={() => {
+            fetchUserProfile() // Refresh user data
+          }}
+          onClose={() => setShowTrialModal(false)}
+        />
+      )}
     </div>
   )
 }

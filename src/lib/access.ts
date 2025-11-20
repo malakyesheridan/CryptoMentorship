@@ -27,12 +27,13 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
       return false
     }
     
-    // Check membership status
-    if (membership.status !== 'active') {
+    // Check membership status - allow both 'active' and 'trial' status
+    // Trial memberships are active subscriptions with expiration dates
+    if (membership.status !== 'active' && membership.status !== 'trial') {
       return false
     }
     
-    // Check subscription end date
+    // Check subscription end date (applies to both active and trial)
     if (membership.currentPeriodEnd && membership.currentPeriodEnd < new Date()) {
       return false
     }
@@ -57,13 +58,14 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
           subscriptionId: membership.stripeSubscriptionId,
         })
         // Fall back to membership status check
-        return membership.status === 'active'
+        return membership.status === 'active' || membership.status === 'trial'
       }
     }
     
     // No Stripe subscription - check membership status only
     // This allows backward compatibility with non-Stripe memberships
-    return membership.status === 'active'
+    // Allow both 'active' and 'trial' status
+    return membership.status === 'active' || membership.status === 'trial'
   } catch (error) {
     logger.error(
       'Error checking active subscription',
