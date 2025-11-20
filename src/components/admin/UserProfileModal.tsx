@@ -165,19 +165,27 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
                         className="mt-1"
                       />
                     </div>
-                    {data.membership && (
-                      <div>
-                        <p className="text-sm text-slate-500 mb-2">Membership</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowTrialModal(true)}
-                          className="w-full"
-                        >
-                          Create Trial Subscription
-                        </Button>
-                      </div>
-                    )}
+                    <div>
+                      <p className="text-sm text-slate-500 mb-2">Membership</p>
+                      {data.membership ? (
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="secondary">{data.membership.tier}</Badge>
+                          <Badge variant="outline" className="capitalize">
+                            {data.membership.status}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-400 mb-2">No membership</p>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowTrialModal(true)}
+                        className="w-full"
+                      >
+                        {data.membership ? 'Update Trial Subscription' : 'Create Trial Subscription'}
+                      </Button>
+                    </div>
                     <div>
                       <p className="text-sm text-slate-500">Status</p>
                       {data.user.isActive ? (
