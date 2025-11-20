@@ -30,6 +30,20 @@ export default async function EditContentPage({
 
   const tags = content.tags ? JSON.parse(content.tags) : []
 
+  // Convert null values to undefined for the form (Prisma returns null, form expects undefined)
+  const initialData = {
+    id: content.id,
+    title: content.title,
+    slug: content.slug,
+    kind: content.kind,
+    excerpt: content.excerpt ?? undefined,
+    body: content.body ?? undefined,
+    coverUrl: content.coverUrl ?? undefined,
+    locked: content.locked,
+    minTier: content.minTier ?? undefined,
+    tags,
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -46,7 +60,7 @@ export default async function EditContentPage({
           <CardTitle>Content Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <ContentForm initialData={{ ...content, tags }} />
+          <ContentForm initialData={initialData} />
         </CardContent>
       </Card>
     </div>

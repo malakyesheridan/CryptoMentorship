@@ -26,6 +26,18 @@ export default async function EditEpisodePage({
     notFound()
   }
 
+  // Convert null values to undefined for the form (Prisma returns null, form expects undefined)
+  const initialData = {
+    id: episode.id,
+    title: episode.title,
+    slug: episode.slug,
+    excerpt: episode.excerpt ?? undefined,
+    videoUrl: episode.videoUrl ?? undefined,
+    body: episode.body ?? undefined,
+    coverUrl: episode.coverUrl ?? undefined,
+    locked: episode.locked,
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -42,7 +54,7 @@ export default async function EditEpisodePage({
           <CardTitle>Episode Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <EpisodeForm initialData={episode} />
+          <EpisodeForm initialData={initialData} />
         </CardContent>
       </Card>
     </div>
