@@ -375,7 +375,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
       {showTrialModal && data && (
         <CreateTrialModal
           userId={data.user.id}
-          userName={data.user.name}
+          userName={data.user.name || data.user.email}
           userEmail={data.user.email}
           onSuccess={async () => {
             // Refresh user data
