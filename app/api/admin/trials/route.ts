@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       where: { userId },
       update: {
         tier,
-        status: 'active', // Set to 'active' so hasActiveSubscription() returns true
+        status: 'trial', // Trial status - only paying users should have 'active' status
         currentPeriodStart: new Date(),
         currentPeriodEnd: trialEndDate,
         // Clear Stripe subscription if exists (trial is manual/managed)
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       create: {
         userId,
         tier,
-        status: 'active',
+        status: 'trial', // Trial status - only paying users should have 'active' status
         currentPeriodStart: new Date(),
         currentPeriodEnd: trialEndDate,
       },

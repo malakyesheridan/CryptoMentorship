@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -64,6 +65,7 @@ interface UserProfileData {
 }
 
 export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: UserProfileModalProps) {
+  const router = useRouter()
   const [data, setData] = useState<UserProfileData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -163,6 +165,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
                         currentRole={data.user.role}
                         currentUserId={currentUserId}
                         className="mt-1"
+                        onSuccess={fetchUserProfile}
                       />
                     </div>
                     <div>
@@ -374,8 +377,11 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
           userId={data.user.id}
           userName={data.user.name}
           userEmail={data.user.email}
-          onSuccess={() => {
-            fetchUserProfile() // Refresh user data
+          onSuccess={async () => {
+            // Refresh user data
+            await fetchUserProfile()
+            // Also trigger a router refresh to update the users table
+            router.refresh()
           }}
           onClose={() => setShowTrialModal(false)}
         />

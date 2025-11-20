@@ -40,7 +40,10 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
 
       toast.success(`Trial subscription created for ${userName || userEmail}`)
       onSuccess?.()
-      onClose()
+      // Small delay to ensure data is saved before closing
+      setTimeout(() => {
+        onClose()
+      }, 500)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create trial')
     } finally {

@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
           email,
           name: name || null,
           passwordHash,
-          role: 'member',
+          role: 'guest', // Start as guest - role should be 'member' only for paying users
           emailVerified: new Date(), // Auto-verify for admin-created accounts
         },
       })
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: newUser.id,
           tier,
-          status: 'active', // Set to 'active' so hasActiveSubscription() returns true
+          status: 'trial', // Trial status - only paying users should have 'active' status
           currentPeriodStart: new Date(),
           currentPeriodEnd: trialEndDate,
         },

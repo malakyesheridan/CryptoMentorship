@@ -10,9 +10,10 @@ interface RoleSelectorProps {
   currentRole: string
   currentUserId: string
   className?: string
+  onSuccess?: () => void // Optional callback for parent components to refresh data
 }
 
-export function RoleSelector({ userId, currentRole, currentUserId, className }: RoleSelectorProps) {
+export function RoleSelector({ userId, currentRole, currentUserId, className, onSuccess }: RoleSelectorProps) {
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
   const [selectedRole, setSelectedRole] = useState(currentRole)
@@ -46,6 +47,7 @@ export function RoleSelector({ userId, currentRole, currentUserId, className }: 
       toast.success('Role updated successfully')
       setSelectedRole(newRole)
       router.refresh()
+      onSuccess?.() // Call parent callback if provided
     } catch (error: any) {
       console.error('Error updating role:', error)
       toast.error(error.message || 'Failed to update role')
