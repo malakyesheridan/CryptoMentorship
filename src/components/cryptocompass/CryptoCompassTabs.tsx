@@ -26,7 +26,7 @@ export function CryptoCompassTabs({ activeCategory, onCategoryChange, counts }: 
     },
     { 
       id: 'daily-update' as CategoryType, 
-      name: `Daily Update${counts ? ` (${counts.dailyUpdate})` : ''}`, 
+      name: `Weekly Update${counts ? ` (${counts.dailyUpdate})` : ''}`, 
       icon: Calendar 
     },
     { 

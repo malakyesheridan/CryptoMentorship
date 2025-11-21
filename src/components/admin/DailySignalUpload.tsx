@@ -70,7 +70,7 @@ export default function DailySignalUpload({ tier, category, userRole }: DailySig
         throw new Error(errorDetails)
       }
 
-      const categoryLabel = category === 'majors' ? 'Majors' : category === 'memecoins' ? 'Memecoins' : ''
+      const categoryLabel = category === 'majors' ? 'Market Rotation' : category === 'memecoins' ? 'Memecoins' : ''
       toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} signal posted successfully!`)
       setUploadStatus('success')
       setFormData({
@@ -175,7 +175,7 @@ export default function DailySignalUpload({ tier, category, userRole }: DailySig
         >
           {isUploading 
             ? 'Posting Update...' 
-            : `Post ${tierLabels[tier]}${category === 'majors' ? ' Majors' : category === 'memecoins' ? ' Memecoins' : ''} Update`}
+            : `Post ${tierLabels[tier]}${category === 'majors' ? ' Market Rotation' : category === 'memecoins' ? ' Memecoins' : ''} Update`}
         </Button>
       </form>
     </div>

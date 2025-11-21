@@ -233,7 +233,7 @@ export default function CryptoCompassUpload() {
                 disabled={isUploading}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
               >
-                <option value="daily-update">Daily Update</option>
+                <option value="daily-update">Weekly Update</option>
                 <option value="analysis">Analysis</option>
                 <option value="breakdown">Breakdown</option>
               </select>

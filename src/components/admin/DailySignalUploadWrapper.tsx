@@ -95,7 +95,7 @@ export default function DailySignalUploadWrapper({ userRole }: DailySignalUpload
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   )}
                 >
-                  {category === 'majors' ? 'Majors' : 'Memecoins'}
+                  {category === 'majors' ? 'Market Rotation' : 'Memecoins'}
                 </Button>
               ))}
             </div>

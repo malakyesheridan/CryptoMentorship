@@ -124,7 +124,7 @@ export function CryptoCompassContent({
   const getCategoryName = (category: string) => {
     switch (category) {
       case 'daily-update':
-        return 'Daily Update'
+        return 'Weekly Update'
       case 'analysis':
         return 'Analysis'
       case 'breakdown':

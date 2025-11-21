@@ -238,7 +238,7 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
                   >
                     <div className="flex items-center gap-2">
                       {isLocked && <Lock className="w-4 h-4" />}
-                      {category === 'majors' ? 'Majors' : 'Memecoins'}
+                      {category === 'majors' ? 'Market Rotation' : 'Memecoins'}
                     </div>
                   </Button>
                 )
@@ -268,7 +268,7 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
                   <div className="flex items-center space-x-2">
                     <Zap className="w-5 h-5 text-yellow-500" />
                     <h3 className="text-lg font-bold text-slate-900">
-                      ⚡ Portfolio Signal Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Majors' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
+                      ⚡ Portfolio Signal Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Market Rotation' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
                     </h3>
                   </div>
                   <span className="text-xs text-slate-500">
