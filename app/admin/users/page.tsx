@@ -40,9 +40,9 @@ export default async function UsersPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
         <div>
-          <h1 className="heading-hero text-4xl mb-2">
+          <h1 className="heading-hero text-3xl sm:text-4xl mb-2">
             <span>User</span> <span className="gold">Management</span>
           </h1>
           <p className="subhead">Manage users, roles, and memberships</p>

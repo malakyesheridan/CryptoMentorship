@@ -52,8 +52,8 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
+      <Card className="w-full max-w-md my-auto" onClick={(e) => e.stopPropagation()}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle>Create Trial Subscription</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -97,11 +97,11 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
               </p>
             </div>
             
-            <div className="flex gap-2 justify-end pt-4">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <div className="flex flex-col sm:flex-row gap-2 justify-end pt-4">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="w-full sm:w-auto min-h-[44px]">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto min-h-[44px]">
                 {isLoading ? 'Creating...' : 'Create Trial'}
               </Button>
             </div>

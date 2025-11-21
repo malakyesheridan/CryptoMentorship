@@ -123,17 +123,17 @@ export default function MessageInput({
     <div className="bg-white">
       {/* Reply indicator */}
       {replyTo && (
-        <div className="px-6 py-3 bg-yellow-50 border-b border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-slate-600">Replying to</span>
-              <span className="font-medium text-slate-800">{replyTo.author}</span>
+        <div className="px-4 sm:px-6 py-3 bg-yellow-50 border-b border-yellow-200">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs sm:text-sm min-w-0 flex-1">
+              <span className="text-slate-600 whitespace-nowrap">Replying to</span>
+              <span className="font-medium text-slate-800 truncate">{replyTo.author}</span>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={onCancelReply}
-              className="h-6 px-2 text-slate-500 hover:text-slate-700"
+              className="h-8 sm:h-6 px-2 sm:px-2 text-slate-500 hover:text-slate-700 flex-shrink-0 min-h-[44px] sm:min-h-0"
             >
               Cancel
             </Button>
@@ -143,7 +143,7 @@ export default function MessageInput({
       )}
 
       {/* Input form */}
-      <form onSubmit={submit} className="flex items-end gap-3 p-6">
+      <form onSubmit={submit} className="flex items-end gap-2 sm:gap-3 p-4 sm:p-6">
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
@@ -152,16 +152,18 @@ export default function MessageInput({
             onKeyDown={handleKeyDown}
             disabled={disabled || busy}
             placeholder={disabled ? 'Select a channel…' : placeholder}
-            className="min-h-[44px] max-h-[120px] resize-none border-slate-200 focus:border-yellow-500 focus:ring-yellow-500 rounded-lg"
+            className="min-h-[44px] max-h-[120px] resize-none border-slate-200 focus:border-yellow-500 focus:ring-yellow-500 rounded-lg text-sm sm:text-base"
             rows={1}
           />
         </div>
         <Button
           type="submit"
           disabled={disabled || busy || !text.trim()}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white h-11 px-4 rounded-lg"
+          className="bg-yellow-500 hover:bg-yellow-600 text-white h-11 w-11 sm:w-auto sm:px-4 rounded-lg flex-shrink-0"
+          aria-label="Send message"
         >
           <Send className="w-4 h-4" />
+          <span className="hidden sm:inline ml-2">Send</span>
         </Button>
       </form>
 

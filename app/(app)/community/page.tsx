@@ -246,33 +246,33 @@ export default function CommunityPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6">
               <span className="text-white">Crypto</span>
-              <span className="text-yellow-400 ml-4">Community</span>
+              <span className="text-yellow-400 ml-2 sm:ml-4">Community</span>
             </h1>
-            <p className="text-xl text-slate-300 mb-8">
+            <p className="text-base sm:text-lg lg:text-xl text-slate-300 mb-8 px-4">
               Connect with fellow long-term investors and share insights in real-time
             </p>
-            <div className="flex items-center justify-center gap-6 text-slate-400 flex-wrap">
+            <div className="flex items-center justify-center gap-4 sm:gap-6 text-slate-400 flex-wrap px-4">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                 </svg>
-                <span className="font-medium">{channels.length} Investment Channels</span>
+                <span className="text-sm sm:text-base font-medium">{channels.length} Investment Channels</span>
               </div>
               <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                 </svg>
-                <span className="font-medium">Active Members</span>
+                <span className="text-sm sm:text-base font-medium">Active Members</span>
               </div>
               <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span className="font-medium">Real-time Chat</span>
+                <span className="text-sm sm:text-base font-medium">Real-time Chat</span>
               </div>
             </div>
             {process.env.NODE_ENV === 'development' && (
@@ -287,10 +287,10 @@ export default function CommunityPage() {
       <div className="container mx-auto px-4 py-12">
 
         {/* Chat Interface */}
-        <div className="flex h-[700px] bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
-          <aside className="w-80 bg-slate-50 border-r border-slate-200 p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">Channels</h3>
+        <div className="flex flex-col md:flex-row h-[600px] md:h-[700px] bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
+          <aside className="w-full md:w-80 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto flex-shrink-0">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h3 className="text-base md:text-lg font-semibold text-slate-900">Channels</h3>
               <div className="flex items-center gap-2">
                 {activeChannelId ? (
                   <>
@@ -365,15 +365,15 @@ export default function CommunityPage() {
             </div>
           </aside>
 
-          <section className="flex-1 flex flex-col">
-            <div className="border-b border-slate-200 p-6 bg-white">
+          <section className="flex-1 flex flex-col min-h-0">
+            <div className="border-b border-slate-200 p-4 md:p-6 bg-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold text-slate-900">
+                  <h3 className="text-lg md:text-xl font-semibold text-slate-900">
                     {activeChannel?.name ? `# ${activeChannel.name}` : 'Select a channel'}
                   </h3>
                   {activeChannel?.description && (
-                    <p className="text-sm text-slate-600 mt-1">{activeChannel.description}</p>
+                    <p className="text-xs md:text-sm text-slate-600 mt-1 line-clamp-2">{activeChannel.description}</p>
                   )}
                 </div>
               </div>

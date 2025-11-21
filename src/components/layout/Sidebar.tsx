@@ -36,8 +36,8 @@ export function Sidebar() {
     : navigation
 
   return (
-    <div className="flex flex-col w-64 bg-white/90 backdrop-blur border-r border-[color:var(--border-subtle)] h-full">
-      <div className="p-6 border-b border-[color:var(--border-subtle)]">
+    <div className="flex flex-col w-full md:w-64 bg-transparent md:bg-white/90 backdrop-blur border-r-0 md:border-r border-[color:var(--border-subtle)] h-full">
+      <div className="hidden md:block p-6 border-b border-[color:var(--border-subtle)]">
         <span className="logo-type text-[15px] md:text-[16px] text-slate-800">
           STEWART & CO
         </span>

@@ -82,8 +82,8 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
   // Show success screen with credentials
   if (createdUser) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleClose}>
-        <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={handleClose}>
+        <Card className="w-full max-w-md my-auto" onClick={(e) => e.stopPropagation()}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle>User Created Successfully</CardTitle>
             <Button variant="ghost" size="sm" onClick={handleClose}>
@@ -137,7 +137,7 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
             </div>
 
             <div className="flex gap-2 justify-end pt-4">
-              <Button onClick={handleClose}>
+              <Button onClick={handleClose} className="w-full sm:w-auto min-h-[44px]">
                 Done
               </Button>
             </div>
@@ -149,8 +149,8 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
 
   // Show form
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleClose}>
-      <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={handleClose}>
+      <Card className="w-full max-w-md my-auto" onClick={(e) => e.stopPropagation()}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle>Create User + Trial</CardTitle>
           <Button variant="ghost" size="sm" onClick={handleClose}>
@@ -214,11 +214,11 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
               </p>
             </div>
             
-            <div className="flex gap-2 justify-end pt-4">
-              <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
+            <div className="flex flex-col sm:flex-row gap-2 justify-end pt-4">
+              <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading} className="w-full sm:w-auto min-h-[44px]">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading || !email}>
+              <Button type="submit" disabled={isLoading || !email} className="w-full sm:w-auto min-h-[44px]">
                 {isLoading ? 'Creating...' : 'Create User + Trial'}
               </Button>
             </div>

@@ -107,9 +107,9 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto" onClick={onClose}>
       <Card 
-        className="card w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="card w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] my-auto overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
@@ -138,7 +138,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
           {data && !isLoading && (
             <div className="space-y-6">
               {/* User Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <h3 className="font-semibold text-lg mb-4">Basic Information</h3>
                   <div className="space-y-3">

@@ -12,9 +12,10 @@ export function CreateUserButton() {
 
   return (
     <>
-      <Button onClick={() => setShowModal(true)}>
+      <Button onClick={() => setShowModal(true)} className="w-full sm:w-auto min-h-[44px]">
         <UserPlus className="w-4 h-4 mr-2" />
-        Create User + Trial
+        <span className="hidden sm:inline">Create User + Trial</span>
+        <span className="sm:hidden">Create User</span>
       </Button>
       
       {showModal && (

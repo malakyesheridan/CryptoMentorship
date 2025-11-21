@@ -599,6 +599,7 @@ model PortfolioSetting {
 model PortfolioDailySignal {
   id               String   @id @default(cuid())
   tier             String // 'T1' | 'T2' | 'T3'
+  category         String? // 'majors' | 'memecoins' (only for T3)
   signal           String // Main signal text (e.g., "100% Cash")
   executiveSummary String? // Executive summary text
   associatedData   String? // Associated data/conditions (JSON string)
@@ -610,6 +611,7 @@ model PortfolioDailySignal {
   createdBy User? @relation("PortfolioDailySignals", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([tier, publishedAt])
+  @@index([tier, category, publishedAt])
   @@index([publishedAt])
 }
 

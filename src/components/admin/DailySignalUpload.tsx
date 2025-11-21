@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 
 interface DailySignalUploadProps {
   tier: 'T1' | 'T2' | 'T3'
+  category?: 'majors' | 'memecoins'
   userRole?: string
 }
 
@@ -21,7 +22,7 @@ const tierLabels = {
   T3: 'T3 - Elite Tier',
 }
 
-export default function DailySignalUpload({ tier, userRole }: DailySignalUploadProps) {
+export default function DailySignalUpload({ tier, category, userRole }: DailySignalUploadProps) {
   const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
@@ -49,12 +50,13 @@ export default function DailySignalUpload({ tier, userRole }: DailySignalUploadP
     try {
       const requestBody = {
         tier,
+        ...(tier === 'T3' && category ? { category } : {}),
         signal: formData.signal.trim(),
         executiveSummary: formData.executiveSummary.trim() || undefined,
         associatedData: formData.associatedData.trim() || undefined,
       }
 
-      console.log(`Creating ${tier} daily signal:`, requestBody)
+      console.log(`Creating ${tier}${category ? ` ${category}` : ''} daily signal:`, requestBody)
 
       const result = await json<{ id: string } | { error: string; details?: any[] }>('/api/admin/portfolio-daily-signals', {
         method: 'POST',
@@ -68,7 +70,8 @@ export default function DailySignalUpload({ tier, userRole }: DailySignalUploadP
         throw new Error(errorDetails)
       }
 
-      toast.success(`${tierLabels[tier]} signal posted successfully!`)
+      const categoryLabel = category === 'majors' ? 'Majors' : category === 'memecoins' ? 'Memecoins' : ''
+      toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} signal posted successfully!`)
       setUploadStatus('success')
       setFormData({
         signal: '',
@@ -170,7 +173,9 @@ export default function DailySignalUpload({ tier, userRole }: DailySignalUploadP
           className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-6 text-lg"
           disabled={isUploading || !formData.signal.trim()}
         >
-          {isUploading ? 'Posting Update...' : `Post ${tierLabels[tier]} Update`}
+          {isUploading 
+            ? 'Posting Update...' 
+            : `Post ${tierLabels[tier]}${category === 'majors' ? ' Majors' : category === 'memecoins' ? ' Memecoins' : ''} Update`}
         </Button>
       </form>
     </div>

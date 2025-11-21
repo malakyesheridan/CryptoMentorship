@@ -1,11 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { NotificationDropdown } from '@/components/NotificationDropdown'
+import { Menu, X } from 'lucide-react'
 
-export function Topbar() {
+interface TopbarProps {
+  onMenuClick?: () => void
+  isMenuOpen?: boolean
+}
+
+export function Topbar({ onMenuClick, isMenuOpen }: TopbarProps) {
   const { data: session } = useSession()
 
   const handleSignOut = async () => {
@@ -19,7 +26,20 @@ export function Topbar() {
     <div className="bg-white/90 backdrop-blur border-b border-[color:var(--border-subtle)] relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex-1">
+          {/* Mobile menu button */}
+          <button
+            onClick={onMenuClick}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6 text-slate-700" />
+            ) : (
+              <Menu className="h-6 w-6 text-slate-700" />
+            )}
+          </button>
+          
+          <div className="flex-1 md:flex-none">
             {/* Ticker removed */}
           </div>
           
@@ -36,7 +56,7 @@ export function Topbar() {
                     {session?.user?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="text-left">
+                <div className="text-left hidden sm:block">
                   <p className="text-sm font-medium text-slate-800">
                     {session?.user?.name || 'User'}
                   </p>

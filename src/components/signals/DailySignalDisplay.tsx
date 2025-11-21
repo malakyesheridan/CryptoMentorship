@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 interface DailySignal {
   id: string
   tier: 'T1' | 'T2' | 'T3'
+  category?: 'majors' | 'memecoins' | null
   signal: string
   executiveSummary?: string | null
   associatedData?: string | null
@@ -54,8 +55,11 @@ function canAccessTier(userTier: string | null, signalTier: Tier, isActive: bool
   return userTierIndex >= signalTierIndex
 }
 
+type Category = 'majors' | 'memecoins'
+
 export default function DailySignalDisplay({ userTier, userRole }: DailySignalDisplayProps) {
   const [activeTier, setActiveTier] = useState<Tier | null>(null)
+  const [activeCategory, setActiveCategory] = useState<Category>('majors')
 
   const { data, error, isLoading } = useSWR<{ 
     signals: DailySignal[]
@@ -72,7 +76,7 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
     }
   )
 
-  // Group signals by tier
+  // Group signals by tier (and category for T3)
   const signalsByTier = useMemo(() => {
     const signals = data?.signals || []
     const grouped: Record<Tier, DailySignal[]> = {
@@ -89,6 +93,22 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
     
     return grouped
   }, [data?.signals])
+
+  // Group T3 signals by category
+  const t3SignalsByCategory = useMemo(() => {
+    const t3Signals = signalsByTier.T3
+    return {
+      majors: t3Signals.find(s => s.category === 'majors') || null,
+      memecoins: t3Signals.find(s => s.category === 'memecoins') || null,
+    }
+  }, [signalsByTier.T3])
+
+  // Reset category when tier changes away from T3
+  useEffect(() => {
+    if (activeTier !== 'T3') {
+      setActiveCategory('majors')
+    }
+  }, [activeTier])
 
   // Set initial active tier to first available tier
   useEffect(() => {
@@ -143,7 +163,17 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
   }
 
   const tiers: Tier[] = ['T1', 'T2', 'T3']
-  const currentSignal = activeTier ? signalsByTier[activeTier]?.[0] : null
+  
+  // Get current signal based on active tier and category
+  const getCurrentSignal = (): DailySignal | null => {
+    if (!activeTier) return null
+    if (activeTier === 'T3') {
+      return t3SignalsByCategory[activeCategory]
+    }
+    return signalsByTier[activeTier]?.[0] || null
+  }
+  
+  const currentSignal = getCurrentSignal()
   const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive, userRole) : false
 
   return (
@@ -151,7 +181,7 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
       <CardContent className="pt-6">
         {/* Tab Navigation */}
         <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200">
+          <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
             {tiers.map((tier) => {
               const signal = signalsByTier[tier]?.[0]
               const hasSignal = !!signal
@@ -165,7 +195,7 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
                   onClick={() => hasSignal && setActiveTier(tier)}
                   disabled={!hasSignal}
                   className={cn(
-                    'rounded-xl px-6 py-3 font-medium transition-all duration-200 relative',
+                    'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none',
                     activeTier === tier
                       ? 'bg-yellow-500 text-white shadow-md hover:bg-yellow-600'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
@@ -181,6 +211,41 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
             })}
           </div>
         </div>
+
+        {/* Category Tab Navigation (only for T3) */}
+        {activeTier === 'T3' && (
+          <div className="flex justify-center mb-6">
+            <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
+              {(['majors', 'memecoins'] as Category[]).map((category) => {
+                const hasSignal = !!t3SignalsByCategory[category]
+                const signal = t3SignalsByCategory[category]
+                const canAccess = signal ? canAccessTier(effectiveUserTier, 'T3', isActive, userRole) : false
+                const isLocked = hasSignal && !canAccess
+                
+                return (
+                  <Button
+                    key={category}
+                    variant={activeCategory === category ? 'default' : 'ghost'}
+                    onClick={() => hasSignal && setActiveCategory(category)}
+                    disabled={!hasSignal}
+                    className={cn(
+                      'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none capitalize',
+                      activeCategory === category
+                        ? 'bg-yellow-500 text-white shadow-md hover:bg-yellow-600'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                      !hasSignal && 'opacity-50 cursor-not-allowed'
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isLocked && <Lock className="w-4 h-4" />}
+                      {category === 'majors' ? 'Majors' : 'Memecoins'}
+                    </div>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Active Tab Content */}
         {currentSignal && (
@@ -203,7 +268,7 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
                   <div className="flex items-center space-x-2">
                     <Zap className="w-5 h-5 text-yellow-500" />
                     <h3 className="text-lg font-bold text-slate-900">
-                      ⚡ Portfolio Signal Update - {tierLabels[currentSignal.tier]} ⚡
+                      ⚡ Portfolio Signal Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Majors' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
                     </h3>
                   </div>
                   <span className="text-xs text-slate-500">

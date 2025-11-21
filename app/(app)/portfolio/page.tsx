@@ -209,11 +209,11 @@ export default async function PortfolioPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6">
               <span className="text-white">My </span>
               <span className="text-yellow-400">Portfolio</span>
             </h1>
-            <p className="text-xl text-slate-300 mb-8">
+            <p className="text-base sm:text-lg lg:text-xl text-slate-300 mb-8 px-4">
               View Daily Updates to Coen&apos;s Portfolio
             </p>
           </div>

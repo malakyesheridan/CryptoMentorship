@@ -88,7 +88,127 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
           <CardTitle>All Users ({users.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {users.map((user) => {
+              const membership = user.memberships[0]
+              return (
+                <Card 
+                  key={user.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedUserId(user.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900 mb-1">{user.name || 'No name'}</p>
+                        <div className="flex items-center gap-1 mb-2">
+                          <Mail className="w-3 h-3 text-slate-400" />
+                          <p className="text-sm text-slate-600">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        {user.isActive ? (
+                          <Badge className="badge-preview text-xs">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge className="badge-locked text-xs">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Inactive
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">Role</span>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <RoleSelector
+                            userId={user.id}
+                            currentRole={user.role}
+                            currentUserId={currentUserId}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">Membership</span>
+                        {membership ? (
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {membership.tier}
+                            </Badge>
+                            <span className="text-xs text-slate-500 capitalize">{membership.status}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">No membership</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">Joined</span>
+                        <div className="flex items-center gap-1 text-xs text-slate-600">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(user.createdAt, 'MMM d, yyyy')}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">Activity</span>
+                        <div className="text-xs text-slate-600">
+                          {user._count.messages} msgs • {user._count.enrollments} enrolls • {user._count.certificates} certs
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-3"
+                        onClick={() => setSelectedUserId(user.id)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleToggleStatus(user.id, user.isActive)}
+                        disabled={isTogglingStatus === user.id || (user.id === currentUserId && user.isActive)}
+                      >
+                        <Power className={cn(
+                          "w-4 h-4",
+                          user.isActive ? "text-red-600" : "text-green-600"
+                        )} />
+                      </Button>
+                      {currentUserId && (
+                        <DeleteUserButton
+                          userId={user.id}
+                          userEmail={user.email}
+                          userName={user.name}
+                          currentUserId={currentUserId}
+                        />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+            
+            {users.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-slate-500">No users found.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[color:var(--border-subtle)]">
@@ -207,13 +327,13 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                 })}
               </tbody>
             </table>
+            
+            {users.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-slate-500">No users found.</p>
+              </div>
+            )}
           </div>
-          
-          {users.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-slate-500">No users found.</p>
-            </div>
-          )}
         </CardContent>
       </Card>
 

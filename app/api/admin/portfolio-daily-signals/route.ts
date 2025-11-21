@@ -8,9 +8,19 @@ export const dynamic = 'force-dynamic'
 
 const createDailySignalSchema = z.object({
   tier: z.enum(['T1', 'T2', 'T3']),
+  category: z.enum(['majors', 'memecoins']).optional(),
   signal: z.string().min(1).max(500),
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
+}).refine((data) => {
+  // Category is required for T3, optional for T1 and T2
+  if (data.tier === 'T3') {
+    return data.category === 'majors' || data.category === 'memecoins'
+  }
+  return true
+}, {
+  message: "Category must be 'majors' or 'memecoins' for T3 tier",
+  path: ['category']
 })
 
 // GET /api/admin/portfolio-daily-signals - Get all daily signals
@@ -69,10 +79,11 @@ export async function POST(request: NextRequest) {
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    // Delete any existing signals for this tier today (replace behavior)
+    // Delete any existing signals for this tier (and category if T3) today (replace behavior)
     await prisma.portfolioDailySignal.deleteMany({
       where: {
         tier: data.tier,
+        ...(data.tier === 'T3' && data.category ? { category: data.category } : {}),
         publishedAt: {
           gte: today,
           lt: tomorrow

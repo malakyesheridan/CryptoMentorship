@@ -71,7 +71,7 @@ export default function MessageList({
   }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-3 sm:p-4">
       {messages.map((message) => {
         const isTemp = message.id.startsWith('tmp:')
         const timestamp = new Date(message.createdAt)
@@ -81,11 +81,11 @@ export default function MessageList({
         return (
           <div 
             key={message.id} 
-            className="group flex gap-3 hover:bg-slate-50/50 rounded-lg p-2 -m-2 transition-colors"
+            className="group flex gap-2 sm:gap-3 hover:bg-slate-50/50 rounded-lg p-2 -m-2 transition-colors"
             onMouseEnter={() => setHoveredMessage(message.id)}
             onMouseLeave={() => setHoveredMessage(null)}
           >
-            <div className="h-8 w-8 overflow-hidden rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex-shrink-0">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 overflow-hidden rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex-shrink-0">
               {message.author?.image ? (
                 <Image
                   src={message.author.image}
@@ -101,8 +101,8 @@ export default function MessageList({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-slate-800 text-sm">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="font-medium text-slate-800 text-xs sm:text-sm">
                   {message.author?.name ?? 'Anonymous'}
                 </span>
                 <time 
@@ -119,7 +119,7 @@ export default function MessageList({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-slate-500 hover:text-slate-700"
+                      className="h-8 w-8 sm:h-6 sm:w-6 p-0 text-slate-500 hover:text-slate-700 min-h-[44px] sm:min-h-0"
                       onClick={() => onReply?.(message)}
                     >
                       <Reply className="w-3 h-3" />
