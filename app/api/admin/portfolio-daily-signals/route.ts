@@ -73,23 +73,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createDailySignalSchema.parse(body)
 
-    // Get today's date range (start of day to end of day)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    // Delete the most recent signal for this tier (and category if T3) to replace it
+    // This ensures only one active signal exists per tier/category combination
+    const whereClause: any = {
+      tier: data.tier,
+    }
+    
+    // For T3, also filter by category
+    if (data.tier === 'T3' && data.category) {
+      whereClause.category = data.category
+    }
 
-    // Delete any existing signals for this tier (and category if T3) today (replace behavior)
-    await prisma.portfolioDailySignal.deleteMany({
-      where: {
-        tier: data.tier,
-        ...(data.tier === 'T3' && data.category ? { category: data.category } : {}),
-        publishedAt: {
-          gte: today,
-          lt: tomorrow
-        }
-      }
+    // Find the most recent signal for this tier/category
+    const existingSignal = await prisma.portfolioDailySignal.findFirst({
+      where: whereClause,
+      orderBy: { publishedAt: 'desc' },
     })
+
+    // Delete it if it exists
+    if (existingSignal) {
+      await prisma.portfolioDailySignal.delete({
+        where: { id: existingSignal.id },
+      })
+    }
 
     // Create new signal
     const signal = await prisma.portfolioDailySignal.create({

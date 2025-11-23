@@ -22,19 +22,9 @@ export async function GET(request: NextRequest) {
     const userTier = membership?.tier || null
     const isActive = membership?.status === 'active' || session.user.role === 'admin'
 
-    // Get today's signals for ALL tiers (we'll filter by access on the client)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-
-    const signals = await prisma.portfolioDailySignal.findMany({
-      where: {
-        publishedAt: {
-          gte: today,
-          lt: tomorrow
-        }
-      },
+    // Get the most recent signal for each tier/category combination
+    // This ensures signals remain visible until they are updated
+    const allSignals = await prisma.portfolioDailySignal.findMany({
       include: {
         createdBy: {
           select: {
@@ -43,7 +33,28 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      orderBy: { tier: 'asc' }, // T1 first, then T2, then T3
+      orderBy: { publishedAt: 'desc' }, // Most recent first
+    })
+
+    // Group by tier and category, keeping only the most recent for each combination
+    const signalsMap = new Map<string, typeof allSignals[0]>()
+    
+    for (const signal of allSignals) {
+      // Create a unique key: tier + category (or just tier for T1/T2)
+      const key = signal.tier === 'T3' && signal.category 
+        ? `${signal.tier}-${signal.category}` 
+        : signal.tier
+      
+      // Only keep the first (most recent) signal for each key
+      if (!signalsMap.has(key)) {
+        signalsMap.set(key, signal)
+      }
+    }
+
+    // Convert map back to array and sort by tier
+    const signals = Array.from(signalsMap.values()).sort((a, b) => {
+      const tierOrder = { 'T1': 1, 'T2': 2, 'T3': 3 }
+      return (tierOrder[a.tier as keyof typeof tierOrder] || 99) - (tierOrder[b.tier as keyof typeof tierOrder] || 99)
     })
 
     return NextResponse.json({ 
