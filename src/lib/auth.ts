@@ -362,11 +362,12 @@ export const authOptions: NextAuthOptions = {
             token.lastRefreshed = now
 
             // Try to get membership separately to avoid column errors
+            // Include both 'active' and 'trial' status - trial accounts should have access
             try {
               const membership = await prisma.membership.findFirst({
                 where: { 
                   userId: token.sub,
-                  status: 'active',
+                  status: { in: ['active', 'trial'] },
                 },
                 orderBy: { createdAt: 'desc' },
                 select: {

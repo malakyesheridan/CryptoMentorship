@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
-    // Create user and membership in transaction
-    const { user, membership } = await prisma.$transaction(async (tx) => {
+    // Create user only (no membership - user must subscribe or be granted trial by admin)
+    const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
           email,
@@ -54,14 +54,6 @@ export async function POST(req: NextRequest) {
           passwordHash,
           role: 'member',
           emailVerified: null, // Require email verification
-        },
-      })
-
-      const newMembership = await tx.membership.create({
-        data: {
-          userId: newUser.id,
-          tier: 'T1',
-          status: 'trial',
         },
       })
 
@@ -93,7 +85,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      return { user: newUser, membership: newMembership }
+      return newUser
     })
 
     logger.info('User registered', { userId: user.id, email })

@@ -16,7 +16,7 @@ interface CreateUserWithTrialModalProps {
 export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithTrialModalProps) {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [tier, setTier] = useState<'T1' | 'T2' | 'T3'>('T1')
+  const [tier, setTier] = useState<'T1' | 'T2' | 'T3'>('T3') // Default to T3 for all trial accounts
   const [durationDays, setDurationDays] = useState(30)
   const [isLoading, setIsLoading] = useState(false)
   const [createdUser, setCreatedUser] = useState<{
@@ -74,7 +74,7 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
     setCreatedUser(null)
     setEmail('')
     setName('')
-    setTier('T1')
+    setTier('T3')
     setDurationDays(30)
     onClose()
   }

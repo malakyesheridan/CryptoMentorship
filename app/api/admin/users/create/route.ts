@@ -8,7 +8,7 @@ import { logger } from '@/lib/logger'
 const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   name: z.string().min(2).max(100).optional(),
-  tier: z.enum(['T1', 'T2', 'T3']).default('T1'),
+  tier: z.enum(['T1', 'T2', 'T3']).default('T3'), // Default to T3 for all trial accounts
   durationDays: z.number().min(1).max(365).default(30), // Default 30 days (1 month)
 })
 

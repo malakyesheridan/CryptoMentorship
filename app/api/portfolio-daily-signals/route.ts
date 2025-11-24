@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
     })
 
     const userTier = membership?.tier || null
-    const isActive = membership?.status === 'active' || session.user.role === 'admin'
+    // Trial accounts should be treated as active for signal access
+    const isActive = (membership?.status === 'active' || membership?.status === 'trial') || session.user.role === 'admin'
 
     // Get the most recent signal for each tier/category combination
     // This ensures signals remain visible until they are updated

@@ -17,7 +17,7 @@ interface CreateTrialModalProps {
 }
 
 export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClose }: CreateTrialModalProps) {
-  const [tier, setTier] = useState<'T1' | 'T2' | 'T3'>('T1')
+  const [tier, setTier] = useState<'T1' | 'T2' | 'T3'>('T3') // Default to T3 for all trial accounts
   const [durationDays, setDurationDays] = useState(30)
   const [isLoading, setIsLoading] = useState(false)
 

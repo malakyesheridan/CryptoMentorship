@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         update: { stripeCustomerId: customer.id },
         create: {
           userId: user.id,
-          tier: 'T1', // Default tier, will be updated by webhook
+          tier: 'T3', // Default tier for trials, will be updated by webhook if different
           status: 'trial',
           stripeCustomerId: customer.id,
         },

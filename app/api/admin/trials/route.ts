@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger'
 
 const createTrialSchema = z.object({
   userId: z.string(),
-  tier: z.enum(['T1', 'T2', 'T3']),
+  tier: z.enum(['T1', 'T2', 'T3']).default('T3'), // Default to T3 for all trial accounts
   durationDays: z.number().min(1).max(365).default(30), // Default 30 days (1 month)
 })
 
