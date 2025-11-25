@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { BeamsBackground } from '@/components/auth/BeamsBackground'
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -39,21 +40,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '28rem', width: '100%' }}>
-        <div style={{
-          background: 'white',
-          borderRadius: '1rem',
-          padding: '2rem',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-        }}>
+    <BeamsBackground intensity="medium">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-md w-full relative z-20">
+          <div className="bg-[#FFFDF7] rounded-2xl p-8 shadow-2xl border border-slate-200/50 backdrop-blur-sm">
           <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
             <h1 style={{ 
               fontSize: '2rem', 
@@ -177,9 +167,10 @@ export default function ForgotPasswordPage() {
               </p>
             </form>
           )}
+          </div>
         </div>
       </div>
-    </div>
+    </BeamsBackground>
   )
 }
 
