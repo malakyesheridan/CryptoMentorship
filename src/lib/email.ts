@@ -11,16 +11,42 @@ function createTransporter() {
     throw new Error('EMAIL_SERVER is not configured')
   }
 
-  // Parse SMTP URL format: smtp://user:pass@host:port
-  const url = new URL(env.EMAIL_SERVER)
+  let url: URL
+  try {
+    // Parse SMTP URL format: smtp://user:pass@host:port
+    url = new URL(env.EMAIL_SERVER)
+  } catch (error) {
+    throw new Error(`Invalid EMAIL_SERVER format: ${error instanceof Error ? error.message : String(error)}. Expected format: smtp://username:password@host:port`)
+  }
   
+  // Decode URL-encoded username and password (handles special characters)
+  // Note: URL() automatically decodes, but we do it explicitly to be safe
+  const username = decodeURIComponent(url.username || '')
+  const password = decodeURIComponent(url.password || '')
+  
+  // Validate that we have credentials
+  if (!username || !password) {
+    throw new Error('EMAIL_SERVER must include both username and password in the format: smtp://username:password@host:port')
+  }
+  
+  const port = parseInt(url.port || '587', 10)
+  const isSecurePort = port === 465
+  
+  // Configure transporter with proper TLS settings
+  // ProtonMail requires STARTTLS on port 587
+  // Note: Some SMTP servers handle STARTTLS automatically, so we don't force requireTLS
   const transporter = nodemailer.createTransport({
     host: url.hostname,
-    port: parseInt(url.port || '587', 10),
-    secure: url.port === '465', // true for 465, false for other ports
+    port: port,
+    secure: isSecurePort, // true for 465 (SSL), false for other ports (STARTTLS)
+    // Don't explicitly require TLS - let the server negotiate it
+    // requireTLS can cause issues with some providers
+    tls: {
+      rejectUnauthorized: true, // Reject unauthorized certificates
+    },
     auth: {
-      user: url.username,
-      pass: url.password,
+      user: username,
+      pass: password,
     },
   })
 
@@ -57,6 +83,10 @@ export async function sendEmail({
 
   try {
     const transporter = createTransporter()
+    
+    // Don't verify connection - some SMTP servers (like ProtonMail) don't support verify()
+    // and it can cause authentication issues. We'll catch errors during sendMail instead.
+    
     const from = env.EMAIL_FROM.includes('<') 
       ? env.EMAIL_FROM 
       : `CryptoMentorship <${env.EMAIL_FROM}>`
@@ -71,7 +101,31 @@ export async function sendEmail({
 
     logger.info('Email sent successfully', { to, subject })
   } catch (error) {
-    logger.error('Failed to send email', error instanceof Error ? error : new Error(String(error)))
+    // Enhanced error logging for SMTP authentication issues
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    const isAuthError = errorMessage.includes('authentication failed') || 
+                       errorMessage.includes('Invalid login') ||
+                       errorMessage.includes('535') ||
+                       errorMessage.includes('Authentication failed')
+    
+    if (isAuthError) {
+      const url = env.EMAIL_SERVER ? new URL(env.EMAIL_SERVER) : null
+      logger.error('SMTP authentication failed - check EMAIL_SERVER credentials', {
+        error: errorMessage,
+        hostname: url?.hostname || 'unknown',
+        port: url?.port || 'unknown',
+        usernameProvided: url ? (url.username ? 'yes' : 'no') : 'unknown',
+        passwordProvided: url ? (url.password ? 'yes' : 'no') : 'unknown',
+        hint: 'For ProtonMail: Ensure you\'re using an SMTP token (not password), and the username is your full email address. Format: smtp://email@domain.com:TOKEN@smtp.protonmail.ch:587',
+        stack: errorStack,
+      })
+    } else {
+      logger.error('Failed to send email', {
+        error: errorMessage,
+        stack: errorStack,
+      })
+    }
     throw error
   }
 }
