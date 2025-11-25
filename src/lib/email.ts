@@ -136,7 +136,7 @@ export async function sendPasswordResetEmail({
         </div>
         
         <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #94a3b8;">
-          <p style="margin: 0;">© ${new Date().getFullYear()} CryptoMentorship. All rights reserved.</p>
+          <p style="margin: 0;">© ${new Date().getFullYear()} Stewart & Co Portal. All rights reserved.</p>
         </div>
       </body>
     </html>
@@ -155,12 +155,12 @@ This link will expire in 1 hour.
 
 If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
 
-© ${new Date().getFullYear()} CryptoMentorship. All rights reserved.
+© ${new Date().getFullYear()} Stewart & Co Portal. All rights reserved.
   `.trim()
 
   await sendEmail({
     to,
-    subject: 'Reset Your Password - CryptoMentorship',
+    subject: 'Reset Your Password - Stewart & Co Portal',
     html,
     text,
   })

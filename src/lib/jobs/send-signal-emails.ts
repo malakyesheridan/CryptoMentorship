@@ -33,10 +33,10 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     // This ensures users get their tier's signal regardless of which tier was just created
 
     // Get all users with active/trial memberships
+    // Note: email is required in User model, so no need to filter for null
     const allUsers = await prisma.user.findMany({
       where: {
         role: { in: ['member', 'editor', 'admin'] },
-        email: { isNot: null },
       },
       include: {
         memberships: {
