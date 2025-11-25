@@ -89,7 +89,7 @@ export async function sendEmail({
     
     const from = env.EMAIL_FROM.includes('<') 
       ? env.EMAIL_FROM 
-      : `CryptoMentorship <${env.EMAIL_FROM}>`
+      : `Stewart & Co <${env.EMAIL_FROM}>`
 
     await transporter.sendMail({
       from,
