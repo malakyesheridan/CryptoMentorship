@@ -36,7 +36,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     const allUsers = await prisma.user.findMany({
       where: {
         role: { in: ['member', 'editor', 'admin'] },
-        email: { not: null },
+        email: { isNot: null },
       },
       include: {
         memberships: {
