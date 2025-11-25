@@ -111,20 +111,17 @@ export async function sendEmail({
     
     if (isAuthError) {
       const url = env.EMAIL_SERVER ? new URL(env.EMAIL_SERVER) : null
-      logger.error('SMTP authentication failed - check EMAIL_SERVER credentials', {
-        error: errorMessage,
+      const errorObj = error instanceof Error ? error : new Error(errorMessage)
+      logger.error('SMTP authentication failed - check EMAIL_SERVER credentials', errorObj, {
         hostname: url?.hostname || 'unknown',
         port: url?.port || 'unknown',
         usernameProvided: url ? (url.username ? 'yes' : 'no') : 'unknown',
         passwordProvided: url ? (url.password ? 'yes' : 'no') : 'unknown',
         hint: 'For ProtonMail: Ensure you\'re using an SMTP token (not password), and the username is your full email address. Format: smtp://email@domain.com:TOKEN@smtp.protonmail.ch:587',
-        stack: errorStack,
       })
     } else {
-      logger.error('Failed to send email', {
-        error: errorMessage,
-        stack: errorStack,
-      })
+      const errorObj = error instanceof Error ? error : new Error(errorMessage)
+      logger.error('Failed to send email', errorObj)
     }
     throw error
   }
