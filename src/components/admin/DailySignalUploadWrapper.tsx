@@ -9,6 +9,15 @@ import { cn } from '@/lib/utils'
 
 interface DailySignalUploadWrapperProps {
   userRole?: string
+  editingSignal?: {
+    id: string
+    tier: 'T1' | 'T2' | 'T3'
+    category?: 'majors' | 'memecoins' | null
+    signal: string
+    executiveSummary?: string | null
+    associatedData?: string | null
+  } | null
+  onEditComplete?: () => void
 }
 
 type Tier = 'T1' | 'T2' | 'T3'
@@ -21,7 +30,7 @@ const tierLabels: Record<Tier, string> = {
 
 type Category = 'majors' | 'memecoins'
 
-export default function DailySignalUploadWrapper({ userRole }: DailySignalUploadWrapperProps) {
+export default function DailySignalUploadWrapper({ userRole, editingSignal, onEditComplete }: DailySignalUploadWrapperProps) {
   const [mounted, setMounted] = useState(false)
   const [activeTier, setActiveTier] = useState<Tier>('T1')
   const [activeCategory, setActiveCategory] = useState<Category>('majors')
@@ -37,6 +46,23 @@ export default function DailySignalUploadWrapper({ userRole }: DailySignalUpload
     }
   }, [activeTier])
 
+  // When editing signal is provided, set the active tier/category and scroll to form
+  useEffect(() => {
+    if (editingSignal) {
+      setActiveTier(editingSignal.tier)
+      if (editingSignal.tier === 'T3' && editingSignal.category) {
+        setActiveCategory(editingSignal.category)
+      }
+      // Scroll to upload section
+      setTimeout(() => {
+        const uploadSection = document.getElementById('daily-signal-upload')
+        if (uploadSection) {
+          uploadSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  }, [editingSignal])
+
   if (!mounted) {
     return <div className="h-32" />
   }
@@ -46,7 +72,7 @@ export default function DailySignalUploadWrapper({ userRole }: DailySignalUpload
   }
 
   return (
-    <Card className="mb-8">
+    <Card id="daily-signal-upload" className="mb-8">
       <CardContent className="pt-6">
         <div className="mb-6">
           <div className="flex items-center space-x-2 mb-2">
@@ -106,7 +132,21 @@ export default function DailySignalUploadWrapper({ userRole }: DailySignalUpload
         <DailySignalUpload 
           tier={activeTier} 
           category={activeTier === 'T3' ? activeCategory : undefined}
-          userRole={userRole} 
+          userRole={userRole}
+          existingSignal={editingSignal && editingSignal.tier === activeTier && 
+            (editingSignal.tier !== 'T3' || editingSignal.category === activeCategory)
+            ? {
+                id: editingSignal.id,
+                signal: editingSignal.signal,
+                executiveSummary: editingSignal.executiveSummary,
+                associatedData: editingSignal.associatedData,
+              }
+            : undefined}
+          onEditComplete={() => {
+            if (onEditComplete) {
+              onEditComplete()
+            }
+          }}
         />
       </CardContent>
     </Card>

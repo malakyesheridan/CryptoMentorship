@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import useSWR from 'swr'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Zap, TrendingUp, AlertCircle, Lock } from 'lucide-react'
+import { Zap, TrendingUp, AlertCircle, Lock, Edit } from 'lucide-react'
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 
@@ -57,7 +57,13 @@ function canAccessTier(userTier: string | null, signalTier: Tier, isActive: bool
 
 type Category = 'majors' | 'memecoins'
 
-export default function DailySignalDisplay({ userTier, userRole }: DailySignalDisplayProps) {
+interface DailySignalDisplayProps {
+  userTier: string | null
+  userRole?: string
+  onEditSignal?: (signal: DailySignal) => void
+}
+
+export default function DailySignalDisplay({ userTier, userRole, onEditSignal }: DailySignalDisplayProps) {
   const [activeTier, setActiveTier] = useState<Tier | null>(null)
   const [activeCategory, setActiveCategory] = useState<Category>('majors')
 
@@ -271,9 +277,22 @@ export default function DailySignalDisplay({ userTier, userRole }: DailySignalDi
                       ⚡ Portfolio Signal Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Market Rotation' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
                     </h3>
                   </div>
-                  <span className="text-xs text-slate-500">
-                    {formatDate(new Date(currentSignal.publishedAt), 'short')}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    {(userRole === 'admin' || userRole === 'editor') && onEditSignal && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEditSignal(currentSignal)}
+                        className="flex items-center gap-2"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </Button>
+                    )}
+                    <span className="text-xs text-slate-500">
+                      {formatDate(new Date(currentSignal.publishedAt), 'short')}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Signal */}

@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { TrendingUp, Lock, Eye, Target, Calendar, ArrowRight, BarChart3, TrendingDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import AdminSignalUploadWrapper from '@/components/AdminSignalUploadWrapper'
 import { PortfolioContent } from '@/components/signals/PortfolioContent'
+import DailySignalManager from '@/components/signals/DailySignalManager'
 import { getOpenPositions, getClosedTrades } from '@/lib/portfolio/metrics'
 import { unstable_cache } from 'next/cache'
 import { Suspense } from 'react'
@@ -221,8 +221,10 @@ export default async function PortfolioPage() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        {/* Admin Upload Section */}
-        <AdminSignalUploadWrapper userRole={userRole} />
+        {/* Daily Signal Manager (Upload + Display) */}
+        <div className="mb-8">
+          <DailySignalManager userTier={userTier} userRole={userRole} />
+        </div>
 
         {/* Unified Portfolio Content with Tabs */}
         <Suspense fallback={

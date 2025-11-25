@@ -1,11 +1,21 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import DailySignalDisplay from './DailySignalDisplay'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp } from 'lucide-react'
 import { canViewContent } from '@/lib/content-utils'
 import Link from 'next/link'
+
+interface DailySignal {
+  id: string
+  tier: 'T1' | 'T2' | 'T3'
+  category?: 'majors' | 'memecoins' | null
+  signal: string
+  executiveSummary?: string | null
+  associatedData?: string | null
+  publishedAt: string
+}
 
 
 interface PortfolioContentProps {
@@ -112,10 +122,9 @@ export function PortfolioContent({
 }: PortfolioContentProps) {
   return (
     <div className="space-y-8">
-      {/* Daily Signal Updates */}
+      {/* Daily Signal Updates - Now handled by DailySignalManager */}
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">Today&apos;s Portfolio Signal Updates</h2>
-        <DailySignalDisplay userTier={userTier} userRole={userRole} />
       </div>
 
 

@@ -10,7 +10,7 @@ const inter = Inter({
 })
 
 export const metadata = {
-  title: 'Crypto Mentorship Portal',
+  title: 'Stewart & Co Portal',
   description: 'Education, signals, and resources for crypto investors',
 }
 

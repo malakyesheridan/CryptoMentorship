@@ -14,6 +14,13 @@ interface DailySignalUploadProps {
   tier: 'T1' | 'T2' | 'T3'
   category?: 'majors' | 'memecoins'
   userRole?: string
+  existingSignal?: {
+    id: string
+    signal: string
+    executiveSummary?: string | null
+    associatedData?: string | null
+  }
+  onEditComplete?: () => void
 }
 
 const tierLabels = {
@@ -22,16 +29,17 @@ const tierLabels = {
   T3: 'T3 - Elite Tier',
 }
 
-export default function DailySignalUpload({ tier, category, userRole }: DailySignalUploadProps) {
+export default function DailySignalUpload({ tier, category, userRole, existingSignal, onEditComplete }: DailySignalUploadProps) {
   const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [isEditing, setIsEditing] = useState(!!existingSignal)
 
   const [formData, setFormData] = useState({
-    signal: '',
-    executiveSummary: '',
-    associatedData: '',
+    signal: existingSignal?.signal || '',
+    executiveSummary: existingSignal?.executiveSummary || '',
+    associatedData: existingSignal?.associatedData || '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,43 +56,82 @@ export default function DailySignalUpload({ tier, category, userRole }: DailySig
     setErrorMessage('')
 
     try {
-      const requestBody = {
-        tier,
-        ...(tier === 'T3' && category ? { category } : {}),
-        signal: formData.signal.trim(),
-        executiveSummary: formData.executiveSummary.trim() || undefined,
-        associatedData: formData.associatedData.trim() || undefined,
+      if (isEditing && existingSignal) {
+        // Update existing signal
+        const result = await json<{ id: string } | { error: string; details?: any[] }>(
+          `/api/admin/portfolio-daily-signals/${existingSignal.id}`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              signal: formData.signal.trim(),
+              executiveSummary: formData.executiveSummary.trim() || undefined,
+              associatedData: formData.associatedData.trim() || undefined,
+            }),
+          }
+        )
+
+        if ('error' in result) {
+          const errorDetails = result.details?.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ') || result.error
+          throw new Error(errorDetails)
+        }
+
+        toast.success('Signal updated successfully!')
+        setUploadStatus('success')
+        setIsEditing(false)
+        if (onEditComplete) {
+          onEditComplete()
+        }
+        
+        // Reset uploading state immediately so buttons remain clickable
+        setIsUploading(false)
+        
+        // Refresh the page to show the updated signal
+        setTimeout(() => {
+          router.refresh()
+          setUploadStatus('idle')
+        }, 500)
+      } else {
+        // Create new signal
+        const requestBody = {
+          tier,
+          ...(tier === 'T3' && category ? { category } : {}),
+          signal: formData.signal.trim(),
+          executiveSummary: formData.executiveSummary.trim() || undefined,
+          associatedData: formData.associatedData.trim() || undefined,
+        }
+
+        console.log(`Creating ${tier}${category ? ` ${category}` : ''} daily signal:`, requestBody)
+
+        const result = await json<{ id: string } | { error: string; details?: any[] }>('/api/admin/portfolio-daily-signals', {
+          method: 'POST',
+          body: JSON.stringify(requestBody),
+        })
+
+        console.log('Daily signal creation response:', result)
+
+        if ('error' in result) {
+          const errorDetails = result.details?.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ') || result.error
+          throw new Error(errorDetails)
+        }
+
+        const categoryLabel = category === 'majors' ? 'Market Rotation' : category === 'memecoins' ? 'Memecoins' : ''
+        toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} signal posted successfully!`)
+        setUploadStatus('success')
+        setFormData({
+          signal: '',
+          executiveSummary: '',
+          associatedData: '',
+        })
+        
+        // Reset uploading state immediately so buttons remain clickable
+        setIsUploading(false)
+        
+        // Refresh the page to show the new signal (but don't block UI)
+        setTimeout(() => {
+          router.refresh()
+          setUploadStatus('idle')
+        }, 500) // Small delay to ensure state is reset
       }
-
-      console.log(`Creating ${tier}${category ? ` ${category}` : ''} daily signal:`, requestBody)
-
-      const result = await json<{ id: string } | { error: string; details?: any[] }>('/api/admin/portfolio-daily-signals', {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-      })
-
-      console.log('Daily signal creation response:', result)
-
-      if ('error' in result) {
-        const errorDetails = result.details?.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ') || result.error
-        throw new Error(errorDetails)
-      }
-
-      const categoryLabel = category === 'majors' ? 'Market Rotation' : category === 'memecoins' ? 'Memecoins' : ''
-      toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} signal posted successfully!`)
-      setUploadStatus('success')
-      setFormData({
-        signal: '',
-        executiveSummary: '',
-        associatedData: '',
-      })
-      
-      // Refresh the page to show the new signal
-      router.refresh()
-      
-      setTimeout(() => {
-        setUploadStatus('idle')
-      }, 2000)
     } catch (error) {
       console.error('Daily signal creation error:', error)
       setUploadStatus('error')
@@ -174,8 +221,10 @@ export default function DailySignalUpload({ tier, category, userRole }: DailySig
           disabled={isUploading || !formData.signal.trim()}
         >
           {isUploading 
-            ? 'Posting Update...' 
-            : `Post ${tierLabels[tier]}${category === 'majors' ? ' Market Rotation' : category === 'memecoins' ? ' Memecoins' : ''} Update`}
+            ? (isEditing ? 'Updating...' : 'Posting Update...')
+            : isEditing
+              ? 'Update Signal'
+              : `Post ${tierLabels[tier]}${category === 'majors' ? ' Market Rotation' : category === 'memecoins' ? ' Memecoins' : ''} Update`}
         </Button>
       </form>
     </div>

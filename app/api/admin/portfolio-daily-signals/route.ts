@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
+import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -112,6 +114,15 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+    })
+
+    // Send email notifications asynchronously (fire-and-forget)
+    // Don't block the API response if email sending fails
+    sendSignalEmails(signal.id).catch((error) => {
+      logger.error('Failed to send signal emails', error instanceof Error ? error : new Error(String(error)), {
+        signalId: signal.id,
+        tier: signal.tier,
+      })
     })
 
     return NextResponse.json(signal, { status: 201 })
