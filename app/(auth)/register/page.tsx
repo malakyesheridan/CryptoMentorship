@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
+import { BeamsBackground } from '@/components/auth/BeamsBackground'
 
 function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -93,62 +94,29 @@ function RegisterForm() {
 
   if (success) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem'
-      }}>
-        <div style={{ maxWidth: '28rem', width: '100%' }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            textAlign: 'center',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-          }}>
-            <div style={{ 
-              fontSize: '3rem', 
-              marginBottom: '1rem',
-              color: '#10b981'
-            }}>
-              ✓
+      <BeamsBackground intensity="medium">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full relative z-20">
+            <div className="bg-[#FFFDF7] rounded-2xl p-8 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
+              <div className="text-5xl mb-4 text-green-500">✓</div>
+              <h1 className="text-2xl font-bold mb-2 text-slate-900">
+                Account Created!
+              </h1>
+              <p className="text-slate-600 mb-6">
+                Your account has been created successfully. Redirecting to choose your subscription...
+              </p>
             </div>
-            <h1 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 'bold', 
-              marginBottom: '0.5rem',
-              color: '#1e293b'
-            }}>
-              Account Created!
-            </h1>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-              Your account has been created successfully. Redirecting to choose your subscription...
-            </p>
           </div>
         </div>
-      </div>
+      </BeamsBackground>
     )
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '28rem', width: '100%' }}>
-        <div style={{
-          background: 'white',
-          borderRadius: '1rem',
-          padding: '2rem',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-        }}>
+    <BeamsBackground intensity="medium">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-md w-full relative z-20">
+          <div className="bg-[#FFFDF7] rounded-2xl p-8 shadow-2xl border border-slate-200/50 backdrop-blur-sm">
           <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
             <h1 style={{ 
               fontSize: '2rem', 
@@ -304,35 +272,25 @@ function RegisterForm() {
               </Link>
             </p>
           </form>
+          </div>
         </div>
       </div>
-    </div>
+    </BeamsBackground>
   )
 }
 
 export default function RegisterPage() {
   return (
     <Suspense fallback={
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem'
-      }}>
-        <div style={{ maxWidth: '28rem', width: '100%' }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            textAlign: 'center',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-          }}>
-            <p style={{ color: '#64748b' }}>Loading...</p>
+      <BeamsBackground intensity="medium">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full relative z-20">
+            <div className="bg-[#FFFDF7] rounded-2xl p-8 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
+              <p className="text-slate-600">Loading...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </BeamsBackground>
     }>
       <RegisterForm />
     </Suspense>
