@@ -56,8 +56,6 @@ export default function CryptoCompassUpload() {
       .trim()
   }
 
-  const [uploadProgress, setUploadProgress] = useState(0)
-
   const handleEpisodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
