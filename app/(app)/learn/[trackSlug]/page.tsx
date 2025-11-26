@@ -137,10 +137,10 @@ export default async function TrackPage({
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
-            <Link href="/learn">
+            <Link href="/learning">
               <Button variant="outline" size="sm" className="flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Learning
+                Back to Learning Hub
               </Button>
             </Link>
             <div className="flex-1">

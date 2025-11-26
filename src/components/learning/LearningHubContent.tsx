@@ -101,6 +101,10 @@ export function LearningHubContent({
   const [searchQuery, setSearchQuery] = useState('')
   const [contentFilter, setContentFilter] = useState<'all' | 'courses' | 'resources'>('all')
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
+  
+  const handleManageTrack = (trackId: string) => {
+    window.open(`/admin/learn/tracks/${trackId}`, '_blank')
+  }
 
   // Transform data for content grid
   const courseItems = useMemo(() => transformEnrollmentsToContent(enrollments), [enrollments])
@@ -253,6 +257,7 @@ export function LearningHubContent({
               showProgress={true}
               userRole={userRole}
               onEditTrack={(trackId) => setEditingTrackId(trackId)}
+              onManageTrack={handleManageTrack}
             />
           </div>
         </div>

@@ -22,14 +22,14 @@ export async function GET(
         sections: {
           include: {
             lessons: {
-              select: { id: true, title: true, slug: true, publishedAt: true, order: true }
+              select: { id: true, title: true, slug: true, publishedAt: true, order: true, videoUrl: true }
             }
           },
           orderBy: { order: 'asc' }
         },
         lessons: {
           where: { sectionId: null },
-          select: { id: true, title: true, slug: true, publishedAt: true, order: true },
+          select: { id: true, title: true, slug: true, publishedAt: true, order: true, videoUrl: true, sectionId: true },
           orderBy: { order: 'asc' }
         },
         _count: {

@@ -16,12 +16,14 @@ import {
   Settings,
   Trash2,
   Plus,
-  Edit
+  Edit,
+  Video
 } from 'lucide-react'
 import { updateTrack, deleteTrack } from '@/lib/actions/learning'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { LessonVideoUpload } from './LessonVideoUpload'
 
 interface TrackEditModalProps {
   trackId: string
@@ -31,7 +33,7 @@ interface TrackEditModalProps {
   onTrackDeleted?: () => void
 }
 
-type TabType = 'basic' | 'structure' | 'settings'
+type TabType = 'basic' | 'videos' | 'structure' | 'settings'
 
 export function TrackEditModal({ 
   trackId, 
@@ -144,6 +146,7 @@ export function TrackEditModal({
 
   const tabs: Array<{ id: TabType; label: string; icon: any }> = [
     { id: 'basic', label: 'Basic Info', icon: BookOpen },
+    { id: 'videos', label: 'Video Lessons', icon: Video },
     { id: 'structure', label: 'Structure', icon: Settings },
     { id: 'settings', label: 'Settings', icon: Users },
   ]
@@ -276,6 +279,59 @@ export function TrackEditModal({
                   Supports Markdown and MDX components
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Videos Tab */}
+          {activeTab === 'videos' && trackId && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Upload Video Lessons</h3>
+                <p className="text-sm text-slate-600 mb-6">
+                  Upload video files to create lessons in this track. Each video will become a lesson that students can watch.
+                </p>
+                <LessonVideoUpload 
+                  trackId={trackId} 
+                  onUploadSuccess={() => {
+                    // Refresh track data
+                    fetchTrack()
+                    toast.success('Video lesson uploaded!')
+                  }}
+                />
+              </div>
+
+              {/* Existing Lessons */}
+              {trackData && trackData.lessons && trackData.lessons.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">Existing Lessons</h3>
+                  <div className="space-y-2">
+                    {trackData.lessons
+                      .filter((lesson: any) => !lesson.sectionId) // Only show lessons without sections
+                      .map((lesson: any) => (
+                        <Card key={lesson.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Video className="h-5 w-5 text-yellow-600" />
+                                <div>
+                                  <p className="font-medium">{lesson.title}</p>
+                                  {lesson.videoUrl && (
+                                    <p className="text-xs text-slate-500">Video: {lesson.videoUrl}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <Link href={`/admin/learn/tracks/${trackId}/lessons/${lesson.id}/edit`} target="_blank">
+                                <Button type="button" variant="ghost" size="sm">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

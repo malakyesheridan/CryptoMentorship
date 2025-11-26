@@ -13,7 +13,8 @@ import {
   Play, 
   CheckCircle,
   Lock,
-  TrendingUp
+  TrendingUp,
+  ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -40,12 +41,10 @@ async function getTracks() {
         where: { publishedAt: { not: null } },
         select: { id: true, durationMin: true },
       },
-      enrollments: {
-        select: { id: true },
-      },
       _count: {
         select: {
-          enrollments: true,
+          sections: true,
+          lessons: true,
         },
       },
     },
@@ -58,21 +57,40 @@ async function getTracks() {
   return tracks
 }
 
-async function getUserEnrollments(userId: string) {
-  const enrollments = await prisma.enrollment.findMany({
+async function getUserProgress(userId: string) {
+  const progress = await prisma.lessonProgress.findMany({
     where: { userId },
-    take: 50, // Limit to 50 enrollments max
     include: {
-      track: {
-        select: { id: true, slug: true, title: true },
+      lesson: {
+        select: { 
+          id: true,
+          trackId: true,
+          track: {
+            select: { id: true, slug: true, title: true },
+          },
+        },
       },
     },
   })
 
-  return enrollments.reduce((acc, enrollment) => {
-    acc[enrollment.trackId] = enrollment
-    return acc
-  }, {} as Record<string, any>)
+  // Group by track and calculate progress
+  const trackProgress: Record<string, any> = {}
+  progress.forEach(p => {
+    if (p.lesson.trackId) {
+      if (!trackProgress[p.lesson.trackId]) {
+        trackProgress[p.lesson.trackId] = {
+          trackId: p.lesson.trackId,
+          track: p.lesson.track,
+          completedLessons: 0,
+        }
+      }
+      if (p.completedAt) {
+        trackProgress[p.lesson.trackId].completedLessons++
+      }
+    }
+  })
+
+  return trackProgress
 }
 
 export default async function LearningPage() {
@@ -82,9 +100,9 @@ export default async function LearningPage() {
     redirect('/login')
   }
 
-  const [tracks, userEnrollments] = await Promise.all([
+  const [tracks, userProgress] = await Promise.all([
     getTracks(),
-    getUserEnrollments(session.user.id),
+    getUserProgress(session.user.id),
   ])
 
   const tierLevels = { guest: 0, member: 1, editor: 2, admin: 3 }
@@ -95,6 +113,14 @@ export default async function LearningPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="mb-4">
+            <Link href="/learning">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Learning Hub
+              </Button>
+            </Link>
+          </div>
           <div className="flex items-center gap-3 mb-4">
             <BookOpen className="h-8 w-8 text-gold-600" />
             <div>
@@ -122,9 +148,9 @@ export default async function LearningPage() {
             <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Your Enrollments</p>
+                  <p className="text-sm font-medium text-slate-600">Tracks Started</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {Object.keys(userEnrollments).length}
+                    {Object.keys(userProgress).length}
                   </p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -136,9 +162,9 @@ export default async function LearningPage() {
             <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Total Students</p>
+                  <p className="text-sm font-medium text-slate-600">Total Lessons</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {tracks.reduce((sum, track) => sum + track._count.enrollments, 0)}
+                    {tracks.reduce((sum, track) => sum + (track._count.lessons || 0), 0)}
                   </p>
                 </div>
                 <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -152,7 +178,7 @@ export default async function LearningPage() {
         {/* Tracks Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tracks.map((track) => {
-            const enrollment = userEnrollments[track.id]
+            const progress = userProgress[track.id]
             const hasAccess = userTierLevel >= tierLevels[track.minTier as keyof typeof tierLevels]
             
             // Calculate total duration
@@ -202,23 +228,21 @@ export default async function LearningPage() {
                         <span>{Math.round(totalDuration / 60)}h {totalDuration % 60}m</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      <span>{track._count.enrollments}</span>
-                    </div>
                   </div>
 
                   {/* Progress Bar */}
-                  {enrollment && (
+                  {progress && totalLessons > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-slate-600">Progress</span>
-                        <span className="font-medium">{enrollment.progressPct}%</span>
+                        <span className="font-medium">
+                          {progress.completedLessons > 0 ? `${Math.round((progress.completedLessons / totalLessons) * 100)}%` : '0%'}
+                        </span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div 
                           className="bg-gold-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${enrollment.progressPct}%` }}
+                          style={{ width: `${progress.completedLessons > 0 ? Math.round((progress.completedLessons / totalLessons) * 100) : 0}%` }}
                         />
                       </div>
                     </div>
@@ -241,10 +265,10 @@ export default async function LearningPage() {
                         <Lock className="h-4 w-4 mr-2" />
                         Upgrade Required
                       </Button>
-                    ) : enrollment ? (
+                    ) : progress ? (
                       <Link href={`/learn/${track.slug}`} className="flex-1">
                         <Button className="w-full">
-                          {enrollment.progressPct === 100 ? (
+                          {progress.completedLessons === totalLessons ? (
                             <>
                               <CheckCircle className="h-4 w-4 mr-2" />
                               Completed

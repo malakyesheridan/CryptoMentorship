@@ -13,8 +13,18 @@ import {
   ArrowRight,
   CheckCircle,
   Award,
-  Edit
+  Edit,
+  MoreVertical,
+  Settings,
+  ExternalLink
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import Image from 'next/image'
 import { formatContentDate } from '@/lib/content-utils'
 
@@ -40,9 +50,10 @@ interface ContentGridProps {
   onItemClick?: (item: ContentItem) => void
   userRole?: string
   onEditTrack?: (trackId: string) => void
+  onManageTrack?: (trackId: string) => void
 }
 
-export function ContentGrid({ items, showProgress = false, onItemClick, userRole, onEditTrack }: ContentGridProps) {
+export function ContentGrid({ items, showProgress = false, onItemClick, userRole, onEditTrack, onManageTrack }: ContentGridProps) {
   const isAdmin = userRole === 'admin' || userRole === 'editor'
   if (items.length === 0) {
     return (
@@ -100,19 +111,57 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                     {item.locked ? 'Member' : 'Public'}
                   </Badge>
                 </div>
-                {isAdmin && isCourse && onEditTrack && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      onEditTrack(item.id)
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                {isAdmin && isCourse && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      {onEditTrack && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            onEditTrack(item.id)
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Track
+                        </DropdownMenuItem>
+                      )}
+                      {onManageTrack && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              onManageTrack(item.id)
+                            }}
+                          >
+                            <Settings className="h-4 w-4 mr-2" />
+                            Manage Track
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/learn/tracks/${item.id}`} target="_blank">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Open in Admin Portal
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
 
