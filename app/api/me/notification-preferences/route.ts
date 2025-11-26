@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
         data: {
           userId: session.user.id,
           inApp: true,
-          email: false,
-          onResearch: true,
-          onEpisode: true,
-          onSignal: true,
-          onMention: true,
-          onReply: true,
+          email: true, // Email enabled by default for portfolio updates
+          onResearch: false, // Disabled - only portfolio signals send emails
+          onEpisode: false, // Disabled - only portfolio signals send emails
+          onSignal: true, // Enabled - for daily portfolio updates
+          onMention: false, // Disabled - only portfolio signals send emails
+          onReply: false, // Disabled - only portfolio signals send emails
           digestEnabled: false,
           digestFreq: 'weekly',
           digestHourUTC: 9,

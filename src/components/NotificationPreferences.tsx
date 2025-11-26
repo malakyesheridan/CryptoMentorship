@@ -123,14 +123,13 @@ export function NotificationPreferences() {
                 Email Notifications
               </Label>
               <p className="text-sm text-slate-600">
-                Send notifications via email (coming soon)
+                Receive daily portfolio updates via email
               </p>
             </div>
             <Switch
               id="email"
-              checked={false}
-              disabled
-              className="opacity-50"
+              checked={preferences.email}
+              onChange={(e) => updatePreference({ email: e.target.checked })}
             />
           </div>
         </CardContent>
@@ -148,7 +147,7 @@ export function NotificationPreferences() {
                 Research Published
               </Label>
               <p className="text-sm text-slate-600">
-                New research articles and analysis
+                New research articles and analysis (in-app only)
               </p>
             </div>
             <Switch
@@ -164,7 +163,7 @@ export function NotificationPreferences() {
                 Crypto Compass Episodes
               </Label>
               <p className="text-sm text-slate-600">
-                New Crypto Compass episodes
+                New Crypto Compass episodes (in-app only)
               </p>
             </div>
             <Switch
@@ -177,10 +176,10 @@ export function NotificationPreferences() {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="onSignal" className="text-base font-medium">
-                Trading Signals
+                Daily Portfolio Updates
               </Label>
               <p className="text-sm text-slate-600">
-                New trading signals and recommendations
+                Daily portfolio signals and recommendations (email + in-app)
               </p>
             </div>
             <Switch
@@ -196,7 +195,7 @@ export function NotificationPreferences() {
                 Mentions
               </Label>
               <p className="text-sm text-slate-600">
-                When someone mentions you in community discussions
+                When someone mentions you in community discussions (in-app only)
               </p>
             </div>
             <Switch
@@ -212,7 +211,7 @@ export function NotificationPreferences() {
                 Replies
               </Label>
               <p className="text-sm text-slate-600">
-                When someone replies to your messages
+                When someone replies to your messages (in-app only)
               </p>
             </div>
             <Switch
