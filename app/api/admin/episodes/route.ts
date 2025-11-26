@@ -30,12 +30,30 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireRole(['admin', 'editor'])
     
-    // Handle FormData for file upload
-    const formData = await request.formData()
-    const videoFile = formData.get('video') as File
-    const title = formData.get('title') as string
-    const description = formData.get('description') as string
-    const slug = formData.get('slug') as string
+    // Check content type to handle both FormData and JSON
+    const contentType = request.headers.get('content-type') || ''
+    
+    let title: string
+    let description: string
+    let slug: string
+    let videoFile: File | null = null
+    let videoUrl: string | null = null
+
+    if (contentType.includes('application/json')) {
+      // JSON request (from chunked upload)
+      const body = await request.json()
+      title = body.title
+      description = body.description || ''
+      slug = body.slug
+      videoUrl = body.videoUrl
+    } else {
+      // FormData request (direct upload for small files)
+      const formData = await request.formData()
+      videoFile = formData.get('video') as File
+      title = formData.get('title') as string
+      description = formData.get('description') as string
+      slug = formData.get('slug') as string
+    }
 
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -44,25 +62,46 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!videoFile) {
-      return NextResponse.json(
-        { error: 'Video file is required' },
-        { status: 400 }
-      )
-    }
-
-    // Validate file size (100MB limit)
-    const maxFileSize = 100 * 1024 * 1024 // 100MB in bytes
-    if (videoFile.size > maxFileSize) {
-      return NextResponse.json(
-        { error: `File too large. Maximum size is 100MB. Your file is ${(videoFile.size / (1024 * 1024)).toFixed(2)}MB` },
-        { status: 400 }
-      )
-    }
-
     if (!slug || !slug.trim()) {
       return NextResponse.json(
         { error: 'Slug is required' },
+        { status: 400 }
+      )
+    }
+
+    // If videoFile is provided, upload it (small files only)
+    if (videoFile) {
+      // Validate file size (100MB limit)
+      const maxFileSize = 100 * 1024 * 1024 // 100MB in bytes
+      if (videoFile.size > maxFileSize) {
+        return NextResponse.json(
+          { error: `File too large. Maximum size is 100MB. Your file is ${(videoFile.size / (1024 * 1024)).toFixed(2)}MB` },
+          { status: 400 }
+        )
+      }
+
+      // Ensure upload directory exists
+      const uploadDir = join(process.cwd(), 'uploads', 'episodes')
+      if (!existsSync(uploadDir)) {
+        await mkdir(uploadDir, { recursive: true })
+      }
+
+      // Save video file
+      const safeFilename = sanitizeFilename(videoFile.name)
+      const timestamp = Date.now()
+      const filename = `${timestamp}-${safeFilename}`
+      const filePath = join(uploadDir, filename)
+      
+      const bytes = await videoFile.arrayBuffer()
+      const buffer = Buffer.from(bytes)
+      await writeFile(filePath, buffer)
+      
+      videoUrl = `/uploads/episodes/${filename}`
+    }
+
+    if (!videoUrl) {
+      return NextResponse.json(
+        { error: 'Video URL is required' },
         { status: 400 }
       )
     }
@@ -78,24 +117,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), 'uploads', 'episodes')
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
-    }
-
-    // Save video file
-    const safeFilename = sanitizeFilename(videoFile.name)
-    const timestamp = Date.now()
-    const filename = `${timestamp}-${safeFilename}`
-    const filePath = join(uploadDir, filename)
-    
-    const bytes = await videoFile.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
-    
-    const videoUrl = `/uploads/episodes/${filename}`
     
     // Wrap in transaction for atomicity
     const episode = await prisma.$transaction(async (tx) => {

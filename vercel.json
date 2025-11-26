@@ -3,6 +3,9 @@
   "functions": {
     "app/api/admin/episodes/route.ts": {
       "maxDuration": 300
+    },
+    "app/api/admin/episodes/upload-chunk/route.ts": {
+      "maxDuration": 300
     }
   }
 }

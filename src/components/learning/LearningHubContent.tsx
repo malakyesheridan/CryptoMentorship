@@ -4,27 +4,20 @@ import { useState, useMemo } from 'react'
 import { LearningHubTabs } from './LearningHubTabs'
 import { ContentGrid } from './ContentGrid'
 import { TrackEditModal } from './TrackEditModal'
-import { CourseCarousel } from './CourseCarousel'
-import { CourseRecommendations } from './CourseRecommendations'
-import { CourseSearch } from './CourseSearch'
+import { SimpleTrackUpload } from './SimpleTrackUpload'
+import { LessonVideoUpload } from './LessonVideoUpload'
 import { EnhancedStats } from './EnhancedStats'
-import { StreakWidget } from './StreakWidget'
-import { SmartNotifications } from './SmartNotifications'
 import { ProgressTimeline } from './ProgressTimeline'
 import { RealTimeProgress } from './RealTimeProgress'
 import { LearningAnalytics } from './LearningAnalytics'
-import AdminResourceUploadWrapper from '@/components/AdminResourceUploadWrapper'
 import { Suspense } from 'react'
 import { Input } from '@/components/ui/input'
-import { Search, Filter, Flame, Award } from 'lucide-react'
+import { Search, Flame, BarChart3, Award } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { BookOpen, FileText, BarChart3, GraduationCap } from 'lucide-react'
+import { BookOpen, Video, Plus } from 'lucide-react'
 import Link from 'next/link'
-import { formatContentDate, canViewContent } from '@/lib/content-utils'
 import { formatDate } from '@/lib/dates'
-import Image from 'next/image'
 
 type TabType = 'discover' | 'progress'
 
@@ -108,25 +101,31 @@ export function LearningHubContent({
 
   // Transform data for content grid
   const courseItems = useMemo(() => transformEnrollmentsToContent(enrollments), [enrollments])
-  const resourceItems = useMemo(() => transformResourcesToContent(resources, userRole, userTier), [resources, userRole, userTier])
   
-  // Combine for discover tab
-  const allContentItems = useMemo(() => {
-    const courses = courseItems.map(item => ({ ...item, type: 'course' as const }))
-    const res = resourceItems.map(item => ({ ...item, type: 'resource' as const }))
-    return [...courses, ...res]
-  }, [courseItems, resourceItems])
+  // For admins, also include all published tracks (not just enrolled ones)
+  const allTracksForAdmin = useMemo(() => {
+    if (userRole !== 'admin' && userRole !== 'editor') return courseItems
+    // Combine enrolled tracks with all published tracks
+    const enrolledIds = new Set(courseItems.map(c => c.id))
+    const additionalTracks = allCourses
+      .filter((c: any) => !enrolledIds.has(c.id))
+      .map((c: any) => ({
+        id: c.id,
+        slug: c.slug,
+        title: c.title,
+        description: c.description,
+        coverUrl: c.coverUrl,
+        type: 'course' as const,
+        locked: false,
+        progressPct: 0,
+        publishedAt: c.publishedAt,
+      }))
+    return [...courseItems, ...additionalTracks]
+  }, [courseItems, allCourses, userRole])
 
-  // Filter content based on search and filters
-  const filteredContent = useMemo(() => {
-    let filtered = allContentItems
-    
-    // Apply content type filter (for discover tab only)
-    if (activeTab === 'discover' && contentFilter !== 'all') {
-      // Map 'resources'/'courses' to 'resource'/'course'
-      const mappedFilter = contentFilter === 'resources' ? 'resource' : contentFilter === 'courses' ? 'course' : contentFilter
-      filtered = filtered.filter(item => item.type === mappedFilter)
-    }
+  // Filter content based on search
+  const filteredTracks = useMemo(() => {
+    let filtered = allTracksForAdmin
     
     // Apply search query
     if (searchQuery) {
@@ -138,12 +137,12 @@ export function LearningHubContent({
     }
     
     return filtered
-  }, [activeTab, allContentItems, courseItems, resourceItems, contentFilter, searchQuery])
+  }, [allTracksForAdmin, searchQuery])
 
   // Stats for tabs
   const tabStats = {
-    courses: enrollments.length,
-    resources: resources.length
+    courses: allTracksForAdmin.length,
+    resources: 0
   }
 
   return (
@@ -172,43 +171,18 @@ export function LearningHubContent({
         stats={tabStats}
       />
 
-      {/* Search and Filters (for Discover tab) */}
+      {/* Search (for Discover tab) */}
       {activeTab === 'discover' && (
         <div className="bg-white rounded-2xl shadow-lg p-4 border border-slate-200">
-          <div className="flex gap-4 flex-col md:flex-row">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Search courses and resources..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={contentFilter === 'all' ? 'default' : 'outline'}
-                onClick={() => setContentFilter('all')}
-                size="sm"
-              >
-                All
-              </Button>
-              <Button
-                variant={contentFilter === 'courses' ? 'default' : 'outline'}
-                onClick={() => setContentFilter('courses')}
-                size="sm"
-              >
-                Courses
-              </Button>
-              <Button
-                variant={contentFilter === 'resources' ? 'default' : 'outline'}
-                onClick={() => setContentFilter('resources')}
-                size="sm"
-              >
-                Resources
-              </Button>
-            </div>
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search learning tracks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
       )}
@@ -216,49 +190,63 @@ export function LearningHubContent({
       {/* Tab Content */}
       {activeTab === 'discover' && (
         <div className="space-y-8">
-          {/* Continue Learning Section */}
-          {enrollments.length > 0 && (
+          {/* Admin: Create Track */}
+          {(userRole === 'admin' || userRole === 'editor') && (
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Continue Learning</h2>
-              <CourseCarousel courses={enrollments.map((enrollment) => {
-                const track = enrollment.track
-                const totalLessons = track.lessons?.length || 0
-                
-                return {
-                  id: track.id,
-                  slug: track.slug,
-                  title: track.title,
-                  summary: track.summary || '',
-                  coverUrl: track.coverUrl || '',
-                  progressPct: enrollment.progressPct,
-                  startedAt: enrollment.startedAt,
-                  totalLessons,
-                  completedLessons: Math.round((enrollment.progressPct / 100) * totalLessons),
-                  completedAt: enrollment.completedAt || null
-                }
-              })} />
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Create New Track</h2>
+              <SimpleTrackUpload />
             </div>
           )}
 
-          {/* Recommended Learning Tracks */}
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Recommended Learning Tracks</h2>
-            <CourseRecommendations courses={allCourses} />
-          </div>
+          {/* Admin: Upload Videos to Tracks */}
+          {(userRole === 'admin' || userRole === 'editor') && filteredTracks.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Upload Videos to Tracks</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredTracks.map((track: any) => (
+                  <Card key={track.id} className="border-2 border-slate-200">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-yellow-600" />
+                        {track.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <LessonVideoUpload 
+                        trackId={track.id}
+                        onUploadSuccess={() => {
+                          window.location.reload()
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
 
-          {/* All Content Grid */}
+          {/* All Learning Tracks */}
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">All Content</h2>
-            <p className="text-sm text-slate-600 mb-4">
-              Browse learning tracks (structured courses) and resources (standalone content)
-            </p>
-            <ContentGrid 
-              items={filteredContent}
-              showProgress={true}
-              userRole={userRole}
-              onEditTrack={(trackId) => setEditingTrackId(trackId)}
-              onManageTrack={handleManageTrack}
-            />
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">
+              {filteredTracks.length === 0 ? 'No Learning Tracks' : 'Learning Tracks'}
+            </h2>
+            {filteredTracks.length > 0 ? (
+              <ContentGrid 
+                items={filteredTracks}
+                showProgress={true}
+                userRole={userRole}
+                onEditTrack={(trackId) => setEditingTrackId(trackId)}
+                onManageTrack={handleManageTrack}
+              />
+            ) : (
+              <div className="text-center py-12 text-slate-500">
+                <BookOpen className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+                <p>No learning tracks found.</p>
+                {(userRole === 'admin' || userRole === 'editor') && (
+                  <p className="text-sm mt-2">Create your first track above!</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

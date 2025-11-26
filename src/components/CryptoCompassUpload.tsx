@@ -13,6 +13,7 @@ export default function CryptoCompassUpload() {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   // Episode form data
   const [episodeData, setEpisodeData] = useState({
@@ -55,12 +56,15 @@ export default function CryptoCompassUpload() {
       .trim()
   }
 
+  const [uploadProgress, setUploadProgress] = useState(0)
+
   const handleEpisodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Clear previous errors
     setErrorMessage('')
     setUploadStatus('idle')
+    setUploadProgress(0)
 
     // Validate required fields
     if (!episodeData.title || episodeData.title.trim() === '') {
@@ -82,49 +86,112 @@ export default function CryptoCompassUpload() {
     try {
       const slug = generateSlug(episodeData.title)
       
-      // Create FormData for file upload
-      const formData = new FormData()
-      formData.append('video', episodeData.video)
-      formData.append('title', episodeData.title)
-      formData.append('description', episodeData.description || '')
-      formData.append('slug', slug)
-      
-      const response = await fetch('/api/admin/episodes', {
-        method: 'POST',
-        body: formData,
-      })
+      // Use chunked upload for files larger than 4MB
+      const useChunkedUpload = episodeData.video.size > 4 * 1024 * 1024
 
-      // Handle 413 error specifically
-      if (response.status === 413) {
-        setUploadStatus('error')
-        setErrorMessage('File too large. The server cannot process files larger than 100MB. Please compress your video or use a smaller file.')
-        return
-      }
-
-      let result
-      try {
-        result = await response.json()
-      } catch (parseError) {
-        // If JSON parsing fails, try to get text response
-        const text = await response.text()
-        setUploadStatus('error')
-        setErrorMessage(`Upload failed: ${response.status === 413 ? 'File too large (413)' : text || `HTTP ${response.status}`}`)
-        return
-      }
-
-      if (response.ok && result.id) {
-        setUploadStatus('success')
-        setEpisodeData({
-          title: '',
-          description: '',
-          video: null,
+      if (useChunkedUpload) {
+        // Chunked upload for large files
+        const { uploadFileInChunks } = await import('@/lib/chunked-upload')
+        
+        const uploadResult = await uploadFileInChunks({
+          file: episodeData.video,
+          endpoint: '/api/admin/episodes/upload-chunk',
+          onProgress: (progress) => {
+            setUploadProgress(progress)
+          },
+          onChunkComplete: (chunkIndex, totalChunks) => {
+            console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded`)
+          }
         })
-        setTimeout(() => {
-          window.location.reload()
-        }, 2000)
+
+        if (!uploadResult.success || !uploadResult.videoUrl) {
+          setUploadStatus('error')
+          setErrorMessage(uploadResult.error || 'Upload failed')
+          return
+        }
+
+        // Create episode record with uploaded video URL
+        const response = await fetch('/api/admin/episodes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: episodeData.title,
+            description: episodeData.description || '',
+            slug: slug,
+            videoUrl: uploadResult.videoUrl,
+          }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
+          setUploadStatus('error')
+          setErrorMessage(error.error || `Failed to create episode: HTTP ${response.status}`)
+          return
+        }
+
+        const result = await response.json()
+        if (result.id) {
+          setUploadStatus('success')
+          setUploadProgress(100)
+          setEpisodeData({
+            title: '',
+            description: '',
+            video: null,
+          })
+          setTimeout(() => {
+            window.location.reload()
+          }, 2000)
+        } else {
+          setUploadStatus('error')
+          setErrorMessage('Failed to create episode')
+        }
       } else {
-        setUploadStatus('error')
-        setErrorMessage(result.error || `Upload failed (${response.status})`)
+        // Direct upload for small files
+        const formData = new FormData()
+        formData.append('video', episodeData.video)
+        formData.append('title', episodeData.title)
+        formData.append('description', episodeData.description || '')
+        formData.append('slug', slug)
+        
+        const response = await fetch('/api/admin/episodes', {
+          method: 'POST',
+          body: formData,
+        })
+
+        // Handle 413 error specifically
+        if (response.status === 413) {
+          setUploadStatus('error')
+          setErrorMessage('File too large. Please try again or compress your video.')
+          return
+        }
+
+        let result
+        try {
+          result = await response.json()
+        } catch (parseError) {
+          const text = await response.text()
+          setUploadStatus('error')
+          setErrorMessage(`Upload failed: ${response.status === 413 ? 'File too large (413)' : text || `HTTP ${response.status}`}`)
+          return
+        }
+
+        if (response.ok && result.id) {
+          setUploadStatus('success')
+          setUploadProgress(100)
+          setEpisodeData({
+            title: '',
+            description: '',
+            video: null,
+          })
+          setTimeout(() => {
+            window.location.reload()
+          }, 2000)
+        } else {
+          setUploadStatus('error')
+          setErrorMessage(result.error || `Upload failed (${response.status})`)
+        }
       }
     } catch (error) {
       setUploadStatus('error')
@@ -234,6 +301,22 @@ export default function CryptoCompassUpload() {
             />
           </div>
 
+          {/* Upload Progress */}
+          {isUploading && uploadProgress > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">Upload Progress</span>
+                <span className="font-medium text-slate-900">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-slate-200 rounded-full h-2">
+                <div 
+                  className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Submit Button */}
           <Button
             type="submit"
@@ -243,7 +326,7 @@ export default function CryptoCompassUpload() {
             {isUploading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Uploading Episode...
+                {uploadProgress > 0 ? `Uploading... ${uploadProgress}%` : 'Uploading Episode...'}
               </>
             ) : (
               'Create Crypto Compass Episode'
