@@ -342,7 +342,7 @@ export function TrackEditModal({
                 </div>
               ) : (
                 <p className="text-sm text-slate-500 text-center py-8">
-                  No sections yet. Click "Add Section" to create one.
+                  No sections yet. Click &quot;Add Section&quot; to create one.
                 </p>
               )}
             </div>
