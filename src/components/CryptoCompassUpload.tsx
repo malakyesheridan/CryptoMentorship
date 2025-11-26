@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, AlertCircle, Play, Shield } from 'lucide-react'
+import { CheckCircle, AlertCircle, Play, Shield, Upload } from 'lucide-react'
 
 export default function CryptoCompassUpload() {
   const [isUploading, setIsUploading] = useState(false)
@@ -17,13 +17,17 @@ export default function CryptoCompassUpload() {
   // Episode form data
   const [episodeData, setEpisodeData] = useState({
     title: '',
-    excerpt: '',
-    body: '',
-    coverUrl: '',
-    videoUrl: '',
-    category: 'daily-update' as 'daily-update' | 'analysis' | 'breakdown',
-    locked: false,
+    description: '',
+    video: null as File | null,
   })
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setEpisodeData({ ...episodeData, video: file })
+      setErrorMessage('')
+    }
+  }
 
   const generateSlug = (title: string) => {
     return title
@@ -48,17 +52,8 @@ export default function CryptoCompassUpload() {
       return
     }
 
-    if (!episodeData.videoUrl || episodeData.videoUrl.trim() === '') {
-      setErrorMessage('Video URL is required')
-      setUploadStatus('error')
-      return
-    }
-
-    // Validate URL format
-    try {
-      new URL(episodeData.videoUrl)
-    } catch {
-      setErrorMessage('Please enter a valid video URL')
+    if (!episodeData.video) {
+      setErrorMessage('Please select a video file to upload')
       setUploadStatus('error')
       return
     }
@@ -70,21 +65,16 @@ export default function CryptoCompassUpload() {
     try {
       const slug = generateSlug(episodeData.title)
       
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('video', episodeData.video)
+      formData.append('title', episodeData.title)
+      formData.append('description', episodeData.description || '')
+      formData.append('slug', slug)
+      
       const response = await fetch('/api/admin/episodes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: episodeData.title,
-          slug,
-          excerpt: episodeData.excerpt || undefined,
-          body: episodeData.body || undefined,
-          videoUrl: episodeData.videoUrl,
-          coverUrl: episodeData.coverUrl || undefined,
-          category: episodeData.category,
-          locked: episodeData.locked,
-        }),
+        body: formData,
       })
 
       const result = await response.json()
@@ -93,12 +83,8 @@ export default function CryptoCompassUpload() {
         setUploadStatus('success')
         setEpisodeData({
           title: '',
-          excerpt: '',
-          body: '',
-          coverUrl: '',
-          videoUrl: '',
-          category: 'daily-update',
-          locked: false,
+          description: '',
+          video: null,
         })
         setTimeout(() => {
           window.location.reload()
@@ -115,6 +101,13 @@ export default function CryptoCompassUpload() {
     }
   }
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+  }
 
   return (
     <Card className="bg-white rounded-2xl shadow-lg border border-slate-200">
@@ -134,145 +127,96 @@ export default function CryptoCompassUpload() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleEpisodeSubmit} className="space-y-4">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="episode-title" className="flex items-center gap-2">
-                Episode Title
-                <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="episode-title"
-                value={episodeData.title}
-                onChange={(e) => {
-                  setEpisodeData({ ...episodeData, title: e.target.value })
-                  setErrorMessage('')
-                }}
-                placeholder="e.g., Market Outlook: Q4 2024 Analysis"
-                required
-                disabled={isUploading}
-                className={uploadStatus === 'error' && !episodeData.title ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
-              />
-              <p className="text-xs text-slate-500">
-                Slug will be auto-generated from title
-              </p>
-            </div>
+          {/* Title */}
+          <div className="space-y-2">
+            <Label htmlFor="episode-title" className="flex items-center gap-2">
+              Episode Name
+              <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="episode-title"
+              value={episodeData.title}
+              onChange={(e) => {
+                setEpisodeData({ ...episodeData, title: e.target.value })
+                setErrorMessage('')
+              }}
+              placeholder="e.g., Market Outlook: Q4 2024 Analysis"
+              required
+              disabled={isUploading}
+              className={uploadStatus === 'error' && !episodeData.title ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
+            />
+          </div>
 
-            {/* Video URL */}
-            <div className="space-y-2">
-              <Label htmlFor="video-url" className="flex items-center gap-2">
-                Video URL
-                <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="video-url"
-                type="url"
-                value={episodeData.videoUrl}
-                onChange={(e) => {
-                  setEpisodeData({ ...episodeData, videoUrl: e.target.value })
-                  setErrorMessage('')
-                }}
-                placeholder="https://example.com/episode-video.mp4"
-                required
-                disabled={isUploading}
-                className={uploadStatus === 'error' && !episodeData.videoUrl ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
-              />
-              <p className="text-xs text-slate-500">
-                Direct link to the episode video file
-              </p>
-            </div>
-
-            {/* Excerpt */}
-            <div className="space-y-2">
-              <Label htmlFor="excerpt">Episode Summary</Label>
-              <Textarea
-                id="excerpt"
-                value={episodeData.excerpt}
-                onChange={(e) => setEpisodeData({ ...episodeData, excerpt: e.target.value })}
-                placeholder="Brief summary of the episode content..."
-                rows={3}
-                disabled={isUploading}
-              />
-            </div>
-
-            {/* Body Content */}
-            <div className="space-y-2">
-              <Label htmlFor="body">Episode Content</Label>
-              <Textarea
-                id="body"
-                value={episodeData.body}
-                onChange={(e) => setEpisodeData({ ...episodeData, body: e.target.value })}
-                placeholder="Detailed episode content, analysis, and insights..."
-                rows={6}
-                disabled={isUploading}
-              />
-              <p className="text-xs text-slate-500">
-                Supports Markdown formatting for rich content
-              </p>
-            </div>
-
-            {/* Cover Image URL */}
-            <div className="space-y-2">
-              <Label htmlFor="cover-url">Cover Image URL (Optional)</Label>
-              <Input
-                id="cover-url"
-                type="url"
-                value={episodeData.coverUrl}
-                onChange={(e) => setEpisodeData({ ...episodeData, coverUrl: e.target.value })}
-                placeholder="https://example.com/episode-cover.jpg"
-                disabled={isUploading}
-              />
-            </div>
-
-            {/* Category */}
-            <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <select
-                id="category"
-                value={episodeData.category}
-                onChange={(e) => setEpisodeData({ ...episodeData, category: e.target.value as 'daily-update' | 'analysis' | 'breakdown' })}
-                disabled={isUploading}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+          {/* Video File Upload */}
+          <div className="space-y-2">
+            <Label htmlFor="video-file" className="flex items-center gap-2">
+              Video File
+              <span className="text-red-500">*</span>
+            </Label>
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="video-file"
+                className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  episodeData.video
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <option value="daily-update">Weekly Update</option>
-                <option value="analysis">Analysis</option>
-                <option value="breakdown">Breakdown</option>
-              </select>
-              <p className="text-xs text-slate-500">
-                Select the category for this episode
-              </p>
-            </div>
-
-            {/* Locked Toggle */}
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <input
-                type="checkbox"
-                id="locked"
-                checked={episodeData.locked}
-                onChange={(e) => setEpisodeData({ ...episodeData, locked: e.target.checked })}
-                disabled={isUploading}
-                className="w-4 h-4 text-yellow-500 border-slate-300 rounded focus:ring-yellow-500"
-              />
-              <Label htmlFor="locked" className="cursor-pointer text-sm">
-                Lock episode (requires membership tier to view)
-              </Label>
-            </div>
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-6 text-base"
-              disabled={isUploading || !episodeData.title || !episodeData.videoUrl}
-            >
-              {isUploading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Creating Episode...
-                </>
-              ) : (
-                'Create Crypto Compass Episode'
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="w-5 h-5 text-slate-600" />
+                  <span className="text-sm text-slate-600">
+                    {episodeData.video ? episodeData.video.name : 'Select video file'}
+                  </span>
+                </div>
+                <input
+                  id="video-file"
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileChange}
+                  disabled={isUploading}
+                  className="hidden"
+                />
+              </label>
+              {episodeData.video && (
+                <div className="text-sm text-slate-600">
+                  {formatFileSize(episodeData.video.size)}
+                </div>
               )}
-            </Button>
-          </form>
+            </div>
+            <p className="text-xs text-slate-500">
+              Select a video file from your computer to upload
+            </p>
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={episodeData.description}
+              onChange={(e) => setEpisodeData({ ...episodeData, description: e.target.value })}
+              placeholder="Brief description of the episode..."
+              rows={3}
+              disabled={isUploading}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-6 text-base"
+            disabled={isUploading || !episodeData.title || !episodeData.video}
+          >
+            {isUploading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Uploading Episode...
+              </>
+            ) : (
+              'Create Crypto Compass Episode'
+            )}
+          </Button>
+        </form>
 
         {/* Status Messages */}
         {uploadStatus === 'success' && (
@@ -292,4 +236,3 @@ export default function CryptoCompassUpload() {
     </Card>
   )
 }
-

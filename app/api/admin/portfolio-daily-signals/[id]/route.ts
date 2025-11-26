@@ -13,7 +13,7 @@ const updateDailySignalSchema = z.object({
   associatedData: z.string().optional(),
 })
 
-// PUT /api/admin/portfolio-daily-signals/[id] - Update daily signal
+// PUT /api/admin/portfolio-daily-signals/[id] - Update daily update
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -27,16 +27,16 @@ export async function PUT(
     const body = await request.json()
     const data = updateDailySignalSchema.parse(body)
 
-    // Verify signal exists
+    // Verify update exists
     const existingSignal = await prisma.portfolioDailySignal.findUnique({
       where: { id: params.id },
     })
 
     if (!existingSignal) {
-      return NextResponse.json({ error: 'Signal not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Update not found' }, { status: 404 })
     }
 
-    // Update signal
+    // Update update
     const updatedSignal = await prisma.portfolioDailySignal.update({
       where: { id: params.id },
       data: {
@@ -59,7 +59,7 @@ export async function PUT(
       }
     })
 
-    logger.info('Daily signal updated', {
+    logger.info('Daily update updated', {
       signalId: updatedSignal.id,
       tier: updatedSignal.tier,
       category: updatedSignal.category,
@@ -77,7 +77,7 @@ export async function PUT(
         }))
       }, { status: 400 })
     }
-    logger.error('Error updating daily signal', error instanceof Error ? error : new Error(String(error)), {
+    logger.error('Error updating daily update', error instanceof Error ? error : new Error(String(error)), {
       signalId: params.id,
     })
     const errorMessage = error instanceof Error ? error.message : String(error)

@@ -49,10 +49,10 @@ export default function CryptoCompassSearchFilter({
     } else if (filterBy === 'videos') {
       filteredEpisodes = []
     } else if (filterBy === 'locked') {
-      filteredEpisodes = filteredEpisodes.filter(episode => episode.locked)
+      // Locked filter removed - all episodes are accessible
       filteredVideos = filteredVideos.filter(video => video.visibility !== 'public')
     } else if (filterBy === 'unlocked') {
-      filteredEpisodes = filteredEpisodes.filter(episode => !episode.locked)
+      // Unlocked filter removed - all episodes are accessible
       filteredVideos = filteredVideos.filter(video => video.visibility === 'public')
     }
 

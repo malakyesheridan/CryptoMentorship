@@ -159,7 +159,8 @@ export function CryptoCompassContent({
       {filteredEpisodes.length > 0 ? (
         <div className="space-y-6">
           {filteredEpisodes.map((episode) => {
-            const canView = !episode.locked || userRole === 'admin' || (userTier && ['T2', 'T3'].includes(userTier))
+            // All episodes are accessible to everyone
+            const canView = true
 
             return (
               <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>

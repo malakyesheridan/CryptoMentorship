@@ -42,7 +42,8 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
           
           <div className="space-y-6">
             {filteredEpisodes.map((episode) => {
-              const canView = !episode.locked || userRole === 'admin' || (userTier && ['T2', 'T3'].includes(userTier))
+              // All episodes are accessible to everyone
+              const canView = true
 
               return (
                 <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>
@@ -71,12 +72,6 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          {episode.locked && (
-                            <Badge className={canView ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}>
-                              {canView ? <Eye className="w-3 h-3 mr-1" /> : <Lock className="w-3 h-3 mr-1" />}
-                              {canView ? 'Preview' : 'Locked'}
-                            </Badge>
-                          )}
                           <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
                             <Calendar className="w-3 h-3" />
                             {formatContentDate(episode.publishedAt)}

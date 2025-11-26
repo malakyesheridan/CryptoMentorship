@@ -25,7 +25,7 @@ import { formatContentDate, canViewContent } from '@/lib/content-utils'
 import { formatDate } from '@/lib/dates'
 import Image from 'next/image'
 
-type TabType = 'discover' | 'courses' | 'resources' | 'progress'
+type TabType = 'discover' | 'progress'
 
 interface LearningHubContentProps {
   // Data
@@ -113,7 +113,7 @@ export function LearningHubContent({
 
   // Filter content based on search and filters
   const filteredContent = useMemo(() => {
-    let filtered = activeTab === 'discover' ? allContentItems : activeTab === 'courses' ? courseItems : resourceItems
+    let filtered = allContentItems
     
     // Apply content type filter (for discover tab only)
     if (activeTab === 'discover' && contentFilter !== 'all') {
@@ -166,45 +166,43 @@ export function LearningHubContent({
         stats={tabStats}
       />
 
-      {/* Search and Filters (for Discover and Resources tabs) */}
-      {(activeTab === 'discover' || activeTab === 'resources') && (
+      {/* Search and Filters (for Discover tab) */}
+      {activeTab === 'discover' && (
         <div className="bg-white rounded-2xl shadow-lg p-4 border border-slate-200">
           <div className="flex gap-4 flex-col md:flex-row">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
                 type="text"
-                placeholder={`Search ${activeTab === 'discover' ? 'courses and resources' : 'resources'}...`}
+                placeholder="Search courses and resources..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
-            {activeTab === 'discover' && (
-              <div className="flex gap-2">
-                <Button
-                  variant={contentFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setContentFilter('all')}
-                  size="sm"
-                >
-                  All
-                </Button>
-                <Button
-                  variant={contentFilter === 'courses' ? 'default' : 'outline'}
-                  onClick={() => setContentFilter('courses')}
-                  size="sm"
-                >
-                  Courses
-                </Button>
-                <Button
-                  variant={contentFilter === 'resources' ? 'default' : 'outline'}
-                  onClick={() => setContentFilter('resources')}
-                  size="sm"
-                >
-                  Resources
-                </Button>
-              </div>
-            )}
+            <div className="flex gap-2">
+              <Button
+                variant={contentFilter === 'all' ? 'default' : 'outline'}
+                onClick={() => setContentFilter('all')}
+                size="sm"
+              >
+                All
+              </Button>
+              <Button
+                variant={contentFilter === 'courses' ? 'default' : 'outline'}
+                onClick={() => setContentFilter('courses')}
+                size="sm"
+              >
+                Courses
+              </Button>
+              <Button
+                variant={contentFilter === 'resources' ? 'default' : 'outline'}
+                onClick={() => setContentFilter('resources')}
+                size="sm"
+              >
+                Resources
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -252,64 +250,6 @@ export function LearningHubContent({
               items={filteredContent}
               showProgress={true}
             />
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'courses' && (
-        <div className="space-y-8">
-          <div className="mb-4">
-            <p className="text-sm text-slate-600">
-              Learning Tracks are structured courses with sections and lessons. Resources are standalone content items.
-            </p>
-          </div>
-          {/* Learning Track Search */}
-          <CourseSearch courses={allCourses} />
-
-          {/* Enrolled Learning Tracks */}
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Learning Tracks</h2>
-            {enrollments.length > 0 ? (
-              <ContentGrid items={courseItems} showProgress={true} />
-            ) : (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <BookOpen className="w-12 h-12 text-slate-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">No Enrolled Tracks</h3>
-                <p className="text-slate-600 mb-6">
-                  Start your learning journey by enrolling in a track.
-                </p>
-                <Link href="/learn">
-                  <Button className="bg-yellow-500 hover:bg-yellow-600 text-white">
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Browse Tracks
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'resources' && (
-        <div className="space-y-8">
-          {/* Admin Upload Section */}
-          <AdminResourceUploadWrapper userRole={userRole} />
-
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">Resource Library</h2>
-            {filteredContent.length > 0 ? (
-              <ContentGrid items={filteredContent as any} />
-            ) : (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FileText className="w-12 h-12 text-slate-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">No Resources Available</h3>
-                <p className="text-slate-600">Check back soon for new resources.</p>
-              </div>
-            )}
           </div>
         </div>
       )}

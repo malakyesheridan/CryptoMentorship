@@ -13,24 +13,24 @@ interface DailySignal {
 }
 
 /**
- * Send email notifications for daily portfolio signals
+ * Send email notifications for daily portfolio updates
  * Users receive emails for their highest accessible tier only
- * T3 users receive both majors and memecoins signals in one email
+ * T3 users receive both majors and memecoins updates in one email
  */
 export async function sendSignalEmails(signalId: string): Promise<void> {
   try {
-    // Get the signal that was just created
+    // Get the update that was just created
     const createdSignal = await prisma.portfolioDailySignal.findUnique({
       where: { id: signalId },
     })
 
     if (!createdSignal) {
-      logger.warn('Signal not found for email sending', { signalId })
+      logger.warn('Update not found for email sending', { signalId })
       return
     }
 
-    // Get all signals for all tiers published today
-    // This ensures users get their tier's signal regardless of which tier was just created
+    // Get all updates for all tiers published today
+    // This ensures users get their tier's update regardless of which tier was just created
 
     // Get all users with active/trial memberships
     // Note: email is required in User model, so no need to filter for null
@@ -51,7 +51,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       },
     })
 
-    // Get all signals for all tiers (to send appropriate tier to each user)
+    // Get all updates for all tiers (to send appropriate tier to each user)
     const allTierSignals = await prisma.portfolioDailySignal.findMany({
       where: {
         publishedAt: {
@@ -61,7 +61,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       orderBy: { publishedAt: 'desc' },
     })
 
-    // Group signals by tier
+    // Group updates by tier
     const signalsByTier = {
       T1: allTierSignals.filter(s => s.tier === 'T1' && !s.category),
       T2: allTierSignals.filter(s => s.tier === 'T2' && !s.category),
@@ -83,7 +83,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     })
 
     if (eligibleUsers.length === 0) {
-      logger.info('No eligible users for signal email', { 
+      logger.info('No eligible users for update email', { 
         signalId, 
         tier: createdSignal.tier 
       })
@@ -102,11 +102,11 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         const membership = user.memberships[0]
         const userTier = membership.tier as 'T1' | 'T2' | 'T3'
 
-        // Get signals for this user's tier (their highest accessible tier)
+        // Get updates for this user's tier (their highest accessible tier)
         let signalsToSend: DailySignal[] = []
 
         if (userTier === 'T3') {
-          // T3 users get both majors and memecoins signals
+          // T3 users get both majors and memecoins updates
           const t3Signals = signalsByTier.T3
           const majorsSignal = t3Signals.find(s => s.category === 'majors')
           const memecoinsSignal = t3Signals.find(s => s.category === 'memecoins')
@@ -114,13 +114,13 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
           if (majorsSignal) signalsToSend.push(majorsSignal as DailySignal)
           if (memecoinsSignal) signalsToSend.push(memecoinsSignal as DailySignal)
         } else if (userTier === 'T2') {
-          // T2 users get T2 signal only
+          // T2 users get T2 update only
           const t2Signals = signalsByTier.T2
           if (t2Signals.length > 0) {
             signalsToSend.push(t2Signals[0] as DailySignal) // Most recent
           }
         } else if (userTier === 'T1') {
-          // T1 users get T1 signal only
+          // T1 users get T1 update only
           const t1Signals = signalsByTier.T1
           if (t1Signals.length > 0) {
             signalsToSend.push(t1Signals[0] as DailySignal) // Most recent
@@ -128,7 +128,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         }
 
         if (signalsToSend.length === 0) {
-          logger.debug('No signals found for user tier', { 
+          logger.debug('No updates found for user tier', { 
             userId: user.id, 
             userTier,
             signalId 
@@ -136,7 +136,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
           continue
         }
 
-        // Check if we already sent an email notification for these signals today
+        // Check if we already sent an email notification for these updates today
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         
@@ -153,9 +153,9 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         const sentSignalIds = new Set(existingNotifications.map(n => n.entityId))
         const unsentSignals = signalsToSend.filter(s => !sentSignalIds.has(s.id))
 
-        // Only send email if there are new signals
+        // Only send email if there are new updates
         if (unsentSignals.length === 0) {
-          logger.debug('All signals already sent to user', { 
+          logger.debug('All updates already sent to user', { 
             userId: user.id, 
             userTier 
           })
@@ -171,17 +171,17 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         const portfolioUrl = `${baseUrl}/portfolio`
         const preferencesUrl = `${baseUrl}/account`
 
-        // Send email with all signals (including ones we've already sent, for context)
+        // Send email with all updates (including ones we've already sent, for context)
         // But only create notifications for new ones
         await sendDailySignalEmail({
           to: user.email!,
           userName: user.name,
-          signals: signalsToSend, // Send all signals in the email
+          signals: signalsToSend, // Send all updates in the email
           portfolioUrl,
           preferencesUrl,
         })
 
-        // Create notification records only for signals we haven't sent yet
+        // Create notification records only for updates we haven't sent yet
         for (const signal of unsentSignals) {
           await prisma.notification.create({
             data: {
@@ -190,7 +190,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
               entityType: 'content',
               entityId: signal.id,
               title: 'Daily Portfolio Update',
-              body: `New portfolio signal for ${tierLabels[signal.tier]}${signal.category === 'majors' ? ' Market Rotation' : signal.category === 'memecoins' ? ' Memecoins' : ''}`,
+              body: `New portfolio update for ${tierLabels[signal.tier]}${signal.category === 'majors' ? ' Market Rotation' : signal.category === 'memecoins' ? ' Memecoins' : ''}`,
               url: portfolioUrl,
               channel: 'email',
               sentAt: new Date(),
@@ -199,7 +199,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         }
 
         results.sent++
-        logger.info('Signal email sent', { 
+        logger.info('Update email sent', { 
           userId: user.id, 
           userTier,
           signalCount: signalsToSend.length 
@@ -208,14 +208,14 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         results.failed++
         const errorMsg = error instanceof Error ? error.message : String(error)
         results.errors.push(`User ${user.id}: ${errorMsg}`)
-        logger.error('Failed to send signal email', error instanceof Error ? error : new Error(String(error)), {
+        logger.error('Failed to send update email', error instanceof Error ? error : new Error(String(error)), {
           userId: user.id,
           signalId,
         })
       }
     }
 
-    logger.info('Signal email sending completed', {
+    logger.info('Update email sending completed', {
       signalId,
       tier: createdSignal.tier,
       sent: results.sent,

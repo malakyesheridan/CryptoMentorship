@@ -3,29 +3,60 @@ import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleError } from '@/lib/errors'
+import { writeFile } from 'fs/promises'
+import { join } from 'path'
+import { mkdir } from 'fs/promises'
+import { existsSync } from 'fs'
+import { sanitizeFilename } from '@/lib/file-validation'
 import { z } from 'zod'
 
-const episodeSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  slug: z.string().min(1, 'Slug is required'),
+// Schema for PUT requests (updates)
+const episodeUpdateSchema = z.object({
+  title: z.string().min(1, 'Title is required').optional(),
+  slug: z.string().min(1, 'Slug is required').optional(),
   excerpt: z.string().optional(),
-  videoUrl: z.string().url('Valid video URL is required'),
+  videoUrl: z.string().url('Valid video URL is required').optional(),
   body: z.string().optional(),
   coverUrl: z.string().optional(),
-  category: z.enum(['daily-update', 'analysis', 'breakdown']).default('daily-update'),
-  locked: z.boolean().default(false),
+  category: z.enum(['daily-update', 'analysis', 'breakdown']).optional(),
+  locked: z.boolean().optional(),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireRole(['admin', 'editor'])
     
-    const body = await request.json()
-    const validatedData = episodeSchema.parse(body)
+    // Handle FormData for file upload
+    const formData = await request.formData()
+    const videoFile = formData.get('video') as File
+    const title = formData.get('title') as string
+    const description = formData.get('description') as string
+    const slug = formData.get('slug') as string
+
+    if (!title || !title.trim()) {
+      return NextResponse.json(
+        { error: 'Title is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!videoFile) {
+      return NextResponse.json(
+        { error: 'Video file is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!slug || !slug.trim()) {
+      return NextResponse.json(
+        { error: 'Slug is required' },
+        { status: 400 }
+      )
+    }
     
     // Check if slug is unique
     const existingEpisode = await prisma.episode.findUnique({
-      where: { slug: validatedData.slug }
+      where: { slug }
     })
     
     if (existingEpisode) {
@@ -34,12 +65,37 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Ensure upload directory exists
+    const uploadDir = join(process.cwd(), 'uploads', 'episodes')
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true })
+    }
+
+    // Save video file
+    const safeFilename = sanitizeFilename(videoFile.name)
+    const timestamp = Date.now()
+    const filename = `${timestamp}-${safeFilename}`
+    const filePath = join(uploadDir, filename)
+    
+    const bytes = await videoFile.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    await writeFile(filePath, buffer)
+    
+    const videoUrl = `/uploads/episodes/${filename}`
     
     // Wrap in transaction for atomicity
     const episode = await prisma.$transaction(async (tx) => {
       const created = await tx.episode.create({
         data: {
-          ...validatedData,
+          title: title.trim(),
+          slug: slug.trim(),
+          excerpt: description?.trim() || null,
+          videoUrl,
+          body: null,
+          coverUrl: null,
+          category: 'daily-update',
+          locked: false, // Always false - everyone can view
           publishedAt: new Date(),
         }
       })
@@ -69,7 +125,13 @@ export async function PUT(request: NextRequest) {
     
     const body = await request.json()
     const { id, ...updateData } = body
-    const validatedData = episodeSchema.partial().parse(updateData)
+    
+    // Always set locked to false
+    if ('locked' in updateData) {
+      updateData.locked = false
+    }
+    
+    const validatedData = episodeUpdateSchema.parse(updateData)
     
     if (!id) {
       return NextResponse.json(

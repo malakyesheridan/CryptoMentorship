@@ -33,8 +33,8 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
   const userRole = session?.user?.role || 'guest'
   const userTier = session?.user?.membershipTier || null
   
-  // For episodes, we'll use a simple locked check for now
-  const canView = !episode.locked || userRole === 'admin' || (userTier && ['T2', 'T3'].includes(userTier))
+  // All episodes are accessible to everyone
+  const canView = true
   
   // Process MDX content
   const mdx = episode.body ? await renderMDX(episode.slug, episode.body) : null

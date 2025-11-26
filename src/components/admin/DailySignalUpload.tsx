@@ -46,10 +46,23 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
     e.preventDefault()
 
     if (!formData.signal.trim()) {
-      setErrorMessage('Please enter a signal')
+      setErrorMessage('Please enter an update')
       setUploadStatus('error')
       return
     }
+    
+    // Convert newlines to bullet points format
+    // Split by newline, trim each line, filter empty lines, add bullet prefix
+    const processSignalText = (text: string): string => {
+      return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => line.startsWith('• ') ? line : `• ${line}`)
+        .join('\n')
+    }
+    
+    const processedSignal = processSignalText(formData.signal)
 
     setIsUploading(true)
     setUploadStatus('uploading')
@@ -63,7 +76,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           {
             method: 'PUT',
             body: JSON.stringify({
-              signal: formData.signal.trim(),
+              signal: processedSignal,
               executiveSummary: formData.executiveSummary.trim() || undefined,
               associatedData: formData.associatedData.trim() || undefined,
             }),
@@ -75,7 +88,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           throw new Error(errorDetails)
         }
 
-        toast.success('Signal updated successfully!')
+        toast.success('Update updated successfully!')
         setUploadStatus('success')
         setIsEditing(false)
         if (onEditComplete) {
@@ -95,19 +108,19 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         const requestBody = {
           tier,
           ...(tier === 'T3' && category ? { category } : {}),
-          signal: formData.signal.trim(),
+          signal: processedSignal,
           executiveSummary: formData.executiveSummary.trim() || undefined,
           associatedData: formData.associatedData.trim() || undefined,
         }
 
-        console.log(`Creating ${tier}${category ? ` ${category}` : ''} daily signal:`, requestBody)
+        console.log(`Creating ${tier}${category ? ` ${category}` : ''} daily update:`, requestBody)
 
         const result = await json<{ id: string } | { error: string; details?: any[] }>('/api/admin/portfolio-daily-signals', {
           method: 'POST',
           body: JSON.stringify(requestBody),
         })
 
-        console.log('Daily signal creation response:', result)
+        console.log('Daily update creation response:', result)
 
         if ('error' in result) {
           const errorDetails = result.details?.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ') || result.error
@@ -115,7 +128,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         }
 
         const categoryLabel = category === 'majors' ? 'Market Rotation' : category === 'memecoins' ? 'Memecoins' : ''
-        toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} signal posted successfully!`)
+        toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} update posted successfully!`)
         setUploadStatus('success')
         setFormData({
           signal: '',
@@ -133,9 +146,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         }, 500) // Small delay to ensure state is reset
       }
     } catch (error) {
-      console.error('Daily signal creation error:', error)
+      console.error('Daily update creation error:', error)
       setUploadStatus('error')
-      const errorMsg = error instanceof Error ? error.message : 'Failed to create signal'
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create update'
       setErrorMessage(errorMsg)
       toast.error(errorMsg)
     } finally {
@@ -152,18 +165,19 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Signal */}
         <div className="space-y-2">
-          <Label htmlFor={`signal-${tier}`}>Signal *</Label>
-          <Input
+          <Label htmlFor={`signal-${tier}`}>Update *</Label>
+          <Textarea
             id={`signal-${tier}`}
             value={formData.signal}
             onChange={(e) => setFormData({ ...formData, signal: e.target.value })}
-            placeholder="e.g., 100% Cash 💰"
+            placeholder="e.g., 100% Cash 💰&#10;Or add multiple lines for bullet points"
             required
             disabled={isUploading}
             maxLength={500}
+            rows={3}
           />
           <p className="text-xs text-slate-500">
-            Main signal text (e.g., &quot;100% Cash&quot;, &quot;50% BTC / 50% ETH&quot;)
+            Main update text. Each new line will become a bullet point (e.g., &quot;100% Cash&quot;, &quot;50% BTC / 50% ETH&quot;)
           </p>
         </div>
 
@@ -223,7 +237,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           {isUploading 
             ? (isEditing ? 'Updating...' : 'Posting Update...')
             : isEditing
-              ? 'Update Signal'
+              ? 'Update'
               : `Post ${tierLabels[tier]}${category === 'majors' ? ' Market Rotation' : category === 'memecoins' ? ' Memecoins' : ''} Update`}
         </Button>
       </form>

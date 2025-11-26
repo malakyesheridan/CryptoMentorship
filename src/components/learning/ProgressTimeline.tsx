@@ -59,7 +59,7 @@ export function ProgressTimeline({
         id: `enrollment-${enrollment.id}`,
         type: 'enrollment',
         title: `Started "${enrollment.track.title}"`,
-        description: `Enrolled in ${enrollment.track.title} learning track`,
+        description: `Started ${enrollment.track.title} learning track`,
         date: enrollment.startedAt,
         icon: <BookOpen className="h-4 w-4" />,
         color: 'bg-blue-500',

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 export const revalidate = 60 // Cache for 1 minute
 
-// GET /api/portfolio-daily-signals - Get all daily signals (with user tier for access control)
+// GET /api/portfolio-daily-signals - Get all daily updates (with user tier for access control)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -20,11 +20,11 @@ export async function GET(request: NextRequest) {
     })
 
     const userTier = membership?.tier || null
-    // Trial accounts should be treated as active for signal access
+    // Trial accounts should be treated as active for update access
     const isActive = (membership?.status === 'active' || membership?.status === 'trial') || session.user.role === 'admin'
 
-    // Get the most recent signal for each tier/category combination
-    // This ensures signals remain visible until they are updated
+    // Get the most recent update for each tier/category combination
+    // This ensures updates remain visible until they are updated
     const allSignals = await prisma.portfolioDailySignal.findMany({
       include: {
         createdBy: {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         ? `${signal.tier}-${signal.category}` 
         : signal.tier
       
-      // Only keep the first (most recent) signal for each key
+      // Only keep the first (most recent) update for each key
       if (!signalsMap.has(key)) {
         signalsMap.set(key, signal)
       }
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       isActive 
     })
   } catch (error) {
-    console.error('Error fetching daily signals:', error)
+    console.error('Error fetching daily updates:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { BookOpen, GraduationCap, FileText, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type TabType = 'discover' | 'courses' | 'resources' | 'progress'
+type TabType = 'discover' | 'progress'
 
 interface LearningHubTabsProps {
   activeTab: TabType
@@ -22,18 +22,6 @@ export function LearningHubTabs({ activeTab, onTabChange, stats }: LearningHubTa
       label: 'Discover',
       icon: BookOpen,
       description: 'Explore all content'
-    },
-    {
-      id: 'courses' as TabType,
-      label: 'Learning Tracks',
-      icon: GraduationCap,
-      description: stats?.courses ? `${stats.courses} enrolled` : undefined
-    },
-    {
-      id: 'resources' as TabType,
-      label: 'Resources',
-      icon: FileText,
-      description: stats?.resources ? `${stats.resources} available` : undefined
     },
     {
       id: 'progress' as TabType,

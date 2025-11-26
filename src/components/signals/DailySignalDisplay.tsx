@@ -160,7 +160,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
             <TrendingUp className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">No Daily Signals Available</h3>
             <p className="text-slate-600">
-              Check back later for today&apos;s portfolio signal updates.
+              Check back later for today&apos;s portfolio updates.
             </p>
           </div>
         </CardContent>
@@ -261,10 +261,10 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                 <Lock className="w-16 h-16 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Locked Content</h3>
                 <p className="text-slate-600 mb-4">
-                  This signal is available for {tierLabels[currentSignal.tier]} members and above.
+                  This update is available for {tierLabels[currentSignal.tier]} members and above.
                 </p>
                 <p className="text-sm text-slate-500">
-                  Upgrade your subscription to access this tier&apos;s signals.
+                  Upgrade your subscription to access this tier&apos;s updates.
                 </p>
               </div>
             ) : (
@@ -274,7 +274,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                   <div className="flex items-center space-x-2">
                     <Zap className="w-5 h-5 text-yellow-500" />
                     <h3 className="text-lg font-bold text-slate-900">
-                      ⚡ Portfolio Signal Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Market Rotation' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
+                      ⚡ Portfolio Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Market Rotation' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
                     </h3>
                   </div>
                   <div className="flex items-center gap-3">
@@ -295,13 +295,17 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                   </div>
                 </div>
 
-                {/* Signal */}
+                {/* Update */}
                 <div className="mb-4">
-                  <h4 className="font-bold text-slate-900 mb-2">Signal:</h4>
+                  <h4 className="font-bold text-slate-900 mb-2">Update:</h4>
                   <div className="bg-white rounded-lg p-4 border border-slate-200">
-                    <p className="text-lg text-slate-800">
-                      • {currentSignal.signal}
-                    </p>
+                    <div className="text-lg text-slate-800">
+                      {currentSignal.signal.split('\n').map((line, index) => (
+                        <p key={index} className="mb-1 last:mb-0">
+                          {line.trim() || '\u00A0'}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

@@ -122,9 +122,8 @@ export function PortfolioContent({
 }: PortfolioContentProps) {
   return (
     <div className="space-y-8">
-      {/* Daily Signal Updates - Now handled by DailySignalManager */}
+      {/* Daily Updates - Now handled by DailySignalManager */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">Today&apos;s Portfolio Signal Updates</h2>
       </div>
 
 

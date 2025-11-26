@@ -31,9 +31,8 @@ export default function DailySignalManager({ userTier, userRole }: DailySignalMa
         onEditComplete={() => setEditingSignal(null)}
       />
       
-      {/* Daily Signal Display */}
+      {/* Daily Update Display */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">Today&apos;s Portfolio Signal Updates</h2>
         <DailySignalDisplay 
           userTier={userTier} 
           userRole={userRole}

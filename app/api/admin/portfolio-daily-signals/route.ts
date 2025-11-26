@@ -25,7 +25,7 @@ const createDailySignalSchema = z.object({
   path: ['category']
 })
 
-// GET /api/admin/portfolio-daily-signals - Get all daily signals
+// GET /api/admin/portfolio-daily-signals - Get all daily updates
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -59,12 +59,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ signals })
   } catch (error) {
-    console.error('Error fetching daily signals:', error)
+    console.error('Error fetching daily updates:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// POST /api/admin/portfolio-daily-signals - Create new daily signal (replaces existing for today)
+// POST /api/admin/portfolio-daily-signals - Create new daily update (replaces existing for today)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createDailySignalSchema.parse(body)
 
-    // Delete the most recent signal for this tier (and category if T3) to replace it
-    // This ensures only one active signal exists per tier/category combination
+    // Delete the most recent update for this tier (and category if T3) to replace it
+    // This ensures only one active update exists per tier/category combination
     const whereClause: any = {
       tier: data.tier,
     }
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       whereClause.category = data.category
     }
 
-    // Find the most recent signal for this tier/category
+    // Find the most recent update for this tier/category
     const existingSignal = await prisma.portfolioDailySignal.findFirst({
       where: whereClause,
       orderBy: { publishedAt: 'desc' },
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create new signal
+    // Create new update
     const signal = await prisma.portfolioDailySignal.create({
       data: {
         ...data,
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     // Send email notifications asynchronously (fire-and-forget)
     // Don't block the API response if email sending fails
     sendSignalEmails(signal.id).catch((error) => {
-      logger.error('Failed to send signal emails', error instanceof Error ? error : new Error(String(error)), {
+      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: signal.id,
         tier: signal.tier,
       })
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         }))
       }, { status: 400 })
     }
-    console.error('Error creating daily signal:', error)
+    console.error('Error creating daily update:', error)
     const errorMessage = error instanceof Error ? error.message : String(error)
     console.error('Error details:', errorMessage)
     return NextResponse.json({ 

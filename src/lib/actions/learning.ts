@@ -563,15 +563,22 @@ async function updateTrackProgress(userId: string, trackId: string) {
 
   const progressPct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0
 
-  // Update enrollment
-  const enrollment = await prisma.enrollment.update({
+  // Update or create enrollment (upsert to handle case where enrollment doesn't exist)
+  const enrollment = await prisma.enrollment.upsert({
     where: {
       userId_trackId: {
         userId,
         trackId,
       },
     },
-    data: {
+    create: {
+      userId,
+      trackId,
+      progressPct,
+      startedAt: new Date(),
+      completedAt: progressPct === 100 ? new Date() : null,
+    },
+    update: {
       progressPct,
       completedAt: progressPct === 100 ? new Date() : null,
     },

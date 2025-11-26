@@ -77,10 +77,10 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
         <div className="mb-6">
           <div className="flex items-center space-x-2 mb-2">
             <Zap className="w-5 h-5 text-yellow-500" />
-            <h2 className="text-2xl font-bold text-slate-900">Daily Portfolio Signal Updates</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Daily Portfolio Updates</h2>
           </div>
           <p className="text-slate-600">
-            Create daily signals for each tier. Users will see signals for their tier and all lower tiers.
+            Create daily updates for each tier. Users will see updates for their tier and all lower tiers.
           </p>
         </div>
 

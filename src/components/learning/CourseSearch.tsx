@@ -31,11 +31,11 @@ interface CourseData {
 
 interface CourseSearchProps {
   courses: CourseData[]
-  onEnroll?: (courseId: string) => Promise<void>
+  onStart?: (courseId: string) => Promise<void>
   className?: string
 }
 
-export function CourseSearch({ courses, onEnroll, className = '' }: CourseSearchProps) {
+export function CourseSearch({ courses, onStart, className = '' }: CourseSearchProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
 
@@ -63,13 +63,13 @@ export function CourseSearch({ courses, onEnroll, className = '' }: CourseSearch
     ).slice(0, 8) // Show up to 8 results
   }, [courses, debouncedQuery])
 
-  const handleEnroll = async (courseId: string) => {
-    if (onEnroll) {
+  const handleStart = async (courseId: string) => {
+    if (onStart) {
       setIsSearching(true)
       try {
-        await onEnroll(courseId)
+        await onStart(courseId)
       } catch (error) {
-        console.error('Failed to enroll:', error)
+        console.error('Failed to start:', error)
       } finally {
         setIsSearching(false)
       }
@@ -83,7 +83,7 @@ export function CourseSearch({ courses, onEnroll, className = '' }: CourseSearch
       } else if (course.progressPct && course.progressPct > 0) {
         return { label: 'In Progress', color: 'bg-blue-100 text-blue-800 border-blue-200' }
       } else {
-        return { label: 'Enrolled', color: 'bg-slate-100 text-slate-800 border-slate-200' }
+        return { label: 'Started', color: 'bg-slate-100 text-slate-800 border-slate-200' }
       }
     }
     return null
@@ -203,11 +203,11 @@ export function CourseSearch({ courses, onEnroll, className = '' }: CourseSearch
                       ) : (
                         <Button 
                           className="w-full"
-                          onClick={() => handleEnroll(course.id)}
+                          onClick={() => handleStart(course.id)}
                           disabled={isSearching}
                         >
                           <BookOpen className="h-4 w-4 mr-2" />
-                          Enroll Now
+                          Start Now
                         </Button>
                       )}
                     </div>

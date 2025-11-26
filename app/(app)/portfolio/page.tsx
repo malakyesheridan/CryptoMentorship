@@ -42,7 +42,7 @@ const getCachedSignals = unstable_cache(
       const signalsResult = await getContent({ kind: 'signal' })
       return Array.isArray(signalsResult) ? signalsResult : signalsResult.data
     } catch (error) {
-      console.error('Error fetching signals:', error)
+      console.error('Error fetching content:', error)
       return []
     }
   },
@@ -261,7 +261,7 @@ export default async function PortfolioPage() {
     </div>
   )
   } catch (error) {
-    console.error('Error fetching signals data:', error)
+    console.error('Error fetching content data:', error)
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <div className="container mx-auto px-4 py-12">

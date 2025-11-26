@@ -37,9 +37,9 @@ const tierColors: Record<'T1' | 'T2' | 'T3', { bg: string; border: string; text:
 }
 
 /**
- * Generate HTML for a single signal section
+ * Generate HTML for a single update section
  */
-function generateSignalSection(signal: DailySignal): string {
+function generateUpdateSection(signal: DailySignal): string {
   const categoryLabel = signal.category === 'majors' 
     ? ' Market Rotation' 
     : signal.category === 'memecoins' 
@@ -56,7 +56,7 @@ function generateSignalSection(signal: DailySignal): string {
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 20px;">⚡</span>
           <h3 style="font-size: 18px; font-weight: bold; color: #1e293b; margin: 0;">
-            Portfolio Signal Update - ${tierLabels[signal.tier]}${categoryLabel} ⚡
+            Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel} ⚡
           </h3>
         </div>
         <span style="font-size: 12px; color: #64748b;">
@@ -64,13 +64,13 @@ function generateSignalSection(signal: DailySignal): string {
         </span>
       </div>
 
-      <!-- Signal -->
+      <!-- Update -->
       <div style="margin-bottom: 16px;">
-        <h4 style="font-weight: bold; color: #1e293b; margin: 0 0 8px 0; font-size: 16px;">Signal:</h4>
+        <h4 style="font-weight: bold; color: #1e293b; margin: 0 0 8px 0; font-size: 16px;">Update:</h4>
         <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
-          <p style="font-size: 18px; color: #1e293b; margin: 0;">
-            • ${escapeHtml(signal.signal)}
-          </p>
+          <div style="font-size: 18px; color: #1e293b; margin: 0;">
+            ${escapeHtml(signal.signal).split('\n').filter(line => line.trim().length > 0).map(line => `<p style="margin: 0 0 4px 0; padding: 0;">${line.trim()}</p>`).join('')}
+          </div>
         </div>
       </div>
 
@@ -102,8 +102,8 @@ function generateSignalSection(signal: DailySignal): string {
 }
 
 /**
- * Send daily portfolio signal email
- * For T3 users, can send both majors and memecoins signals in one email
+ * Send daily portfolio update email
+ * For T3 users, can send both majors and memecoins updates in one email
  */
 export async function sendDailySignalEmail({
   to,
@@ -119,13 +119,13 @@ export async function sendDailySignalEmail({
   preferencesUrl: string
 }): Promise<void> {
   if (signals.length === 0) {
-    throw new Error('No signals provided for email')
+    throw new Error('No updates provided for email')
   }
 
   const greeting = userName ? `Hi ${userName},` : 'Hi there,'
   
-  // Generate signal sections
-  const signalSections = signals.map(signal => generateSignalSection(signal)).join('')
+  // Generate update sections
+  const signalSections = signals.map(signal => generateUpdateSection(signal)).join('')
 
   // Determine main tier (for header)
   const mainTier = signals[0].tier
@@ -150,7 +150,7 @@ export async function sendDailySignalEmail({
           </p>
           
           <p style="margin: 0 0 24px 0; font-size: 16px; color: #475569;">
-            Here's your daily portfolio signal update${hasMultipleCategories ? 's' : ''}:
+            Here's your daily portfolio update${hasMultipleCategories ? 's' : ''}:
           </p>
 
           ${signalSections}
@@ -182,9 +182,9 @@ export async function sendDailySignalEmail({
       ? ' Memecoins' 
       : ''
     
-    let text = `Portfolio Signal Update - ${tierLabels[signal.tier]}${categoryLabel}\n`
+    let text = `Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel}\n`
     text += `Published: ${formatDate(new Date(signal.publishedAt), 'short')}\n\n`
-    text += `Signal:\n• ${signal.signal}\n\n`
+    text += `Update:\n${signal.signal.split('\n').map(line => `• ${line.trim()}`).join('\n')}\n\n`
     
     if (signal.executiveSummary) {
       text += `Executive Summary:\n• ${signal.executiveSummary}\n\n`
@@ -204,7 +204,7 @@ Daily Portfolio Update
 
 ${greeting}
 
-Here's your daily portfolio signal update${hasMultipleCategories ? 's' : ''}:
+Here's your daily portfolio update${hasMultipleCategories ? 's' : ''}:
 
 ${textSignals}
 

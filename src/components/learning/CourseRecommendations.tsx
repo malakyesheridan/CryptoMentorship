@@ -99,11 +99,11 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
     setRecommendedCourses(recommendations)
   }, [courses])
 
-  const handleEnroll = async (trackId: string) => {
+  const handleStart = async (trackId: string) => {
     setIsEnrolling(trackId)
     try {
       await enrollInTrack({ trackId })
-      toast.success('Successfully enrolled in course!')
+      toast.success('Successfully started course!')
       // Update the course status
       setRecommendedCourses(prev => 
         prev.map(course => 
@@ -113,8 +113,8 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
         )
       )
     } catch (error) {
-      console.error('Failed to enroll:', error)
-      toast.error('Failed to enroll in course.')
+      console.error('Failed to start:', error)
+      toast.error('Failed to start course.')
     } finally {
       setIsEnrolling(null)
     }
@@ -143,7 +143,7 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
       <div className={cn('text-center py-8', className)}>
         <Sparkles className="h-12 w-12 text-slate-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-slate-900 mb-2">All Caught Up!</h3>
-        <p className="text-slate-600 mb-4">You&apos;re enrolled in all available courses. Great job!</p>
+        <p className="text-slate-600 mb-4">You&apos;re started in all available courses. Great job!</p>
         <Button asChild>
           <Link href="/learn">Browse All Courses</Link>
         </Button>
@@ -221,17 +221,17 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
                   
                   <Button 
                     className="flex-1 bg-purple-600 hover:bg-purple-700 text-white group-hover:scale-105 transition-all duration-300"
-                    onClick={() => handleEnroll(course.id)}
+                    onClick={() => handleStart(course.id)}
                     disabled={isEnrolling === course.id}
                   >
                     {isEnrolling === course.id ? (
                       <>
                         <Clock className="h-4 w-4 mr-2 animate-spin" />
-                        Enrolling...
+                        Starting...
                       </>
                     ) : (
                       <>
-                        Enroll Now
+                        Start Now
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </>
                     )}

@@ -107,6 +107,22 @@ export default async function LessonPage({
     getUserQuizSubmission(session.user.id, lesson.id),
   ])
 
+  // Ensure user is enrolled in track (auto-enroll if not already enrolled)
+  await prisma.enrollment.upsert({
+    where: {
+      userId_trackId: {
+        userId: session.user.id,
+        trackId: track.id,
+      },
+    },
+    create: {
+      userId: session.user.id,
+      trackId: track.id,
+      startedAt: new Date(),
+    },
+    update: {},
+  })
+
   // Check lesson access
   const accessInfo = await checkLessonAccess(session.user.id, lesson.id, track.id)
 
