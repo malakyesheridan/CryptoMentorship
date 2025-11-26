@@ -20,6 +20,7 @@ import {
   Plus
 } from 'lucide-react'
 import Link from 'next/link'
+import { DeleteTrackButton } from '@/components/admin/DeleteTrackButton'
 
 // Force dynamic rendering for admin pages (auth-gated)
 export const dynamic = 'force-dynamic'
@@ -62,18 +63,6 @@ async function getTrack(trackId: string) {
           order: 'asc'
         }
       },
-      enrollments: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true
-            }
-          }
-        }
-      }
     }
   })
 
@@ -97,7 +86,6 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
   const publishedLessons = track.sections.reduce((acc, section) => 
     acc + section.lessons.filter(lesson => lesson.publishedAt).length, 0
   )
-  const enrollmentCount = track.enrollments.length
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -121,10 +109,7 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                     Edit
                   </Button>
                 </Link>
-                <Button variant="destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
+                <DeleteTrackButton trackId={track.id} />
               </div>
             }
           />
@@ -152,10 +137,6 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">{enrollmentCount} enrollments</span>
-                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -330,13 +311,6 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                   <span className="font-medium">{publishedLessons}</span>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">Enrollments</span>
-                  </div>
-                  <span className="font-medium">{enrollmentCount}</span>
-                </div>
               </CardContent>
             </Card>
 
@@ -360,10 +334,6 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                   </Button>
                 </Link>
                 
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="h-4 w-4 mr-2" />
-                  View Enrollments
-                </Button>
               </CardContent>
             </Card>
           </div>

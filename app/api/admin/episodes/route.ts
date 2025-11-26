@@ -10,6 +10,10 @@ import { existsSync } from 'fs'
 import { sanitizeFilename } from '@/lib/file-validation'
 import { z } from 'zod'
 
+// Configure route for large file uploads
+export const runtime = 'nodejs'
+export const maxDuration = 300 // 5 minutes for large uploads
+
 // Schema for PUT requests (updates)
 const episodeUpdateSchema = z.object({
   title: z.string().min(1, 'Title is required').optional(),
@@ -43,6 +47,15 @@ export async function POST(request: NextRequest) {
     if (!videoFile) {
       return NextResponse.json(
         { error: 'Video file is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate file size (100MB limit)
+    const maxFileSize = 100 * 1024 * 1024 // 100MB in bytes
+    if (videoFile.size > maxFileSize) {
+      return NextResponse.json(
+        { error: `File too large. Maximum size is 100MB. Your file is ${(videoFile.size / (1024 * 1024)).toFixed(2)}MB` },
         { status: 400 }
       )
     }

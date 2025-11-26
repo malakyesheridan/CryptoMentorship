@@ -34,7 +34,6 @@ export async function GET(
         },
         _count: {
           select: {
-            enrollments: true,
             sections: true,
             lessons: true
           }

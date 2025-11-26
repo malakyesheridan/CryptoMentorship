@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { LearningHubTabs } from './LearningHubTabs'
 import { ContentGrid } from './ContentGrid'
+import { TrackEditModal } from './TrackEditModal'
 import { CourseCarousel } from './CourseCarousel'
 import { CourseRecommendations } from './CourseRecommendations'
 import { CourseSearch } from './CourseSearch'
@@ -99,6 +100,7 @@ export function LearningHubContent({
   const [activeTab, setActiveTab] = useState<TabType>('discover')
   const [searchQuery, setSearchQuery] = useState('')
   const [contentFilter, setContentFilter] = useState<'all' | 'courses' | 'resources'>('all')
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
 
   // Transform data for content grid
   const courseItems = useMemo(() => transformEnrollmentsToContent(enrollments), [enrollments])
@@ -249,6 +251,8 @@ export function LearningHubContent({
             <ContentGrid 
               items={filteredContent}
               showProgress={true}
+              userRole={userRole}
+              onEditTrack={(trackId) => setEditingTrackId(trackId)}
             />
           </div>
         </div>
@@ -322,6 +326,23 @@ export function LearningHubContent({
             </div>
           )}
         </div>
+      )}
+
+      {/* Track Edit Modal */}
+      {editingTrackId && (
+        <TrackEditModal
+          trackId={editingTrackId}
+          open={!!editingTrackId}
+          onOpenChange={(open) => {
+            if (!open) setEditingTrackId(null)
+          }}
+          onTrackUpdated={() => {
+            window.location.reload()
+          }}
+          onTrackDeleted={() => {
+            window.location.reload()
+          }}
+        />
       )}
     </div>
   )

@@ -12,7 +12,8 @@ import {
   Play, 
   ArrowRight,
   CheckCircle,
-  Award
+  Award,
+  Edit
 } from 'lucide-react'
 import Image from 'next/image'
 import { formatContentDate } from '@/lib/content-utils'
@@ -37,9 +38,12 @@ interface ContentGridProps {
   items: ContentItem[]
   showProgress?: boolean
   onItemClick?: (item: ContentItem) => void
+  userRole?: string
+  onEditTrack?: (trackId: string) => void
 }
 
-export function ContentGrid({ items, showProgress = false, onItemClick }: ContentGridProps) {
+export function ContentGrid({ items, showProgress = false, onItemClick, userRole, onEditTrack }: ContentGridProps) {
+  const isAdmin = userRole === 'admin' || userRole === 'editor'
   if (items.length === 0) {
     return (
       <div className="text-center py-16">
@@ -96,6 +100,20 @@ export function ContentGrid({ items, showProgress = false, onItemClick }: Conten
                     {item.locked ? 'Member' : 'Public'}
                   </Badge>
                 </div>
+                {isAdmin && isCourse && onEditTrack && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      onEditTrack(item.id)
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
 
               <CardTitle className="text-xl font-semibold mb-2 text-slate-900 group-hover:text-yellow-600 transition-colors line-clamp-2">

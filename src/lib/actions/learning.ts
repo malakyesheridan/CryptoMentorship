@@ -267,6 +267,30 @@ export async function updateTrack(trackId: string, input: unknown) {
   }
 }
 
+export async function deleteTrack(trackId: string) {
+  const user = await requireUser()
+  
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Insufficient permissions to delete tracks')
+  }
+
+  // Check if track exists
+  const existingTrack = await prisma.track.findUnique({
+    where: { id: trackId }
+  })
+
+  if (!existingTrack) {
+    throw new Error('Track not found')
+  }
+
+  // Delete the track (cascade will handle related records)
+  await prisma.track.delete({
+    where: { id: trackId }
+  })
+
+  return { success: true }
+}
+
 export async function createSection(input: unknown) {
   const user = await requireUser()
   

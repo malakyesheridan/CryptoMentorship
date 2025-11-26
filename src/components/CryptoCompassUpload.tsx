@@ -24,8 +24,25 @@ export default function CryptoCompassUpload() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      // Validate file size (100MB limit)
+      const maxFileSize = 100 * 1024 * 1024 // 100MB
+      if (file.size > maxFileSize) {
+        setErrorMessage(`File too large. Maximum size is 100MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+        setUploadStatus('error')
+        return
+      }
+      
+      // Validate file type
+      const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMessage('Invalid file type. Please upload an MP4, WebM, QuickTime, or AVI video file.')
+        setUploadStatus('error')
+        return
+      }
+      
       setEpisodeData({ ...episodeData, video: file })
       setErrorMessage('')
+      setUploadStatus('idle')
     }
   }
 
@@ -77,7 +94,23 @@ export default function CryptoCompassUpload() {
         body: formData,
       })
 
-      const result = await response.json()
+      // Handle 413 error specifically
+      if (response.status === 413) {
+        setUploadStatus('error')
+        setErrorMessage('File too large. The server cannot process files larger than 100MB. Please compress your video or use a smaller file.')
+        return
+      }
+
+      let result
+      try {
+        result = await response.json()
+      } catch (parseError) {
+        // If JSON parsing fails, try to get text response
+        const text = await response.text()
+        setUploadStatus('error')
+        setErrorMessage(`Upload failed: ${response.status === 413 ? 'File too large (413)' : text || `HTTP ${response.status}`}`)
+        return
+      }
 
       if (response.ok && result.id) {
         setUploadStatus('success')
