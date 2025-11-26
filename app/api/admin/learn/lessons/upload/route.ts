@@ -3,11 +3,6 @@ import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleError } from '@/lib/errors'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
-import { mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import { sanitizeFilename } from '@/lib/file-validation'
 
 // Configure route for large file uploads
 export const runtime = 'nodejs'
@@ -17,12 +12,12 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireRole(['admin', 'editor'])
     
-    // Handle FormData for file upload
-    const formData = await request.formData()
-    const videoFile = formData.get('video') as File
-    const title = formData.get('title') as string
-    const description = formData.get('description') as string
-    const trackId = formData.get('trackId') as string
+    // Expect JSON with videoUrl (uploaded via blob storage)
+    const body = await request.json()
+    const title = body.title
+    const description = body.description || ''
+    const trackId = body.trackId
+    const videoUrl = body.videoUrl
 
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -31,9 +26,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!videoFile) {
+    if (!videoUrl || !videoUrl.trim()) {
       return NextResponse.json(
-        { error: 'Video file is required' },
+        { error: 'Video URL is required. Please upload the video first.' },
         { status: 400 }
       )
     }
@@ -41,15 +36,6 @@ export async function POST(request: NextRequest) {
     if (!trackId || !trackId.trim()) {
       return NextResponse.json(
         { error: 'Track ID is required' },
-        { status: 400 }
-      )
-    }
-
-    // Validate file size (100MB limit)
-    const maxFileSize = 100 * 1024 * 1024 // 100MB in bytes
-    if (videoFile.size > maxFileSize) {
-      return NextResponse.json(
-        { error: `File too large. Maximum size is 100MB. Your file is ${(videoFile.size / (1024 * 1024)).toFixed(2)}MB` },
         { status: 400 }
       )
     }
@@ -90,24 +76,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), 'uploads', 'lessons')
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
-    }
-
-    // Save video file
-    const safeFilename = sanitizeFilename(videoFile.name)
-    const timestamp = Date.now()
-    const filename = `${timestamp}-${safeFilename}`
-    const filePath = join(uploadDir, filename)
-    
-    const bytes = await videoFile.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
-    
-    const videoUrl = `/uploads/lessons/${filename}`
 
     // Get max order for lessons in this track
     const maxOrder = await prisma.lesson.findFirst({

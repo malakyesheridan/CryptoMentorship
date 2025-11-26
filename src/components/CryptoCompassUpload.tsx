@@ -84,112 +84,59 @@ export default function CryptoCompassUpload() {
     try {
       const slug = generateSlug(episodeData.title)
       
-      // Use chunked upload for files larger than 4MB
-      const useChunkedUpload = episodeData.video.size > 4 * 1024 * 1024
+      // Upload video to Vercel Blob Storage
+      const { uploadToBlob } = await import('@/lib/blob-upload')
+      
+      const uploadResult = await uploadToBlob({
+        file: episodeData.video,
+        folder: 'episodes',
+        onProgress: (progress) => {
+          setUploadProgress(progress)
+        }
+      })
 
-      if (useChunkedUpload) {
-        // Chunked upload for large files
-        const { uploadFileInChunks } = await import('@/lib/chunked-upload')
-        
-        const uploadResult = await uploadFileInChunks({
-          file: episodeData.video,
-          endpoint: '/api/admin/episodes/upload-chunk',
-          onProgress: (progress) => {
-            setUploadProgress(progress)
-          },
-          onChunkComplete: (chunkIndex, totalChunks) => {
-            console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded`)
-          }
+      if (!uploadResult.success || !uploadResult.url) {
+        setUploadStatus('error')
+        setErrorMessage(uploadResult.error || 'Upload failed')
+        return
+      }
+
+      // Create episode record with uploaded video URL
+      const response = await fetch('/api/admin/episodes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: episodeData.title,
+          description: episodeData.description || '',
+          slug: slug,
+          videoUrl: uploadResult.url,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
+        setUploadStatus('error')
+        setErrorMessage(error.error || `Failed to create episode: HTTP ${response.status}`)
+        return
+      }
+
+      const result = await response.json()
+      if (result.id) {
+        setUploadStatus('success')
+        setUploadProgress(100)
+        setEpisodeData({
+          title: '',
+          description: '',
+          video: null,
         })
-
-        if (!uploadResult.success || !uploadResult.videoUrl) {
-          setUploadStatus('error')
-          setErrorMessage(uploadResult.error || 'Upload failed')
-          return
-        }
-
-        // Create episode record with uploaded video URL
-        const response = await fetch('/api/admin/episodes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title: episodeData.title,
-            description: episodeData.description || '',
-            slug: slug,
-            videoUrl: uploadResult.videoUrl,
-          }),
-        })
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-          setUploadStatus('error')
-          setErrorMessage(error.error || `Failed to create episode: HTTP ${response.status}`)
-          return
-        }
-
-        const result = await response.json()
-        if (result.id) {
-          setUploadStatus('success')
-          setUploadProgress(100)
-          setEpisodeData({
-            title: '',
-            description: '',
-            video: null,
-          })
-          setTimeout(() => {
-            window.location.reload()
-          }, 2000)
-        } else {
-          setUploadStatus('error')
-          setErrorMessage('Failed to create episode')
-        }
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
       } else {
-        // Direct upload for small files
-        const formData = new FormData()
-        formData.append('video', episodeData.video)
-        formData.append('title', episodeData.title)
-        formData.append('description', episodeData.description || '')
-        formData.append('slug', slug)
-        
-        const response = await fetch('/api/admin/episodes', {
-          method: 'POST',
-          body: formData,
-        })
-
-        // Handle 413 error specifically
-        if (response.status === 413) {
-          setUploadStatus('error')
-          setErrorMessage('File too large. Please try again or compress your video.')
-          return
-        }
-
-        let result
-        try {
-          result = await response.json()
-        } catch (parseError) {
-          const text = await response.text()
-          setUploadStatus('error')
-          setErrorMessage(`Upload failed: ${response.status === 413 ? 'File too large (413)' : text || `HTTP ${response.status}`}`)
-          return
-        }
-
-        if (response.ok && result.id) {
-          setUploadStatus('success')
-          setUploadProgress(100)
-          setEpisodeData({
-            title: '',
-            description: '',
-            video: null,
-          })
-          setTimeout(() => {
-            window.location.reload()
-          }, 2000)
-        } else {
-          setUploadStatus('error')
-          setErrorMessage(result.error || `Upload failed (${response.status})`)
-        }
+        setUploadStatus('error')
+        setErrorMessage('Failed to create episode')
       }
     } catch (error) {
       setUploadStatus('error')

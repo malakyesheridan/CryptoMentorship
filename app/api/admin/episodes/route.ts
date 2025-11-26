@@ -3,11 +3,6 @@ import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleError } from '@/lib/errors'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
-import { mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import { sanitizeFilename } from '@/lib/file-validation'
 import { z } from 'zod'
 
 // Configure route for large file uploads
@@ -30,30 +25,12 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireRole(['admin', 'editor'])
     
-    // Check content type to handle both FormData and JSON
-    const contentType = request.headers.get('content-type') || ''
-    
-    let title: string
-    let description: string
-    let slug: string
-    let videoFile: File | null = null
-    let videoUrl: string | null = null
-
-    if (contentType.includes('application/json')) {
-      // JSON request (from chunked upload)
-      const body = await request.json()
-      title = body.title
-      description = body.description || ''
-      slug = body.slug
-      videoUrl = body.videoUrl
-    } else {
-      // FormData request (direct upload for small files)
-      const formData = await request.formData()
-      videoFile = formData.get('video') as File
-      title = formData.get('title') as string
-      description = formData.get('description') as string
-      slug = formData.get('slug') as string
-    }
+    // Expect JSON with videoUrl (uploaded via blob storage)
+    const body = await request.json()
+    const title = body.title
+    const description = body.description || ''
+    const slug = body.slug
+    const videoUrl = body.videoUrl
 
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -69,39 +46,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // If videoFile is provided, upload it (small files only)
-    if (videoFile) {
-      // Validate file size (100MB limit)
-      const maxFileSize = 100 * 1024 * 1024 // 100MB in bytes
-      if (videoFile.size > maxFileSize) {
-        return NextResponse.json(
-          { error: `File too large. Maximum size is 100MB. Your file is ${(videoFile.size / (1024 * 1024)).toFixed(2)}MB` },
-          { status: 400 }
-        )
-      }
-
-      // Ensure upload directory exists
-      const uploadDir = join(process.cwd(), 'uploads', 'episodes')
-      if (!existsSync(uploadDir)) {
-        await mkdir(uploadDir, { recursive: true })
-      }
-
-      // Save video file
-      const safeFilename = sanitizeFilename(videoFile.name)
-      const timestamp = Date.now()
-      const filename = `${timestamp}-${safeFilename}`
-      const filePath = join(uploadDir, filename)
-      
-      const bytes = await videoFile.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      await writeFile(filePath, buffer)
-      
-      videoUrl = `/uploads/episodes/${filename}`
-    }
-
-    if (!videoUrl) {
+    if (!videoUrl || !videoUrl.trim()) {
       return NextResponse.json(
-        { error: 'Video URL is required' },
+        { error: 'Video URL is required. Please upload the video first.' },
         { status: 400 }
       )
     }

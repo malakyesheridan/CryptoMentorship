@@ -76,36 +76,48 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     setErrorMessage('')
 
     try {
-      // Create FormData for file upload
-      const uploadFormData = new FormData()
-      uploadFormData.append('video', formData.video)
-      uploadFormData.append('title', formData.title)
-      uploadFormData.append('description', formData.description || '')
-      uploadFormData.append('trackId', trackId)
+      // Upload video to Vercel Blob Storage first
+      const { uploadToBlob } = await import('@/lib/blob-upload')
       
-      const response = await fetch('/api/admin/learn/lessons/upload', {
-        method: 'POST',
-        body: uploadFormData,
+      const uploadResult = await uploadToBlob({
+        file: formData.video,
+        folder: 'lessons',
+        onProgress: (progress) => {
+          // Progress tracking can be added here if needed
+        }
       })
 
-      // Handle 413 error specifically
-      if (response.status === 413) {
+      if (!uploadResult.success || !uploadResult.url) {
         setUploadStatus('error')
-        setErrorMessage('File too large. The server cannot process files larger than 100MB. Please compress your video or use a smaller file.')
+        setErrorMessage(uploadResult.error || 'Video upload failed')
+        toast.error(uploadResult.error || 'Failed to upload video')
         return
       }
 
-      let result
-      try {
-        result = await response.json()
-      } catch (parseError) {
-        const text = await response.text()
+      // Create lesson record with uploaded video URL
+      const response = await fetch('/api/admin/learn/lessons/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description || '',
+          trackId: trackId,
+          videoUrl: uploadResult.url,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
         setUploadStatus('error')
-        setErrorMessage(`Upload failed: ${response.status === 413 ? 'File too large (413)' : text || `HTTP ${response.status}`}`)
+        setErrorMessage(error.error || `Failed to create lesson: HTTP ${response.status}`)
+        toast.error(error.error || 'Failed to create lesson')
         return
       }
 
-      if (response.ok && result.success) {
+      const result = await response.json()
+      if (result.success) {
         setUploadStatus('success')
         toast.success('Video lesson uploaded successfully!')
         setFormData({
@@ -119,8 +131,8 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
         }, 2000)
       } else {
         setUploadStatus('error')
-        setErrorMessage(result.error || `Upload failed (${response.status})`)
-        toast.error(result.error || 'Failed to upload video lesson')
+        setErrorMessage(result.error || 'Failed to create lesson')
+        toast.error(result.error || 'Failed to create lesson')
       }
     } catch (error) {
       setUploadStatus('error')
