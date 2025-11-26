@@ -39,8 +39,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), 'uploads', 'episodes', 'chunks')
+    // Use /tmp for Vercel serverless (only writable directory)
+    // In production, files are ephemeral but sufficient for chunk assembly
+    const uploadDir = process.env.VERCEL ? '/tmp/uploads/episodes/chunks' : join(process.cwd(), 'uploads', 'episodes', 'chunks')
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true })
     }
@@ -58,11 +59,15 @@ export async function POST(request: NextRequest) {
       const safeFilename = sanitizeFilename(fileName)
       const timestamp = Date.now()
       const finalFileName = `${timestamp}-${safeFilename}`
-      const finalDir = join(process.cwd(), 'uploads', 'episodes')
+      // Use /tmp for Vercel, regular path for local dev
+      const finalDir = process.env.VERCEL ? '/tmp/uploads/episodes' : join(process.cwd(), 'uploads', 'episodes')
       if (!existsSync(finalDir)) {
         await mkdir(finalDir, { recursive: true })
       }
       const finalPath = join(finalDir, finalFileName)
+      
+      // For Vercel, we need to upload to a persistent storage after assembly
+      // For now, we'll store the file data and return it to be saved via the regular upload endpoint
 
       try {
         // Assemble chunks
@@ -83,7 +88,54 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const videoUrl = `/uploads/episodes/${finalFileName}`
+        // Read the assembled file
+        const finalFileData = await readFile(finalPath)
+        
+        // Try to use Vercel Blob Storage if available
+        let videoUrl: string | null = null
+        let needsUpload = false
+        
+        if (process.env.VERCEL && process.env.BLOB_READ_WRITE_TOKEN) {
+          try {
+            const { put } = await import('@vercel/blob')
+            const blob = await put(`episodes/${finalFileName}`, finalFileData, {
+              access: 'public',
+              contentType: 'video/mp4',
+            })
+            videoUrl = blob.url
+          } catch (blobError) {
+            console.error('Vercel Blob upload failed, falling back to base64:', blobError)
+            // Fall back to base64 method
+            needsUpload = true
+          }
+        } else if (process.env.VERCEL) {
+          // No blob storage configured, use base64 method
+          needsUpload = true
+        } else {
+          // Local development - use regular file path
+          videoUrl = `/uploads/episodes/${finalFileName}`
+        }
+        
+        // Clean up temp files
+        try {
+          await unlink(finalPath)
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        
+        if (needsUpload) {
+          // Return base64 data for client to upload
+          const base64Data = finalFileData.toString('base64')
+          return NextResponse.json({
+            success: true,
+            fileName: finalFileName,
+            fileData: base64Data,
+            fileSize: finalFileData.length,
+            mimeType: 'video/mp4',
+            complete: true,
+            needsUpload: true
+          })
+        }
         
         return NextResponse.json({
           success: true,

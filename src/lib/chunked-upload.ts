@@ -60,6 +60,47 @@ export async function uploadFileInChunks({
       if (result.complete) {
         // Last chunk uploaded and file assembled
         onProgress?.(100)
+        
+        // If needsUpload flag is set, we need to upload the assembled file
+        if (result.needsUpload && result.fileData) {
+          // Convert base64 back to File
+          const binaryString = atob(result.fileData)
+          const bytes = new Uint8Array(binaryString.length)
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i)
+          }
+          const blob = new Blob([bytes], { type: result.mimeType || 'video/mp4' })
+          const assembledFile = new File([blob], result.fileName, { type: result.mimeType || 'video/mp4' })
+          
+          // Upload via regular endpoint
+          const uploadFormData = new FormData()
+          uploadFormData.append('video', assembledFile)
+          uploadFormData.append('title', file.name.replace(/\.[^/.]+$/, '')) // Use original filename without extension
+          uploadFormData.append('description', '')
+          uploadFormData.append('slug', file.name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim())
+          
+          const uploadResponse = await fetch('/api/admin/episodes', {
+            method: 'POST',
+            body: uploadFormData,
+          })
+          
+          if (!uploadResponse.ok) {
+            const error = await uploadResponse.json().catch(() => ({ error: `HTTP ${uploadResponse.status}` }))
+            return {
+              success: false,
+              error: error.error || 'Failed to upload assembled file'
+            }
+          }
+          
+          const uploadResult = await uploadResponse.json()
+          return {
+            success: true,
+            videoUrl: uploadResult.videoUrl,
+            fileName: result.fileName
+          }
+        }
+        
+        // Direct file path (local development)
         return {
           success: true,
           videoUrl: result.videoUrl,
