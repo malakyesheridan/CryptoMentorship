@@ -12,7 +12,11 @@ import { toast } from 'sonner'
 import { createTrack } from '@/lib/actions/learning'
 import { useRouter } from 'next/navigation'
 
-export function SimpleTrackUpload() {
+interface SimpleTrackUploadProps {
+  onSuccess?: () => void
+}
+
+export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
   const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
@@ -69,9 +73,16 @@ export function SimpleTrackUpload() {
           summary: '',
           coverUrl: '',
         })
-        setTimeout(() => {
-          window.location.reload()
-        }, 1500)
+        // Call onSuccess callback if provided, otherwise reload
+        if (onSuccess) {
+          setTimeout(() => {
+            onSuccess()
+          }, 500)
+        } else {
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500)
+        }
       } else {
         setUploadStatus('error')
         setErrorMessage('Failed to create track')

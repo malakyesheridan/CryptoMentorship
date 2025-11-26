@@ -4,15 +4,14 @@ import { useState, useMemo } from 'react'
 import { LearningHubTabs } from './LearningHubTabs'
 import { ContentGrid } from './ContentGrid'
 import { TrackEditModal } from './TrackEditModal'
-import { SimpleTrackUpload } from './SimpleTrackUpload'
-import { LessonVideoUpload } from './LessonVideoUpload'
+import { UploadModal } from './UploadModal'
 import { EnhancedStats } from './EnhancedStats'
 import { ProgressTimeline } from './ProgressTimeline'
 import { RealTimeProgress } from './RealTimeProgress'
 import { LearningAnalytics } from './LearningAnalytics'
 import { Suspense } from 'react'
 import { Input } from '@/components/ui/input'
-import { Search, Flame, BarChart3, Award } from 'lucide-react'
+import { Search, Flame, BarChart3, Award, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { BookOpen, Video, Plus } from 'lucide-react'
@@ -94,6 +93,7 @@ export function LearningHubContent({
   const [searchQuery, setSearchQuery] = useState('')
   const [contentFilter, setContentFilter] = useState<'all' | 'courses' | 'resources'>('all')
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
   
   const handleManageTrack = (trackId: string) => {
     window.open(`/admin/learn/tracks/${trackId}`, '_blank')
@@ -190,38 +190,16 @@ export function LearningHubContent({
       {/* Tab Content */}
       {activeTab === 'discover' && (
         <div className="space-y-8">
-          {/* Admin: Create Track */}
+          {/* Admin: Upload Button */}
           {(userRole === 'admin' || userRole === 'editor') && (
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Create New Track</h2>
-              <SimpleTrackUpload />
-            </div>
-          )}
-
-          {/* Admin: Upload Videos to Tracks */}
-          {(userRole === 'admin' || userRole === 'editor') && filteredTracks.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Upload Videos to Tracks</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredTracks.map((track: any) => (
-                  <Card key={track.id} className="border-2 border-slate-200">
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <BookOpen className="h-5 w-5 text-yellow-600" />
-                        {track.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <LessonVideoUpload 
-                        trackId={track.id}
-                        onUploadSuccess={() => {
-                          window.location.reload()
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setUploadModalOpen(true)}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
             </div>
           )}
 
@@ -333,6 +311,23 @@ export function LearningHubContent({
             window.location.reload()
           }}
           onTrackDeleted={() => {
+            window.location.reload()
+          }}
+        />
+      )}
+
+      {/* Upload Modal */}
+      {(userRole === 'admin' || userRole === 'editor') && (
+        <UploadModal
+          open={uploadModalOpen}
+          onOpenChange={setUploadModalOpen}
+          tracks={allTracksForAdmin.map(t => ({ id: t.id, title: t.title }))}
+          onTrackCreated={() => {
+            // Refresh the page to show the new track
+            window.location.reload()
+          }}
+          onVideoUploaded={() => {
+            // Refresh the page to show the new video
             window.location.reload()
           }}
         />
