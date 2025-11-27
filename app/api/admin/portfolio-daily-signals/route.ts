@@ -9,19 +9,19 @@ import { logger } from '@/lib/logger'
 export const dynamic = 'force-dynamic'
 
 const createDailySignalSchema = z.object({
-  tier: z.enum(['T1', 'T2', 'T3']),
+  tier: z.enum(['T1', 'T2']),
   category: z.enum(['majors', 'memecoins']).optional(),
   signal: z.string().min(1).max(500),
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
 }).refine((data) => {
-  // Category is required for T3, optional for T1 and T2
-  if (data.tier === 'T3') {
+  // Category is required for T2 (Elite), optional for T1 (Growth)
+  if (data.tier === 'T2') {
     return data.category === 'majors' || data.category === 'memecoins'
   }
   return true
 }, {
-  message: "Category must be 'majors' or 'memecoins' for T3 tier",
+  message: "Category must be 'majors' or 'memecoins' for T2 (Elite) tier",
   path: ['category']
 })
 

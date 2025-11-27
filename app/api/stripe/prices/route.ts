@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const tiers = ['T1', 'T2', 'T3'] as const
+    // Map old tiers: T2→T1 (Growth), T3→T2 (Elite), T1→removed
+    const tiers = ['T1', 'T2'] as const
     const intervals = ['month', '3month', '6month', 'year'] as const
     const prices: Record<string, Record<string, { amount: number; currency: string; formatted: string }>> = {}
 

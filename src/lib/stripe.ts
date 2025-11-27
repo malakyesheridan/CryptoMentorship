@@ -56,9 +56,13 @@ export function getStripe(): Promise<StripeType | null> {
 
 /**
  * Get Stripe Price ID for a tier and interval
- * @param tier Membership tier (T1, T2, T3)
+ * @param tier Membership tier (T1=Growth, T2=Elite)
  * @param interval Billing interval ('month' | '3month' | '6month' | 'year')
  * @returns Price ID or null if not configured
+ * 
+ * Note: New tier mapping:
+ * - T1 (Growth) → uses old T2 price IDs
+ * - T2 (Elite) → uses old T3 price IDs
  */
 export function getPriceId(tier: string, interval: 'month' | '3month' | '6month' | 'year'): string | null {
   // This function should only be called server-side, but handle client-side gracefully
@@ -71,29 +75,31 @@ export function getPriceId(tier: string, interval: 'month' | '3month' | '6month'
     return null
   }
   
-  // Special handling for T3 tier - price IDs are swapped in Stripe
+  // New T2 (Elite) → uses old T3 price IDs
+  // Special handling - price IDs are swapped in Stripe
   // Monthly ($2,000) is stored as ANNUAL, 3month ($5,750) as MONTHLY, 6month ($10,500) as 3MONTH, Annual ($20,000) as 6MONTH
-  if (tier === 'T3') {
-    const t3Mapping: Record<string, string> = {
+  if (tier === 'T2') {
+    const t2Mapping: Record<string, string> = {
       'month': 'STRIPE_PRICE_T3_ANNUAL',    // $2,000 monthly -> uses ANNUAL price ID
       '3month': 'STRIPE_PRICE_T3_MONTHLY',  // $5,750 3-month -> uses MONTHLY price ID
       '6month': 'STRIPE_PRICE_T3_3MONTH',   // $10,500 6-month -> uses 3MONTH price ID
       'year': 'STRIPE_PRICE_T3_6MONTH',     // $20,000 annual -> uses 6MONTH price ID
     }
-    const key = t3Mapping[interval] as keyof typeof serverEnv
+    const key = t2Mapping[interval] as keyof typeof serverEnv
     const priceId = serverEnv[key]
     return typeof priceId === 'string' && priceId.length > 0 ? priceId : null
   }
   
-  // Special handling for T2 tier - swap 3month and 6month price IDs
-  if (tier === 'T2') {
-    const t2Mapping: Record<string, string> = {
+  // New T1 (Growth) → uses old T2 price IDs
+  // Special handling - swap 3month and 6month price IDs
+  if (tier === 'T1') {
+    const t1Mapping: Record<string, string> = {
       'month': 'STRIPE_PRICE_T2_MONTHLY',
       '3month': 'STRIPE_PRICE_T2_6MONTH',   // 3-month uses 6-month price ID
       '6month': 'STRIPE_PRICE_T2_3MONTH',   // 6-month uses 3-month price ID
       'year': 'STRIPE_PRICE_T2_ANNUAL',
     }
-    const key = t2Mapping[interval] as keyof typeof serverEnv
+    const key = t1Mapping[interval] as keyof typeof serverEnv
     const priceId = serverEnv[key]
     return typeof priceId === 'string' && priceId.length > 0 ? priceId : null
   }
@@ -118,7 +124,11 @@ export function getPriceId(tier: string, interval: 'month' | '3month' | '6month'
 /**
  * Get tier from Stripe Price ID (reverse lookup)
  * @param priceId Stripe Price ID
- * @returns Tier (T1, T2, T3) or null if not found
+ * @returns Tier (T1=Growth, T2=Elite) or null if not found
+ * 
+ * Note: Maps old Stripe price IDs to new tiers:
+ * - Old T2 price IDs → new T1 (Growth)
+ * - Old T3 price IDs → new T2 (Elite)
  */
 export function getTierFromPriceId(priceId: string): string | null {
   // This function should only be called server-side
@@ -131,15 +141,31 @@ export function getTierFromPriceId(priceId: string): string | null {
     return null
   }
   
-  const tiers = ['T1', 'T2', 'T3'] as const
-  const intervals = ['MONTHLY', '3MONTH', '6MONTH', 'ANNUAL'] as const
+  // Check old T3 price IDs first (maps to new T2/Elite)
+  const t3Intervals = ['MONTHLY', '3MONTH', '6MONTH', 'ANNUAL'] as const
+  for (const interval of t3Intervals) {
+    const key = `STRIPE_PRICE_T3_${interval}` as keyof typeof serverEnv
+    if (serverEnv[key] === priceId) {
+      return 'T2' // Old T3 → new T2 (Elite)
+    }
+  }
   
-  for (const tier of tiers) {
-    for (const interval of intervals) {
-      const key = `STRIPE_PRICE_${tier}_${interval}` as keyof typeof serverEnv
-      if (serverEnv[key] === priceId) {
-        return tier
-      }
+  // Check old T2 price IDs (maps to new T1/Growth)
+  const t2Intervals = ['MONTHLY', '3MONTH', '6MONTH', 'ANNUAL'] as const
+  for (const interval of t2Intervals) {
+    const key = `STRIPE_PRICE_T2_${interval}` as keyof typeof serverEnv
+    if (serverEnv[key] === priceId) {
+      return 'T1' // Old T2 → new T1 (Growth)
+    }
+  }
+  
+  // Check old T1 price IDs (should not exist, but handle gracefully)
+  const t1Intervals = ['MONTHLY', '3MONTH', '6MONTH', 'ANNUAL'] as const
+  for (const interval of t1Intervals) {
+    const key = `STRIPE_PRICE_T1_${interval}` as keyof typeof serverEnv
+    if (serverEnv[key] === priceId) {
+      // Old T1 is removed, but return null to deny access
+      return null
     }
   }
   

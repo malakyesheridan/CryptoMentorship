@@ -17,7 +17,7 @@ interface CreateTrialModalProps {
 }
 
 export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClose }: CreateTrialModalProps) {
-  const [tier, setTier] = useState<'T1' | 'T2' | 'T3'>('T3') // Default to T3 for all trial accounts
+  const [tier, setTier] = useState<'T1' | 'T2'>('T2') // Default to T2 (Elite) for all trial accounts
   const [durationDays, setDurationDays] = useState(30)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -72,12 +72,11 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
               <select
                 id="tier"
                 value={tier}
-                onChange={(e) => setTier(e.target.value as 'T1' | 'T2' | 'T3')}
+                onChange={(e) => setTier(e.target.value as 'T1' | 'T2')}
                 className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="T1">T1 - Foundation</option>
-                <option value="T2">T2 - Growth</option>
-                <option value="T3">T3 - Elite</option>
+                <option value="T1">Growth</option>
+                <option value="T2">Elite</option>
               </select>
             </div>
             

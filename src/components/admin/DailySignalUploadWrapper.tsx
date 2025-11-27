@@ -11,7 +11,7 @@ interface DailySignalUploadWrapperProps {
   userRole?: string
   editingSignal?: {
     id: string
-    tier: 'T1' | 'T2' | 'T3'
+    tier: 'T1' | 'T2'
     category?: 'majors' | 'memecoins' | null
     signal: string
     executiveSummary?: string | null
@@ -20,12 +20,11 @@ interface DailySignalUploadWrapperProps {
   onEditComplete?: () => void
 }
 
-type Tier = 'T1' | 'T2' | 'T3'
+type Tier = 'T1' | 'T2'
 
 const tierLabels: Record<Tier, string> = {
-  T1: 'T1 - Basic Tier',
-  T2: 'T2 - Premium Tier',
-  T3: 'T3 - Elite Tier',
+  T1: 'Growth',
+  T2: 'Elite',
 }
 
 type Category = 'majors' | 'memecoins'
@@ -41,7 +40,7 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
 
   // Reset category when tier changes
   useEffect(() => {
-    if (activeTier !== 'T3') {
+    if (activeTier !== 'T2') {
       setActiveCategory('majors')
     }
   }, [activeTier])
@@ -49,8 +48,18 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
   // When editing signal is provided, set the active tier/category and scroll to form
   useEffect(() => {
     if (editingSignal) {
-      setActiveTier(editingSignal.tier)
-      if (editingSignal.tier === 'T3' && editingSignal.category) {
+      // Map old tiers to new tiers
+      let mappedTier: Tier = 'T1'
+      if (editingSignal.tier === 'T3') {
+        mappedTier = 'T2' // Old T3 → new T2 (Elite)
+      } else if (editingSignal.tier === 'T2' && editingSignal.category) {
+        mappedTier = 'T2' // Old T3 (with category) might be stored as T2
+      } else if (editingSignal.tier === 'T2') {
+        mappedTier = 'T1' // Old T2 → new T1 (Growth)
+      }
+      
+      setActiveTier(mappedTier)
+      if (mappedTier === 'T2' && editingSignal.category) {
         setActiveCategory(editingSignal.category)
       }
       // Scroll to upload section
@@ -87,7 +96,7 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
         {/* Tier Tab Navigation */}
         <div className="flex justify-center mb-6">
           <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
-            {(['T1', 'T2', 'T3'] as Tier[]).map((tier) => (
+            {(['T1', 'T2'] as Tier[]).map((tier) => (
               <Button
                 key={tier}
                 variant={activeTier === tier ? 'default' : 'ghost'}
@@ -105,8 +114,8 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
           </div>
         </div>
 
-        {/* Category Tab Navigation (only for T3) */}
-        {activeTier === 'T3' && (
+        {/* Category Tab Navigation (only for T2/Elite) */}
+        {activeTier === 'T2' && (
           <div className="flex justify-center mb-6">
             <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
               {(['majors', 'memecoins'] as Category[]).map((category) => (
@@ -131,10 +140,13 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
         {/* Active Tab Content */}
         <DailySignalUpload 
           tier={activeTier} 
-          category={activeTier === 'T3' ? activeCategory : undefined}
+          category={activeTier === 'T2' ? activeCategory : undefined}
           userRole={userRole}
-          existingSignal={editingSignal && editingSignal.tier === activeTier && 
-            (editingSignal.tier !== 'T3' || editingSignal.category === activeCategory)
+          existingSignal={editingSignal && 
+            ((editingSignal.tier === 'T2' && activeTier === 'T2' && (!editingSignal.category || editingSignal.category === activeCategory)) ||
+             (editingSignal.tier === 'T3' && activeTier === 'T2' && editingSignal.category === activeCategory) ||
+             (editingSignal.tier === 'T2' && activeTier === 'T1' && !editingSignal.category) ||
+             (editingSignal.tier === 'T1' && activeTier === 'T1'))
             ? {
                 id: editingSignal.id,
                 signal: editingSignal.signal,

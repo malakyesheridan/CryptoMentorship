@@ -109,9 +109,23 @@ export async function canAccessTier(userId: string, requiredTier: string): Promi
     }
     
     // Check tier access
-    const tierHierarchy = ['T1', 'T2', 'T3']
-    const userTierIndex = tierHierarchy.indexOf(membership.tier)
-    const requiredTierIndex = tierHierarchy.indexOf(requiredTier)
+    // Map old tiers to new: T1→removed, T2→T1, T3→T2
+    const mapTier = (tier: string): string => {
+      if (tier === 'T3') return 'T2' // Old T3 → new T2 (Elite)
+      if (tier === 'T2') return 'T1' // Old T2 → new T1 (Growth)
+      if (tier === 'T1') return '' // Old T1 → removed (no access)
+      return tier
+    }
+    
+    const mappedUserTier = mapTier(membership.tier)
+    const mappedRequiredTier = mapTier(requiredTier)
+    
+    // Old T1 users have no access
+    if (!mappedUserTier) return false
+    
+    const tierHierarchy = ['T1', 'T2']
+    const userTierIndex = tierHierarchy.indexOf(mappedUserTier)
+    const requiredTierIndex = tierHierarchy.indexOf(mappedRequiredTier)
     
     // If tier not found in hierarchy, deny access
     if (userTierIndex === -1 || requiredTierIndex === -1) {

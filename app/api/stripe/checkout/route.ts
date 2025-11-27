@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { logger } from '@/lib/logger'
 
 const checkoutSchema = z.object({
-  tier: z.enum(['T1', 'T2', 'T3']),
+  tier: z.enum(['T1', 'T2']),
   interval: z.enum(['month', '3month', '6month', 'year']),
   successUrl: z.string().url(),
   cancelUrl: z.string().url(),
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         update: { stripeCustomerId: customer.id },
         create: {
           userId: user.id,
-          tier: 'T3', // Default tier for trials, will be updated by webhook if different
+          tier: 'T2', // Default tier for trials, will be updated by webhook if different
           status: 'trial',
           stripeCustomerId: customer.id,
         },

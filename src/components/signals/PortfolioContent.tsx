@@ -9,7 +9,7 @@ import Link from 'next/link'
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2' | 'T3'
+  tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
   executiveSummary?: string | null
@@ -46,18 +46,17 @@ function SignalsByTier({
   })
   
   // Group signals by tier
+  // Map old tiers: T2→T1, T3→T2, T1→removed
   const signalsByTier = {
     all: filteredSignals.filter((s: any) => !s.minTier),
-    T1: filteredSignals.filter((s: any) => s.minTier === 'T1'),
-    T2: filteredSignals.filter((s: any) => s.minTier === 'T2'),
-    T3: filteredSignals.filter((s: any) => s.minTier === 'T3'),
+    T1: filteredSignals.filter((s: any) => s.minTier === 'T1' || s.minTier === 'T2'),
+    T2: filteredSignals.filter((s: any) => s.minTier === 'T2' || s.minTier === 'T3'),
   }
   
   const tierLabels: Record<string, string> = {
     all: 'All Members',
-    T1: 'T1 - Basic Tier',
-    T2: 'T2 - Premium Tier',
-    T3: 'T3 - Elite Tier',
+    T1: 'Growth',
+    T2: 'Elite',
   }
   
   const tiersWithSignals = Object.entries(signalsByTier).filter(([_, tierSignals]) => tierSignals.length > 0)

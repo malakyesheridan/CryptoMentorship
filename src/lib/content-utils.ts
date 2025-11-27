@@ -5,7 +5,16 @@
 
 import { formatDate } from './dates'
 
-export type MembershipTier = 'T1' | 'T2' | 'T3'
+export type MembershipTier = 'T1' | 'T2'
+
+// Map old tiers to new tiers
+function mapTier(tier: string | null): string | null {
+  if (!tier) return null
+  if (tier === 'T3') return 'T2' // Old T3 → new T2 (Elite)
+  if (tier === 'T2') return 'T1' // Old T2 → new T1 (Growth)
+  if (tier === 'T1') return null // Old T1 → removed (no access)
+  return tier
+}
 
 export function canViewContent(userRole: string, userTier: string | null, contentMinTier: string | null, contentLocked: boolean): boolean {
   // Admins can view everything
@@ -15,9 +24,16 @@ export function canViewContent(userRole: string, userTier: string | null, conten
   if (contentLocked && contentMinTier) {
     if (!userTier) return false
     
-    const tierOrder = { 'T1': 1, 'T2': 2, 'T3': 3 }
-    const userTierLevel = tierOrder[userTier as MembershipTier] || 0
-    const requiredTierLevel = tierOrder[contentMinTier as MembershipTier] || 0
+    // Map both tiers to new structure
+    const mappedUserTier = mapTier(userTier)
+    const mappedContentTier = mapTier(contentMinTier)
+    
+    // Old T1 users have no access
+    if (!mappedUserTier) return false
+    
+    const tierOrder = { 'T1': 1, 'T2': 2 }
+    const userTierLevel = tierOrder[mappedUserTier as MembershipTier] || 0
+    const requiredTierLevel = tierOrder[mappedContentTier as MembershipTier] || 0
     
     return userTierLevel >= requiredTierLevel
   }

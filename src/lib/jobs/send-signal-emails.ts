@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger'
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2' | 'T3'
+  tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
   executiveSummary?: string | null
@@ -61,11 +61,62 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       orderBy: { publishedAt: 'desc' },
     })
 
+    // For T2 (Elite), also get the most recent memecoin and majors signals (even if from different days)
+    // This ensures T2 users always get both updates when available
+    const t2MajorsSignal = await prisma.portfolioDailySignal.findFirst({
+      where: {
+        tier: 'T2',
+        category: 'majors',
+      },
+      orderBy: { publishedAt: 'desc' },
+    })
+    
+    const t2MemecoinsSignal = await prisma.portfolioDailySignal.findFirst({
+      where: {
+        tier: 'T2',
+        category: 'memecoins',
+      },
+      orderBy: { publishedAt: 'desc' },
+    })
+
     // Group updates by tier
+    // Note: Old T2 becomes T1, old T3 becomes T2
     const signalsByTier = {
-      T1: allTierSignals.filter(s => s.tier === 'T1' && !s.category),
-      T2: allTierSignals.filter(s => s.tier === 'T2' && !s.category),
-      T3: allTierSignals.filter(s => s.tier === 'T3'),
+      T1: allTierSignals.filter(s => (s.tier === 'T1' || s.tier === 'T2') && !s.category),
+      T2: allTierSignals.filter(s => s.tier === 'T2' || s.tier === 'T3'),
+    }
+    
+    // Add the most recent T2 (Elite) signals if they exist (even if not from today)
+    // This ensures T2 users get both majors and memecoins in one email
+    if (t2MajorsSignal && !signalsByTier.T2.find(s => s.id === t2MajorsSignal.id)) {
+      signalsByTier.T2.push(t2MajorsSignal)
+    }
+    if (t2MemecoinsSignal && !signalsByTier.T2.find(s => s.id === t2MemecoinsSignal.id)) {
+      signalsByTier.T2.push(t2MemecoinsSignal)
+    }
+    
+    // Also check for old T3 signals and map them to T2
+    const oldT3MajorsSignal = await prisma.portfolioDailySignal.findFirst({
+      where: {
+        tier: 'T3',
+        category: 'majors',
+      },
+      orderBy: { publishedAt: 'desc' },
+    })
+    
+    const oldT3MemecoinsSignal = await prisma.portfolioDailySignal.findFirst({
+      where: {
+        tier: 'T3',
+        category: 'memecoins',
+      },
+      orderBy: { publishedAt: 'desc' },
+    })
+    
+    if (oldT3MajorsSignal && !signalsByTier.T2.find(s => s.id === oldT3MajorsSignal.id)) {
+      signalsByTier.T2.push(oldT3MajorsSignal)
+    }
+    if (oldT3MemecoinsSignal && !signalsByTier.T2.find(s => s.id === oldT3MemecoinsSignal.id)) {
+      signalsByTier.T2.push(oldT3MemecoinsSignal)
     }
 
     // Filter users by email preferences (we'll check tier access when sending)
@@ -100,27 +151,50 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     for (const user of eligibleUsers) {
       try {
         const membership = user.memberships[0]
-        const userTier = membership.tier as 'T1' | 'T2' | 'T3'
+        const rawUserTier = membership.tier as 'T1' | 'T2' | 'T3'
+        
+        // Map old tiers to new tiers:
+        // Old T1 → removed (no access)
+        // Old T2 → new T1 (Growth)
+        // Old T3 → new T2 (Elite)
+        let userTier: 'T1' | 'T2' = 'T1'
+        if (rawUserTier === 'T3') {
+          userTier = 'T2' // Old T3 → new T2 (Elite)
+        } else if (rawUserTier === 'T2') {
+          userTier = 'T1' // Old T2 → new T1 (Growth)
+        }
+        // Old T1 users get no access (filtered out earlier)
 
         // Get updates for this user's tier (their highest accessible tier)
         let signalsToSend: DailySignal[] = []
 
-        if (userTier === 'T3') {
-          // T3 users get both majors and memecoins updates
-          const t3Signals = signalsByTier.T3
-          const majorsSignal = t3Signals.find(s => s.category === 'majors')
-          const memecoinsSignal = t3Signals.find(s => s.category === 'memecoins')
-          
-          if (majorsSignal) signalsToSend.push(majorsSignal as DailySignal)
-          if (memecoinsSignal) signalsToSend.push(memecoinsSignal as DailySignal)
-        } else if (userTier === 'T2') {
-          // T2 users get T2 update only
+        if (userTier === 'T2') {
+          // T2 (Elite) users get both majors and memecoins updates
           const t2Signals = signalsByTier.T2
-          if (t2Signals.length > 0) {
-            signalsToSend.push(t2Signals[0] as DailySignal) // Most recent
+          const majorsSignal = t2Signals.find(s => s.category === 'majors')
+          const memecoinsSignal = t2Signals.find(s => s.category === 'memecoins')
+          
+          // Always add majors first (Market Rotation), then memecoins
+          // This ensures proper ordering in the email: Market Rotation on top, Memecoins below
+          if (majorsSignal) {
+            signalsToSend.push(majorsSignal as DailySignal)
+          }
+          if (memecoinsSignal) {
+            signalsToSend.push(memecoinsSignal as DailySignal)
+          }
+          
+          // Log for debugging
+          if (signalsToSend.length > 0) {
+            logger.info('T2 (Elite) signals prepared for email', {
+              userId: user.id,
+              majorsFound: !!majorsSignal,
+              memecoinsFound: !!memecoinsSignal,
+              signalsToSendCount: signalsToSend.length,
+              signalCategories: signalsToSend.map(s => s.category || 'none')
+            })
           }
         } else if (userTier === 'T1') {
-          // T1 users get T1 update only
+          // T1 (Growth) users get T1 update only
           const t1Signals = signalsByTier.T1
           if (t1Signals.length > 0) {
             signalsToSend.push(t1Signals[0] as DailySignal) // Most recent

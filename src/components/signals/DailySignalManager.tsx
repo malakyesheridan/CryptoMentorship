@@ -6,7 +6,7 @@ import AdminSignalUploadWrapper from '@/components/AdminSignalUploadWrapper'
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2' | 'T3'
+  tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
   executiveSummary?: string | null

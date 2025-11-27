@@ -41,20 +41,35 @@ export async function GET(request: NextRequest) {
     const signalsMap = new Map<string, typeof allSignals[0]>()
     
     for (const signal of allSignals) {
-      // Create a unique key: tier + category (or just tier for T1/T2)
-      const key = signal.tier === 'T3' && signal.category 
-        ? `${signal.tier}-${signal.category}` 
-        : signal.tier
+      // Map old tiers to new tiers for display
+      let displayTier = signal.tier
+      if (signal.tier === 'T2' && !signal.category) {
+        // Old T2 (no category) → new T1 (Growth)
+        displayTier = 'T1'
+      } else if (signal.tier === 'T3') {
+        // Old T3 → new T2 (Elite)
+        displayTier = 'T2'
+      } else if (signal.tier === 'T1') {
+        // Old T1 → skip (removed)
+        continue
+      }
+      
+      // Create a unique key: tier + category (or just tier for T1)
+      const key = displayTier === 'T2' && signal.category 
+        ? `${displayTier}-${signal.category}` 
+        : displayTier
       
       // Only keep the first (most recent) update for each key
       if (!signalsMap.has(key)) {
-        signalsMap.set(key, signal)
+        // Create a new signal object with mapped tier
+        const mappedSignal = { ...signal, tier: displayTier }
+        signalsMap.set(key, mappedSignal)
       }
     }
 
     // Convert map back to array and sort by tier
     const signals = Array.from(signalsMap.values()).sort((a, b) => {
-      const tierOrder = { 'T1': 1, 'T2': 2, 'T3': 3 }
+      const tierOrder = { 'T1': 1, 'T2': 2 }
       return (tierOrder[a.tier as keyof typeof tierOrder] || 99) - (tierOrder[b.tier as keyof typeof tierOrder] || 99)
     })
 

@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2' | 'T3'
+  tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
   executiveSummary?: string | null
@@ -27,18 +27,16 @@ interface DailySignalDisplayProps {
   userRole?: string
 }
 
-type Tier = 'T1' | 'T2' | 'T3'
+type Tier = 'T1' | 'T2'
 
 const tierLabels: Record<Tier, string> = {
-  T1: 'T1 - Basic Tier',
-  T2: 'T2 - Premium Tier',
-  T3: 'T3 - Elite Tier',
+  T1: 'Growth',
+  T2: 'Elite',
 }
 
 const tierColors: Record<Tier, string> = {
-  T1: 'bg-blue-50 border-blue-200',
-  T2: 'bg-purple-50 border-purple-200',
-  T3: 'bg-yellow-50 border-yellow-200',
+  T1: 'bg-purple-50 border-purple-200',
+  T2: 'bg-yellow-50 border-yellow-200',
 }
 
 // Check if user can access a tier
@@ -48,7 +46,7 @@ function canAccessTier(userTier: string | null, signalTier: Tier, isActive: bool
   
   if (!userTier || !isActive) return false
   
-  const tierHierarchy: Tier[] = ['T1', 'T2', 'T3']
+  const tierHierarchy: Tier[] = ['T1', 'T2']
   const userTierIndex = tierHierarchy.indexOf(userTier as Tier)
   const signalTierIndex = tierHierarchy.indexOf(signalTier)
   
@@ -82,13 +80,12 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     }
   )
 
-  // Group signals by tier (and category for T3)
+  // Group signals by tier (and category for T2/Elite)
   const signalsByTier = useMemo(() => {
     const signals = data?.signals || []
     const grouped: Record<Tier, DailySignal[]> = {
       T1: [],
-      T2: [],
-      T3: []
+      T2: []
     }
     
     signals.forEach(signal => {
@@ -100,18 +97,18 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     return grouped
   }, [data?.signals])
 
-  // Group T3 signals by category
-  const t3SignalsByCategory = useMemo(() => {
-    const t3Signals = signalsByTier.T3
+  // Group T2 (Elite) signals by category
+  const t2SignalsByCategory = useMemo(() => {
+    const t2Signals = signalsByTier.T2
     return {
-      majors: t3Signals.find(s => s.category === 'majors') || null,
-      memecoins: t3Signals.find(s => s.category === 'memecoins') || null,
+      majors: t2Signals.find(s => s.category === 'majors') || null,
+      memecoins: t2Signals.find(s => s.category === 'memecoins') || null,
     }
-  }, [signalsByTier.T3])
+  }, [signalsByTier.T2])
 
-  // Reset category when tier changes away from T3
+  // Reset category when tier changes away from T2
   useEffect(() => {
-    if (activeTier !== 'T3') {
+    if (activeTier !== 'T2') {
       setActiveCategory('majors')
     }
   }, [activeTier])
@@ -119,7 +116,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   // Set initial active tier to first available tier
   useEffect(() => {
     if (!activeTier && data?.signals) {
-      const tiers: Tier[] = ['T1', 'T2', 'T3']
+      const tiers: Tier[] = ['T1', 'T2']
       const firstTierWithSignal = tiers.find(tier => signalsByTier[tier].length > 0)
       if (firstTierWithSignal) {
         setActiveTier(firstTierWithSignal)
@@ -168,13 +165,13 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     )
   }
 
-  const tiers: Tier[] = ['T1', 'T2', 'T3']
+  const tiers: Tier[] = ['T1', 'T2']
   
   // Get current signal based on active tier and category
   const getCurrentSignal = (): DailySignal | null => {
     if (!activeTier) return null
-    if (activeTier === 'T3') {
-      return t3SignalsByCategory[activeCategory]
+    if (activeTier === 'T2') {
+      return t2SignalsByCategory[activeCategory]
     }
     return signalsByTier[activeTier]?.[0] || null
   }
@@ -218,14 +215,14 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
           </div>
         </div>
 
-        {/* Category Tab Navigation (only for T3) */}
-        {activeTier === 'T3' && (
+        {/* Category Tab Navigation (only for T2/Elite) */}
+        {activeTier === 'T2' && (
           <div className="flex justify-center mb-6">
             <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
               {(['majors', 'memecoins'] as Category[]).map((category) => {
-                const hasSignal = !!t3SignalsByCategory[category]
-                const signal = t3SignalsByCategory[category]
-                const canAccess = signal ? canAccessTier(effectiveUserTier, 'T3', isActive, userRole) : false
+                const hasSignal = !!t2SignalsByCategory[category]
+                const signal = t2SignalsByCategory[category]
+                const canAccess = signal ? canAccessTier(effectiveUserTier, 'T2', isActive, userRole) : false
                 const isLocked = hasSignal && !canAccess
                 
                 return (

@@ -11,7 +11,7 @@ import { json } from '@/lib/http'
 import { toast } from 'sonner'
 
 interface DailySignalUploadProps {
-  tier: 'T1' | 'T2' | 'T3'
+  tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins'
   userRole?: string
   existingSignal?: {
@@ -24,9 +24,8 @@ interface DailySignalUploadProps {
 }
 
 const tierLabels = {
-  T1: 'T1 - Basic Tier',
-  T2: 'T2 - Premium Tier',
-  T3: 'T3 - Elite Tier',
+  T1: 'Growth',
+  T2: 'Elite',
 }
 
 export default function DailySignalUpload({ tier, category, userRole, existingSignal, onEditComplete }: DailySignalUploadProps) {
@@ -107,7 +106,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         // Create new signal
         const requestBody = {
           tier,
-          ...(tier === 'T3' && category ? { category } : {}),
+          ...(tier === 'T2' && category ? { category } : {}),
           signal: processedSignal,
           executiveSummary: formData.executiveSummary.trim() || undefined,
           associatedData: formData.associatedData.trim() || undefined,

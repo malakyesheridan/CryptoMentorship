@@ -16,7 +16,7 @@ function escapeHtml(text: string | null | undefined): string {
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2' | 'T3'
+  tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
   executiveSummary?: string | null
@@ -24,16 +24,14 @@ interface DailySignal {
   publishedAt: Date | string
 }
 
-const tierLabels: Record<'T1' | 'T2' | 'T3', string> = {
-  T1: 'T1 - Basic Tier',
-  T2: 'T2 - Premium Tier',
-  T3: 'T3 - Elite Tier',
+const tierLabels: Record<'T1' | 'T2', string> = {
+  T1: 'Growth',
+  T2: 'Elite',
 }
 
-const tierColors: Record<'T1' | 'T2' | 'T3', { bg: string; border: string; text: string }> = {
-  T1: { bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF' }, // blue-50, blue-200, blue-800
-  T2: { bg: '#FAF5FF', border: '#E9D5FF', text: '#6B21A8' }, // purple-50, purple-200, purple-800
-  T3: { bg: '#FEFCE8', border: '#FEF08A', text: '#854D0E' }, // yellow-50, yellow-200, yellow-800
+const tierColors: Record<'T1' | 'T2', { bg: string; border: string; text: string }> = {
+  T1: { bg: '#FAF5FF', border: '#E9D5FF', text: '#6B21A8' }, // purple-50, purple-200, purple-800 (old T2)
+  T2: { bg: '#FEFCE8', border: '#FEF08A', text: '#854D0E' }, // yellow-50, yellow-200, yellow-800 (old T3)
 }
 
 /**

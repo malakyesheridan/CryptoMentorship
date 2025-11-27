@@ -236,7 +236,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   const isInitial = invoice.billing_reason === 'subscription_create'
   
   // Get tier from membership (default to T1 if not set)
-  const tier = (membership.tier as 'T1' | 'T2' | 'T3') || 'T1'
+  const tier = (membership.tier as 'T1' | 'T2') || 'T1'
   
   // Create payment record
   const payment = await prisma.payment.create({
