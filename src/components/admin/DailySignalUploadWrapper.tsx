@@ -11,7 +11,7 @@ interface DailySignalUploadWrapperProps {
   userRole?: string
   editingSignal?: {
     id: string
-    tier: 'T1' | 'T2'
+    tier: 'T1' | 'T2' | 'T3' // Allow T3 for backward compatibility with existing data
     category?: 'majors' | 'memecoins' | null
     signal: string
     executiveSummary?: string | null
