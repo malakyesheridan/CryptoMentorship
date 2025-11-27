@@ -147,17 +147,22 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
       if (result.success) {
         setUploadStatus('success')
         setUploadProgress(100)
-        toast.success('Video lesson uploaded successfully!')
         setFormData({
           title: '',
           description: '',
           video: null,
           duration: null,
         })
-        // Defer callback to avoid state updates during render
-        setTimeout(() => {
-          onUploadSuccess?.()
-        }, 0)
+        // Call callback after state updates are complete
+        if (onUploadSuccess) {
+          // Use requestAnimationFrame to ensure this runs after React's render cycle
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              onUploadSuccess()
+            }, 0)
+          })
+        }
+        toast.success('Video lesson uploaded successfully!')
         setTimeout(() => {
           setUploadStatus('idle')
           setUploadProgress(0)

@@ -57,6 +57,7 @@ export function TrackEditModal({
     publishedAt: '',
   })
   const [trackData, setTrackData] = useState<any>(null)
+  const [shouldRefreshTrack, setShouldRefreshTrack] = useState(false)
 
   const fetchTrack = useCallback(async () => {
     if (!trackId) return
@@ -91,6 +92,15 @@ export function TrackEditModal({
       fetchTrack()
     }
   }, [open, trackId, fetchTrack])
+
+  // Handle track refresh after video upload
+  useEffect(() => {
+    if (shouldRefreshTrack) {
+      setShouldRefreshTrack(false)
+      fetchTrack()
+      toast.success('Video lesson uploaded!')
+    }
+  }, [shouldRefreshTrack, fetchTrack])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -295,11 +305,8 @@ export function TrackEditModal({
                 <LessonVideoUpload 
                   trackId={trackId} 
                   onUploadSuccess={() => {
-                    // Use setTimeout to avoid state updates during render
-                    setTimeout(() => {
-                      fetchTrack()
-                      toast.success('Video lesson uploaded!')
-                    }, 0)
+                    // Set flag to trigger refresh in useEffect (avoids state updates during render)
+                    setShouldRefreshTrack(true)
                   }}
                 />
               </div>
