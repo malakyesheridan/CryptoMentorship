@@ -36,6 +36,13 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
   
   // All episodes are accessible to everyone
   const canView = true
+
+  // Debug: Log video URL for troubleshooting
+  if (episode.videoUrl) {
+    console.log('[Episode Page] Video URL:', episode.videoUrl.substring(0, 100))
+  } else {
+    console.warn('[Episode Page] No video URL found for episode:', episode.slug)
+  }
   
   // Process MDX content
   const mdx = episode.body ? await renderMDX(episode.slug, episode.body) : null

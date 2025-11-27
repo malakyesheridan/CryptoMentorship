@@ -116,9 +116,9 @@ export async function getEpisodes(filters: { locked?: boolean } = {}) {
   })
 }
 
-export async function getEpisodeById(id: string) {
+export async function getEpisodeById(slug: string) {
   return await prisma.episode.findUnique({
-    where: { id }
+    where: { slug }
   })
 }
 

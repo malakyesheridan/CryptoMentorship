@@ -32,6 +32,7 @@ export default function VideoPlayer({
   const [showControls, setShowControls] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Format time helper
   const formatTime = (time: number) => {
@@ -162,6 +163,36 @@ export default function VideoPlayer({
       setIsMuted(video.muted)
     }
 
+    const handleError = () => {
+      console.error('Video playback error:', {
+        error: video.error,
+        code: video.error?.code,
+        message: video.error?.message,
+        src: video.src
+      })
+      setIsLoading(false)
+      if (video.error) {
+        switch (video.error.code) {
+          case video.error.MEDIA_ERR_ABORTED:
+            setError('Video loading was aborted')
+            break
+          case video.error.MEDIA_ERR_NETWORK:
+            setError('Network error while loading video')
+            break
+          case video.error.MEDIA_ERR_DECODE:
+            setError('Video decoding error')
+            break
+          case video.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            setError('Video format not supported or file not found')
+            break
+          default:
+            setError('Video failed to load. Please check the video URL.')
+        }
+      } else {
+        setError('Video failed to load. Please check the video URL.')
+      }
+    }
+
     video.addEventListener('loadstart', handleLoadStart)
     video.addEventListener('loadedmetadata', handleLoadedMetadata)
     video.addEventListener('canplay', handleCanPlay)
@@ -171,6 +202,7 @@ export default function VideoPlayer({
     video.addEventListener('timeupdate', handleTimeUpdate)
     video.addEventListener('ended', handleEnded)
     video.addEventListener('volumechange', handleVolumeChange)
+    video.addEventListener('error', handleError)
 
     return () => {
       video.removeEventListener('loadstart', handleLoadStart)
@@ -182,6 +214,7 @@ export default function VideoPlayer({
       video.removeEventListener('timeupdate', handleTimeUpdate)
       video.removeEventListener('ended', handleEnded)
       video.removeEventListener('volumechange', handleVolumeChange)
+      video.removeEventListener('error', handleError)
     }
   }, [onTimeUpdate, onEnded])
 
@@ -278,8 +311,28 @@ export default function VideoPlayer({
         className="w-full h-full"
       />
 
+      {/* Error Overlay */}
+      {error && (
+        <div className="absolute inset-0 bg-black/90 flex items-center justify-center backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4 text-center px-4">
+            <div className="w-12 h-12 border-2 border-red-500 rounded-full flex items-center justify-center">
+              <span className="text-red-500 text-2xl">!</span>
+            </div>
+            <div>
+              <p className="text-white font-medium text-lg mb-2">Video Error</p>
+              <p className="text-white/80 text-sm">{error}</p>
+              {src && (
+                <p className="text-white/60 text-xs mt-2 break-all max-w-md">
+                  URL: {src.substring(0, 100)}...
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading Overlay */}
-      {isLoading && !hasStartedPlaying && (
+      {!error && isLoading && !hasStartedPlaying && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center backdrop-blur-sm">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-12 h-12 border-3 border-white/30 border-t-white rounded-full animate-spin" />
