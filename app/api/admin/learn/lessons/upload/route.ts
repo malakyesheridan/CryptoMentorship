@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     const description = body.description || ''
     const trackId = body.trackId
     const videoUrl = body.videoUrl
+    const durationSeconds = body.duration ? parseInt(body.duration) : null
+    const durationMin = durationSeconds ? Math.round(durationSeconds / 60) : null
 
     console.log('[Lesson Creation] Request received:', {
       title: title?.substring(0, 50),
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
           title: title.trim(),
           contentMDX: description?.trim() || `# ${title.trim()}\n\n${description?.trim() || ''}`,
           videoUrl: videoUrl.trim(),
-          durationMin: null,
+          durationMin: durationMin,
           resources: null,
           publishedAt: new Date(),
           order: order,

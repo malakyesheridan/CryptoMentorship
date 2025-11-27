@@ -19,14 +19,16 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     video: null as File | null,
+    duration: null as number | null,
   })
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       // Validate file size (100MB limit)
@@ -45,7 +47,30 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
         return
       }
       
-      setFormData({ ...formData, video: file })
+      // Extract video duration
+      let duration: number | null = null
+      try {
+        const video = document.createElement('video')
+        video.preload = 'metadata'
+        video.src = URL.createObjectURL(file)
+        
+        await new Promise((resolve, reject) => {
+          video.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(video.src)
+            duration = Math.round(video.duration)
+            resolve(duration)
+          }
+          video.onerror = () => {
+            window.URL.revokeObjectURL(video.src)
+            reject(new Error('Failed to load video metadata'))
+          }
+        })
+      } catch (error) {
+        console.warn('Failed to extract video duration:', error)
+        // Continue without duration - it's optional
+      }
+      
+      setFormData({ ...formData, video: file, duration })
       setErrorMessage('')
       setUploadStatus('idle')
     }
@@ -74,6 +99,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     setIsUploading(true)
     setUploadStatus('uploading')
     setErrorMessage('')
+    setUploadProgress(0)
 
     try {
       // Upload video to Vercel Blob Storage first
@@ -83,7 +109,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
         file: formData.video,
         folder: 'lessons',
         onProgress: (progress) => {
-          // Progress tracking can be added here if needed
+          setUploadProgress(progress)
         }
       })
 
@@ -105,6 +131,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           description: formData.description || '',
           trackId: trackId,
           videoUrl: uploadResult.url,
+          duration: formData.duration,
         }),
       })
 
@@ -119,15 +146,18 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
       const result = await response.json()
       if (result.success) {
         setUploadStatus('success')
+        setUploadProgress(100)
         toast.success('Video lesson uploaded successfully!')
         setFormData({
           title: '',
           description: '',
           video: null,
+          duration: null,
         })
         onUploadSuccess?.()
         setTimeout(() => {
           setUploadStatus('idle')
+          setUploadProgress(0)
         }, 2000)
       } else {
         setUploadStatus('error')
@@ -143,81 +173,89 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     }
   }
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="bg-white rounded-2xl shadow-lg border border-slate-200">
+      <CardHeader className="border-b border-slate-200 pb-4">
+        <CardTitle className="flex items-center gap-2 text-xl">
           <Video className="h-5 w-5 text-yellow-600" />
           Upload Video Lesson
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Lesson Title */}
-          <div>
-            <Label htmlFor="title">
-              Lesson Title *
+          <div className="space-y-2">
+            <Label htmlFor="title" className="flex items-center gap-2">
+              Lesson Title
+              <span className="text-red-500">*</span>
             </Label>
             <Input
               id="title"
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, title: e.target.value })
+                setErrorMessage('')
+              }}
               placeholder="e.g., Introduction to Bitcoin"
               required
               disabled={isUploading}
+              className={uploadStatus === 'error' && !formData.title ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
             />
           </div>
 
           {/* Video File */}
-          <div>
-            <Label htmlFor="video">
-              Video File *
+          <div className="space-y-2">
+            <Label htmlFor="video" className="flex items-center gap-2">
+              Video File
+              <span className="text-red-500">*</span>
             </Label>
-            <div className="mt-2">
-              <div className="border-2 border-dashed border-green-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="video"
+                className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  formData.video
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="w-5 h-5 text-slate-600" />
+                  <span className="text-sm text-slate-600">
+                    {formData.video ? formData.video.name : 'Select video file'}
+                  </span>
+                </div>
                 <input
                   type="file"
                   id="video"
-                  accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+                  accept="video/*"
                   onChange={handleFileChange}
                   className="hidden"
                   disabled={isUploading}
                 />
-                <label htmlFor="video" className="cursor-pointer">
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="h-8 w-8 text-green-600" />
-                    {formData.video ? (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium text-slate-900">{formData.video.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {(formData.video.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-sm font-medium text-slate-900">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          MP4, WebM, QuickTime, or AVI (MAX. 100MB)
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </label>
-              </div>
-              <p className="text-xs text-slate-500 mt-2">
-                Select a video file from your computer to upload
-              </p>
+              </label>
+              {formData.video && (
+                <div className="text-sm text-slate-600">
+                  {formatFileSize(formData.video.size)}
+                </div>
+              )}
             </div>
+            <p className="text-xs text-slate-500">
+              Select a video file from your computer to upload
+            </p>
           </div>
 
           {/* Description */}
-          <div>
-            <Label htmlFor="description">
-              Description
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -228,24 +266,18 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
             />
           </div>
 
-          {/* Error Message */}
-          {errorMessage && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-red-900">Error</p>
-                <p className="text-sm text-red-700 mt-1">{errorMessage}</p>
+          {/* Upload Progress */}
+          {isUploading && uploadProgress > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">Upload Progress</span>
+                <span className="font-medium text-slate-900">{uploadProgress}%</span>
               </div>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {uploadStatus === 'success' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-green-900">Success!</p>
-                <p className="text-sm text-green-700 mt-1">Video lesson uploaded successfully.</p>
+              <div className="w-full bg-slate-200 rounded-full h-2">
+                <div 
+                  className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
               </div>
             </div>
           )}
@@ -253,22 +285,34 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           {/* Submit Button */}
           <Button
             type="submit"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-6 text-base"
             disabled={isUploading || !formData.title || !formData.video}
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
           >
             {isUploading ? (
               <>
-                <Upload className="h-4 w-4 mr-2 animate-pulse" />
-                Uploading...
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                {uploadProgress > 0 ? `Uploading... ${uploadProgress}%` : 'Uploading Lesson...'}
               </>
             ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Video Lesson
-              </>
+              'Upload Video Lesson'
             )}
           </Button>
         </form>
+
+        {/* Status Messages */}
+        {uploadStatus === 'success' && (
+          <div className="mt-4 flex items-center space-x-2 text-green-600">
+            <CheckCircle className="w-5 h-5" />
+            <span>Lesson uploaded successfully!</span>
+          </div>
+        )}
+
+        {uploadStatus === 'error' && errorMessage && (
+          <div className="mt-4 flex items-center space-x-2 text-red-600">
+            <AlertCircle className="w-5 h-5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
