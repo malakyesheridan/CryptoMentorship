@@ -14,7 +14,7 @@ interface Episode {
   slug: string
   title: string
   summary: string | null
-  coverUrl: string
+  coverUrl: string | null
   publishedAt: string // ISO date string
   locked: boolean
   category: string
@@ -168,11 +168,17 @@ export function CryptoCompassContent({
                   <div className="flex flex-col lg:flex-row">
                     {/* Episode Image */}
                     <div className="lg:w-80 lg:h-48 h-64 relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
-                      <img
-                        src={episode.coverUrl ?? '/images/placeholders/episode-cover.jpg'}
-                        alt={episode.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      {episode.coverUrl ? (
+                        <img
+                          src={episode.coverUrl}
+                          alt={episode.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600">
+                          <Play className="w-16 h-16 text-white opacity-80" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                       <div className="absolute top-4 left-4">
                         <Badge className={`text-sm px-3 py-1 font-medium ${getCategoryBadgeColor(episode.category)}`}>

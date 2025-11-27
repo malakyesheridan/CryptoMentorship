@@ -53,7 +53,7 @@ export default async function CryptoCompassPage({
       slug: ep.slug,
       title: ep.title,
       summary: ep.excerpt ?? null,
-      coverUrl: ep.coverUrl ?? '/images/placeholders/episode-cover.jpg',
+      coverUrl: ep.coverUrl ?? null, // Don't use placeholder, handle in component
       publishedAt: ep.publishedAt.toISOString(),
       locked: ep.locked,
       category: ep.category || 'daily-update',
