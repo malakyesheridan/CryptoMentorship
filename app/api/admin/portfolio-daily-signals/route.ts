@@ -75,14 +75,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createDailySignalSchema.parse(body)
 
-    // Delete the most recent update for this tier (and category if T3) to replace it
+    // Delete the most recent update for this tier (and category if T2/Elite) to replace it
     // This ensures only one active update exists per tier/category combination
     const whereClause: any = {
       tier: data.tier,
     }
     
-    // For T3, also filter by category
-    if (data.tier === 'T3' && data.category) {
+    // For T2 (Elite), also filter by category
+    if (data.tier === 'T2' && data.category) {
       whereClause.category = data.category
     }
 
