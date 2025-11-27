@@ -154,7 +154,10 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           video: null,
           duration: null,
         })
-        onUploadSuccess?.()
+        // Defer callback to avoid state updates during render
+        setTimeout(() => {
+          onUploadSuccess?.()
+        }, 0)
         setTimeout(() => {
           setUploadStatus('idle')
           setUploadProgress(0)

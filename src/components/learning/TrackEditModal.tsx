@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,13 +58,9 @@ export function TrackEditModal({
   })
   const [trackData, setTrackData] = useState<any>(null)
 
-  useEffect(() => {
-    if (open && trackId) {
-      fetchTrack()
-    }
-  }, [open, trackId])
-
-  async function fetchTrack() {
+  const fetchTrack = useCallback(async () => {
+    if (!trackId) return
+    
     setIsLoadingTrack(true)
     try {
       const res = await fetch(`/api/admin/learn/tracks/${trackId}`)
@@ -88,7 +84,13 @@ export function TrackEditModal({
     } finally {
       setIsLoadingTrack(false)
     }
-  }
+  }, [trackId])
+
+  useEffect(() => {
+    if (open && trackId) {
+      fetchTrack()
+    }
+  }, [open, trackId, fetchTrack])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -293,9 +295,11 @@ export function TrackEditModal({
                 <LessonVideoUpload 
                   trackId={trackId} 
                   onUploadSuccess={() => {
-                    // Refresh track data
-                    fetchTrack()
-                    toast.success('Video lesson uploaded!')
+                    // Use setTimeout to avoid state updates during render
+                    setTimeout(() => {
+                      fetchTrack()
+                      toast.success('Video lesson uploaded!')
+                    }, 0)
                   }}
                 />
               </div>
