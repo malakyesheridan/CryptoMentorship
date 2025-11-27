@@ -15,55 +15,44 @@ interface PriceData {
 interface Prices {
   T1: Record<string, PriceData>
   T2: Record<string, PriceData>
-  T3: Record<string, PriceData>
 }
 
 const PLANS = [
   {
     tier: 'T1',
-    name: 'Foundation',
-    description: 'Entry Level Systems',
-    icon: Star,
-    features: [
-      'Long-Term Trend System',
-      'Weekly Market Valuation',
-      'Community Access',
-      'Advanced Portfolio Construction',
-    ],
-  },
-  {
-    tier: 'T2',
     name: 'Growth',
     description: 'Advanced Management',
     icon: TrendingUp,
     features: [
-      "All 'Foundation' Features",
-      'Majors Rotation System',
-      'Monthly Portfolio Review',
-      'Priority Support',
+      'Majors Rotation Investment System',
+      'Weekly Market Valuation',
+      'Private Community Access',
+      'Tutorials and Lessons',
+      'Advanced Portfolio Construction',
       'Bear Market Strategies',
     ],
   },
   {
-    tier: 'T3',
+    tier: 'T2',
     name: 'Elite',
     description: 'VIP Access',
     icon: Crown,
     features: [
-      "All 'Growth' Features",
+      'All Tier 1 Features',
       'Market Rotation System',
-      '1-on-1 Mentoring',
-      'Custom Investment Strategy',
       'Direct Founder Access',
+      '1-on-1 Mentoring',
+      'Monthly Portfolio Reviews',
+      'Priority Support',
     ],
   },
 ]
 
 const INTERVALS = [
   { key: 'month' as const, label: 'Monthly', savings: null },
-  { key: '3month' as const, label: '3 Months', savings: 7 },
+  { key: '3month' as const, label: '3 Months', savings: 5 },
   { key: '6month' as const, label: '6 Months', savings: 11 },
-  { key: 'year' as const, label: '1 Year', savings: 22 },
+  { key: 'year' as const, label: '1 Year', savings: 17 },
 ]
 
 function SubscribePageContent() {
@@ -223,15 +212,15 @@ function SubscribePageContent() {
         {/* Billing Toggle */}
         <div className="mx-auto w-full max-w-3xl">
           <div className="flex justify-center">
-            <div className="inline-flex rounded-xl border border-slate-200 bg-[#FFFDF7] p-1.5 shadow-lg gap-1.5">
+            <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg gap-1.5">
               {INTERVALS.map((intervalOption) => (
                 <button
                   key={intervalOption.key}
                   onClick={() => setInterval(intervalOption.key)}
                   className={`relative px-6 py-3 rounded-lg transition-all duration-200 text-sm font-medium ${
                     interval === intervalOption.key
-                      ? 'bg-gold-400 text-slate-900 shadow-md'
-                      : 'text-slate-700 hover:bg-white/50'
+                      ? 'bg-yellow-500 text-slate-900 shadow-md'
+                      : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex flex-col items-center">
@@ -251,14 +240,7 @@ function SubscribePageContent() {
         </div>
 
         {/* Plans Grid */}
-        <div className="relative mt-8 lg:mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10 items-stretch">
-          {/* Most Popular Badge */}
-          <div className="hidden md:block absolute -top-6 left-1/2 -translate-x-1/2 z-10">
-            <span className="rounded-full border px-3 py-1 text-xs font-semibold bg-amber-50 border-amber-300 text-amber-700 shadow-sm">
-              Most Popular
-            </span>
-          </div>
-
+        <div className="relative mt-8 lg:mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 items-stretch max-w-5xl mx-auto">
           {PLANS.map((plan) => {
             const Icon = plan.icon
             const priceData = getPrice(plan.tier)
@@ -267,15 +249,23 @@ function SubscribePageContent() {
             return (
               <div
                 key={plan.tier}
-                className={`h-full flex flex-col rounded-2xl border shadow-sm bg-[#FFFDF7] backdrop-blur-sm ${
-                  isPopular ? 'border-2 border-gold-400' : 'border-slate-200'
+                className={`h-full flex flex-col rounded-2xl border shadow-sm bg-gradient-to-b from-yellow-50/50 to-white backdrop-blur-sm relative ${
+                  isPopular ? 'border-2 border-yellow-400' : 'border-yellow-300'
                 }`}
               >
+                {/* Most Popular Badge */}
+                {isPopular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <span className="rounded-full border px-3 py-1 text-xs font-semibold bg-yellow-400 border-yellow-500 text-slate-900 shadow-sm">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
                 <div className="p-6 lg:p-8 grow">
                   {/* Icon */}
                   <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 rounded-xl bg-gold-400/10 border-2 border-gold-400 flex items-center justify-center">
-                      <Icon className="h-8 w-8 text-gold-400" strokeWidth={2} />
+                    <div className="w-16 h-16 rounded-xl bg-yellow-100 border-2 border-yellow-300 flex items-center justify-center">
+                      <Icon className="h-8 w-8 text-yellow-600" strokeWidth={2} />
                     </div>
                   </div>
 
@@ -293,7 +283,7 @@ function SubscribePageContent() {
                       </div>
                     ) : priceData ? (
                       <div>
-                        <div className="text-4xl font-bold text-gold-400 mb-1">
+                        <div className="text-4xl font-bold text-yellow-600 mb-1">
                           {priceData.formatted}
                         </div>
                         <div className="text-sm text-slate-500">
@@ -309,7 +299,7 @@ function SubscribePageContent() {
                   <ul className="space-y-4">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-gold-400 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
+                        <Check className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
                         <span className="text-slate-700 text-sm leading-relaxed">
                           {feature}
                         </span>
@@ -326,7 +316,7 @@ function SubscribePageContent() {
                     className={`w-full rounded-xl ${
                       isPopular
                         ? 'bg-slate-900 hover:bg-slate-800 text-white'
-                        : 'bg-white border-2 border-gold-400 text-slate-900 hover:bg-gold-50'
+                        : 'bg-white border-2 border-yellow-400 text-slate-900 hover:bg-yellow-50'
                     }`}
                     variant={isPopular ? 'default' : 'outline'}
                   >
