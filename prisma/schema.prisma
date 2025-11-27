@@ -265,6 +265,7 @@ model Episode {
   videoUrl    String?
   body        String?
   coverUrl    String?
+  duration    Int?      // Duration in seconds
   category    String    @default("daily-update") // daily-update | analysis | breakdown
   publishedAt DateTime  @default(now())
   publishAt   DateTime?

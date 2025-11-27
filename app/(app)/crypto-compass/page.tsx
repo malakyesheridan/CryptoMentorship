@@ -39,6 +39,7 @@ export default async function CryptoCompassPage({
         title: true,
         excerpt: true,
         coverUrl: true,
+        duration: true,
         publishedAt: true,
         locked: true,
         category: true,
@@ -54,6 +55,7 @@ export default async function CryptoCompassPage({
       title: ep.title,
       summary: ep.excerpt ?? null,
       coverUrl: ep.coverUrl ?? null, // Don't use placeholder, handle in component
+      duration: ep.duration,
       publishedAt: ep.publishedAt.toISOString(),
       locked: ep.locked,
       category: ep.category || 'daily-update',

@@ -15,6 +15,7 @@ interface Episode {
   title: string
   summary: string | null
   coverUrl: string | null
+  duration: number | null
   publishedAt: string // ISO date string
   locked: boolean
   category: string
@@ -134,6 +135,33 @@ export function CryptoCompassContent({
     }
   }
 
+  // Format duration helper
+  const formatDuration = (seconds: number | null): string => {
+    if (!seconds) return 'Duration unknown'
+    
+    if (seconds < 60) {
+      return `${seconds}s`
+    }
+    
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    
+    if (minutes < 60) {
+      if (remainingSeconds === 0) {
+        return `${minutes} min`
+      }
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+    }
+    
+    const hours = Math.floor(minutes / 60)
+    const remainingMinutes = minutes % 60
+    
+    if (remainingMinutes === 0) {
+      return `${hours} hr`
+    }
+    return `${hours} hr ${remainingMinutes} min`
+  }
+
   return (
     <div className="space-y-8">
       {/* Tab Navigation */}
@@ -221,7 +249,7 @@ export function CryptoCompassContent({
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            <span>~15 min</span>
+                            <span>{episode.duration ? formatDuration(episode.duration) : 'Duration unknown'}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 text-slate-400 group-hover:text-yellow-500 transition-colors">

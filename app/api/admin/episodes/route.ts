@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     const description = body.description || ''
     const slug = body.slug
     const videoUrl = body.videoUrl
+    const duration = body.duration ? parseInt(body.duration) : null
 
     console.log('[Episode Creation] Request received:', {
       title: title?.substring(0, 50),
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
           videoUrl: videoUrl.trim(),
           body: null,
           coverUrl: null,
+          duration: duration,
           category: 'daily-update',
           locked: false, // Always false - everyone can view
           publishedAt: new Date(),

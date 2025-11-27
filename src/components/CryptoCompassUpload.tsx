@@ -20,9 +20,10 @@ export default function CryptoCompassUpload() {
     title: '',
     description: '',
     video: null as File | null,
+    duration: null as number | null,
   })
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       // Validate file size (100MB limit)
@@ -41,7 +42,30 @@ export default function CryptoCompassUpload() {
         return
       }
       
-      setEpisodeData({ ...episodeData, video: file })
+      // Extract video duration
+      let duration: number | null = null
+      try {
+        const video = document.createElement('video')
+        video.preload = 'metadata'
+        video.src = URL.createObjectURL(file)
+        
+        await new Promise((resolve, reject) => {
+          video.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(video.src)
+            duration = Math.round(video.duration)
+            resolve(duration)
+          }
+          video.onerror = () => {
+            window.URL.revokeObjectURL(video.src)
+            reject(new Error('Failed to load video metadata'))
+          }
+        })
+      } catch (error) {
+        console.warn('Failed to extract video duration:', error)
+        // Continue without duration - it's optional
+      }
+      
+      setEpisodeData({ ...episodeData, video: file, duration })
       setErrorMessage('')
       setUploadStatus('idle')
     }
@@ -112,6 +136,7 @@ export default function CryptoCompassUpload() {
           description: episodeData.description || '',
           slug: slug,
           videoUrl: uploadResult.url,
+          duration: episodeData.duration,
         }),
       })
 
@@ -130,6 +155,7 @@ export default function CryptoCompassUpload() {
           title: '',
           description: '',
           video: null,
+          duration: null,
         })
         setTimeout(() => {
           window.location.reload()
