@@ -62,6 +62,8 @@ const nextConfig = {
               "img-src 'self' data: https:",
               "font-src 'self'",
               "connect-src 'self'",
+              "media-src 'self' https://*.public.blob.vercel-storage.com",
+              "frame-src https://js.stripe.com https://hooks.stripe.com",
               "frame-ancestors 'none'",
               "form-action 'self'"
             ].join('; ')
