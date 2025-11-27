@@ -13,6 +13,18 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireRole(['admin', 'editor'])
     
+    // Check for BLOB_READ_WRITE_TOKEN early
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+    if (!blobToken) {
+      return NextResponse.json(
+        { 
+          error: 'Vercel Blob Storage is not configured. Please set BLOB_READ_WRITE_TOKEN environment variable.',
+          details: 'Get your token from https://vercel.com/dashboard/stores'
+        },
+        { status: 500 }
+      )
+    }
+    
     const formData = await request.formData()
     const chunk = formData.get('chunk') as File
     const chunkIndex = parseInt(formData.get('chunkIndex') as string)
@@ -50,6 +62,7 @@ export async function POST(request: NextRequest) {
       access: 'public',
       contentType: 'application/octet-stream',
       addRandomSuffix: false, // Keep predictable path for assembly
+      token: blobToken,
     })
 
     // If this is the last chunk, assemble the file and upload to Blob Storage
@@ -77,6 +90,7 @@ export async function POST(request: NextRequest) {
             const blobs = await list({
               prefix: currentChunkPath,
               limit: 1,
+              token: blobToken,
             })
             
             if (blobs.blobs.length > 0) {
@@ -130,12 +144,13 @@ export async function POST(request: NextRequest) {
           const blob = await put(blobPath, finalFileData, {
             access: 'public',
             contentType: detectedContentType,
+            token: blobToken,
           })
 
           // Clean up temporary chunk blobs (non-blocking)
           // Use the URLs we already collected during assembly
           chunkUrls.forEach(url => {
-            del(url).catch(() => {}) // Ignore cleanup errors
+            del(url, { token: blobToken }).catch(() => {}) // Ignore cleanup errors
           })
 
           return NextResponse.json({
@@ -179,9 +194,10 @@ export async function POST(request: NextRequest) {
           list({
             prefix: currentChunkPath,
             limit: 1,
+            token: blobToken,
           }).then(blobs => {
             if (blobs.blobs.length > 0) {
-              return del(blobs.blobs[0].url).catch(() => {})
+              return del(blobs.blobs[0].url, { token: blobToken }).catch(() => {})
             }
           }).catch(() => {})
         }

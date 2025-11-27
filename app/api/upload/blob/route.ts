@@ -10,6 +10,18 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireRole(['admin', 'editor'])
     
+    // Check for BLOB_READ_WRITE_TOKEN early
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+    if (!blobToken) {
+      return NextResponse.json(
+        { 
+          error: 'Vercel Blob Storage is not configured. Please set BLOB_READ_WRITE_TOKEN environment variable.',
+          details: 'Get your token from https://vercel.com/dashboard/stores'
+        },
+        { status: 500 }
+      )
+    }
+    
     const formData = await request.formData()
     const file = formData.get('file') as File
     const folder = (formData.get('folder') as string) || 'uploads'
@@ -45,6 +57,7 @@ export async function POST(request: NextRequest) {
       const blob = await put(blobPath, buffer, {
         access: 'public',
         contentType: file.type || 'application/octet-stream',
+        token: blobToken,
       })
 
       return NextResponse.json({
