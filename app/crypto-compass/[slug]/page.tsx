@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { MDXRenderer } from '@/components/MDXRenderer'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { ViewTracker } from '@/components/ViewTracker'
+import VideoPlayer from '@/components/VideoPlayer'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, Lock, Eye, Play, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -115,14 +116,12 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
         {/* Video Player */}
         {episode.videoUrl && canView ? (
           <div className="mb-8">
-            <div className="aspect-video bg-black rounded-2xl overflow-hidden">
-              <iframe
-                src={episode.videoUrl}
-                className="w-full h-full"
-                allowFullScreen
-                title={episode.title}
-              />
-            </div>
+            <VideoPlayer
+              src={episode.videoUrl}
+              title={episode.title}
+              poster={episode.coverUrl || undefined}
+              className="w-full"
+            />
           </div>
         ) : episode.videoUrl && !canView ? (
           <div className="mb-8">
