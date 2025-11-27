@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth-server'
-import { put } from '@vercel/blob'
-import { writeFile, readFile, unlink, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
+import { put, del, list } from '@vercel/blob'
 import { sanitizeFilename } from '@/lib/file-validation'
 
 export const runtime = 'nodejs'
@@ -41,19 +38,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use /tmp for temporary chunk storage (only writable directory on Vercel)
-    const uploadDir = '/tmp/uploads/chunks'
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
-    }
-
-    // Save chunk to temporary file
-    const chunkFileName = `${uploadId}-chunk-${chunkIndex}`
-    const chunkPath = join(uploadDir, chunkFileName)
+    // Upload chunk to Vercel Blob Storage as a temporary file
+    // This ensures chunks are accessible across different serverless function instances
+    const chunkBlobPath = `chunks/${uploadId}-chunk-${chunkIndex}`
     
     const bytes = await chunk.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    await writeFile(chunkPath, buffer)
+    
+    // Upload chunk to blob storage
+    await put(chunkBlobPath, buffer, {
+      access: 'public',
+      contentType: 'application/octet-stream',
+      addRandomSuffix: false, // Keep predictable path for assembly
+    })
 
     // If this is the last chunk, assemble the file and upload to Blob Storage
     if (chunkIndex === totalChunks - 1) {
@@ -61,30 +58,58 @@ export async function POST(request: NextRequest) {
       const timestamp = Date.now()
       const finalFileName = `${timestamp}-${safeFilename}`
       const blobPath = `${folder}/${finalFileName}`
+
+      // Store chunk URLs for cleanup
+      const chunkUrls: string[] = []
       
-      const finalPath = join('/tmp/uploads', finalFileName)
-
       try {
-        // Assemble chunks
+        // Read all chunks from Blob Storage and assemble
+        const chunkBuffers: Buffer[] = []
+        
+        // First, collect all chunk URLs with retry logic
         for (let i = 0; i < totalChunks; i++) {
-          const currentChunkPath = join(uploadDir, `${uploadId}-chunk-${i}`)
-          if (existsSync(currentChunkPath)) {
-            const chunkData = await readFile(currentChunkPath)
-            if (i === 0) {
-              await writeFile(finalPath, chunkData)
-            } else {
-              const existingData = await readFile(finalPath)
-              await writeFile(finalPath, Buffer.concat([existingData, chunkData]))
+          const currentChunkPath = `chunks/${uploadId}-chunk-${i}`
+          
+          // Retry logic: chunks might not be immediately available
+          let chunkBlob = null
+          let retries = 3
+          while (retries > 0 && !chunkBlob) {
+            const blobs = await list({
+              prefix: currentChunkPath,
+              limit: 1,
+            })
+            
+            if (blobs.blobs.length > 0) {
+              chunkBlob = blobs.blobs[0]
+              break
             }
-            // Clean up chunk file
-            await unlink(currentChunkPath).catch(() => {})
-          } else {
-            throw new Error(`Missing chunk ${i} of ${totalChunks}`)
+            
+            // Wait a bit before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 500 * (4 - retries)))
+            retries--
           }
+          
+          if (!chunkBlob) {
+            throw new Error(`Missing chunk ${i} of ${totalChunks} (uploadId: ${uploadId})`)
+          }
+          
+          chunkUrls.push(chunkBlob.url)
         }
+        
+        // Now fetch all chunks in parallel
+        const chunkPromises = chunkUrls.map(async (url, index) => {
+          const chunkResponse = await fetch(url)
+          if (!chunkResponse.ok) {
+            throw new Error(`Failed to read chunk ${index} from blob storage: HTTP ${chunkResponse.status}`)
+          }
+          const chunkArrayBuffer = await chunkResponse.arrayBuffer()
+          return Buffer.from(chunkArrayBuffer)
+        })
+        
+        chunkBuffers.push(...await Promise.all(chunkPromises))
 
-        // Read the assembled file
-        const finalFileData = await readFile(finalPath)
+        // Assemble all chunks
+        const finalFileData = Buffer.concat(chunkBuffers)
         
         // Detect content type from file extension if not provided
         let detectedContentType = contentType
@@ -100,15 +125,18 @@ export async function POST(request: NextRequest) {
           detectedContentType = mimeTypes[ext || ''] || 'video/mp4'
         }
         
-        // Upload to Vercel Blob Storage
+        // Upload final file to Vercel Blob Storage
         try {
           const blob = await put(blobPath, finalFileData, {
             access: 'public',
             contentType: detectedContentType,
           })
 
-          // Clean up temp file
-          await unlink(finalPath).catch(() => {})
+          // Clean up temporary chunk blobs (non-blocking)
+          // Use the URLs we already collected during assembly
+          chunkUrls.forEach(url => {
+            del(url).catch(() => {}) // Ignore cleanup errors
+          })
 
           return NextResponse.json({
             success: true,
@@ -119,9 +147,6 @@ export async function POST(request: NextRequest) {
           })
         } catch (blobError) {
           console.error('Vercel Blob upload error:', blobError)
-          
-          // Clean up temp file
-          await unlink(finalPath).catch(() => {})
           
           if (!process.env.BLOB_READ_WRITE_TOKEN) {
             return NextResponse.json(
@@ -142,15 +167,23 @@ export async function POST(request: NextRequest) {
           )
         }
       } catch (error) {
-        // Cleanup on error
+        // Cleanup chunks on error (non-blocking)
+        // First, try to clean up chunks we already found
+        chunkUrls.forEach(url => {
+          del(url).catch(() => {})
+        })
+        
+        // Also try to find and clean up any remaining chunks
         for (let i = 0; i < totalChunks; i++) {
-          const currentChunkPath = join(uploadDir, `${uploadId}-chunk-${i}`)
-          if (existsSync(currentChunkPath)) {
-            await unlink(currentChunkPath).catch(() => {})
-          }
-        }
-        if (existsSync(finalPath)) {
-          await unlink(finalPath).catch(() => {})
+          const currentChunkPath = `chunks/${uploadId}-chunk-${i}`
+          list({
+            prefix: currentChunkPath,
+            limit: 1,
+          }).then(blobs => {
+            if (blobs.blobs.length > 0) {
+              return del(blobs.blobs[0].url).catch(() => {})
+            }
+          }).catch(() => {})
         }
         throw error
       }
@@ -169,4 +202,5 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
 
