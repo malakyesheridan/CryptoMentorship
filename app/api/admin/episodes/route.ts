@@ -32,6 +32,13 @@ export async function POST(request: NextRequest) {
     const slug = body.slug
     const videoUrl = body.videoUrl
 
+    console.log('[Episode Creation] Request received:', {
+      title: title?.substring(0, 50),
+      slug: slug?.substring(0, 50),
+      videoUrl: videoUrl ? 'present' : 'missing',
+      userId: user.id
+    })
+
     if (!title || !title.trim()) {
       return NextResponse.json(
         { error: 'Title is required' },
@@ -67,12 +74,14 @@ export async function POST(request: NextRequest) {
     
     // Wrap in transaction for atomicity
     const episode = await prisma.$transaction(async (tx) => {
+      console.log('[Episode Creation] Starting transaction...')
+      
       const created = await tx.episode.create({
         data: {
           title: title.trim(),
           slug: slug.trim(),
           excerpt: description?.trim() || null,
-          videoUrl,
+          videoUrl: videoUrl.trim(),
           body: null,
           coverUrl: null,
           category: 'daily-update',
@@ -81,19 +90,28 @@ export async function POST(request: NextRequest) {
         }
       })
       
-      // Audit log within transaction
-      await logAudit(
-        tx,
-        user.id,
-        'create',
-        'episode',
-        created.id,
-        { title: created.title }
-      )
+      console.log('[Episode Creation] Episode created successfully:', created.id)
+      
+      // Audit log within transaction (non-blocking - won't fail transaction if audit fails)
+      try {
+        await logAudit(
+          tx,
+          user.id,
+          'create',
+          'episode',
+          created.id,
+          { title: created.title }
+        )
+        console.log('[Episode Creation] Audit log created successfully')
+      } catch (auditError) {
+        // Log but don't fail the transaction
+        console.error('[Episode Creation] Audit logging failed (non-blocking):', auditError)
+      }
       
       return created
     })
     
+    console.log('[Episode Creation] Transaction completed successfully')
     return NextResponse.json(episode)
   } catch (error) {
     return handleError(error)

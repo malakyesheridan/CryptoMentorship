@@ -55,7 +55,18 @@ export async function logAudit(
   } catch (error) {
     console.error('Failed to log audit:', error)
     // Don't throw - audit logging shouldn't break the main flow
-    // But in transaction context, this will rollback the transaction
+    // In transaction context, we want the main operation to succeed even if audit fails
+    // However, if this is a critical error (like foreign key constraint), we should log it
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('Audit error details:', {
+        code: (error as any).code,
+        meta: (error as any).meta,
+        actorId,
+        action,
+        subjectType,
+        subjectId
+      })
+    }
   }
 }
 

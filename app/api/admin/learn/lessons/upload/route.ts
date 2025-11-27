@@ -19,6 +19,13 @@ export async function POST(request: NextRequest) {
     const trackId = body.trackId
     const videoUrl = body.videoUrl
 
+    console.log('[Lesson Creation] Request received:', {
+      title: title?.substring(0, 50),
+      trackId,
+      videoUrl: videoUrl ? 'present' : 'missing',
+      userId: user.id
+    })
+
     if (!title || !title.trim()) {
       return NextResponse.json(
         { error: 'Title is required' },
@@ -90,6 +97,8 @@ export async function POST(request: NextRequest) {
 
     // Wrap in transaction for atomicity
     const lesson = await prisma.$transaction(async (tx) => {
+      console.log('[Lesson Creation] Starting transaction...')
+      
       const created = await tx.lesson.create({
         data: {
           trackId: trackId,
@@ -97,7 +106,7 @@ export async function POST(request: NextRequest) {
           slug: slug,
           title: title.trim(),
           contentMDX: description?.trim() || `# ${title.trim()}\n\n${description?.trim() || ''}`,
-          videoUrl: videoUrl,
+          videoUrl: videoUrl.trim(),
           durationMin: null,
           resources: null,
           publishedAt: new Date(),
@@ -105,19 +114,28 @@ export async function POST(request: NextRequest) {
         }
       })
       
-      // Audit log within transaction
-      await logAudit(
-        tx,
-        user.id,
-        'create',
-        'lesson',
-        created.id,
-        { title: created.title, trackId: trackId }
-      )
+      console.log('[Lesson Creation] Lesson created successfully:', created.id)
+      
+      // Audit log within transaction (non-blocking - won't fail transaction if audit fails)
+      try {
+        await logAudit(
+          tx,
+          user.id,
+          'create',
+          'lesson',
+          created.id,
+          { title: created.title, trackId: trackId }
+        )
+        console.log('[Lesson Creation] Audit log created successfully')
+      } catch (auditError) {
+        // Log but don't fail the transaction
+        console.error('[Lesson Creation] Audit logging failed (non-blocking):', auditError)
+      }
       
       return created
     })
     
+    console.log('[Lesson Creation] Transaction completed successfully')
     return NextResponse.json({
       success: true,
       lesson: {
