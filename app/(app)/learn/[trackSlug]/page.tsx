@@ -297,14 +297,26 @@ export default async function TrackPage({
             ))}
             
             {/* Lessons without sections */}
-            {track.lessons.length > 0 && (
-              <div>
-                {track.sections.length > 0 && (
-                  <div className="px-6 py-3 bg-slate-50 border-b border-slate-200">
-                    <h3 className="font-semibold text-slate-900">Other Lessons</h3>
-                  </div>
-                )}
-                {track.lessons.map((lesson) => {
+            {(() => {
+              // Get all lesson IDs that are in sections
+              const lessonIdsInSections = new Set(
+                track.sections.flatMap(section => section.lessons.map(lesson => lesson.id))
+              )
+              // Filter out lessons that are already in sections
+              const lessonsWithoutSections = track.lessons.filter(
+                lesson => !lessonIdsInSections.has(lesson.id)
+              )
+              
+              if (lessonsWithoutSections.length === 0) return null
+              
+              return (
+                <div>
+                  {track.sections.length > 0 && (
+                    <div className="px-6 py-3 bg-slate-50 border-b border-slate-200">
+                      <h3 className="font-semibold text-slate-900">Other Lessons</h3>
+                    </div>
+                  )}
+                  {lessonsWithoutSections.map((lesson) => {
                   const isCompleted = userProgress[lesson.id]
                   const hasQuiz = !!lesson.quiz
                   
@@ -359,9 +371,11 @@ export default async function TrackPage({
                       </div>
                     </Link>
                   )
-                })}
-              </div>
-            )}
+                  })
+                }
+                </div>
+              )
+            })()}
           </div>
         </div>
 
