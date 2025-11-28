@@ -16,24 +16,6 @@ export async function seedLearningTracks() {
       summary: 'Master the fundamentals of cryptocurrency trading, from basic concepts to advanced strategies.',
       coverUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=450&fit=crop',
       minTier: 'member',
-      summary: `Foundations of Cryptocurrency Trading
-
-This comprehensive track covers everything you need to know to start trading cryptocurrencies successfully.
-
-## What You'll Learn
-
-- Understanding blockchain technology and how cryptocurrencies work
-- Key trading concepts and terminology
-- Technical analysis fundamentals
-- Risk management strategies
-- Portfolio management techniques
-- Psychology of trading
-
-## Prerequisites
-
-- Basic understanding of financial markets
-- Willingness to learn and practice
-- Access to a cryptocurrency exchange account`,
       publishedAt: new Date('2024-01-01'),
       order: 1,
     }
@@ -602,24 +584,6 @@ Never risk more than 2% of your account balance on a single trade.
       summary: 'Advanced strategies for managing risk and building a diversified cryptocurrency portfolio.',
       coverUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop',
       minTier: 'member',
-      summary: `Risk & Portfolio Management
-
-Learn advanced techniques for managing risk and building a robust cryptocurrency portfolio.
-
-## What You'll Learn
-
-- Advanced risk management techniques
-- Portfolio construction strategies
-- Position sizing methodologies
-- Correlation analysis
-- Performance measurement
-- Rebalancing strategies
-
-## Prerequisites
-
-- Completion of Foundations track recommended
-- Basic understanding of trading concepts
-- Experience with cryptocurrency markets`,
       publishedAt: new Date('2024-01-15'),
       order: 2,
     }
