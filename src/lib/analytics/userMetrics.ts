@@ -120,15 +120,10 @@ export async function getEnhancedMetrics(userId: string): Promise<EnhancedMetric
   const recentProgress = progress.filter(p => p.completedAt && p.completedAt >= oneWeekAgo)
   const learningVelocity = recentProgress.length
 
-  // Calculate total time spent from actual timeSpentMs (convert to minutes)
-  const timeSpentAggregate = await prisma.lessonProgress.aggregate({
-    where: { userId },
-    _sum: { timeSpentMs: true }
-  })
-  
-  const totalTimeSpent = timeSpentAggregate._sum.timeSpentMs 
-    ? Math.round(timeSpentAggregate._sum.timeSpentMs / 1000 / 60)
-    : 0
+  // Calculate total time spent from lesson duration (since timeSpentMs was removed)
+  const totalTimeSpent = progress.reduce((sum, p) => {
+    return sum + (p.lesson.durationMin || 0)
+  }, 0)
 
   // Calculate consistency score (days with activity vs total days)
   const completedDates = new Set(
