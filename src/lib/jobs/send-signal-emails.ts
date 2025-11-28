@@ -151,7 +151,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     for (const user of eligibleUsers) {
       try {
         const membership = user.memberships[0]
-        const rawUserTier = membership.tier as 'T1' | 'T2'
+        const rawUserTier = membership.tier as 'T1' | 'T2' | 'T3'
         
         // Map old tiers to new tiers:
         // Old T1 → removed (no access)
@@ -161,7 +161,9 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         if (rawUserTier === 'T3') {
           userTier = 'T2' // Old T3 → new T2 (Elite)
         } else if (rawUserTier === 'T2') {
-          userTier = 'T1' // Old T2 → new T1 (Growth)
+          userTier = 'T2' // T2 is now Elite (no mapping needed in new system)
+        } else if (rawUserTier === 'T1') {
+          userTier = 'T1' // T1 is now Growth (no mapping needed in new system)
         }
         // Old T1 users get no access (filtered out earlier)
 
