@@ -29,6 +29,7 @@ import { formatRelativeTime } from '@/lib/cohorts'
 import { completeLesson, submitQuiz, enrollInTrack } from '@/lib/actions/learning'
 import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
 import { useSession } from 'next-auth/react'
+import VideoPlayer from '@/components/VideoPlayer'
 
 interface LessonPlayerProps {
   track: {
@@ -464,9 +465,9 @@ export function LessonPlayer({
                           allowFullScreen
                         />
                       ) : (
-                        <video
+                        <VideoPlayer
                           src={lesson.videoUrl}
-                          controls
+                          title={lesson.title}
                           className="w-full h-full"
                         />
                       )}
