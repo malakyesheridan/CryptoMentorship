@@ -340,14 +340,18 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
 
       <div className="space-y-2">
         {[...channels].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((channel) => (
-          <div
-            key={channel.id}
-            draggable
-            onDragStart={(e) => handleDragStart(e, channel.id)}
-            onDragOver={(e) => handleDragOver(e, channel.id)}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, channel.id)}
-            onDragEnd={handleDragEnd}
+          <div key={channel.id}>
+            {/* Drop indicator line before channel */}
+            {draggedOverChannelId === channel.id && dropPosition === 'before' && (
+              <div className="h-1 bg-blue-500 rounded-full mb-1 mx-2" />
+            )}
+            <div
+              draggable
+              onDragStart={(e) => handleDragStart(e, channel.id)}
+              onDragOver={(e) => handleDragOver(e, channel.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, channel.id)}
+              onDragEnd={handleDragEnd}
             className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 relative ${
               draggedChannelId === channel.id
                 ? 'opacity-30 bg-slate-200 scale-95'
