@@ -75,6 +75,17 @@ export type Env = z.infer<typeof envSchema>
 
 function validateEnv(): Env {
   try {
+    // Skip validation on client side - env vars should only be validated on server
+    // This prevents the validation from running in the browser bundle
+    if (typeof window !== 'undefined') {
+      // On client side, return a minimal object that won't cause errors
+      // The actual env values won't be used on client anyway (they're server-only)
+      return {
+        NEXTAUTH_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        NEXTAUTH_SECRET: 'client-side-placeholder', // Not used on client
+      } as Env
+    }
+    
     // Provide defaults for development - only if value is missing or invalid
     const envWithDefaults = { ...process.env }
     const isProduction = process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production'
