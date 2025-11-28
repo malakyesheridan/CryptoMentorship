@@ -196,7 +196,6 @@ async function getTrackAnalytics(userId: string, trackId: string, timeframe: str
     track: {
       id: track.id,
       title: track.title,
-      description: track.description,
       progressPct: enrollment?.progressPct || 0,
       startedAt: enrollment?.startedAt,
       completedAt: enrollment?.completedAt
