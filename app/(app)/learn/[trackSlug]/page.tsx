@@ -379,20 +379,6 @@ export default async function TrackPage({
           </div>
         </div>
 
-        {/* Track Description */}
-        {track.description && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>About This Track</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-slate max-w-none">
-                {/* TODO: Render MDX content */}
-                <p className="text-slate-600">{track.description}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   )
