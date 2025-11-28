@@ -29,15 +29,20 @@ function useChannels() {
     revalidateOnFocus: false, // Channels don't change frequently
     revalidateOnReconnect: true,
     shouldRetryOnError: true,
-    dedupingInterval: 1000, // Dedupe requests within 1 second (faster for drag-drop)
+    dedupingInterval: 0, // No deduping - always fetch fresh data when requested
     refreshInterval: 0, // No auto-refresh
   })
+
+  // Enhanced refresh function that forces revalidation
+  const refresh = React.useCallback(async () => {
+    await mutate(undefined, { revalidate: true })
+  }, [mutate])
 
   return {
     channels: data?.items ?? [],
     error,
     isLoading,
-    refresh: mutate,
+    refresh,
   }
 }
 

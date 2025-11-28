@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { revalidatePath } from 'next/cache'
 
 const reorderSchema = z.object({
   channelIds: z.array(z.string()).min(1),
@@ -33,6 +34,16 @@ export async function POST(req: NextRequest) {
         })
       )
     )
+
+    // Immediately revalidate the channels cache
+    try {
+      revalidatePath('/api/channels-minimal')
+      revalidatePath('/api/community/channels')
+      revalidatePath('/community')
+    } catch (error) {
+      // Log but don't fail the operation if revalidation fails
+      console.error('Error revalidating cache after channel reorder:', error)
+    }
 
     logger.info('Channels reordered', {
       channelIds,

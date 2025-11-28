@@ -250,8 +250,15 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
 
       if (data.success) {
         toast.success('Channels reordered successfully')
-        // Refresh channels immediately
-        onChannelChange()
+        // Force immediate refresh with cache bypass
+        // Wait a small delay to ensure database transaction is committed
+        setTimeout(() => {
+          onChannelChange()
+          // Force another refresh after a short delay to ensure cache is cleared
+          setTimeout(() => {
+            onChannelChange()
+          }, 200)
+        }, 100)
       } else {
         throw new Error('Failed to reorder channels')
       }

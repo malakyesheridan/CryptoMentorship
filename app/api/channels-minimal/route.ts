@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Cache for 5 minutes - channels don't change frequently
-export const revalidate = 300
+// Make dynamic to allow immediate updates after reordering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {
