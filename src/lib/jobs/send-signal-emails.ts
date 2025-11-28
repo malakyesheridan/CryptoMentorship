@@ -15,7 +15,7 @@ interface DailySignal {
 /**
  * Send email notifications for daily portfolio updates
  * Users receive emails for their highest accessible tier only
- * T3 users receive both majors and memecoins updates in one email
+ * T2 (Elite) users receive both majors and memecoins updates in one email
  */
 export async function sendSignalEmails(signalId: string): Promise<void> {
   try {
