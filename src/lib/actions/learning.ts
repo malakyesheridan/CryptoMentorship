@@ -439,7 +439,6 @@ export async function createLesson(input: unknown) {
       contentMDX: data.contentMDX,
       durationMin: data.durationMin,
       videoUrl: data.videoUrl,
-      resources: data.resources,
       publishedAt: data.publishedAt,
       order: order,
     }
