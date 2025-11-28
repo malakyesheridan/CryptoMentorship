@@ -5,7 +5,6 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { LessonPlayer } from '@/components/learning/LessonPlayer'
 import { ViewTracker } from '@/components/ViewTracker'
-import { renderMDX } from '@/lib/mdx'
 import { checkLessonAccess } from '@/lib/cohorts'
 
 // Revalidate every 5 minutes - lesson content is published, not real-time
@@ -145,12 +144,6 @@ export default async function LessonPage({
     userProgress[progress.lessonId] = !!progress.completedAt
   })
 
-  const lessonMdx = lesson.contentMDX
-    ? await renderMDX(lesson.slug, lesson.contentMDX, {
-        frontmatter: { title: lesson.title },
-      })
-    : null
-
   return (
     <>
       <ViewTracker
@@ -162,10 +155,8 @@ export default async function LessonPage({
         track={track}
         lesson={{ 
           ...lesson, 
-          mdx: lessonMdx?.source || null,
           durationMin: lesson.durationMin ?? undefined,
           videoUrl: lesson.videoUrl ?? undefined,
-          resources: lesson.resources ?? undefined,
           quiz: lesson.quiz ?? undefined,
           section: lesson.section ?? undefined
         }}

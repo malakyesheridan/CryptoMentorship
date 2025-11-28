@@ -637,7 +637,6 @@ model Track {
   summary     String?
   coverUrl    String?
   minTier     String    @default("member") // member | editor | admin
-  description String? // MDX
   publishedAt DateTime?
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
@@ -671,10 +670,9 @@ model Lesson {
   sectionId   String?
   slug        String
   title       String
-  contentMDX  String // source MDX
+  contentMDX  String? // Optional - can be empty for video-only lessons
   durationMin Int? // estimated
   videoUrl    String?
-  resources   String? // JSON string array of {title,url}
   quizId      String?
   publishedAt DateTime?
   order       Int       @default(0)

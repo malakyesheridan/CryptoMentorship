@@ -95,9 +95,6 @@ export function LearningHubContent({
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   
-  const handleManageTrack = (trackId: string) => {
-    window.open(`/admin/learn/tracks/${trackId}`, '_blank')
-  }
 
   // Transform data for content grid
   const courseItems = useMemo(() => transformEnrollmentsToContent(enrollments), [enrollments])
@@ -214,7 +211,6 @@ export function LearningHubContent({
                 showProgress={true}
                 userRole={userRole}
                 onEditTrack={(trackId) => setEditingTrackId(trackId)}
-                onManageTrack={handleManageTrack}
               />
             ) : (
               <div className="text-center py-12 text-slate-500">
@@ -274,11 +270,19 @@ export function LearningHubContent({
           onOpenChange={(open) => {
             if (!open) setEditingTrackId(null)
           }}
-          onTrackUpdated={() => {
-            window.location.reload()
+          onTrackUpdated={async () => {
+            // Refresh track data without full page reload
+            if (editingTrackId) {
+              // The modal will handle its own refresh via fetchTrack
+              // Just close the modal
+              setEditingTrackId(null)
+            }
+            // Trigger a soft refresh of the tracks list
+            window.location.reload() // TODO: Replace with proper state management
           }}
           onTrackDeleted={() => {
-            window.location.reload()
+            setEditingTrackId(null)
+            window.location.reload() // TODO: Replace with proper state management
           }}
         />
       )}
@@ -290,12 +294,13 @@ export function LearningHubContent({
           onOpenChange={setUploadModalOpen}
           tracks={allTracksForAdmin.map(t => ({ id: t.id, title: t.title }))}
           onTrackCreated={() => {
-            // Refresh the page to show the new track
-            window.location.reload()
+            // Close modal and refresh tracks list
+            setUploadModalOpen(false)
+            window.location.reload() // TODO: Replace with proper state management
           }}
           onVideoUploaded={() => {
-            // Refresh the page to show the new video
-            window.location.reload()
+            // Keep modal open for multiple uploads, just refresh tracks
+            window.location.reload() // TODO: Replace with proper state management
           }}
         />
       )}

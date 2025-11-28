@@ -107,10 +107,9 @@ export async function POST(request: NextRequest) {
           sectionId: null,
           slug: slug,
           title: title.trim(),
-          contentMDX: description?.trim() || `# ${title.trim()}\n\n${description?.trim() || ''}`,
+          contentMDX: description?.trim() || '', // Optional - can be empty for video-only lessons
           videoUrl: videoUrl.trim(),
           durationMin: durationMin,
-          resources: null,
           publishedAt: new Date(),
           order: order,
         }

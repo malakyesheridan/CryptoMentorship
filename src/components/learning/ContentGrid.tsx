@@ -14,15 +14,12 @@ import {
   CheckCircle,
   Award,
   Edit,
-  MoreVertical,
-  Settings,
-  ExternalLink
+  MoreVertical
 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Image from 'next/image'
@@ -53,7 +50,7 @@ interface ContentGridProps {
   onManageTrack?: (trackId: string) => void
 }
 
-export function ContentGrid({ items, showProgress = false, onItemClick, userRole, onEditTrack, onManageTrack }: ContentGridProps) {
+export function ContentGrid({ items, showProgress = false, onItemClick, userRole, onEditTrack }: ContentGridProps) {
   const isAdmin = userRole === 'admin' || userRole === 'editor'
   if (items.length === 0) {
     return (
@@ -139,27 +136,6 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                           Edit Track
                         </DropdownMenuItem>
                       )}
-                      {onManageTrack && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              onManageTrack(item.id)
-                            }}
-                          >
-                            <Settings className="h-4 w-4 mr-2" />
-                            Manage Track
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/learn/tracks/${item.id}`} target="_blank">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Open in Admin Portal
-                        </Link>
-                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}

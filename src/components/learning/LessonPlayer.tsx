@@ -20,10 +20,7 @@ import {
   Calendar
 } from 'lucide-react'
 import Link from 'next/link'
-import { LessonMDXRenderer } from '@/components/learning/LessonMDXRenderer'
-import type { SerializedMDXSource } from '@/lib/mdx'
 import { QuizComponent } from '@/components/learning/QuizComponent'
-import { validateResources } from '@/lib/schemas/learning'
 import { formatRelativeTime } from '@/lib/cohorts'
 import { completeLesson, submitQuiz, enrollInTrack } from '@/lib/actions/learning'
 import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
@@ -54,11 +51,8 @@ interface LessonPlayerProps {
     id: string
     slug: string
     title: string
-    contentMDX: string
-    mdx?: SerializedMDXSource | null
     durationMin?: number
     videoUrl?: string
-    resources?: string
     quiz?: {
       id: string
       questions: string
@@ -368,35 +362,6 @@ export function LessonPlayer({
                           className="w-full h-full"
                         />
                       )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Content */}
-                <div className="mb-8">
-                  <LessonMDXRenderer serialized={lesson.mdx} content={lesson.contentMDX} />
-                </div>
-
-                {/* Resources */}
-                {lesson.resources && (
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-gold-600" />
-                      Resources
-                    </h3>
-                    <div className="space-y-2">
-                      {validateResources(lesson.resources).map((resource, index) => (
-                        <a
-                          key={index}
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 p-3 bg-gold-50 border border-gold-200 rounded-lg hover:bg-gold-100 transition-colors"
-                        >
-                          <FileText className="h-4 w-4 text-gold-600" />
-                          <span className="text-gold-800 font-medium">{resource.title}</span>
-                        </a>
-                      ))}
                     </div>
                   </div>
                 )}

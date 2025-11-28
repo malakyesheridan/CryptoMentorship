@@ -25,8 +25,10 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
   const [formData, setFormData] = useState({
     title: '',
     summary: '',
-    coverUrl: '',
+    coverImage: null as File | null,
   })
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
+  const [coverUploadProgress, setCoverUploadProgress] = useState(0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,8 +47,30 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
     setIsUploading(true)
     setUploadStatus('uploading')
     setErrorMessage('')
+    setCoverUploadProgress(0)
 
     try {
+      // Upload cover image if provided
+      let coverUrl: string | undefined = undefined
+      if (formData.coverImage) {
+        const { uploadToBlob } = await import('@/lib/blob-upload')
+        const uploadResult = await uploadToBlob({
+          file: formData.coverImage,
+          folder: 'tracks',
+          onProgress: (progress) => {
+            setCoverUploadProgress(progress)
+          }
+        })
+
+        if (!uploadResult.success || !uploadResult.url) {
+          setUploadStatus('error')
+          setErrorMessage(uploadResult.error || 'Cover image upload failed')
+          setIsUploading(false)
+          return
+        }
+        coverUrl = uploadResult.url
+      }
+
       // Generate slug from title
       const slug = formData.title
         .toLowerCase()
@@ -59,9 +83,8 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
         title: formData.title.trim(),
         slug: slug,
         summary: formData.summary.trim() || '',
-        coverUrl: formData.coverUrl.trim() || undefined,
+        coverUrl: coverUrl,
         minTier: 'member',
-        description: formData.summary.trim() || '',
         publishedAt: new Date().toISOString(),
       })
 
@@ -71,8 +94,10 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
         setFormData({
           title: '',
           summary: '',
-          coverUrl: '',
+          coverImage: null,
         })
+        setCoverImagePreview(null)
+        setCoverUploadProgress(0)
         // Call onSuccess callback if provided, otherwise reload
         if (onSuccess) {
           setTimeout(() => {
@@ -146,17 +171,67 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
             />
           </div>
 
-          {/* Cover Image URL */}
+          {/* Cover Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="cover-url">Cover Image URL (Optional)</Label>
-            <Input
-              id="cover-url"
-              value={formData.coverUrl}
-              onChange={(e) => setFormData({ ...formData, coverUrl: e.target.value })}
-              placeholder="https://example.com/cover-image.jpg"
-              type="url"
-              disabled={isUploading}
-            />
+            <Label htmlFor="cover-image">Cover Image (Optional)</Label>
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="cover-image"
+                className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  formData.coverImage
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="w-5 h-5 text-slate-600" />
+                  <span className="text-sm text-slate-600">
+                    {formData.coverImage ? formData.coverImage.name : 'Select cover image'}
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  id="cover-image"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      // Validate file type
+                      if (!file.type.startsWith('image/')) {
+                        setErrorMessage('Please select an image file')
+                        setUploadStatus('error')
+                        return
+                      }
+                      // Validate file size (10MB limit)
+                      const maxFileSize = 10 * 1024 * 1024 // 10MB
+                      if (file.size > maxFileSize) {
+                        setErrorMessage(`Image too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+                        setUploadStatus('error')
+                        return
+                      }
+                      setFormData({ ...formData, coverImage: file })
+                      setCoverImagePreview(URL.createObjectURL(file))
+                      setErrorMessage('')
+                      setUploadStatus('idle')
+                    }
+                  }}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+              </label>
+              {coverImagePreview && (
+                <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                  <img
+                    src={coverImagePreview}
+                    alt="Cover preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              Upload a cover image from your computer (JPG, PNG, WebP up to 10MB)
+            </p>
           </div>
 
           {/* Error Message */}

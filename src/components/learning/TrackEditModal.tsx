@@ -17,7 +17,8 @@ import {
   Trash2,
   Plus,
   Edit,
-  Video
+  Video,
+  Upload
 } from 'lucide-react'
 import { updateTrack, deleteTrack } from '@/lib/actions/learning'
 import { toast } from 'sonner'
@@ -51,11 +52,13 @@ export function TrackEditModal({
     title: '',
     slug: '',
     summary: '',
-    coverUrl: '',
+    coverImage: null as File | null,
+    coverUrl: '', // Existing cover URL
     minTier: 'member' as 'guest' | 'member' | 'editor' | 'admin',
-    description: '',
     publishedAt: '',
   })
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
+  const [coverUploadProgress, setCoverUploadProgress] = useState(0)
   const [trackData, setTrackData] = useState<any>(null)
   const [shouldRefreshTrack, setShouldRefreshTrack] = useState(false)
 
@@ -74,11 +77,12 @@ export function TrackEditModal({
         title: track.title || '',
         slug: track.slug || '',
         summary: track.summary || '',
+        coverImage: null,
         coverUrl: track.coverUrl || '',
         minTier: track.minTier || 'member',
-        description: track.description || '',
         publishedAt: track.publishedAt ? new Date(track.publishedAt).toISOString().slice(0, 16) : '',
       })
+      setCoverImagePreview(track.coverUrl || null)
     } catch (error) {
       console.error('Error fetching track:', error)
       toast.error('Failed to load track')
@@ -116,21 +120,48 @@ export function TrackEditModal({
     setIsLoading(true)
 
     try {
+      // Upload cover image if a new one was selected
+      let coverUrl = formData.coverUrl
+      if (formData.coverImage) {
+        setCoverUploadProgress(0)
+        const { uploadToBlob } = await import('@/lib/blob-upload')
+        const uploadResult = await uploadToBlob({
+          file: formData.coverImage,
+          folder: 'tracks',
+          onProgress: (progress) => {
+            setCoverUploadProgress(progress)
+          }
+        })
+
+        if (!uploadResult.success || !uploadResult.url) {
+          toast.error(uploadResult.error || 'Cover image upload failed')
+          setIsLoading(false)
+          return
+        }
+        coverUrl = uploadResult.url
+      }
+
       const result = await updateTrack(trackId, {
-        ...formData,
+        title: formData.title,
+        slug: formData.slug,
+        summary: formData.summary,
+        coverUrl: coverUrl || undefined,
+        minTier: formData.minTier,
         publishedAt: formData.publishedAt || undefined,
       })
 
       if (result.success) {
         toast.success('Track updated successfully')
+        // Refresh track data
+        await fetchTrack()
         onTrackUpdated?.()
-        onOpenChange(false)
       }
     } catch (error: any) {
       console.error('Error updating track:', error)
       toast.error(error.message || 'Failed to update track')
     } finally {
       setIsLoading(false)
+      setCoverUploadProgress(0)
     }
   }
 
@@ -254,41 +285,72 @@ export function TrackEditModal({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Cover Image URL
+                  Cover Image
                 </label>
-                <Input
-                  value={formData.coverUrl}
-                  onChange={(e) => handleInputChange('coverUrl', e.target.value)}
-                  placeholder="https://example.com/cover-image.jpg"
-                  type="url"
-                />
-                {formData.coverUrl && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.coverUrl}
-                      alt="Cover preview"
-                      className="h-32 w-full object-cover rounded-md border"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
+                <div className="flex items-center gap-4">
+                  <label
+                    htmlFor="cover-image-edit"
+                    className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                      formData.coverImage
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-5 h-5 text-slate-600" />
+                      <span className="text-sm text-slate-600">
+                        {formData.coverImage ? formData.coverImage.name : 'Select new cover image'}
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      id="cover-image-edit"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          // Validate file type
+                          if (!file.type.startsWith('image/')) {
+                            toast.error('Please select an image file')
+                            return
+                          }
+                          // Validate file size (10MB limit)
+                          const maxFileSize = 10 * 1024 * 1024 // 10MB
+                          if (file.size > maxFileSize) {
+                            toast.error(`Image too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+                            return
+                          }
+                          setFormData({ ...formData, coverImage: file })
+                          setCoverImagePreview(URL.createObjectURL(file))
+                        }
                       }}
+                      className="hidden"
+                      disabled={isLoading}
                     />
+                  </label>
+                  {coverImagePreview && (
+                    <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                      <img
+                        src={coverImagePreview}
+                        alt="Cover preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+                {coverUploadProgress > 0 && coverUploadProgress < 100 && (
+                  <div className="mt-2">
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div 
+                        className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${coverUploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Uploading cover image... {coverUploadProgress}%</p>
                   </div>
                 )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Description (MDX)
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Write a detailed description of what students will learn..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                  rows={6}
-                />
-                <p className="text-sm text-slate-500 mt-1">
-                  Supports Markdown and MDX components
+                <p className="text-xs text-slate-500 mt-1">
+                  Upload a cover image from your computer (JPG, PNG, WebP up to 10MB). Leave empty to keep existing image.
                 </p>
               </div>
             </div>
