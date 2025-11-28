@@ -329,6 +329,7 @@ export default function CommunityPage() {
                 channels={channels}
                 isAdmin={isAdmin}
                 onChannelChange={refreshChannels}
+                onChannelsReorder={handleChannelsReorder}
               />
             )}
             
