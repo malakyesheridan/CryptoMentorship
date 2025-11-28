@@ -20,49 +20,70 @@ const postBody = z.object({
 })
 
 export async function GET(req: Request) {
-  const url = new URL(req.url)
-  const parsed = getQuery.safeParse({
-    channelId: url.searchParams.get('channelId'),
-    take: url.searchParams.get('take') ?? undefined,
-  })
+  try {
+    const url = new URL(req.url)
+    const parsed = getQuery.safeParse({
+      channelId: url.searchParams.get('channelId'),
+      take: url.searchParams.get('take') ?? undefined,
+    })
 
-  if (!parsed.success) {
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, code: 'BAD_QUERY', message: 'Invalid query', details: parsed.error.issues },
+        { status: 400 },
+      )
+    }
+
+    const { channelId, take = 50 } = parsed.data // Reduced default from 100 to 50
+
+    // Verify channel exists
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: { id: true },
+    })
+
+    if (!channel) {
+      return NextResponse.json(
+        { ok: false, code: 'NOT_FOUND', message: 'Channel not found' },
+        { status: 404 },
+      )
+    }
+
+    // Fetch messages in reverse chronological order (newest first) then reverse
+    // This is faster with the index on [channelId, createdAt(sort: Desc)]
+    const rows = await prisma.message.findMany({
+      where: { channelId },
+      orderBy: { createdAt: 'desc' }, // Use desc to leverage index
+      take: Math.min(take, 100), // Cap at 100 for safety
+      include: {
+        user: { select: { id: true, name: true, image: true } },
+      },
+    })
+
+    // Reverse to get chronological order (oldest first)
+    rows.reverse()
+
+    const items = rows.map((message) => ({
+      id: message.id,
+      channelId: message.channelId,
+      userId: message.userId,
+      body: message.body,
+      createdAt: message.createdAt.toISOString(),
+      author: {
+        id: message.user.id,
+        name: message.user.name,
+        image: message.user.image,
+      },
+    }))
+
+    return NextResponse.json({ ok: true, items })
+  } catch (error) {
+    console.error('Error fetching messages:', error)
     return NextResponse.json(
-      { ok: false, code: 'BAD_QUERY', message: 'Invalid query' },
-      { status: 400 },
+      { ok: false, code: 'SERVER_ERROR', message: 'Failed to fetch messages' },
+      { status: 500 },
     )
   }
-
-  const { channelId, take = 50 } = parsed.data // Reduced default from 100 to 50
-
-  // Fetch messages in reverse chronological order (newest first) then reverse
-  // This is faster with the index on [channelId, createdAt(sort: Desc)]
-  const rows = await prisma.message.findMany({
-    where: { channelId },
-    orderBy: { createdAt: 'desc' }, // Use desc to leverage index
-    take: Math.min(take, 100), // Cap at 100 for safety
-    include: {
-      user: { select: { id: true, name: true, image: true } },
-    },
-  })
-
-  // Reverse to get chronological order (oldest first)
-  rows.reverse()
-
-  const items = rows.map((message) => ({
-    id: message.id,
-    channelId: message.channelId,
-    userId: message.userId,
-    body: message.body,
-    createdAt: message.createdAt.toISOString(),
-    author: {
-      id: message.user.id,
-      name: message.user.name,
-      image: message.user.image,
-    },
-  }))
-
-  return NextResponse.json({ ok: true, items })
 }
 
 export async function POST(req: Request) {

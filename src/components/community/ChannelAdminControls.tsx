@@ -146,18 +146,30 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
   const handleDragStart = (e: React.DragEvent, channelId: string) => {
     setDraggedChannelId(channelId)
     e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.dropEffect = 'move'
+    // Add visual feedback by making the dragged element semi-transparent
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
   }
 
   const handleDragOver = (e: React.DragEvent, channelId: string) => {
     e.preventDefault()
+    e.stopPropagation()
     e.dataTransfer.dropEffect = 'move'
     if (channelId !== draggedChannelId) {
       setDraggedOverChannelId(channelId)
     }
   }
 
-  const handleDragLeave = () => {
-    setDraggedOverChannelId(null)
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're actually leaving the element (not just moving to a child)
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX
+    const y = e.clientY
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDraggedOverChannelId(null)
+    }
   }
 
   const handleDrop = async (e: React.DragEvent, targetChannelId: string) => {
@@ -209,7 +221,11 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     }
   }
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Reset opacity
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
     setDraggedChannelId(null)
     setDraggedOverChannelId(null)
   }
@@ -309,13 +325,16 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, channel.id)}
             onDragEnd={handleDragEnd}
-            className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+            className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 ${
               draggedChannelId === channel.id
-                ? 'opacity-50 bg-slate-200'
+                ? 'opacity-30 bg-slate-200 scale-95'
                 : draggedOverChannelId === channel.id
-                ? 'bg-yellow-100 border-2 border-yellow-400'
-                : 'hover:bg-slate-100'
-            } ${isLoading ? 'pointer-events-none' : 'cursor-move'}`}
+                ? 'bg-blue-100 border-2 border-blue-400 scale-105 shadow-md'
+                : 'hover:bg-slate-100 border-2 border-transparent'
+            } ${isLoading ? 'pointer-events-none opacity-50' : 'cursor-move'}`}
+            style={{
+              transform: draggedOverChannelId === channel.id ? 'translateY(-2px)' : undefined,
+            }}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <GripVertical className="h-4 w-4 text-slate-400 flex-shrink-0" />

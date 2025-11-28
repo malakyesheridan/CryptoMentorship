@@ -11,8 +11,13 @@ const globalForPrisma = globalThis as unknown as {
  * - Falls back to DATABASE_URL_DEV for SQLite development
  */
 function getDatabaseUrl(): string {
+  // Skip on client side - Prisma should never run in the browser
+  if (typeof window !== 'undefined') {
+    throw new Error('Prisma client cannot be used in the browser. This is a server-only module.')
+  }
+  
   // Check process.env directly first (Next.js loads .env automatically)
-  const dbUrl = process.env.DATABASE_URL || env.DATABASE_URL
+  const dbUrl = process.env.DATABASE_URL || (typeof env !== 'undefined' && env.DATABASE_URL ? env.DATABASE_URL : undefined)
   
   // Use production database if DATABASE_URL is set and not SQLite
   if (dbUrl && typeof dbUrl === 'string' && dbUrl.trim() !== '' && !dbUrl.startsWith('file:')) {
@@ -34,7 +39,7 @@ function getDatabaseUrl(): string {
   }
   
   // Fall back to development database
-  const devUrl = process.env.DATABASE_URL_DEV || env.DATABASE_URL_DEV
+  const devUrl = process.env.DATABASE_URL_DEV || (typeof env !== 'undefined' && env.DATABASE_URL_DEV ? env.DATABASE_URL_DEV : undefined)
   if (devUrl && typeof devUrl === 'string' && devUrl.trim() !== '') {
     return devUrl
   }
@@ -86,24 +91,28 @@ function createPrismaClient(): PrismaClient {
         url: optimizedUrl
       }
     },
-    log: env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    log: (typeof env !== 'undefined' && env.NODE_ENV === 'development') ? ['error', 'warn'] : ['error'],
   })
 }
 
-// Create Prisma client with singleton pattern
-const prisma = globalForPrisma.prisma ?? createPrismaClient()
+// Create Prisma client with singleton pattern (only on server)
+const prisma = typeof window === 'undefined' 
+  ? (globalForPrisma.prisma ?? createPrismaClient())
+  : ({} as PrismaClient) // Dummy object on client to prevent errors
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma
 }
 
-// Add connection error handling
-prisma.$on('error' as never, (e: any) => {
-  // Use console.error here as logger might not be initialized yet
-  if (env.NODE_ENV === 'development') {
-    console.error('Prisma client error:', e)
-  }
-})
+// Add connection error handling (only on server)
+if (typeof window === 'undefined') {
+  prisma.$on('error' as never, (e: any) => {
+    // Use console.error here as logger might not be initialized yet
+    if (typeof env !== 'undefined' && env.NODE_ENV === 'development') {
+      console.error('Prisma client error:', e)
+    }
+  })
+}
 
 // Graceful shutdown
 if (typeof window === 'undefined') {
