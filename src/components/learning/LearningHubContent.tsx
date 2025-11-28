@@ -90,6 +90,7 @@ export function LearningHubContent({
   userRole,
   userTier
 }: LearningHubContentProps) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabType>('discover')
   const [searchQuery, setSearchQuery] = useState('')
   const [contentFilter, setContentFilter] = useState<'all' | 'courses' | 'resources'>('all')
