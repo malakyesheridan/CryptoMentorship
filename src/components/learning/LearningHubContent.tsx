@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { LearningHubTabs } from './LearningHubTabs'
 import { ContentGrid } from './ContentGrid'
 import { TrackEditModal } from './TrackEditModal'
@@ -271,18 +272,15 @@ export function LearningHubContent({
             if (!open) setEditingTrackId(null)
           }}
           onTrackUpdated={async () => {
-            // Refresh track data without full page reload
-            if (editingTrackId) {
-              // The modal will handle its own refresh via fetchTrack
-              // Just close the modal
-              setEditingTrackId(null)
-            }
-            // Trigger a soft refresh of the tracks list
-            window.location.reload() // TODO: Replace with proper state management
+            // Close the modal
+            setEditingTrackId(null)
+            // Refresh server-side data (will revalidate cache)
+            router.refresh()
           }}
           onTrackDeleted={() => {
             setEditingTrackId(null)
-            window.location.reload() // TODO: Replace with proper state management
+            // Refresh server-side data (will revalidate cache)
+            router.refresh()
           }}
         />
       )}
@@ -296,11 +294,13 @@ export function LearningHubContent({
           onTrackCreated={() => {
             // Close modal and refresh tracks list
             setUploadModalOpen(false)
-            window.location.reload() // TODO: Replace with proper state management
+            // Refresh server-side data (will revalidate cache)
+            router.refresh()
           }}
           onVideoUploaded={() => {
             // Keep modal open for multiple uploads, just refresh tracks
-            window.location.reload() // TODO: Replace with proper state management
+            // Refresh server-side data (will revalidate cache)
+            router.refresh()
           }}
         />
       )}

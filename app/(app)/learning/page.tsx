@@ -39,10 +39,11 @@ import { LearningHubContent } from '@/components/learning/LearningHubContent'
 import { getEnhancedMetrics } from '@/lib/analytics'
 import { unstable_cache } from 'next/cache'
 
-// Revalidate every 5 minutes - learning content is not real-time
-export const revalidate = 300
+// Revalidate every 30 seconds for faster updates (especially for admin edits)
+// This ensures track edits appear within 30 seconds instead of 5 minutes
+export const revalidate = 30
 
-// Cache resources for 5 minutes
+// Cache resources for 5 minutes with tag for targeted invalidation
 const getCachedResources = unstable_cache(
   async () => {
     try {
@@ -83,7 +84,7 @@ const getCachedResources = unstable_cache(
     }
   },
   ['learning-resources'],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ['learning-resources'] }
 )
 
 // Fetch resources for Learning Hub
@@ -91,7 +92,7 @@ async function getResources() {
   return getCachedResources()
 }
 
-// ✅ Cache enrollments query for 5 minutes (per-user)
+// ✅ Cache enrollments query for 5 minutes (per-user) with tag for targeted invalidation
 async function getUserEnrollments(userId: string) {
   const getCachedEnrollments = unstable_cache(
     async () => {
@@ -131,7 +132,7 @@ async function getUserEnrollments(userId: string) {
       })
     },
     [`user-enrollments-${userId}`],
-    { revalidate: 300 } // 5 minutes
+    { revalidate: 300, tags: [`user-enrollments-${userId}`, 'user-enrollments-*'] } // 5 minutes
   )
   return getCachedEnrollments()
 }
@@ -248,7 +249,7 @@ function transformEnrollmentsForCarousel(enrollments: any[]) {
   })
 }
 
-// ✅ Cache all courses query for 5 minutes (per-user for enrollment data)
+// ✅ Cache all courses query for 5 minutes (per-user for enrollment data) with tag for targeted invalidation
 async function getAllCourses(userId: string) {
   const getCachedAllCourses = unstable_cache(
     async () => {
@@ -292,7 +293,7 @@ async function getAllCourses(userId: string) {
       }))
     },
     [`all-courses-${userId}`],
-    { revalidate: 300 } // 5 minutes
+    { revalidate: 300, tags: [`all-courses-${userId}`, 'all-courses-*'] } // 5 minutes
   )
   return getCachedAllCourses()
 }

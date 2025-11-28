@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth-server'
 import { broadcastUserProgress, broadcastTrackProgress, broadcastAchievement } from '@/lib/learning/sse'
+import { revalidatePath, revalidateTag } from 'next/cache'
 
 const CompleteLessonSchema = z.object({ 
   lessonId: z.string().min(1),
@@ -251,6 +252,14 @@ export async function updateTrack(trackId: string, input: unknown) {
       publishedAt: data.publishedAt,
     }
   })
+
+  // Immediately revalidate all learning-related caches
+  revalidatePath('/learning')
+  revalidatePath(`/learn/${track.slug}`)
+  revalidatePath(`/learn/${existingTrack.slug}`) // Also revalidate old slug if changed
+  revalidateTag('learning-resources')
+  revalidateTag(`all-courses-*`) // Invalidate all user caches for courses
+  revalidateTag(`user-enrollments-*`) // Invalidate all user enrollment caches
 
   return { 
     success: true, 
