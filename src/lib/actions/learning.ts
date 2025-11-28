@@ -296,11 +296,17 @@ export async function deleteTrack(trackId: string) {
   })
 
   // Immediately revalidate all learning-related caches
-  revalidatePath('/learning')
-  revalidatePath(`/learn/${trackSlug}`)
-  revalidateTag('learning-resources')
-  revalidateTag(`all-courses-*`) // Invalidate all user caches for courses
-  revalidateTag(`user-enrollments-*`) // Invalidate all user enrollment caches
+  // Use try-catch to prevent revalidation errors from breaking the delete operation
+  try {
+    revalidatePath('/learning')
+    revalidatePath(`/learn/${trackSlug}`)
+    revalidateTag('learning-resources')
+    // Note: revalidateTag with wildcards doesn't work in Next.js
+    // We'll revalidate paths instead which is more reliable
+  } catch (error) {
+    // Log but don't fail the delete operation if revalidation fails
+    console.error('Error revalidating cache after track deletion:', error)
+  }
 
   return { success: true }
 }

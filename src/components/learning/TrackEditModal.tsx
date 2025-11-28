@@ -92,10 +92,10 @@ export function TrackEditModal({
   }, [trackId])
 
   useEffect(() => {
-    if (open && trackId) {
+    if (open && trackId && !isDeleting) {
       fetchTrack()
     }
-  }, [open, trackId, fetchTrack])
+  }, [open, trackId, fetchTrack, isDeleting])
 
   // Handle track refresh after video upload
   useEffect(() => {
@@ -171,35 +171,26 @@ export function TrackEditModal({
     }
 
     setIsDeleting(true)
+    // Close modal immediately to prevent any fetch attempts
+    onOpenChange(false)
+    
     try {
-      // Close modal immediately to prevent any state updates during deletion
-      onOpenChange(false)
-      
-      // Defer the delete and navigation to avoid React render errors
-      requestAnimationFrame(() => {
-        setTimeout(async () => {
-          try {
-            const result = await deleteTrack(trackId)
-            if (result.success) {
-              toast.success('Track deleted successfully')
-              // Navigate away before triggering refresh to avoid 404 errors
-              router.push('/learning')
-              // Defer the callback to avoid state updates during render
-              setTimeout(() => {
-                onTrackDeleted?.()
-              }, 100)
-            }
-          } catch (error: any) {
-            console.error('Error deleting track:', error)
-            toast.error(error.message || 'Failed to delete track')
-            setIsDeleting(false)
-          }
-        }, 0)
-      })
+      const result = await deleteTrack(trackId)
+      if (result.success) {
+        toast.success('Track deleted successfully')
+        // Navigate away immediately
+        router.push('/learning')
+        // Defer callback to avoid state updates during render
+        setTimeout(() => {
+          onTrackDeleted?.()
+        }, 200)
+      }
     } catch (error: any) {
       console.error('Error deleting track:', error)
       toast.error(error.message || 'Failed to delete track')
       setIsDeleting(false)
+      // Re-open modal if deletion failed
+      onOpenChange(true)
     }
   }
 
