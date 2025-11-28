@@ -29,7 +29,8 @@ function useChannels() {
     revalidateOnFocus: false, // Channels don't change frequently
     revalidateOnReconnect: true,
     shouldRetryOnError: true,
-    dedupingInterval: 5000, // Dedupe requests within 5 seconds
+    dedupingInterval: 1000, // Dedupe requests within 1 second (faster for drag-drop)
+    refreshInterval: 0, // No auto-refresh
   })
 
   return {

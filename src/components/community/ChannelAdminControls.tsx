@@ -158,8 +158,19 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     e.preventDefault()
     e.stopPropagation()
     e.dataTransfer.dropEffect = 'move'
+    
     if (channelId !== draggedChannelId) {
       setDraggedOverChannelId(channelId)
+      
+      // Calculate drop position based on mouse Y position relative to the element
+      const rect = e.currentTarget.getBoundingClientRect()
+      const y = e.clientY - rect.top
+      const height = rect.height
+      const midpoint = height / 2
+      
+      // If mouse is in top half, drop before; bottom half, drop after
+      const position = y < midpoint ? 'before' : 'after'
+      setDropPosition(position)
     }
   }
 
@@ -175,11 +186,13 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
 
   const handleDrop = async (e: React.DragEvent, targetChannelId: string) => {
     e.preventDefault()
-    setDraggedOverChannelId(null)
-    const currentDropPosition = dropPosition
+    e.stopPropagation()
+    
+    const currentDropPosition = dropPosition || 'before' // Default to 'before' if not set
 
     if (!draggedChannelId || draggedChannelId === targetChannelId) {
       setDraggedChannelId(null)
+      setDraggedOverChannelId(null)
       setDropPosition(null)
       return
     }
@@ -191,11 +204,12 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
 
     if (draggedIndex === -1 || targetIndex === -1) {
       setDraggedChannelId(null)
+      setDraggedOverChannelId(null)
       setDropPosition(null)
       return
     }
 
-    // Reorder channels
+    // Calculate new order
     const newChannels = [...sortedChannels]
     const [removed] = newChannels.splice(draggedIndex, 1)
     
@@ -203,16 +217,16 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     let insertIndex = targetIndex
     if (currentDropPosition === 'after') {
       insertIndex = targetIndex + 1
-      // If we removed an item before the target, we need to adjust
+      // Adjust if we removed an item before the target
       if (draggedIndex < targetIndex) {
-        insertIndex = targetIndex // The target index is already correct after splice
+        insertIndex = targetIndex // Target index is already correct after splice
       }
     } else {
-      // currentDropPosition === 'before' or null (default to before)
+      // 'before' position
       insertIndex = targetIndex
-      // If we removed an item after the target, we need to adjust
+      // Adjust if we removed an item after the target
       if (draggedIndex > targetIndex) {
-        insertIndex = targetIndex // The target index is already correct after splice
+        insertIndex = targetIndex // Target index is already correct after splice
       }
     }
     
@@ -221,7 +235,13 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     // Extract channel IDs in new order
     const channelIds = newChannels.map(c => c.id)
 
+    // Optimistic update: immediately update local state
+    // The parent component will refresh, but this gives instant feedback
     setIsLoading(true)
+    setDraggedChannelId(null)
+    setDraggedOverChannelId(null)
+    setDropPosition(null)
+    
     try {
       const data = await json<{ success: boolean }>('/api/admin/channels/reorder', {
         method: 'POST',
@@ -230,6 +250,7 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
 
       if (data.success) {
         toast.success('Channels reordered successfully')
+        // Refresh channels immediately
         onChannelChange()
       } else {
         throw new Error('Failed to reorder channels')
@@ -237,9 +258,10 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to reorder channels'
       toast.error(errorMessage)
+      // Refresh to get correct order on error
+      onChannelChange()
     } finally {
       setIsLoading(false)
-      setDraggedChannelId(null)
     }
   }
 
@@ -338,72 +360,74 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
         </div>
       )}
 
-      <div className="space-y-2">
-        {[...channels].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((channel) => (
-          <div key={channel.id}>
-            {/* Drop indicator line before channel */}
-            {draggedOverChannelId === channel.id && dropPosition === 'before' && (
-              <div className="h-1 bg-blue-500 rounded-full mb-1 mx-2" />
+      <div className="space-y-1">
+        {[...channels].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((channel, index) => (
+          <div key={channel.id} className="relative">
+            {/* Drop indicator line BEFORE channel - shows when dragging over this channel's top half OR previous channel's bottom */}
+            {((draggedOverChannelId === channel.id && dropPosition === 'before') ||
+              (index > 0 && draggedOverChannelId === channels.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[index - 1]?.id && dropPosition === 'after')) && (
+              <div className="h-1.5 bg-blue-500 rounded-full mb-2 mx-2 shadow-lg z-10" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)' }} />
             )}
+            
             <div
-              draggable
+              draggable={!isLoading}
               onDragStart={(e) => handleDragStart(e, channel.id)}
               onDragOver={(e) => handleDragOver(e, channel.id)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, channel.id)}
               onDragEnd={handleDragEnd}
-            className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 relative ${
-              draggedChannelId === channel.id
-                ? 'opacity-30 bg-slate-200 scale-95'
-                : draggedOverChannelId === channel.id
-                ? 'bg-blue-50 border-2 border-blue-400 scale-105 shadow-md'
-                : 'hover:bg-slate-100 border-2 border-transparent'
-            } ${isLoading ? 'pointer-events-none opacity-50' : 'cursor-move'}`}
-            style={{
-              transform: draggedOverChannelId === channel.id ? 'translateY(-2px)' : undefined,
-            }}
-          >
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <GripVertical className="h-4 w-4 text-slate-400 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-slate-900">#{channel.name}</div>
-                {channel.description && (
-                  <div className="text-xs text-slate-500 truncate">{channel.description}</div>
-                )}
+              className={`flex items-center justify-between p-3 rounded-lg transition-all duration-150 relative ${
+                draggedChannelId === channel.id
+                  ? 'opacity-40 bg-slate-200 scale-95 cursor-grabbing'
+                  : draggedOverChannelId === channel.id
+                  ? dropPosition === 'before'
+                    ? 'bg-blue-50 border-t-4 border-blue-500 border-b-2 border-blue-200'
+                    : 'bg-blue-50 border-b-4 border-blue-500 border-t-2 border-blue-200'
+                  : 'hover:bg-slate-50 border-2 border-transparent'
+              } ${isLoading ? 'pointer-events-none opacity-50' : 'cursor-grab active:cursor-grabbing'}`}
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <GripVertical className="h-5 w-5 text-slate-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-slate-900">#{channel.name}</div>
+                  {channel.description && (
+                    <div className="text-xs text-slate-500 truncate">{channel.description}</div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    startEdit(channel)
+                  }}
+                  disabled={isLoading}
+                  className="h-8 w-8 p-0"
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(channel.id)
+                  }}
+                  disabled={isLoading}
+                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  startEdit(channel)
-                }}
-                disabled={isLoading}
-                className="h-8 w-8 p-0"
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDelete(channel.id)
-                }}
-                disabled={isLoading}
-                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
+            
+            {/* Drop indicator line AFTER channel - shows when dragging over this channel's bottom half */}
+            {draggedOverChannelId === channel.id && dropPosition === 'after' && index === channels.length - 1 && (
+              <div className="h-1.5 bg-blue-500 rounded-full mt-2 mx-2 shadow-lg z-10" style={{ boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)' }} />
+            )}
           </div>
-          {/* Drop indicator line after channel */}
-          {draggedOverChannelId === channel.id && dropPosition === 'after' && (
-            <div className="h-1 bg-blue-500 rounded-full mt-1 mx-2" />
-          )}
-        </div>
         ))}
       </div>
     </div>
