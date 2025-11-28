@@ -279,9 +279,14 @@ export function LearningHubContent({
             router.refresh()
           }}
           onTrackDeleted={() => {
+            // Close modal and refresh - but defer to avoid React errors
             setEditingTrackId(null)
-            // Refresh server-side data (will revalidate cache)
-            router.refresh()
+            // Defer refresh to avoid state updates during render
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                router.refresh()
+              }, 100)
+            })
           }}
         />
       )}

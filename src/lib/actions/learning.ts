@@ -278,19 +278,29 @@ export async function deleteTrack(trackId: string) {
     throw new Error('Insufficient permissions to delete tracks')
   }
 
-  // Check if track exists
+  // Check if track exists and get slug for cache revalidation
   const existingTrack = await prisma.track.findUnique({
-    where: { id: trackId }
+    where: { id: trackId },
+    select: { id: true, slug: true }
   })
 
   if (!existingTrack) {
     throw new Error('Track not found')
   }
 
+  const trackSlug = existingTrack.slug
+
   // Delete the track (cascade will handle related records)
   await prisma.track.delete({
     where: { id: trackId }
   })
+
+  // Immediately revalidate all learning-related caches
+  revalidatePath('/learning')
+  revalidatePath(`/learn/${trackSlug}`)
+  revalidateTag('learning-resources')
+  revalidateTag(`all-courses-*`) // Invalidate all user caches for courses
+  revalidateTag(`user-enrollments-*`) // Invalidate all user enrollment caches
 
   return { success: true }
 }

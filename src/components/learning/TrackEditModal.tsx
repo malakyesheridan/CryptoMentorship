@@ -172,17 +172,33 @@ export function TrackEditModal({
 
     setIsDeleting(true)
     try {
-      const result = await deleteTrack(trackId)
-      if (result.success) {
-        toast.success('Track deleted successfully')
-        onTrackDeleted?.()
-        onOpenChange(false)
-        router.push('/learning')
-      }
+      // Close modal immediately to prevent any state updates during deletion
+      onOpenChange(false)
+      
+      // Defer the delete and navigation to avoid React render errors
+      requestAnimationFrame(() => {
+        setTimeout(async () => {
+          try {
+            const result = await deleteTrack(trackId)
+            if (result.success) {
+              toast.success('Track deleted successfully')
+              // Navigate away before triggering refresh to avoid 404 errors
+              router.push('/learning')
+              // Defer the callback to avoid state updates during render
+              setTimeout(() => {
+                onTrackDeleted?.()
+              }, 100)
+            }
+          } catch (error: any) {
+            console.error('Error deleting track:', error)
+            toast.error(error.message || 'Failed to delete track')
+            setIsDeleting(false)
+          }
+        }, 0)
+      })
     } catch (error: any) {
       console.error('Error deleting track:', error)
       toast.error(error.message || 'Failed to delete track')
-    } finally {
       setIsDeleting(false)
     }
   }
