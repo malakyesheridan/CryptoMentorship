@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,8 +17,7 @@ import {
   HelpCircle,
   Award,
   Lock,
-  Calendar,
-  Timer
+  Calendar
 } from 'lucide-react'
 import Link from 'next/link'
 import { LessonMDXRenderer } from '@/components/learning/LessonMDXRenderer'
@@ -98,12 +97,6 @@ export function LessonPlayer({
   const { data: session } = useSession()
   const router = useRouter()
   
-  // Time tracking state
-  const [timeSpent, setTimeSpent] = useState(0)
-  const [isTracking, setIsTracking] = useState(false)
-  const startTimeRef = useRef<number | null>(null)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  
   const isCompleted = !!progress?.completedAt
   const hasQuiz = !!lesson.quiz
   const quizPassed = quizSubmission?.passed || false
@@ -119,88 +112,6 @@ export function LessonPlayer({
   // Check if lesson can be completed
   const canComplete = !isCompleted && (!hasQuiz || quizPassed) && canAccess
 
-  // Time tracking functions
-  const startTimeTracking = () => {
-    if (!isTracking && canAccess) {
-      setIsTracking(true)
-      startTimeRef.current = Date.now()
-      
-      intervalRef.current = setInterval(() => {
-        if (startTimeRef.current) {
-          setTimeSpent(Date.now() - startTimeRef.current)
-        }
-      }, 1000)
-    }
-  }
-
-  const stopTimeTracking = () => {
-    if (isTracking) {
-      setIsTracking(false)
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-      if (startTimeRef.current) {
-        setTimeSpent(Date.now() - startTimeRef.current)
-        startTimeRef.current = null
-      }
-    }
-  }
-
-  // Start tracking when component mounts and lesson is accessible
-  useEffect(() => {
-    if (canAccess && !isCompleted) {
-      startTimeTracking()
-    }
-    
-    return () => {
-      stopTimeTracking()
-    }
-  }, [canAccess, isCompleted])
-
-  // Format time display
-  const formatTime = (ms: number) => {
-    const minutes = Math.floor(ms / 60000)
-    const seconds = Math.floor((ms % 60000) / 1000)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Don't trigger shortcuts when typing in inputs
-      if (event.target instanceof HTMLInputElement || 
-          event.target instanceof HTMLTextAreaElement ||
-          event.target instanceof HTMLSelectElement) {
-        return
-      }
-
-      switch (event.key.toLowerCase()) {
-        case 'n':
-          if (nextLesson && canAccess) {
-            router.push(`/learn/${track.slug}/lesson/${nextLesson.slug}`)
-          }
-          break
-        case 'p':
-          if (prevLesson && canAccess) {
-            router.push(`/learn/${track.slug}/lesson/${prevLesson.slug}`)
-          }
-          break
-        case 'm':
-          if (canComplete) {
-            // Trigger completion
-            const form = document.querySelector('form[action*="complete-lesson"]') as HTMLFormElement
-            if (form) {
-              form.requestSubmit()
-            }
-          }
-          break
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [nextLesson, prevLesson, canComplete, canAccess, router, track.slug])
 
   // Show locked lesson view
   if (isLocked) {
@@ -355,27 +266,6 @@ export function LessonPlayer({
                   </Link>
                 </div>
                 <CardTitle className="text-lg">{track.title}</CardTitle>
-                
-                {/* Keyboard Shortcuts Help */}
-                <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-                  <h4 className="text-sm font-medium text-slate-700 mb-2">Keyboard Shortcuts</h4>
-                  <div className="space-y-1 text-xs text-slate-600">
-                    <div className="flex justify-between">
-                      <span>Next lesson:</span>
-                      <kbd className="px-1 py-0.5 bg-white border rounded text-xs">N</kbd>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Previous lesson:</span>
-                      <kbd className="px-1 py-0.5 bg-white border rounded text-xs">P</kbd>
-                    </div>
-                    {canComplete && (
-                      <div className="flex justify-between">
-                        <span>Mark complete:</span>
-                        <kbd className="px-1 py-0.5 bg-white border rounded text-xs">M</kbd>
-                      </div>
-                    )}
-                  </div>
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -514,33 +404,12 @@ export function LessonPlayer({
                   />
                 )}
 
-                {/* Time Tracking Display */}
-                {canAccess && !isCompleted && (
-                  <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Timer className="h-4 w-4 text-slate-500" />
-                        <span className="text-sm font-medium">Time Spent:</span>
-                        <span className="text-sm text-slate-600">{formatTime(timeSpent)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full ${isTracking ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        <span className="text-xs text-slate-500">
-                          {isTracking ? 'Tracking' : 'Paused'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Completion Button */}
                 {canComplete && (
                   <div className="mb-8">
                     <form action={async () => {
-                      stopTimeTracking()
                       await completeLesson({ 
-                        lessonId: lesson.id,
-                        timeSpentMs: timeSpent
+                        lessonId: lesson.id
                       })
                     }}>
                       <Button type="submit" size="lg" className="w-full">

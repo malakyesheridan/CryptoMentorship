@@ -139,24 +139,6 @@ export function EnhancedStats({
         <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 group-hover:scale-110 transition-all duration-300">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-              </div>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 group-hover:scale-105 transition-transform duration-300 text-xs">
-                Total Time
-              </Badge>
-            </div>
-            <h3 className="text-xs sm:text-sm font-medium text-slate-600 mb-1">Time Invested</h3>
-            <p className="text-lg sm:text-2xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors duration-300">
-              {formatTimeSpent(enhancedMetrics.totalTimeSpent)}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">of learning time</p>
-          </CardContent>
-        </Card>
-
-        <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="h-8 w-8 sm:h-10 sm:w-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 group-hover:scale-110 transition-all duration-300">
                 <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>

@@ -206,17 +206,6 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Time Spent</p>
-                <p className="text-2xl font-bold">{formatTimeSpent(analytics.overview.totalTimeSpent)}</p>
-              </div>
-              <Clock className="h-8 w-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Learning Streak */}

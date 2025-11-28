@@ -9,7 +9,6 @@ import {
   Trophy, 
   Flame, 
   Award, 
-  Clock,
   TrendingUp,
   Target
 } from 'lucide-react'
@@ -29,7 +28,6 @@ interface ProgressData {
   completedLessons?: number
   totalLessons?: number
   completedAt?: string
-  timeSpentMs?: number
 }
 
 interface AchievementData {
@@ -75,7 +73,6 @@ export function RealTimeProgress({
           progressPct: data.progressPct,
           completedLessons: data.completedLessons,
           totalLessons: data.totalLessons,
-          timeSpentMs: data.timeSpentMs,
         })
         setStreak(data.streak || 0)
       } catch (error) {
@@ -110,11 +107,6 @@ export function RealTimeProgress({
     }
   }
 
-  const formatTimeSpent = (timeSpentMs: number) => {
-    const minutes = Math.floor(timeSpentMs / 60000)
-    const seconds = Math.floor((timeSpentMs % 60000) / 1000)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -147,13 +139,6 @@ export function RealTimeProgress({
                 {progress.completedLessons !== undefined && progress.totalLessons !== undefined && (
                   <div className="text-xs text-slate-500">
                     {progress.completedLessons} of {progress.totalLessons} lessons completed
-                  </div>
-                )}
-                
-                {progress.timeSpentMs && (
-                  <div className="flex items-center gap-1 text-xs text-slate-500">
-                    <Clock className="h-3 w-3" />
-                    Time spent: {formatTimeSpent(progress.timeSpentMs)}
                   </div>
                 )}
               </div>

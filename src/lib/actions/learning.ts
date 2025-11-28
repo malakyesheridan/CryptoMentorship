@@ -7,7 +7,7 @@ import { broadcastUserProgress, broadcastTrackProgress, broadcastAchievement } f
 
 const CompleteLessonSchema = z.object({ 
   lessonId: z.string().min(1),
-  timeSpentMs: z.number().optional()
+  timeSpentMs: z.number().optional().default(0)
 })
 const SubmitQuizSchema = z.object({
   lessonId: z.string().min(1),
@@ -98,11 +98,11 @@ export async function completeLesson(input: unknown) {
       userId: user.id, 
       lessonId, 
       completedAt: new Date(),
-      timeSpentMs: timeSpentMs || 0
+      timeSpentMs: 0
     },
     update: { 
       completedAt: new Date(),
-      timeSpentMs: timeSpentMs || 0
+      timeSpentMs: 0
     }
   })
 
