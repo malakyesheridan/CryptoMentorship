@@ -51,20 +51,49 @@ export function RealTimeProgress({
   const [progress, setProgress] = useState<ProgressData>({})
   const [achievements, setAchievements] = useState<AchievementData[]>([])
   const [streak, setStreak] = useState(0)
-  const [isConnected, setIsConnected] = useState(false)
-  const [connectionError, setConnectionError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Simplified version without SSE for now to prevent errors
+  // Fetch real progress data from API
   useEffect(() => {
-    // Mock some progress data for demonstration
-    setProgress({
-      progressPct: 75,
-      completedLessons: 15,
-      totalLessons: 20
-    })
-    setStreak(5)
-    setIsConnected(true)
-  }, [])
+    if (!trackId) {
+      setIsLoading(false)
+      return
+    }
+
+    const fetchProgress = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/learning/track-progress?trackId=${trackId}`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch progress')
+        }
+
+        const data = await response.json()
+        
+        setProgress({
+          progressPct: data.progressPct,
+          completedLessons: data.completedLessons,
+          totalLessons: data.totalLessons,
+          timeSpentMs: data.timeSpentMs,
+        })
+        setStreak(data.streak || 0)
+      } catch (error) {
+        console.error('Error fetching progress:', error)
+        // Set empty progress on error
+        setProgress({})
+        setStreak(0)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProgress()
+
+    // Refresh progress every 30 seconds
+    const interval = setInterval(fetchProgress, 30000)
+    return () => clearInterval(interval)
+  }, [trackId])
 
   const getAchievementIcon = (type: string) => {
     switch (type) {
@@ -89,19 +118,14 @@ export function RealTimeProgress({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Connection Status */}
-      <div className="flex items-center gap-2 text-sm">
-        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-        <span className={isConnected ? 'text-green-600' : 'text-red-600'}>
-          {isConnected ? 'Live Updates Connected' : 'Connecting...'}
-        </span>
-        {connectionError && (
-          <span className="text-orange-600 text-xs">{connectionError}</span>
-        )}
-      </div>
-
       {/* Progress Display */}
-      {progress.progressPct !== undefined && (
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-slate-500">Loading progress...</div>
+          </CardContent>
+        </Card>
+      ) : progress.progressPct !== undefined && (
         <Card>
           <CardContent className="p-4">
             <div className="space-y-3">
