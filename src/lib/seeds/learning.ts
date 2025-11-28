@@ -16,7 +16,7 @@ export async function seedLearningTracks() {
       summary: 'Master the fundamentals of cryptocurrency trading, from basic concepts to advanced strategies.',
       coverUrl: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=450&fit=crop',
       minTier: 'member',
-      description: `# Foundations of Cryptocurrency Trading
+      summary: `Foundations of Cryptocurrency Trading
 
 This comprehensive track covers everything you need to know to start trading cryptocurrencies successfully.
 
@@ -602,7 +602,7 @@ Never risk more than 2% of your account balance on a single trade.
       summary: 'Advanced strategies for managing risk and building a diversified cryptocurrency portfolio.',
       coverUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop',
       minTier: 'member',
-      description: `# Risk & Portfolio Management
+      summary: `Risk & Portfolio Management
 
 Learn advanced techniques for managing risk and building a robust cryptocurrency portfolio.
 
