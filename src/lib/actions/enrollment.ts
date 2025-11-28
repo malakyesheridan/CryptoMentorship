@@ -353,10 +353,7 @@ async function updateTrackProgress(userId: string, trackId: string) {
     },
   })
 
-  // If track is completed, issue certificate
-  if (progressPct === 100 && !enrollment.completedAt) {
-    await issueCertificate(userId, trackId)
-  }
+  // Track completion is tracked but no certificate is issued
 
   return enrollment
 }

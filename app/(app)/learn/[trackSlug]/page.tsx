@@ -7,16 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
-  BookOpen, 
-  Clock, 
-  Users, 
   Play, 
   CheckCircle,
   Lock,
   ArrowLeft,
-  Calendar,
-  Target,
-  Award
+  ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -161,89 +156,29 @@ export default async function TrackPage({
             </div>
           )}
 
-          {/* Track Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Lessons</p>
-                  <p className="text-2xl font-bold text-slate-900">{totalLessons}</p>
-                </div>
-                <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <BookOpen className="h-4 w-4 text-blue-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Duration</p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {Math.round(totalDuration / 60)}h {totalDuration % 60}m
-                  </p>
-                </div>
-                <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-green-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Students</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {track._count.enrollments}
-                  </p>
-                </div>
-                <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Users className="h-4 w-4 text-purple-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Progress</p>
-                  <p className="text-2xl font-bold text-gold-600">{progressPct}%</p>
-                </div>
-                <div className="h-8 w-8 bg-gold-100 rounded-lg flex items-center justify-center">
-                  <Target className="h-4 w-4 text-gold-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
+          {/* Simple Progress and Action */}
           {enrollment && (
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Your Progress</h3>
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-600">
                   {completedLessons} of {totalLessons} lessons completed
                 </span>
+                <span className="text-sm font-medium text-slate-900">{progressPct}%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-3">
+              <div className="w-full bg-slate-200 rounded-full h-2">
                 <div 
-                  className="bg-gold-600 h-3 rounded-full transition-all duration-300"
+                  className="bg-gold-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-4 mb-8">
-            {!hasAccess ? (
-              <Button disabled size="lg">
-                <Lock className="h-5 w-5 mr-2" />
-                Upgrade to {track.minTier} tier to access this track
-              </Button>
-            ) : enrollment ? (
-              <div className="flex items-center gap-4">
-                {nextLesson ? (
+          {/* Action Button */}
+          {hasAccess && (
+            <div className="mb-8">
+              {enrollment ? (
+                nextLesson ? (
                   <Link href={`/learn/${track.slug}/lesson/${nextLesson.slug}`}>
                     <Button size="lg">
                       <Play className="h-5 w-5 mr-2" />
@@ -251,108 +186,183 @@ export default async function TrackPage({
                     </Button>
                   </Link>
                 ) : (
-                  <Button disabled size="lg">
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    Track Completed!
-                  </Button>
-                )}
-                
-                {progressPct === 100 && (
-                  <Link href={`/learn/cert/${enrollment.id}`}>
-                    <Button variant="outline" size="lg">
-                      <Award className="h-5 w-5 mr-2" />
-                      View Certificate
+                  // Allow re-watching completed tracks - start from first lesson
+                  <Link href={`/learn/${track.slug}/lesson/${track.lessons[0]?.slug}`}>
+                    <Button size="lg" variant="outline">
+                      <Play className="h-5 w-5 mr-2" />
+                      Watch Again
                     </Button>
                   </Link>
-                )}
-              </div>
-            ) : (
-              <form action={async () => {
-                'use server'
-                await enrollInTrack({ trackId: track.id })
-              }}>
-                <Button type="submit" size="lg">
-                  <Play className="h-5 w-5 mr-2" />
-                  Start Track
-                </Button>
-              </form>
-            )}
-          </div>
+                )
+              ) : (
+                <form action={async () => {
+                  'use server'
+                  await enrollInTrack({ trackId: track.id })
+                }}>
+                  <Button type="submit" size="lg">
+                    <Play className="h-5 w-5 mr-2" />
+                    Start Track
+                  </Button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {!hasAccess && (
+            <div className="mb-8">
+              <Button disabled size="lg">
+                <Lock className="h-5 w-5 mr-2" />
+                Upgrade to {track.minTier} tier to access this track
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Sections and Lessons */}
-        <div className="space-y-6">
-          {track.sections.map((section) => (
-            <Card key={section.id}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-gold-600" />
-                  {section.title}
-                </CardTitle>
-                {section.summary && (
-                  <CardDescription>{section.summary}</CardDescription>
+        {/* Lessons List - Prominent and Easy to Navigate */}
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+          <div className="p-6 border-b border-slate-200">
+            <h2 className="text-xl font-bold text-slate-900">Lessons</h2>
+            <p className="text-sm text-slate-600 mt-1">Select a lesson to watch</p>
+          </div>
+          
+          <div className="divide-y divide-slate-200">
+            {/* Lessons in sections */}
+            {track.sections.map((section) => (
+              <div key={section.id}>
+                {section.title && (
+                  <div className="px-6 py-3 bg-slate-50 border-b border-slate-200">
+                    <h3 className="font-semibold text-slate-900">{section.title}</h3>
+                    {section.summary && (
+                      <p className="text-sm text-slate-600 mt-1">{section.summary}</p>
+                    )}
+                  </div>
                 )}
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {section.lessons.map((lesson) => {
-                    const isCompleted = userProgress[lesson.id]
-                    const hasQuiz = !!lesson.quiz
-                    
-                    return (
-                      <div
-                        key={lesson.id}
-                        className={`flex items-center justify-between p-4 rounded-lg border ${
+                {section.lessons.map((lesson) => {
+                  const isCompleted = userProgress[lesson.id]
+                  const hasQuiz = !!lesson.quiz
+                  
+                  return (
+                    <Link
+                      key={lesson.id}
+                      href={hasAccess ? `/learn/${track.slug}/lesson/${lesson.slug}` : '#'}
+                      className={`block px-6 py-4 hover:bg-slate-50 transition-colors ${
+                        !hasAccess ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
                           isCompleted 
-                            ? 'bg-green-50 border-green-200' 
-                            : 'bg-white border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                            isCompleted 
-                              ? 'bg-green-100 text-green-600' 
-                              : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            {isCompleted ? (
-                              <CheckCircle className="h-4 w-4" />
-                            ) : (
-                              <Play className="h-4 w-4" />
+                            ? 'bg-green-100 text-green-600' 
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {isCompleted ? (
+                            <CheckCircle className="h-5 w-5" />
+                          ) : (
+                            <Play className="h-5 w-5" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-slate-900">{lesson.title}</h4>
+                            {isCompleted && (
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                Completed
+                              </Badge>
+                            )}
+                            {hasQuiz && (
+                              <Badge variant="secondary" className="text-xs">
+                                Quiz
+                              </Badge>
                             )}
                           </div>
-                          
-                          <div>
-                            <h4 className="font-medium text-slate-900">{lesson.title}</h4>
-                            <div className="flex items-center gap-4 text-sm text-slate-600">
-                              {lesson.durationMin && (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {lesson.durationMin}m
-                                </span>
-                              )}
-                              {hasQuiz && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Quiz
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
+                          {lesson.durationMin && (
+                            <p className="text-sm text-slate-600 mt-1">
+                              {lesson.durationMin} minutes
+                            </p>
+                          )}
                         </div>
 
                         {hasAccess && (
-                          <Link href={`/learn/${track.slug}/lesson/${lesson.slug}`}>
-                            <Button variant="outline" size="sm">
-                              {isCompleted ? 'Review' : 'Start'}
-                            </Button>
-                          </Link>
+                          <Button variant="ghost" size="sm" className="flex-shrink-0">
+                            {isCompleted ? 'Review' : 'Watch'}
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
                         )}
                       </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    </Link>
+                  )
+                })}
+              </div>
+            ))}
+            
+            {/* Lessons without sections */}
+            {track.lessons.length > 0 && (
+              <div>
+                {track.sections.length > 0 && (
+                  <div className="px-6 py-3 bg-slate-50 border-b border-slate-200">
+                    <h3 className="font-semibold text-slate-900">Other Lessons</h3>
+                  </div>
+                )}
+                {track.lessons.map((lesson) => {
+                  const isCompleted = userProgress[lesson.id]
+                  const hasQuiz = !!lesson.quiz
+                  
+                  return (
+                    <Link
+                      key={lesson.id}
+                      href={hasAccess ? `/learn/${track.slug}/lesson/${lesson.slug}` : '#'}
+                      className={`block px-6 py-4 hover:bg-slate-50 transition-colors ${
+                        !hasAccess ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                          isCompleted 
+                            ? 'bg-green-100 text-green-600' 
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {isCompleted ? (
+                            <CheckCircle className="h-5 w-5" />
+                          ) : (
+                            <Play className="h-5 w-5" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-slate-900">{lesson.title}</h4>
+                            {isCompleted && (
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                Completed
+                              </Badge>
+                            )}
+                            {hasQuiz && (
+                              <Badge variant="secondary" className="text-xs">
+                                Quiz
+                              </Badge>
+                            )}
+                          </div>
+                          {lesson.durationMin && (
+                            <p className="text-sm text-slate-600 mt-1">
+                              {lesson.durationMin} minutes
+                            </p>
+                          )}
+                        </div>
+
+                        {hasAccess && (
+                          <Button variant="ghost" size="sm" className="flex-shrink-0">
+                            {isCompleted ? 'Review' : 'Watch'}
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
+                        )}
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Track Description */}

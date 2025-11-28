@@ -268,41 +268,48 @@ export function LessonPlayer({
                 <CardTitle className="text-lg">{track.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {track.sections.map((section) => (
-                    <div key={section.id} className="space-y-1">
-                      <h4 className="font-medium text-slate-900 text-sm">{section.title}</h4>
-                      <div className="space-y-1 ml-2">
-                        {section.lessons.map((sectionLesson) => {
-                          const isCurrentLesson = sectionLesson.id === lesson.id
-                          const isCompleted = userProgress[sectionLesson.id] || false
-                          
-                          return (
-                            <Link
-                              key={sectionLesson.id}
-                              href={`/learn/${track.slug}/lesson/${sectionLesson.slug}`}
-                              className={`block p-2 rounded text-sm ${
-                                isCurrentLesson
-                                  ? 'bg-gold-100 text-gold-700 font-medium'
-                                  : isCompleted
-                                  ? 'text-green-600 hover:bg-green-50'
-                                  : 'text-slate-600 hover:bg-slate-50'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                {isCompleted ? (
-                                  <CheckCircle className="h-3 w-3" />
-                                ) : (
-                                  <Play className="h-3 w-3" />
-                                )}
-                                <span className="truncate">{sectionLesson.title}</span>
-                              </div>
-                            </Link>
-                          )
-                        })}
-                      </div>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900 mb-3">Lessons</h4>
+                    <div className="space-y-1">
+                      {track.sections.map((section) => (
+                        <div key={section.id} className="space-y-1">
+                          {section.title && (
+                            <h5 className="text-xs font-medium text-slate-600 uppercase tracking-wide px-2 py-1">
+                              {section.title}
+                            </h5>
+                          )}
+                          {section.lessons.map((sectionLesson) => {
+                            const isCurrentLesson = sectionLesson.id === lesson.id
+                            const isCompleted = userProgress[sectionLesson.id] || false
+                            
+                            return (
+                              <Link
+                                key={sectionLesson.id}
+                                href={`/learn/${track.slug}/lesson/${sectionLesson.slug}`}
+                                className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                                  isCurrentLesson
+                                    ? 'bg-gold-100 text-gold-900 font-medium border border-gold-200'
+                                    : isCompleted
+                                    ? 'text-green-700 hover:bg-green-50'
+                                    : 'text-slate-700 hover:bg-slate-50'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {isCompleted ? (
+                                    <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                                  ) : (
+                                    <Play className="h-4 w-4 flex-shrink-0" />
+                                  )}
+                                  <span className="truncate">{sectionLesson.title}</span>
+                                </div>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>

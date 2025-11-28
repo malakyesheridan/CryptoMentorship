@@ -270,8 +270,8 @@ export default async function LearningPage() {
                         <Button className="w-full">
                           {progress.completedLessons === totalLessons ? (
                             <>
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Completed
+                              <Play className="h-4 w-4 mr-2" />
+                              Watch Again
                             </>
                           ) : (
                             <>

@@ -263,39 +263,6 @@ export function LearningHubContent({
             </Suspense>
           </div>
 
-          {/* Certificates */}
-          {certificates.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Your Certificates</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {certificates.map((certificate) => (
-                  <Card key={certificate.id} className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200">
-                    <CardHeader>
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                          <Award className="h-6 w-6 text-yellow-600" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg font-semibold text-slate-900">{certificate.track.title}</CardTitle>
-                          <CardDescription className="text-slate-600">
-                            Completed {formatDate(certificate.issuedAt, 'MMM d, yyyy')}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <Link href={`/learn/cert/${certificate.code}`}>
-                        <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
-                          <Award className="h-4 w-4 mr-2" />
-                          View Certificate
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
