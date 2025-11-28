@@ -175,9 +175,11 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
   const handleDrop = async (e: React.DragEvent, targetChannelId: string) => {
     e.preventDefault()
     setDraggedOverChannelId(null)
+    const currentDropPosition = dropPosition
 
     if (!draggedChannelId || draggedChannelId === targetChannelId) {
       setDraggedChannelId(null)
+      setDropPosition(null)
       return
     }
 
@@ -188,13 +190,32 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
 
     if (draggedIndex === -1 || targetIndex === -1) {
       setDraggedChannelId(null)
+      setDropPosition(null)
       return
     }
 
     // Reorder channels
     const newChannels = [...sortedChannels]
     const [removed] = newChannels.splice(draggedIndex, 1)
-    newChannels.splice(targetIndex, 0, removed)
+    
+    // Calculate insertion index based on drop position
+    let insertIndex = targetIndex
+    if (currentDropPosition === 'after') {
+      insertIndex = targetIndex + 1
+      // If we removed an item before the target, we need to adjust
+      if (draggedIndex < targetIndex) {
+        insertIndex = targetIndex // The target index is already correct after splice
+      }
+    } else {
+      // currentDropPosition === 'before' or null (default to before)
+      insertIndex = targetIndex
+      // If we removed an item after the target, we need to adjust
+      if (draggedIndex > targetIndex) {
+        insertIndex = targetIndex // The target index is already correct after splice
+      }
+    }
+    
+    newChannels.splice(insertIndex, 0, removed)
 
     // Extract channel IDs in new order
     const channelIds = newChannels.map(c => c.id)
@@ -228,6 +249,7 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     }
     setDraggedChannelId(null)
     setDraggedOverChannelId(null)
+    setDropPosition(null)
   }
 
   return (
@@ -325,11 +347,11 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, channel.id)}
             onDragEnd={handleDragEnd}
-            className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 ${
+            className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 relative ${
               draggedChannelId === channel.id
                 ? 'opacity-30 bg-slate-200 scale-95'
                 : draggedOverChannelId === channel.id
-                ? 'bg-blue-100 border-2 border-blue-400 scale-105 shadow-md'
+                ? 'bg-blue-50 border-2 border-blue-400 scale-105 shadow-md'
                 : 'hover:bg-slate-100 border-2 border-transparent'
             } ${isLoading ? 'pointer-events-none opacity-50' : 'cursor-move'}`}
             style={{
@@ -372,6 +394,11 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
               </Button>
             </div>
           </div>
+          {/* Drop indicator line after channel */}
+          {draggedOverChannelId === channel.id && dropPosition === 'after' && (
+            <div className="h-1 bg-blue-500 rounded-full mt-1 mx-2" />
+          )}
+        </div>
         ))}
       </div>
     </div>

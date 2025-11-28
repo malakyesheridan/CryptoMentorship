@@ -352,8 +352,13 @@ export default async function LearningDashboardPage() {
 
   // Calculate streak (consecutive days with completed lessons)
   const completedDates = progress
-    .map(p => p.completedAt?.toDateString())
-    .filter(Boolean)
+    .map(p => {
+      if (!p.completedAt) return null
+      // Handle both Date objects and ISO strings
+      const date = p.completedAt instanceof Date ? p.completedAt : new Date(p.completedAt)
+      return date.toDateString()
+    })
+    .filter(Boolean) as string[]
     .sort()
     .reverse()
 
