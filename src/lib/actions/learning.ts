@@ -52,10 +52,9 @@ const CreateLessonSchema = z.object({
   sectionId: z.string().optional(),
   slug: z.string().min(1, "Slug is required"),
   title: z.string().min(1, "Title is required"),
-  contentMDX: z.string().min(1, "Content is required"),
+  contentMDX: z.string().optional(), // Optional - can be empty for video-only lessons
   durationMin: z.number().optional(),
   videoUrl: z.string().optional(),
-  resources: z.string().optional(), // JSON string
   publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
   order: z.number().optional(),
 })
