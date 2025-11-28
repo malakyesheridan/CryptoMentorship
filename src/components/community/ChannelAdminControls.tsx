@@ -23,6 +23,7 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
   const [isLoading, setIsLoading] = useState(false)
   const [draggedChannelId, setDraggedChannelId] = useState<string | null>(null)
   const [draggedOverChannelId, setDraggedOverChannelId] = useState<string | null>(null)
+  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null)
 
   if (!isAdmin) return null
 
