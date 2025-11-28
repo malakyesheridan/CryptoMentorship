@@ -318,7 +318,8 @@ export default async function LearningDashboardPage() {
   }
 
   try {
-    const [enrollments, progress, certificates, learningActivity, allCourses, enhancedMetrics, resources] = await Promise.all([
+    // Fetch data with individual error handling to prevent one failure from breaking the page
+    const results = await Promise.allSettled([
       getUserEnrollments(session.user.id),
       getUserProgress(session.user.id),
       getUserCertificates(session.user.id),
@@ -327,6 +328,21 @@ export default async function LearningDashboardPage() {
       getEnhancedProgressMetrics(session.user.id),
       getResources(),
     ])
+    
+    const enrollments = results[0].status === 'fulfilled' ? results[0].value : []
+    const progress = results[1].status === 'fulfilled' ? results[1].value : []
+    const certificates = results[2].status === 'fulfilled' ? results[2].value : []
+    const learningActivity = results[3].status === 'fulfilled' ? results[3].value : []
+    const allCourses = results[4].status === 'fulfilled' ? results[4].value : []
+    const enhancedMetrics = results[5].status === 'fulfilled' ? results[5].value : { learningVelocity: 0, totalTimeSpent: 0, consistencyScore: 0, retentionRate: 0, totalDays: 0 }
+    const resources = results[6].status === 'fulfilled' ? results[6].value : []
+    
+    // Log any errors for debugging
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(`Error fetching data at index ${index}:`, result.reason)
+      }
+    })
 
     // Calculate stats
     const totalEnrollments = enrollments.length
