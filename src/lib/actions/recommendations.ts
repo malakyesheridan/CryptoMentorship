@@ -251,7 +251,6 @@ async function getAllContent(contentType?: string, excludeIds: string[] = []) {
       select: {
         id: true,
         title: true,
-        description: true,
         slug: true,
         coverUrl: true,
         publishedAt: true,
