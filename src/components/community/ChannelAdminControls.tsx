@@ -14,9 +14,10 @@ interface ChannelAdminControlsProps {
   channels: Channel[]
   isAdmin: boolean
   onChannelChange: () => void
+  onChannelsReorder?: (newOrder: string[]) => void // For optimistic updates
 }
 
-export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: ChannelAdminControlsProps) {
+export function ChannelAdminControls({ channels, isAdmin, onChannelChange, onChannelsReorder }: ChannelAdminControlsProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null)
   const [formData, setFormData] = useState({ name: '', description: '' })
@@ -235,8 +236,11 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     // Extract channel IDs in new order
     const channelIds = newChannels.map(c => c.id)
 
-    // Optimistic update: immediately update local state
-    // The parent component will refresh, but this gives instant feedback
+    // Optimistic update: immediately update UI with new order
+    if (onChannelsReorder) {
+      onChannelsReorder(channelIds)
+    }
+
     setIsLoading(true)
     setDraggedChannelId(null)
     setDraggedOverChannelId(null)
@@ -265,7 +269,7 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to reorder channels'
       toast.error(errorMessage)
-      // Refresh to get correct order on error
+      // Refresh to get correct order on error (revert optimistic update)
       onChannelChange()
     } finally {
       setIsLoading(false)
