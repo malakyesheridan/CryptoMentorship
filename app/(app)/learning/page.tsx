@@ -396,23 +396,8 @@ export default async function LearningDashboardPage() {
               </div>
               <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                <span className="font-medium">{resources.length} Resources</span>
-              </div>
-              <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-              <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">{completedTracks} Completed</span>
-              </div>
-              <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                <span className="font-medium">{totalLessonsCompleted} Lessons</span>
-              </div>
-              <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <Award className="w-5 h-5" />
-                <span className="font-medium">{totalCertificates} Certificates</span>
               </div>
             </div>
           </div>
