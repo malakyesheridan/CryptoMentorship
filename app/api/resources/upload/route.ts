@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         coverUrl: null, // We'll use a default icon
         publishedAt: new Date(),
         locked: visibility !== 'public',
-        minTier: visibility === 'admin' ? 'T3' : visibility === 'member' ? 'T1' : null,
+        minTier: visibility === 'admin' ? 'T2' : visibility === 'member' ? 'T1' : null,
         tags: JSON.stringify(tagsArray),
         slug,
       }

@@ -78,7 +78,7 @@ function generateUpdateSection(signal: DailySignal): string {
         <h4 style="font-weight: bold; color: #1e293b; margin: 0 0 8px 0; font-size: 16px;">Executive Summary:</h4>
         <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
           <p style="color: #334155; margin: 0; white-space: pre-wrap;">
-            • ${escapeHtml(signal.executiveSummary)}
+            ${escapeHtml(signal.executiveSummary)}
           </p>
         </div>
       </div>
@@ -90,7 +90,7 @@ function generateUpdateSection(signal: DailySignal): string {
         <h4 style="font-weight: bold; color: #1e293b; margin: 0 0 8px 0; font-size: 16px;">Associated Data:</h4>
         <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
           <p style="color: #334155; margin: 0; white-space: pre-wrap;">
-            • ${escapeHtml(signal.associatedData)}
+            ${escapeHtml(signal.associatedData)}
           </p>
         </div>
       </div>
@@ -101,7 +101,7 @@ function generateUpdateSection(signal: DailySignal): string {
 
 /**
  * Send daily portfolio update email
- * For T3 users, can send both majors and memecoins updates in one email
+ * For T2 (Elite) users, can send both majors and memecoins updates in one email
  */
 export async function sendDailySignalEmail({
   to,
@@ -182,14 +182,14 @@ export async function sendDailySignalEmail({
     
     let text = `Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel}\n`
     text += `Published: ${formatDate(new Date(signal.publishedAt), 'short')}\n\n`
-    text += `Update:\n${signal.signal.split('\n').map(line => `• ${line.trim()}`).join('\n')}\n\n`
+    text += `Update:\n${signal.signal}\n\n`
     
     if (signal.executiveSummary) {
       text += `Executive Summary:\n• ${signal.executiveSummary}\n\n`
     }
     
     if (signal.associatedData) {
-      text += `Associated Data:\n• ${signal.associatedData}\n\n`
+      text += `Associated Data:\n${signal.associatedData}\n\n`
     }
     
     return text

@@ -268,12 +268,12 @@ export const authOptions: NextAuthOptions = {
                   const mem = await tx.membership.upsert({
                     where: { userId: user.id },
                     update: { 
-                      tier: role === 'admin' ? 'T3' : 'T2', 
+                      tier: role === 'admin' ? 'T2' : 'T2', // All users get T2 (Elite) access 
                       status: 'active' 
                     },
                     create: {
                       userId: user.id,
-                      tier: role === 'admin' ? 'T3' : 'T2',
+                      tier: role === 'admin' ? 'T2' : 'T2', // All users get T2 (Elite) access
                       status: 'active',
                     },
                   })

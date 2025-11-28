@@ -17,7 +17,7 @@ export async function getSession() {
       user: {
         ...session.user,
         role: session.user.email.includes('demo-admin') ? 'admin' : 'member',
-        membershipTier: session.user.email.includes('demo-admin') ? 'T3' : 'T2'
+        membershipTier: 'T2' // All demo users get T2 (Elite) access
       }
     }
   }

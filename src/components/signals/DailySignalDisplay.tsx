@@ -312,7 +312,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                     <h4 className="font-bold text-slate-900 mb-2">Executive Summary:</h4>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <p className="text-slate-700 whitespace-pre-wrap">
-                        • {currentSignal.executiveSummary}
+                        {currentSignal.executiveSummary}
                       </p>
                     </div>
                   </div>
@@ -324,7 +324,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                     <h4 className="font-bold text-slate-900 mb-2">Associated Data:</h4>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <p className="text-slate-700 whitespace-pre-wrap">
-                        • {currentSignal.associatedData}
+                        {currentSignal.associatedData}
                       </p>
                     </div>
                   </div>

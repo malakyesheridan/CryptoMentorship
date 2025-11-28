@@ -15,7 +15,7 @@ const contentSchema = z.object({
   body: z.string().optional(),
   coverUrl: z.string().optional(),
   locked: z.boolean().default(false),
-  minTier: z.enum(['T1', 'T2', 'T3']).optional(),
+  minTier: z.enum(['T1', 'T2']).optional(),
   tags: z.array(z.string()).default([]),
 })
 

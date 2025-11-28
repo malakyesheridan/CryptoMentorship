@@ -151,7 +151,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     for (const user of eligibleUsers) {
       try {
         const membership = user.memberships[0]
-        const rawUserTier = membership.tier as 'T1' | 'T2' | 'T3'
+        const rawUserTier = membership.tier as 'T1' | 'T2'
         
         // Map old tiers to new tiers:
         // Old T1 → removed (no access)
@@ -304,9 +304,8 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
   }
 }
 
-const tierLabels: Record<'T1' | 'T2' | 'T3', string> = {
-  T1: 'T1 - Basic Tier',
-  T2: 'T2 - Premium Tier',
-  T3: 'T3 - Elite Tier',
+const tierLabels: Record<'T1' | 'T2', string> = {
+  T1: 'Growth',
+  T2: 'Elite',
 }
 

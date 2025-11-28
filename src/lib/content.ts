@@ -3,7 +3,7 @@ import { formatDate } from './dates'
 import { getPaginationOffset, createPaginationResult } from './pagination'
 
 export type ContentKind = 'research' | 'macro' | 'signal' | 'resource'
-export type MembershipTier = 'T1' | 'T2' | 'T3'
+export type MembershipTier = 'T1' | 'T2'
 
 export interface ContentFilters {
   kind?: ContentKind

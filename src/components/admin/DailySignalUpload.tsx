@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,11 +35,39 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   const [errorMessage, setErrorMessage] = useState('')
   const [isEditing, setIsEditing] = useState(!!existingSignal)
 
+  // Strip bullet points when loading existing signal for editing
+  const stripBulletPoints = (text: string | null | undefined): string => {
+    if (!text) return ''
+    return text
+      .split('\n')
+      .map(line => line.trim().replace(/^•\s*/, '')) // Remove bullet point prefix
+      .join('\n')
+  }
+
   const [formData, setFormData] = useState({
-    signal: existingSignal?.signal || '',
+    signal: stripBulletPoints(existingSignal?.signal),
     executiveSummary: existingSignal?.executiveSummary || '',
     associatedData: existingSignal?.associatedData || '',
   })
+
+  // Update form when existingSignal changes
+  useEffect(() => {
+    if (existingSignal) {
+      setFormData({
+        signal: stripBulletPoints(existingSignal.signal),
+        executiveSummary: existingSignal.executiveSummary || '',
+        associatedData: existingSignal.associatedData || '',
+      })
+      setIsEditing(true)
+    } else {
+      setFormData({
+        signal: '',
+        executiveSummary: '',
+        associatedData: '',
+      })
+      setIsEditing(false)
+    }
+  }, [existingSignal])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,18 +78,8 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
       return
     }
     
-    // Convert newlines to bullet points format
-    // Split by newline, trim each line, filter empty lines, add bullet prefix
-    const processSignalText = (text: string): string => {
-      return text
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0)
-        .map(line => line.startsWith('• ') ? line : `• ${line}`)
-        .join('\n')
-    }
-    
-    const processedSignal = processSignalText(formData.signal)
+    // Use signal text as-is, no bullet point conversion
+    const processedSignal = formData.signal.trim()
 
     setIsUploading(true)
     setUploadStatus('uploading')
@@ -169,14 +187,14 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
             id={`signal-${tier}`}
             value={formData.signal}
             onChange={(e) => setFormData({ ...formData, signal: e.target.value })}
-            placeholder="e.g., 100% Cash 💰&#10;Or add multiple lines for bullet points"
+            placeholder="e.g., 100% Cash 💰"
             required
             disabled={isUploading}
             maxLength={500}
             rows={3}
           />
           <p className="text-xs text-slate-500">
-            Main update text. Each new line will become a bullet point (e.g., &quot;100% Cash&quot;, &quot;50% BTC / 50% ETH&quot;)
+            Main update text
           </p>
         </div>
 

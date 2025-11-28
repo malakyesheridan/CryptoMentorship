@@ -14,13 +14,17 @@ const postBody = z.object({
 
 export async function GET() {
   try {
-    // ✅ Return all channels - no longer filtering by name since channels can be renamed
+    // ✅ Return all channels - ordered by order field, then name
     const rows = await prisma.channel.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: [
+        { order: 'asc' },
+        { name: 'asc' },
+      ],
       select: {
         id: true,
         name: true,
         description: true,
+        order: true,
         createdAt: true,
       },
     })
@@ -29,6 +33,7 @@ export async function GET() {
       id: channel.id,
       name: channel.name,
       description: channel.description,
+      order: channel.order,
       createdAt: channel.createdAt.toISOString(),
     }))
 
@@ -128,11 +133,19 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Get max order value to set new channel order
+    const maxOrderChannel = await prisma.channel.findFirst({
+      orderBy: { order: 'desc' },
+      select: { order: true },
+    })
+    const newOrder = (maxOrderChannel?.order ?? -1) + 1
+
     const channel = await prisma.channel.create({
       data: {
         slug,
         name,
         description,
+        order: newOrder,
       },
       select: {
         id: true,

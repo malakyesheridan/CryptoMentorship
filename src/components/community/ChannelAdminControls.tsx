@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, Edit2, Trash2, X } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, GripVertical } from 'lucide-react'
 import { json } from '@/lib/http'
 import { toast } from 'sonner'
 import type { Channel } from '@/lib/community/types'
@@ -21,6 +21,8 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null)
   const [formData, setFormData] = useState({ name: '', description: '' })
   const [isLoading, setIsLoading] = useState(false)
+  const [draggedChannelId, setDraggedChannelId] = useState<string | null>(null)
+  const [draggedOverChannelId, setDraggedOverChannelId] = useState<string | null>(null)
 
   if (!isAdmin) return null
 
@@ -141,6 +143,77 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
     setFormData({ name: '', description: '' })
   }
 
+  const handleDragStart = (e: React.DragEvent, channelId: string) => {
+    setDraggedChannelId(channelId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent, channelId: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (channelId !== draggedChannelId) {
+      setDraggedOverChannelId(channelId)
+    }
+  }
+
+  const handleDragLeave = () => {
+    setDraggedOverChannelId(null)
+  }
+
+  const handleDrop = async (e: React.DragEvent, targetChannelId: string) => {
+    e.preventDefault()
+    setDraggedOverChannelId(null)
+
+    if (!draggedChannelId || draggedChannelId === targetChannelId) {
+      setDraggedChannelId(null)
+      return
+    }
+
+    // Get current channel order
+    const sortedChannels = [...channels].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    const draggedIndex = sortedChannels.findIndex(c => c.id === draggedChannelId)
+    const targetIndex = sortedChannels.findIndex(c => c.id === targetChannelId)
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedChannelId(null)
+      return
+    }
+
+    // Reorder channels
+    const newChannels = [...sortedChannels]
+    const [removed] = newChannels.splice(draggedIndex, 1)
+    newChannels.splice(targetIndex, 0, removed)
+
+    // Extract channel IDs in new order
+    const channelIds = newChannels.map(c => c.id)
+
+    setIsLoading(true)
+    try {
+      const data = await json<{ success: boolean }>('/api/admin/channels/reorder', {
+        method: 'POST',
+        body: JSON.stringify({ channelIds }),
+      })
+
+      if (data.success) {
+        toast.success('Channels reordered successfully')
+        onChannelChange()
+      } else {
+        throw new Error('Failed to reorder channels')
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to reorder channels'
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+      setDraggedChannelId(null)
+    }
+  }
+
+  const handleDragEnd = () => {
+    setDraggedChannelId(null)
+    setDraggedOverChannelId(null)
+  }
+
   return (
     <div className="mb-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -227,22 +300,40 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
       )}
 
       <div className="space-y-2">
-        {channels.map((channel) => (
+        {[...channels].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((channel) => (
           <div
             key={channel.id}
-            className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100"
+            draggable
+            onDragStart={(e) => handleDragStart(e, channel.id)}
+            onDragOver={(e) => handleDragOver(e, channel.id)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, channel.id)}
+            onDragEnd={handleDragEnd}
+            className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+              draggedChannelId === channel.id
+                ? 'opacity-50 bg-slate-200'
+                : draggedOverChannelId === channel.id
+                ? 'bg-yellow-100 border-2 border-yellow-400'
+                : 'hover:bg-slate-100'
+            } ${isLoading ? 'pointer-events-none' : 'cursor-move'}`}
           >
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-slate-900">#{channel.name}</div>
-              {channel.description && (
-                <div className="text-xs text-slate-500 truncate">{channel.description}</div>
-              )}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <GripVertical className="h-4 w-4 text-slate-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-slate-900">#{channel.name}</div>
+                {channel.description && (
+                  <div className="text-xs text-slate-500 truncate">{channel.description}</div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => startEdit(channel)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  startEdit(channel)
+                }}
                 disabled={isLoading}
                 className="h-8 w-8 p-0"
               >
@@ -251,7 +342,10 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange }: Cha
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleDelete(channel.id)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDelete(channel.id)
+                }}
                 disabled={isLoading}
                 className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
               >

@@ -284,10 +284,13 @@ model Channel {
   slug        String   @unique
   name        String
   description String?
+  order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   messages Message[]
+
+  @@index([order])
 }
 
 model Message {

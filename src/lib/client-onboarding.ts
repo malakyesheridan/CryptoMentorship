@@ -162,7 +162,7 @@ export async function inviteUserToClient(clientId: string, email: string, role: 
   await prisma.membership.create({
     data: {
       userId: newUser.id,
-      tier: 'T3', // All trial accounts get T3 access
+      tier: 'T2', // All trial accounts get T2 (Elite) access
       status: 'trial',
     }
   })

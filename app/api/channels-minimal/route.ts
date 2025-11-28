@@ -6,13 +6,17 @@ export const revalidate = 300
 
 export async function GET() {
   try {
-    // ✅ Return all channels - no longer filtering by name since channels can be renamed/created with any name
+    // ✅ Return all channels - ordered by order field, then name
     const channels = await prisma.channel.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: [
+        { order: 'asc' },
+        { name: 'asc' },
+      ],
       select: {
         id: true,
         name: true,
         description: true,
+        order: true,
         createdAt: true,
       }
     })
@@ -23,6 +27,7 @@ export async function GET() {
         id: channel.id,
         name: channel.name,
         description: channel.description || '',
+        order: channel.order,
         createdAt: channel.createdAt.toISOString(),
       }))
     })
