@@ -74,33 +74,22 @@ export async function PUT(
       tier: updatedSignal.tier,
       category: updatedSignal.category,
     })
-    console.log('[PUT] About to call sendSignalEmails', {
-      signalId: updatedSignal.id,
-      tier: updatedSignal.tier,
-      category: updatedSignal.category,
-    })
     
-    // Ensure the function is called and any errors are caught
-    try {
-      const emailPromise = sendSignalEmails(updatedSignal.id)
-      emailPromise.catch((error) => {
-        logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
-          signalId: updatedSignal.id,
-          tier: updatedSignal.tier,
-          category: updatedSignal.category,
-          errorMessage: error instanceof Error ? error.message : String(error),
-          errorStack: error instanceof Error ? error.stack : undefined,
-        })
-        console.error('[PUT] Error in sendSignalEmails catch:', error)
-      })
-      console.log('[PUT] sendSignalEmails promise created', { signalId: updatedSignal.id })
-    } catch (error) {
-      logger.error('Error calling sendSignalEmails', error instanceof Error ? error : new Error(String(error)), {
+    // Use waitUntil to ensure the promise completes in Vercel/serverless
+    // This prevents the execution context from being terminated before emails are sent
+    const emailPromise = sendSignalEmails(updatedSignal.id).catch((error) => {
+      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: updatedSignal.id,
         tier: updatedSignal.tier,
         category: updatedSignal.category,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
       })
-      console.error('[PUT] Error calling sendSignalEmails:', error)
+    })
+    
+    // In Vercel, use waitUntil to keep the execution context alive
+    if (typeof (request as any).waitUntil === 'function') {
+      (request as any).waitUntil(emailPromise)
     }
 
     return NextResponse.json(updatedSignal)

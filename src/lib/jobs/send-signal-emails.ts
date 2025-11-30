@@ -158,16 +158,18 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         
         // Map old tiers to new tiers:
         // Old T1 → removed (no access)
-        // Old T2 → new T1 (Growth)
+        // Old T2 without category → new T1 (Growth)
+        // Old T2 with category → new T2 (Elite)
         // Old T3 → new T2 (Elite)
+        // Current system: T1 = Growth, T2 = Elite
         if (rawUserTier === 'T3') {
           userTier = 'T2' // Old T3 → new T2 (Elite)
         } else if (rawUserTier === 'T2') {
-          userTier = 'T2' // T2 is now Elite (no mapping needed in new system)
+          // T2 users in the current system are Elite
+          userTier = 'T2' // T2 = Elite
         } else if (rawUserTier === 'T1') {
-          userTier = 'T1' // T1 is now Growth (no mapping needed in new system)
+          userTier = 'T1' // T1 = Growth
         }
-        // Old T1 users get no access (filtered out earlier)
 
         // Determine if this user should receive this signal based on their tier
         let shouldSend = false

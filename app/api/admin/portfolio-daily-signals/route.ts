@@ -147,12 +147,17 @@ export async function POST(request: NextRequest) {
 
     // Send email notifications asynchronously (fire-and-forget)
     // Don't block the API response if email sending fails
-    sendSignalEmails(signal.id).catch((error) => {
+    const emailPromise = sendSignalEmails(signal.id).catch((error) => {
       logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: signal.id,
         tier: signal.tier,
       })
     })
+    
+    // In Vercel, use waitUntil to keep the execution context alive
+    if (typeof (request as any).waitUntil === 'function') {
+      (request as any).waitUntil(emailPromise)
+    }
 
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {
