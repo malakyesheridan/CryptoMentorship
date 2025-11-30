@@ -243,6 +243,11 @@ export default function CommunityPage() {
     }
   }, [mutate])
 
+  const handleChannelsReorder = useCallback((newOrder: string[]) => {
+    // Optimistic update - refresh channels to get new order
+    refreshChannels()
+  }, [refreshChannels])
+
   const activeChannel = channels.find((channel) => channel.id === activeChannelId)
 
   return (
