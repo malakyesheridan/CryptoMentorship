@@ -67,28 +67,32 @@ export async function PUT(
       updatedBy: session.user.id,
     })
 
-    // Send email notifications asynchronously (fire-and-forget)
-    // Send the exact updated signal to eligible users
+    // Send email notifications - await to ensure completion
+    // This blocks the API response but ensures emails are sent reliably
     logger.info('Triggering email sending for updated signal', {
       signalId: updatedSignal.id,
       tier: updatedSignal.tier,
       category: updatedSignal.category,
     })
     
-    // Use setImmediate to ensure the promise starts executing before handler returns
-    // This prevents Vercel from freezing the execution context too early
-    setImmediate(() => {
-      sendSignalEmails(updatedSignal.id).catch((error) => {
-        logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
-          signalId: updatedSignal.id,
-          tier: updatedSignal.tier,
-          category: updatedSignal.category,
-          errorMessage: error instanceof Error ? error.message : String(error),
-          errorStack: error instanceof Error ? error.stack : undefined,
-        })
-        console.error('[PUT] Failed to send update emails:', error)
+    try {
+      await sendSignalEmails(updatedSignal.id)
+      logger.info('Email sending completed successfully', {
+        signalId: updatedSignal.id,
+        tier: updatedSignal.tier,
+        category: updatedSignal.category,
       })
-    })
+    } catch (error) {
+      // Log error but don't fail the API response
+      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
+        signalId: updatedSignal.id,
+        tier: updatedSignal.tier,
+        category: updatedSignal.category,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      })
+      console.error('[PUT] Failed to send update emails:', error)
+    }
 
     return NextResponse.json(updatedSignal)
   } catch (error) {

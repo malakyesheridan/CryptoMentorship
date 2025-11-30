@@ -145,19 +145,22 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Send email notifications asynchronously (fire-and-forget)
-    // Don't block the API response if email sending fails
-    // Use setImmediate to ensure the promise starts executing before handler returns
-    // This prevents Vercel from freezing the execution context too early
-    setImmediate(() => {
-      sendSignalEmails(signal.id).catch((error) => {
-        logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
-          signalId: signal.id,
-          tier: signal.tier,
-        })
-        console.error('[POST] Failed to send update emails:', error)
+    // Send email notifications - await to ensure completion
+    // This blocks the API response but ensures emails are sent reliably
+    try {
+      await sendSignalEmails(signal.id)
+      logger.info('Email sending completed successfully', {
+        signalId: signal.id,
+        tier: signal.tier,
       })
-    })
+    } catch (error) {
+      // Log error but don't fail the API response
+      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
+        signalId: signal.id,
+        tier: signal.tier,
+      })
+      console.error('[POST] Failed to send update emails:', error)
+    }
 
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {
