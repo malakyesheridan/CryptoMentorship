@@ -15,6 +15,12 @@
     },
     "app/api/admin/learn/lessons/upload/route.ts": {
       "maxDuration": 300
+    },
+    "app/api/admin/portfolio-daily-signals/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/admin/portfolio-daily-signals/[id]/route.ts": {
+      "maxDuration": 60
     }
   }
 }
