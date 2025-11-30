@@ -46,25 +46,38 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
 
     // Get all users with active/trial memberships
     // Note: email is required in User model, so no need to filter for null
-    const allUsers = await prisma.user.findMany({
-      where: {
-        role: { in: ['member', 'editor', 'admin'] },
-      },
-      include: {
-        memberships: {
-          where: {
-            status: { in: ['active', 'trial'] },
-            currentPeriodEnd: { gte: new Date() }, // Not expired
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 1,
+    console.log('[sendSignalEmails] About to fetch users from database')
+    logger.info('Fetching users for email sending', { signalId })
+    
+    let allUsers
+    try {
+      allUsers = await prisma.user.findMany({
+        where: {
+          role: { in: ['member', 'editor', 'admin'] },
         },
-        notificationPreference: true,
-      },
-    })
+        include: {
+          memberships: {
+            where: {
+              status: { in: ['active', 'trial'] },
+              currentPeriodEnd: { gte: new Date() }, // Not expired
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+          notificationPreference: true,
+        },
+      })
+      console.log('[sendSignalEmails] Users fetched:', allUsers.length)
+      logger.info('Users fetched', { signalId, userCount: allUsers.length })
+    } catch (error) {
+      console.error('[sendSignalEmails] Error fetching users:', error)
+      logger.error('Error fetching users', error instanceof Error ? error : new Error(String(error)), { signalId })
+      throw error
+    }
 
     // Filter users by email preferences (we'll check tier access when sending)
     // If user doesn't have preferences, use defaults (email: true, onSignal: true)
+    console.log('[sendSignalEmails] Filtering eligible users')
     const eligibleUsers = allUsers.filter(user => {
       // Must have active subscription
       if (user.memberships.length === 0) return false
@@ -86,6 +99,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       return true
     })
 
+    console.log('[sendSignalEmails] Eligible users filtered:', eligibleUsers.length)
     logger.info('Email sending preparation', {
       signalId,
       tier: createdSignal.tier,
@@ -94,8 +108,16 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       totalUsers: allUsers.length,
       eligibleUsers: eligibleUsers.length,
     })
+    console.log('[sendSignalEmails] Email sending preparation:', {
+      signalId,
+      tier: createdSignal.tier,
+      category: createdSignal.category,
+      totalUsers: allUsers.length,
+      eligibleUsers: eligibleUsers.length,
+    })
 
     if (eligibleUsers.length === 0) {
+      console.log('[sendSignalEmails] No eligible users - exiting early')
       logger.info('No eligible users for update email', { 
         signalId, 
         tier: createdSignal.tier,
@@ -106,6 +128,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       return
     }
 
+    console.log('[sendSignalEmails] Processing eligible users:', eligibleUsers.length)
     logger.info('Processing eligible users', {
       signalId,
       tier: createdSignal.tier,
@@ -347,8 +370,11 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       totalFailed: results.failed,
     })
   } catch (error) {
+    console.error('[sendSignalEmails] ERROR in sendSignalEmails:', error)
     logger.error('Error in sendSignalEmails', error instanceof Error ? error : new Error(String(error)), {
       signalId,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
     })
     // Don't throw - this is fire-and-forget
   }
