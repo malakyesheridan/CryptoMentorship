@@ -74,15 +74,34 @@ export async function PUT(
       tier: updatedSignal.tier,
       category: updatedSignal.category,
     })
-    sendSignalEmails(updatedSignal.id).catch((error) => {
-      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
+    console.log('[PUT] About to call sendSignalEmails', {
+      signalId: updatedSignal.id,
+      tier: updatedSignal.tier,
+      category: updatedSignal.category,
+    })
+    
+    // Ensure the function is called and any errors are caught
+    try {
+      const emailPromise = sendSignalEmails(updatedSignal.id)
+      emailPromise.catch((error) => {
+        logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
+          signalId: updatedSignal.id,
+          tier: updatedSignal.tier,
+          category: updatedSignal.category,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+        })
+        console.error('[PUT] Error in sendSignalEmails catch:', error)
+      })
+      console.log('[PUT] sendSignalEmails promise created', { signalId: updatedSignal.id })
+    } catch (error) {
+      logger.error('Error calling sendSignalEmails', error instanceof Error ? error : new Error(String(error)), {
         signalId: updatedSignal.id,
         tier: updatedSignal.tier,
         category: updatedSignal.category,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
       })
-    })
+      console.error('[PUT] Error calling sendSignalEmails:', error)
+    }
 
     return NextResponse.json(updatedSignal)
   } catch (error) {
