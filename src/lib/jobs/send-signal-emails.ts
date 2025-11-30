@@ -153,7 +153,18 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       // Declare userTier outside try block so it's accessible in catch block
       let userTier: 'T1' | 'T2' = 'T1'
       try {
+        // Safety check - should never happen due to filter, but be defensive
+        if (!user.memberships || user.memberships.length === 0) {
+          logger.warn('User has no memberships despite being in eligibleUsers', { userId: user.id })
+          continue
+        }
+        
         const membership = user.memberships[0]
+        if (!membership) {
+          logger.warn('User membership is null/undefined', { userId: user.id })
+          continue
+        }
+        
         const rawUserTier = membership.tier as 'T1' | 'T2' | 'T3'
         
         // Map old tiers to new tiers:

@@ -75,9 +75,9 @@ export async function PUT(
       category: updatedSignal.category,
     })
     
-    // Use waitUntil to ensure the promise completes in Vercel/serverless
-    // This prevents the execution context from being terminated before emails are sent
-    const emailPromise = sendSignalEmails(updatedSignal.id).catch((error) => {
+    // Start email sending - don't await, but ensure errors are caught
+    // The promise chain ensures Vercel keeps the execution context alive
+    sendSignalEmails(updatedSignal.id).catch((error) => {
       logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: updatedSignal.id,
         tier: updatedSignal.tier,
@@ -85,12 +85,8 @@ export async function PUT(
         errorMessage: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined,
       })
+      console.error('[PUT] Failed to send update emails:', error)
     })
-    
-    // In Vercel, use waitUntil to keep the execution context alive
-    if (typeof (request as any).waitUntil === 'function') {
-      (request as any).waitUntil(emailPromise)
-    }
 
     return NextResponse.json(updatedSignal)
   } catch (error) {
