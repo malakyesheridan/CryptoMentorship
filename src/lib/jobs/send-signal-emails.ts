@@ -18,6 +18,7 @@ interface DailySignal {
  * T2 (Elite) users receive both majors and memecoins updates in one email
  */
 export async function sendSignalEmails(signalId: string): Promise<void> {
+  logger.info('sendSignalEmails called', { signalId })
   try {
     // Get the update that was just created
     const createdSignal = await prisma.portfolioDailySignal.findUnique({
@@ -84,11 +85,19 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       logger.info('No eligible users for update email', { 
         signalId, 
         tier: createdSignal.tier,
+        category: createdSignal.category,
         totalUsers: allUsers.length,
         reason: 'No users with email preferences enabled or active memberships'
       })
       return
     }
+
+    logger.info('Processing eligible users', {
+      signalId,
+      tier: createdSignal.tier,
+      category: createdSignal.category,
+      eligibleUsersCount: eligibleUsers.length,
+    })
 
     // Group users by tier and send emails
     const results = {
@@ -132,17 +141,35 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
           signalTier = 'T1' // T1 → T1 (Growth)
         }
 
+        logger.debug('Tier matching check', {
+          userId: user.id,
+          userTier,
+          signalTier,
+          signalId: createdSignal.id,
+          signalTierRaw: createdSignal.tier,
+          signalCategory: createdSignal.category,
+        })
+
         if (userTier === 'T2') {
           // T2 (Elite) users get T2 signals (with category) or old T3 signals
           if (signalTier === 'T2') {
             shouldSend = true
             signalToSend = createdSignal as DailySignal
+            logger.debug('T2 user matched with T2 signal', {
+              userId: user.id,
+              signalId: createdSignal.id,
+              category: createdSignal.category,
+            })
           }
         } else if (userTier === 'T1') {
           // T1 (Growth) users get T1 signals (or T2 without category)
           if (signalTier === 'T1') {
             shouldSend = true
             signalToSend = createdSignal as DailySignal
+            logger.debug('T1 user matched with T1 signal', {
+              userId: user.id,
+              signalId: createdSignal.id,
+            })
           }
         }
 

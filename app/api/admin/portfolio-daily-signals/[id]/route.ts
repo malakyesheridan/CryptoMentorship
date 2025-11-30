@@ -69,10 +69,18 @@ export async function PUT(
 
     // Send email notifications asynchronously (fire-and-forget)
     // Send the exact updated signal to eligible users
+    logger.info('Triggering email sending for updated signal', {
+      signalId: updatedSignal.id,
+      tier: updatedSignal.tier,
+      category: updatedSignal.category,
+    })
     sendSignalEmails(updatedSignal.id).catch((error) => {
       logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: updatedSignal.id,
         tier: updatedSignal.tier,
+        category: updatedSignal.category,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
       })
     })
 
