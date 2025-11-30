@@ -61,6 +61,18 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       orderBy: { publishedAt: 'desc' },
     })
 
+    // Get the most recent T1 (Growth) signal (even if not from today)
+    // This ensures T1 users get updates even if signal was created on a previous day
+    const t1Signal = await prisma.portfolioDailySignal.findFirst({
+      where: {
+        OR: [
+          { tier: 'T1', category: null },
+          { tier: 'T2', category: null }
+        ]
+      },
+      orderBy: { publishedAt: 'desc' },
+    })
+    
     // For T2 (Elite), also get the most recent memecoin and majors signals (even if from different days)
     // This ensures T2 users always get both updates when available
     const t2MajorsSignal = await prisma.portfolioDailySignal.findFirst({
@@ -80,10 +92,22 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     })
 
     // Group updates by tier
-    // Note: Old T2 becomes T1, old T3 becomes T2
+    // Note: Old T2 (without category) becomes T1, old T3 becomes T2
+    // T1 (Growth): tier === 'T1' OR (tier === 'T2' && category === null)
+    // T2 (Elite): (tier === 'T2' && category !== null) OR tier === 'T3'
     const signalsByTier = {
-      T1: allTierSignals.filter(s => (s.tier === 'T1' || s.tier === 'T2') && !s.category),
-      T2: allTierSignals.filter(s => s.tier === 'T2' || s.tier === 'T3'),
+      T1: allTierSignals.filter(s => 
+        s.tier === 'T1' || (s.tier === 'T2' && !s.category)
+      ),
+      T2: allTierSignals.filter(s => 
+        (s.tier === 'T2' && s.category !== null) || s.tier === 'T3'
+      ),
+    }
+    
+    // Add the most recent T1 (Growth) signal if it exists (even if not from today)
+    // This ensures T1 users get updates even if signal was created on a previous day
+    if (t1Signal && !signalsByTier.T1.find(s => s.id === t1Signal.id)) {
+      signalsByTier.T1.push(t1Signal)
     }
     
     // Add the most recent T2 (Elite) signals if they exist (even if not from today)
@@ -120,23 +144,43 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     }
 
     // Filter users by email preferences (we'll check tier access when sending)
+    // If user doesn't have preferences, use defaults (email: true, onSignal: true)
     const eligibleUsers = allUsers.filter(user => {
       // Must have active subscription
       if (user.memberships.length === 0) return false
 
       // Check email preferences
       const prefs = user.notificationPreference
-      if (!prefs) return false
+      
+      // If no preferences exist, use defaults (email enabled for signals by default)
+      // This matches the behavior in /api/me/notification-preferences
+      if (!prefs) {
+        // Default: email enabled, onSignal enabled
+        return true
+      }
+      
+      // If preferences exist, check if email and onSignal are enabled
       if (!prefs.email) return false
       if (!prefs.onSignal) return false
 
       return true
     })
 
+    logger.info('Email sending preparation', {
+      signalId,
+      tier: createdSignal.tier,
+      totalUsers: allUsers.length,
+      eligibleUsers: eligibleUsers.length,
+      t1SignalsCount: signalsByTier.T1.length,
+      t2SignalsCount: signalsByTier.T2.length,
+    })
+
     if (eligibleUsers.length === 0) {
       logger.info('No eligible users for update email', { 
         signalId, 
-        tier: createdSignal.tier 
+        tier: createdSignal.tier,
+        totalUsers: allUsers.length,
+        reason: 'No users with email preferences enabled or active memberships'
       })
       return
     }
@@ -200,6 +244,17 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
           const t1Signals = signalsByTier.T1
           if (t1Signals.length > 0) {
             signalsToSend.push(t1Signals[0] as DailySignal) // Most recent
+            logger.info('T1 (Growth) signal prepared for email', {
+              userId: user.id,
+              signalId: t1Signals[0].id,
+              signalTier: t1Signals[0].tier,
+            })
+          } else {
+            logger.debug('No T1 signals found for user', {
+              userId: user.id,
+              userTier,
+              t1SignalsCount: signalsByTier.T1.length,
+            })
           }
         }
 

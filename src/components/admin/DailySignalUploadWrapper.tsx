@@ -53,9 +53,11 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
       if (editingSignal.tier === 'T3') {
         mappedTier = 'T2' // Old T3 → new T2 (Elite)
       } else if (editingSignal.tier === 'T2' && editingSignal.category) {
-        mappedTier = 'T2' // Old T3 (with category) might be stored as T2
-      } else if (editingSignal.tier === 'T2') {
-        mappedTier = 'T1' // Old T2 → new T1 (Growth)
+        mappedTier = 'T2' // T2 with category → T2 (Elite)
+      } else if (editingSignal.tier === 'T2' && !editingSignal.category) {
+        mappedTier = 'T1' // Old T2 without category → new T1 (Growth)
+      } else if (editingSignal.tier === 'T1') {
+        mappedTier = 'T1' // T1 → T1 (Growth) - explicit handling
       }
       
       setActiveTier(mappedTier)
@@ -145,8 +147,7 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
           existingSignal={editingSignal && 
             ((editingSignal.tier === 'T2' && activeTier === 'T2' && (!editingSignal.category || editingSignal.category === activeCategory)) ||
              (editingSignal.tier === 'T3' && activeTier === 'T2' && editingSignal.category === activeCategory) ||
-             (editingSignal.tier === 'T2' && activeTier === 'T1' && !editingSignal.category) ||
-             (editingSignal.tier === 'T1' && activeTier === 'T1'))
+             ((editingSignal.tier === 'T2' || editingSignal.tier === 'T1') && activeTier === 'T1' && !editingSignal.category))
             ? {
                 id: editingSignal.id,
                 signal: editingSignal.signal,

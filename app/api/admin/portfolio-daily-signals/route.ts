@@ -77,13 +77,28 @@ export async function POST(request: NextRequest) {
 
     // Delete the most recent update for this tier (and category if T2/Elite) to replace it
     // This ensures only one active update exists per tier/category combination
-    const whereClause: any = {
-      tier: data.tier,
-    }
+    let whereClause: any
     
-    // For T2 (Elite), also filter by category
     if (data.tier === 'T2' && data.category) {
-      whereClause.category = data.category
+      // For T2 (Elite), filter by tier and category
+      whereClause = {
+        tier: data.tier,
+        category: data.category
+      }
+    } else if (data.tier === 'T1') {
+      // For T1 (Growth), find signals with tier T1 OR old T2 signals without category
+      // This handles both new T1 signals and old T2 signals that map to T1
+      whereClause = {
+        OR: [
+          { tier: 'T1', category: null },
+          { tier: 'T2', category: null }
+        ]
+      }
+    } else {
+      // Fallback (shouldn't happen with current schema)
+      whereClause = {
+        tier: data.tier,
+      }
     }
 
     // Find the most recent update for this tier/category
@@ -100,11 +115,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new update
+    // For T1 (Growth), ensure category is explicitly null (not undefined)
+    const createData: any = {
+      tier: data.tier,
+      signal: data.signal,
+      executiveSummary: data.executiveSummary || null,
+      associatedData: data.associatedData || null,
+      createdById: session.user.id
+    }
+    
+    // Only include category for T2 (Elite)
+    if (data.tier === 'T2' && data.category) {
+      createData.category = data.category
+    } else {
+      // For T1 (Growth), explicitly set category to null
+      createData.category = null
+    }
+    
     const signal = await prisma.portfolioDailySignal.create({
-      data: {
-        ...data,
-        createdById: session.user.id
-      },
+      data: createData,
       include: {
         createdBy: {
           select: {

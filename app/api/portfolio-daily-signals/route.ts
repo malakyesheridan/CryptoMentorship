@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
         // Old T3 → new T2 (Elite)
         displayTier = 'T2'
       } else if (signal.tier === 'T1') {
-        // Old T1 → skip (removed)
-        continue
+        // T1 is now Growth tier - keep as T1 (no longer skipping)
+        displayTier = 'T1'
       }
       
       // Create a unique key: tier + category (or just tier for T1)

@@ -75,10 +75,10 @@ export async function seedNotifications() {
       create: {
         userId: user.id,
         inApp: true,
-        email: false,
+        email: true, // Email enabled by default for portfolio updates
         onResearch: true,
         onEpisode: true,
-        onSignal: true,
+        onSignal: true, // Enabled by default for daily portfolio updates
         onMention: true,
         onReply: true,
         digestEnabled: false,

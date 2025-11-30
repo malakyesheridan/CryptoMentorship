@@ -406,11 +406,11 @@ model NotificationPreference {
   userId        String  @id
   // channels
   inApp         Boolean @default(true)
-  email         Boolean @default(false)
+  email         Boolean @default(true) // Email enabled by default for portfolio updates
   // events
   onResearch    Boolean @default(true)
   onEpisode     Boolean @default(true)
-  onSignal      Boolean @default(true)
+  onSignal      Boolean @default(true) // Enabled by default for daily portfolio updates
   onMention     Boolean @default(true)
   onReply       Boolean @default(true)
   // digest
