@@ -75,29 +75,19 @@ export async function PUT(
       category: updatedSignal.category,
     })
     
-    // Start email sending - don't await, but ensure errors are caught
-    // Store the promise to prevent garbage collection and ensure Vercel tracks it
-    const emailPromise = sendSignalEmails(updatedSignal.id)
-    emailPromise.catch((error) => {
-      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
-        signalId: updatedSignal.id,
-        tier: updatedSignal.tier,
-        category: updatedSignal.category,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
+    // Use setImmediate to ensure the promise starts executing before handler returns
+    // This prevents Vercel from freezing the execution context too early
+    setImmediate(() => {
+      sendSignalEmails(updatedSignal.id).catch((error) => {
+        logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
+          signalId: updatedSignal.id,
+          tier: updatedSignal.tier,
+          category: updatedSignal.category,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+        })
+        console.error('[PUT] Failed to send update emails:', error)
       })
-      console.error('[PUT] Failed to send update emails:', error)
-    })
-    
-    // Explicitly keep the promise alive by storing it in a way that prevents GC
-    // This ensures Vercel's runtime keeps the execution context alive
-    const globalAny = globalThis as any
-    if (globalAny.emailPromises === undefined) {
-      globalAny.emailPromises = new Set()
-    }
-    globalAny.emailPromises.add(emailPromise)
-    emailPromise.finally(() => {
-      globalAny.emailPromises?.delete(emailPromise)
     })
 
     return NextResponse.json(updatedSignal)
