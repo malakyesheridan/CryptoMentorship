@@ -127,6 +127,8 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     }
 
     for (const user of eligibleUsers) {
+      // Declare userTier outside try block so it's accessible in catch block
+      let userTier: 'T1' | 'T2' = 'T1'
       try {
         const membership = user.memberships[0]
         const rawUserTier = membership.tier as 'T1' | 'T2' | 'T3'
@@ -135,7 +137,6 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         // Old T1 → removed (no access)
         // Old T2 → new T1 (Growth)
         // Old T3 → new T2 (Elite)
-        let userTier: 'T1' | 'T2' = 'T1'
         if (rawUserTier === 'T3') {
           userTier = 'T2' // Old T3 → new T2 (Elite)
         } else if (rawUserTier === 'T2') {
