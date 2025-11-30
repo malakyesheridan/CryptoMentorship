@@ -29,9 +29,6 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       return
     }
 
-    // Get all updates for all tiers published today
-    // This ensures users get their tier's update regardless of which tier was just created
-
     // Get all users with active/trial memberships
     // Note: email is required in User model, so no need to filter for null
     const allUsers = await prisma.user.findMany({
@@ -50,98 +47,6 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         notificationPreference: true,
       },
     })
-
-    // Get all updates for all tiers (to send appropriate tier to each user)
-    const allTierSignals = await prisma.portfolioDailySignal.findMany({
-      where: {
-        publishedAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)), // Today
-        },
-      },
-      orderBy: { publishedAt: 'desc' },
-    })
-
-    // Get the most recent T1 (Growth) signal (even if not from today)
-    // This ensures T1 users get updates even if signal was created on a previous day
-    const t1Signal = await prisma.portfolioDailySignal.findFirst({
-      where: {
-        OR: [
-          { tier: 'T1', category: null },
-          { tier: 'T2', category: null }
-        ]
-      },
-      orderBy: { publishedAt: 'desc' },
-    })
-    
-    // For T2 (Elite), also get the most recent memecoin and majors signals (even if from different days)
-    // This ensures T2 users always get both updates when available
-    const t2MajorsSignal = await prisma.portfolioDailySignal.findFirst({
-      where: {
-        tier: 'T2',
-        category: 'majors',
-      },
-      orderBy: { publishedAt: 'desc' },
-    })
-    
-    const t2MemecoinsSignal = await prisma.portfolioDailySignal.findFirst({
-      where: {
-        tier: 'T2',
-        category: 'memecoins',
-      },
-      orderBy: { publishedAt: 'desc' },
-    })
-
-    // Group updates by tier
-    // Note: Old T2 (without category) becomes T1, old T3 becomes T2
-    // T1 (Growth): tier === 'T1' OR (tier === 'T2' && category === null)
-    // T2 (Elite): (tier === 'T2' && category !== null) OR tier === 'T3'
-    const signalsByTier = {
-      T1: allTierSignals.filter(s => 
-        s.tier === 'T1' || (s.tier === 'T2' && !s.category)
-      ),
-      T2: allTierSignals.filter(s => 
-        (s.tier === 'T2' && s.category !== null) || s.tier === 'T3'
-      ),
-    }
-    
-    // Add the most recent T1 (Growth) signal if it exists (even if not from today)
-    // This ensures T1 users get updates even if signal was created on a previous day
-    if (t1Signal && !signalsByTier.T1.find(s => s.id === t1Signal.id)) {
-      signalsByTier.T1.push(t1Signal)
-    }
-    
-    // Add the most recent T2 (Elite) signals if they exist (even if not from today)
-    // This ensures T2 users get both majors and memecoins in one email
-    if (t2MajorsSignal && !signalsByTier.T2.find(s => s.id === t2MajorsSignal.id)) {
-      signalsByTier.T2.push(t2MajorsSignal)
-    }
-    if (t2MemecoinsSignal && !signalsByTier.T2.find(s => s.id === t2MemecoinsSignal.id)) {
-      signalsByTier.T2.push(t2MemecoinsSignal)
-    }
-    
-    // Also check for old T3 signals and map them to T2
-    const oldT3MajorsSignal = await prisma.portfolioDailySignal.findFirst({
-      where: {
-        tier: 'T3',
-        category: 'majors',
-      },
-      orderBy: { publishedAt: 'desc' },
-    })
-    
-    const oldT3MemecoinsSignal = await prisma.portfolioDailySignal.findFirst({
-      where: {
-        tier: 'T3',
-        category: 'memecoins',
-      },
-      orderBy: { publishedAt: 'desc' },
-    })
-    
-    if (oldT3MajorsSignal && !signalsByTier.T2.find(s => s.id === oldT3MajorsSignal.id)) {
-      signalsByTier.T2.push(oldT3MajorsSignal)
-    }
-    if (oldT3MemecoinsSignal && !signalsByTier.T2.find(s => s.id === oldT3MemecoinsSignal.id)) {
-      signalsByTier.T2.push(oldT3MemecoinsSignal)
-    }
 
     // Filter users by email preferences (we'll check tier access when sending)
     // If user doesn't have preferences, use defaults (email: true, onSignal: true)
@@ -169,10 +74,10 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     logger.info('Email sending preparation', {
       signalId,
       tier: createdSignal.tier,
+      category: createdSignal.category,
+      publishedAt: createdSignal.publishedAt.toISOString(),
       totalUsers: allUsers.length,
       eligibleUsers: eligibleUsers.length,
-      t1SignalsCount: signalsByTier.T1.length,
-      t2SignalsCount: signalsByTier.T2.length,
     })
 
     if (eligibleUsers.length === 0) {
@@ -211,87 +116,48 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         }
         // Old T1 users get no access (filtered out earlier)
 
-        // Get updates for this user's tier (their highest accessible tier)
-        let signalsToSend: DailySignal[] = []
+        // Determine if this user should receive this signal based on their tier
+        let shouldSend = false
+        let signalToSend: DailySignal | null = null
+
+        // Map the created signal's tier for comparison
+        let signalTier: 'T1' | 'T2' = 'T1'
+        if (createdSignal.tier === 'T3') {
+          signalTier = 'T2' // Old T3 → new T2 (Elite)
+        } else if (createdSignal.tier === 'T2' && createdSignal.category) {
+          signalTier = 'T2' // T2 with category → T2 (Elite)
+        } else if (createdSignal.tier === 'T2' && !createdSignal.category) {
+          signalTier = 'T1' // T2 without category → T1 (Growth)
+        } else if (createdSignal.tier === 'T1') {
+          signalTier = 'T1' // T1 → T1 (Growth)
+        }
 
         if (userTier === 'T2') {
-          // T2 (Elite) users get both majors and memecoins updates
-          const t2Signals = signalsByTier.T2
-          const majorsSignal = t2Signals.find(s => s.category === 'majors')
-          const memecoinsSignal = t2Signals.find(s => s.category === 'memecoins')
-          
-          // Always add majors first (Market Rotation), then memecoins
-          // This ensures proper ordering in the email: Market Rotation on top, Memecoins below
-          if (majorsSignal) {
-            signalsToSend.push(majorsSignal as DailySignal)
-          }
-          if (memecoinsSignal) {
-            signalsToSend.push(memecoinsSignal as DailySignal)
-          }
-          
-          // Log for debugging
-          if (signalsToSend.length > 0) {
-            logger.info('T2 (Elite) signals prepared for email', {
-              userId: user.id,
-              majorsFound: !!majorsSignal,
-              memecoinsFound: !!memecoinsSignal,
-              signalsToSendCount: signalsToSend.length,
-              signalCategories: signalsToSend.map(s => s.category || 'none')
-            })
+          // T2 (Elite) users get T2 signals (with category) or old T3 signals
+          if (signalTier === 'T2') {
+            shouldSend = true
+            signalToSend = createdSignal as DailySignal
           }
         } else if (userTier === 'T1') {
-          // T1 (Growth) users get T1 update only
-          const t1Signals = signalsByTier.T1
-          if (t1Signals.length > 0) {
-            signalsToSend.push(t1Signals[0] as DailySignal) // Most recent
-            logger.info('T1 (Growth) signal prepared for email', {
-              userId: user.id,
-              signalId: t1Signals[0].id,
-              signalTier: t1Signals[0].tier,
-            })
-          } else {
-            logger.debug('No T1 signals found for user', {
-              userId: user.id,
-              userTier,
-              t1SignalsCount: signalsByTier.T1.length,
-            })
+          // T1 (Growth) users get T1 signals (or T2 without category)
+          if (signalTier === 'T1') {
+            shouldSend = true
+            signalToSend = createdSignal as DailySignal
           }
         }
 
-        if (signalsToSend.length === 0) {
-          logger.debug('No updates found for user tier', { 
-            userId: user.id, 
-            userTier,
-            signalId 
-          })
-          continue
-        }
-
-        // Check if we already sent an email notification for these updates today
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        
-        const existingNotifications = await prisma.notification.findMany({
-          where: {
+        if (!shouldSend || !signalToSend) {
+          logger.debug('User tier does not match signal tier', {
             userId: user.id,
-            type: 'signal_published',
-            channel: 'email',
-            entityId: { in: signalsToSend.map(s => s.id) },
-            sentAt: { gte: today },
-          },
-        })
-
-        const sentSignalIds = new Set(existingNotifications.map(n => n.entityId))
-        const unsentSignals = signalsToSend.filter(s => !sentSignalIds.has(s.id))
-
-        // Only send email if there are new updates
-        if (unsentSignals.length === 0) {
-          logger.debug('All updates already sent to user', { 
-            userId: user.id, 
-            userTier 
+            userTier,
+            signalTier,
+            signalId: createdSignal.id,
           })
           continue
         }
+
+        // Always send email when signal is created or updated
+        // No deduplication - user wants email on every create/update
 
         // Build URLs
         let baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
@@ -302,38 +168,37 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         const portfolioUrl = `${baseUrl}/portfolio`
         const preferencesUrl = `${baseUrl}/account`
 
-        // Send email with all updates (including ones we've already sent, for context)
-        // But only create notifications for new ones
+        // Send email with the exact signal that was just created/updated
         await sendDailySignalEmail({
           to: user.email!,
           userName: user.name,
-          signals: signalsToSend, // Send all updates in the email
+          signals: [signalToSend], // Send only this exact signal
           portfolioUrl,
           preferencesUrl,
         })
 
-        // Create notification records only for updates we haven't sent yet
-        for (const signal of unsentSignals) {
-          await prisma.notification.create({
-            data: {
-              userId: user.id,
-              type: 'signal_published',
-              entityType: 'content',
-              entityId: signal.id,
-              title: 'Daily Portfolio Update',
-              body: `New portfolio update for ${tierLabels[signal.tier]}${signal.category === 'majors' ? ' Market Rotation' : signal.category === 'memecoins' ? ' Memecoins' : ''}`,
-              url: portfolioUrl,
-              channel: 'email',
-              sentAt: new Date(),
-            },
-          })
-        }
+        // Create notification record
+        await prisma.notification.create({
+          data: {
+            userId: user.id,
+            type: 'signal_published',
+            entityType: 'content',
+            entityId: signalToSend.id,
+            title: 'Daily Portfolio Update',
+            body: `New portfolio update for ${tierLabels[signalTier]}${signalToSend.category === 'majors' ? ' Market Rotation' : signalToSend.category === 'memecoins' ? ' Memecoins' : ''}`,
+            url: portfolioUrl,
+            channel: 'email',
+            sentAt: new Date(),
+          },
+        })
 
         results.sent++
         logger.info('Update email sent', { 
           userId: user.id, 
           userTier,
-          signalCount: signalsToSend.length 
+          signalId: signalToSend.id,
+          signalTier,
+          signalDate: signalToSend.publishedAt.toISOString(),
         })
       } catch (error) {
         results.failed++

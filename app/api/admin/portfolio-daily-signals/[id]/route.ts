@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +65,15 @@ export async function PUT(
       tier: updatedSignal.tier,
       category: updatedSignal.category,
       updatedBy: session.user.id,
+    })
+
+    // Send email notifications asynchronously (fire-and-forget)
+    // Send the exact updated signal to eligible users
+    sendSignalEmails(updatedSignal.id).catch((error) => {
+      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
+        signalId: updatedSignal.id,
+        tier: updatedSignal.tier,
+      })
     })
 
     return NextResponse.json(updatedSignal)
