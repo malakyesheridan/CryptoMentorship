@@ -157,12 +157,13 @@ export async function POST(request: NextRequest) {
     
     // Explicitly keep the promise alive by storing it in a way that prevents GC
     // This ensures Vercel's runtime keeps the execution context alive
-    if (globalThis.emailPromises === undefined) {
-      (globalThis as any).emailPromises = new Set()
+    const globalAny = globalThis as any
+    if (globalAny.emailPromises === undefined) {
+      globalAny.emailPromises = new Set()
     }
-    ;(globalThis as any).emailPromises.add(emailPromise)
+    globalAny.emailPromises.add(emailPromise)
     emailPromise.finally(() => {
-      ;(globalThis as any).emailPromises?.delete(emailPromise)
+      globalAny.emailPromises?.delete(emailPromise)
     })
 
     return NextResponse.json(signal, { status: 201 })
