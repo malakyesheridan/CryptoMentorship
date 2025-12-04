@@ -50,7 +50,7 @@ const PLANS = [
 
 const INTERVALS = [
   { key: 'month' as const, label: 'Monthly', savings: null },
-  { key: '3month' as const, label: '3 Months', savings: 5 },
+  { key: '3month' as const, label: '3 Months', savings: 4 },
   { key: '6month' as const, label: '6 Months', savings: 11 },
   { key: 'year' as const, label: '1 Year', savings: 17 },
 ]
