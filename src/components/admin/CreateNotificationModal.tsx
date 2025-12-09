@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Send, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +31,18 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -103,12 +115,18 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-2 sm:p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <Card 
+        className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] my-auto overflow-hidden flex flex-col shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Send className="h-5 w-5" />
-            Create Custom Notification
+            Send Notification
           </CardTitle>
           <Button
             variant="ghost"
@@ -120,7 +138,7 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
           </Button>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="flex-1 overflow-y-auto pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Type */}
             <div>
