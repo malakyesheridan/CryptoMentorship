@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, Check, CheckCheck } from 'lucide-react'
+import { Bell, Check, CheckCheck, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,6 +9,8 @@ import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import useSWR from 'swr'
+import { useSession } from 'next-auth/react'
+import { CreateNotificationModal } from '@/components/admin/CreateNotificationModal'
 
 interface Notification {
   id: string
@@ -26,7 +28,11 @@ interface NotificationDropdownProps {
 
 export function NotificationDropdown({ className }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { data: session } = useSession()
+  
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
 
   // Fetch unread count - refresh every 30 seconds (matches API cache)
   // Use keepPreviousData to prevent UI flicker during navigation
@@ -152,17 +158,34 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
             <div className="p-4 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-slate-800">Notifications</h3>
-                {unreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={markAllAsRead}
-                    className="text-xs text-slate-600 hover:text-slate-800"
-                  >
-                    <CheckCheck className="h-3 w-3 mr-1" />
-                    Mark all read
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsOpen(false)
+                        setIsCreateModalOpen(true)
+                      }}
+                      className="text-xs text-slate-600 hover:text-slate-800"
+                      title="Create notification (Admin)"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Create
+                    </Button>
+                  )}
+                  {unreadCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={markAllAsRead}
+                      className="text-xs text-slate-600 hover:text-slate-800"
+                    >
+                      <CheckCheck className="h-3 w-3 mr-1" />
+                      Mark all read
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -244,6 +267,19 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Admin Create Notification Modal */}
+      {isAdmin && (
+        <CreateNotificationModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={() => {
+            // Refresh notifications after creating
+            mutateNotifications()
+            mutateUnread()
+          }}
+        />
       )}
     </div>
   )

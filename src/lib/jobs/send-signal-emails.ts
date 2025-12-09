@@ -280,7 +280,65 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         const portfolioUrl = `${baseUrl}/portfolio`
         const preferencesUrl = `${baseUrl}/account`
 
-        // Send email with the exact signal that was just created/updated
+        // For T2 users, prepare signals array (may include both majors and memecoins)
+        // Always put majors (market rotation) first, then memecoins
+        let signalsForEmail: DailySignal[] = [signalToSend]
+        
+        if (userTier === 'T2' && signalTier === 'T2') {
+          // Get the date of the created signal (start of day)
+          const signalDate = new Date(createdSignal.publishedAt)
+          signalDate.setHours(0, 0, 0, 0)
+          const endOfDay = new Date(signalDate)
+          endOfDay.setHours(23, 59, 59, 999)
+          
+          if (createdSignal.category === 'majors') {
+            // If this is a majors signal, also fetch memecoins signal for the same day
+            const memecoinsSignal = await prisma.portfolioDailySignal.findFirst({
+              where: {
+                tier: 'T2',
+                category: 'memecoins',
+                publishedAt: {
+                  gte: signalDate,
+                  lte: endOfDay,
+                },
+              },
+              orderBy: { publishedAt: 'desc' },
+            })
+            
+            if (memecoinsSignal) {
+              signalsForEmail = [createdSignal as DailySignal, memecoinsSignal as DailySignal]
+              logger.info('Found memecoins signal for same day - will include in email', {
+                userId: user.id,
+                majorsSignalId: createdSignal.id,
+                memecoinsSignalId: memecoinsSignal.id,
+              })
+            }
+          } else if (createdSignal.category === 'memecoins') {
+            // If this is a memecoins signal, also fetch majors signal for the same day (put it first)
+            const majorsSignal = await prisma.portfolioDailySignal.findFirst({
+              where: {
+                tier: 'T2',
+                category: 'majors',
+                publishedAt: {
+                  gte: signalDate,
+                  lte: endOfDay,
+                },
+              },
+              orderBy: { publishedAt: 'desc' },
+            })
+            
+            if (majorsSignal) {
+              signalsForEmail = [majorsSignal as DailySignal, createdSignal as DailySignal]
+              logger.info('Found majors signal for same day - will include in email', {
+                userId: user.id,
+                memecoinsSignalId: createdSignal.id,
+                majorsSignalId: majorsSignal.id,
+              })
+            }
+          }
+        }
+
+        // Send email with the signals (may be one or two for T2 users)
         logger.info('About to send email', {
           userId: user.id,
           userEmail: user.email,
@@ -288,18 +346,20 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
           signalId: signalToSend.id,
           signalTier,
           signalCategory: signalToSend.category,
+          signalsCount: signalsForEmail.length,
         })
         console.log('[sendSignalEmails] About to send email to:', user.email, {
           userId: user.id,
           signalId: signalToSend.id,
           tier: signalTier,
           category: signalToSend.category,
+          signalsCount: signalsForEmail.length,
         })
         
         await sendDailySignalEmail({
           to: user.email!,
           userName: user.name,
-          signals: [signalToSend], // Send only this exact signal
+          signals: signalsForEmail, // Send all relevant signals (may include both majors and memecoins for T2)
           portfolioUrl,
           preferencesUrl,
         })
@@ -308,23 +368,28 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
           userId: user.id,
           userEmail: user.email,
           signalId: signalToSend.id,
+          signalsCount: signalsForEmail.length,
         })
-        console.log('[sendSignalEmails] Email sent successfully to:', user.email)
+        console.log('[sendSignalEmails] Email sent successfully to:', user.email, {
+          signalsCount: signalsForEmail.length,
+        })
 
-        // Create notification record
-        await prisma.notification.create({
-          data: {
-            userId: user.id,
-            type: 'signal_published',
-            entityType: 'content',
-            entityId: signalToSend.id,
-            title: 'Daily Portfolio Update',
-            body: `New portfolio update for ${tierLabels[signalTier]}${signalToSend.category === 'majors' ? ' Market Rotation' : signalToSend.category === 'memecoins' ? ' Memecoins' : ''}`,
-            url: portfolioUrl,
-            channel: 'email',
-            sentAt: new Date(),
-          },
-        })
+        // Create notification record for each signal sent
+        for (const signal of signalsForEmail) {
+          await prisma.notification.create({
+            data: {
+              userId: user.id,
+              type: 'signal_published',
+              entityType: 'content',
+              entityId: signal.id,
+              title: 'Daily Portfolio Update',
+              body: `New portfolio update for ${tierLabels[signalTier]}${signal.category === 'majors' ? ' Market Rotation' : signal.category === 'memecoins' ? ' Memecoins' : ''}`,
+              url: portfolioUrl,
+              channel: 'email',
+              sentAt: new Date(),
+            },
+          })
+        }
 
         results.sent++
         if (userTier === 'T1') {

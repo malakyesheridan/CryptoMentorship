@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Zap, TrendingUp, AlertCircle, Lock, Edit } from 'lucide-react'
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
+import { CalendarDatePicker } from './CalendarDatePicker'
 
 interface DailySignal {
   id: string
@@ -64,18 +65,24 @@ interface DailySignalDisplayProps {
 export default function DailySignalDisplay({ userTier, userRole, onEditSignal }: DailySignalDisplayProps) {
   const [activeTier, setActiveTier] = useState<Tier | null>(null)
   const [activeCategory, setActiveCategory] = useState<Category>('majors')
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
+  // Build API URL with date parameter if selected
+  const apiUrl = selectedDate 
+    ? `/api/portfolio-daily-signals?date=${selectedDate}`
+    : '/api/portfolio-daily-signals'
 
   const { data, error, isLoading } = useSWR<{ 
     signals: DailySignal[]
     userTier: string | null
     isActive: boolean
   }>(
-    '/api/portfolio-daily-signals',
+    apiUrl,
     (url) => fetch(url).then(res => res.json()),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      refreshInterval: 60000, // Refresh every minute
+      refreshInterval: selectedDate ? 0 : 60000, // Don't auto-refresh when viewing past dates
       dedupingInterval: 30000,
     }
   )
@@ -153,11 +160,20 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     return (
       <Card>
         <CardContent className="pt-6">
+          {/* Calendar Date Picker - Above tier selector */}
+          <div className="flex justify-center mb-4">
+            <CalendarDatePicker
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+            />
+          </div>
           <div className="text-center py-8">
             <TrendingUp className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">No Daily Signals Available</h3>
             <p className="text-slate-600">
-              Check back later for today&apos;s portfolio updates.
+              {selectedDate 
+                ? `No updates found for the selected date.`
+                : "Check back later for today's portfolio updates."}
             </p>
           </div>
         </CardContent>
@@ -182,6 +198,14 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   return (
     <Card>
       <CardContent className="pt-6">
+        {/* Calendar Date Picker - Above tier selector */}
+        <div className="flex justify-center mb-4">
+          <CalendarDatePicker
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
+        </div>
+
         {/* Tab Navigation */}
         <div className="flex justify-center mb-6">
           <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">

@@ -23,9 +23,35 @@ export async function GET(request: NextRequest) {
     // Trial accounts should be treated as active for update access
     const isActive = (membership?.status === 'active' || membership?.status === 'trial') || session.user.role === 'admin'
 
-    // Get the most recent update for each tier/category combination
-    // This ensures updates remain visible until they are updated
+    // Check if a date filter is provided
+    const { searchParams } = new URL(request.url)
+    const dateParam = searchParams.get('date')
+    
+    let dateFilter: { gte?: Date; lt?: Date } | undefined
+    if (dateParam) {
+      const selectedDate = new Date(dateParam)
+      // Set to start of day (00:00:00)
+      const startOfDay = new Date(selectedDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      // Set to end of day (23:59:59.999)
+      const endOfDay = new Date(selectedDate)
+      endOfDay.setHours(23, 59, 59, 999)
+      
+      dateFilter = {
+        gte: startOfDay,
+        lt: new Date(endOfDay.getTime() + 1) // Add 1ms to make it exclusive
+      }
+    }
+
+    // Build where clause
+    const whereClause: any = {}
+    if (dateFilter) {
+      whereClause.publishedAt = dateFilter
+    }
+
+    // Get signals - either for a specific date or the most recent for each tier/category
     const allSignals = await prisma.portfolioDailySignal.findMany({
+      where: whereClause,
       include: {
         createdBy: {
           select: {
@@ -38,6 +64,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Group by tier and category, keeping only the most recent for each combination
+    // When filtering by date, we still deduplicate by tier/category for that date
     const signalsMap = new Map<string, typeof allSignals[0]>()
     
     for (const signal of allSignals) {
@@ -60,6 +87,7 @@ export async function GET(request: NextRequest) {
         : displayTier
       
       // Only keep the first (most recent) update for each key
+      // When filtering by date, this will be the most recent for that date
       if (!signalsMap.has(key)) {
         // Create a new signal object with mapped tier
         const mappedSignal = { ...signal, tier: displayTier }

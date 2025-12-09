@@ -211,8 +211,8 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                 <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
                   {isCourse && item.progressPct === 100 ? (
                     <>
-                      <Award className="h-4 w-4 mr-2" />
-                      View Certificate
+                      <Play className="h-4 w-4 mr-2" />
+                      Watch Again
                     </>
                   ) : isCourse ? (
                     <>

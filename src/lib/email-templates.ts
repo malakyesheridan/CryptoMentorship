@@ -48,7 +48,7 @@ function generateUpdateSection(signal: DailySignal): string {
   const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
 
   return `
-    <div style="background: ${tierColor.bg}; border: 2px solid ${tierColor.border}; border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <div style="background: ${tierColor.bg}; border: 2px solid ${tierColor.border}; border-radius: 8px; padding: 24px; margin-bottom: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
       <!-- Header -->
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 8px;">
