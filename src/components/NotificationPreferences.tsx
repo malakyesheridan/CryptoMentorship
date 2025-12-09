@@ -135,6 +135,97 @@ export function NotificationPreferences() {
         </CardContent>
       </Card>
 
+      {/* Notification Types */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Notification Types
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="onPortfolio" className="text-base font-medium">
+                Portfolio Updates
+              </Label>
+              <p className="text-sm text-slate-600">
+                Daily portfolio updates and signals
+              </p>
+            </div>
+            <Switch
+              id="onPortfolio"
+              checked={preferences.onSignal}
+              onChange={(e) => updatePreference({ onSignal: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="onCryptoCompass" className="text-base font-medium">
+                Crypto Compass
+              </Label>
+              <p className="text-sm text-slate-600">
+                New episodes and weekly updates
+              </p>
+            </div>
+            <Switch
+              id="onCryptoCompass"
+              checked={preferences.onEpisode}
+              onChange={(e) => updatePreference({ onEpisode: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="onLearning" className="text-base font-medium">
+                Learning Hub
+              </Label>
+              <p className="text-sm text-slate-600">
+                New courses, lessons, and resources
+              </p>
+            </div>
+            <Switch
+              id="onLearning"
+              checked={preferences.onResearch}
+              onChange={(e) => updatePreference({ onResearch: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="onMention" className="text-base font-medium">
+                Community Mentions
+              </Label>
+              <p className="text-sm text-slate-600">
+                When someone mentions you in community
+              </p>
+            </div>
+            <Switch
+              id="onMention"
+              checked={preferences.onMention}
+              onChange={(e) => updatePreference({ onMention: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="onReply" className="text-base font-medium">
+                Community Replies
+              </Label>
+              <p className="text-sm text-slate-600">
+                When someone replies to your messages
+              </p>
+            </div>
+            <Switch
+              id="onReply"
+              checked={preferences.onReply}
+              onChange={(e) => updatePreference({ onReply: e.target.checked })}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Digest Settings */}
       <Card>
         <CardHeader>

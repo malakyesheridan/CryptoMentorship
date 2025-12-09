@@ -8,7 +8,7 @@ const createNotificationSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().max(1000).optional(),
   url: z.string().url().optional().or(z.literal('')),
-  type: z.enum(['announcement', 'research_published', 'episode_published', 'signal_published', 'mention', 'reply']).default('announcement'),
+  type: z.enum(['announcement', 'portfolio_update', 'crypto_compass', 'learning_hub', 'community_mention', 'community_reply']).default('announcement'),
   userIds: z.array(z.string()).optional(), // If not provided, send to all users
 })
 

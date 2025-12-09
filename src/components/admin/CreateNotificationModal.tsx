@@ -12,7 +12,7 @@ const notificationSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
   body: z.string().max(1000, 'Body must be 1000 characters or less').optional(),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  type: z.enum(['announcement', 'research_published', 'episode_published', 'signal_published', 'mention', 'reply']),
+  type: z.enum(['announcement', 'portfolio_update', 'crypto_compass', 'learning_hub', 'community_mention', 'community_reply']),
 })
 
 type NotificationFormData = z.infer<typeof notificationSchema>
@@ -158,11 +158,11 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               >
                 <option value="announcement">Announcement</option>
-                <option value="research_published">Research Published</option>
-                <option value="episode_published">Episode Published</option>
-                <option value="signal_published">Signal Published</option>
-                <option value="mention">Mention</option>
-                <option value="reply">Reply</option>
+                <option value="portfolio_update">Portfolio Update</option>
+                <option value="crypto_compass">Crypto Compass</option>
+                <option value="learning_hub">Learning Hub</option>
+                <option value="community_mention">Community Mention</option>
+                <option value="community_reply">Community Reply</option>
               </select>
             </div>
 

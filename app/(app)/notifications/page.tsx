@@ -45,9 +45,14 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
   if (filter === 'unread') {
     where.readAt = null
   } else if (filter === 'mentions') {
-    where.type = 'mention'
+    where.type = { in: ['community_mention', 'mention'] } // Include both new and legacy
   } else if (filter === 'content') {
-    where.type = { in: ['research_published', 'episode_published', 'signal_published'] }
+    where.type = { 
+      in: [
+        'portfolio_update', 'crypto_compass', 'learning_hub',
+        'research_published', 'episode_published', 'signal_published' // Legacy types
+      ] 
+    }
   }
 
   // Get notifications
@@ -72,8 +77,22 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      // New types
+      case 'portfolio_update':
+        return '📊'
+      case 'crypto_compass':
+        return '🎥'
+      case 'learning_hub':
+        return '📚'
+      case 'community_mention':
+        return '@'
+      case 'community_reply':
+        return '💬'
+      case 'announcement':
+        return '📢'
+      // Legacy types (for backward compatibility)
       case 'research_published':
-        return '📄'
+        return '📚'
       case 'episode_published':
         return '🎥'
       case 'signal_published':
@@ -82,8 +101,6 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         return '@'
       case 'reply':
         return '💬'
-      case 'announcement':
-        return '📢'
       default:
         return '🔔'
     }

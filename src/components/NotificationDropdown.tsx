@@ -115,8 +115,22 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      // New types
+      case 'portfolio_update':
+        return '📊'
+      case 'crypto_compass':
+        return '🎥'
+      case 'learning_hub':
+        return '📚'
+      case 'community_mention':
+        return '@'
+      case 'community_reply':
+        return '💬'
+      case 'announcement':
+        return '📢'
+      // Legacy types (for backward compatibility)
       case 'research_published':
-        return '📄'
+        return '📚'
       case 'episode_published':
         return '🎥'
       case 'signal_published':
@@ -125,8 +139,6 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
         return '@'
       case 'reply':
         return '💬'
-      case 'announcement':
-        return '📢'
       default:
         return '🔔'
     }

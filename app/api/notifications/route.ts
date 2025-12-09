@@ -26,9 +26,14 @@ export async function GET(request: NextRequest) {
     if (filter === 'unread') {
       where.readAt = null
     } else if (filter === 'mentions') {
-      where.type = 'mention'
+      where.type = { in: ['community_mention', 'mention'] } // Include both new and legacy
     } else if (filter === 'content') {
-      where.type = { in: ['research_published', 'episode_published', 'signal_published'] }
+      where.type = { 
+        in: [
+          'portfolio_update', 'crypto_compass', 'learning_hub',
+          'research_published', 'episode_published', 'signal_published' // Legacy types
+        ] 
+      }
     }
 
     // Get notifications
