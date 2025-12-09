@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Send, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +32,12 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [mounted, setMounted] = useState(false)
+
+  // Handle mounting for portal
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -44,7 +51,7 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
     }
   }, [isOpen])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,13 +121,13 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
     }
   }
 
-  return (
+  const modalContent = (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-2 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto min-h-screen"
       onClick={onClose}
     >
       <Card 
-        className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] my-auto overflow-hidden flex flex-col shadow-2xl"
+        className="card w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] my-auto overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
@@ -277,5 +284,8 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
       </Card>
     </div>
   )
+
+  // Render modal using portal to escape parent positioning context
+  return createPortal(modalContent, document.body)
 }
 
