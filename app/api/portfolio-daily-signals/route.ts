@@ -29,13 +29,15 @@ export async function GET(request: NextRequest) {
     
     let dateFilter: { gte?: Date; lt?: Date } | undefined
     if (dateParam) {
-      const selectedDate = new Date(dateParam)
-      // Set to start of day (00:00:00)
-      const startOfDay = new Date(selectedDate)
-      startOfDay.setHours(0, 0, 0, 0)
-      // Set to end of day (23:59:59.999)
-      const endOfDay = new Date(selectedDate)
-      endOfDay.setHours(23, 59, 59, 999)
+      // Parse date string (YYYY-MM-DD) and create UTC dates to avoid timezone issues
+      // The date string is in local date format, but we need to query in UTC
+      const [year, month, day] = dateParam.split('-').map(Number)
+      
+      // Create start of day in UTC (00:00:00 UTC)
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+      
+      // Create end of day in UTC (23:59:59.999 UTC)
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
       
       dateFilter = {
         gte: startOfDay,
