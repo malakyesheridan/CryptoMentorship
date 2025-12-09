@@ -25,12 +25,14 @@ export async function uploadToBlob({
   onProgress
 }: BlobUploadOptions): Promise<BlobUploadResult> {
   try {
-    // Validate file size (100MB limit)
-    const maxFileSize = 100 * 1024 * 1024 // 100MB
+    // Validate file size - 200MB for video files, 100MB for other files
+    const isVideoFile = file.type.startsWith('video/')
+    const maxFileSize = isVideoFile ? 200 * 1024 * 1024 : 100 * 1024 * 1024 // 200MB for videos, 100MB for others
+    const maxSizeMB = isVideoFile ? 200 : 100
     if (file.size > maxFileSize) {
       return {
         success: false,
-        error: `File too large. Maximum size is 100MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`
+        error: `File too large. Maximum size is ${maxSizeMB}MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`
       }
     }
 

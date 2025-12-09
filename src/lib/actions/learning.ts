@@ -79,7 +79,7 @@ export async function completeLesson(input: unknown) {
     where: { id: lessonId },
     include: {
       track: {
-        select: { id: true, title: true }
+        select: { id: true, title: true, slug: true }
       }
     }
   })
@@ -126,11 +126,18 @@ export async function completeLesson(input: unknown) {
   // Check for achievements
   await checkAndBroadcastAchievements(user.id, lesson.track.id, trackProgress)
 
+  // Revalidate paths to ensure UI updates
+  revalidatePath('/learn')
+  revalidatePath('/learning')
+  revalidatePath(`/learn/${lesson.track.slug}`)
+  revalidatePath(`/learn/${lesson.track.slug}/lesson`)
+
   return { 
     ok: true, 
     progress: {
       lessonId,
       trackId: lesson.track.id,
+      trackSlug: lesson.track.slug,
       completedAt: progress.completedAt,
       timeSpentMs: progress.timeSpentMs,
       trackProgressPct: trackProgress.progressPct

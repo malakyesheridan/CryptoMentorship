@@ -26,6 +26,8 @@ import { completeLesson, submitQuiz, enrollInTrack } from '@/lib/actions/learnin
 import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
 import { useSession } from 'next-auth/react'
 import VideoPlayer from '@/components/VideoPlayer'
+import { LessonMDXRenderer } from '@/components/learning/LessonMDXRenderer'
+import { toast } from 'sonner'
 
 interface LessonPlayerProps {
   track: {
@@ -53,6 +55,7 @@ interface LessonPlayerProps {
     title: string
     durationMin?: number
     videoUrl?: string
+    contentMDX?: string
     quiz?: {
       id: string
       questions: string
@@ -90,6 +93,7 @@ export function LessonPlayer({
 }: LessonPlayerProps) {
   const { data: session } = useSession()
   const router = useRouter()
+  const [isCompleting, setIsCompleting] = useState(false)
   
   const isCompleted = !!progress?.completedAt
   const hasQuiz = !!lesson.quiz
@@ -97,14 +101,71 @@ export function LessonPlayer({
   const isLocked = accessInfo?.isLocked || false
   const canAccess = accessInfo?.canAccess !== false
 
-  // Find lesson navigation
-  const allLessons = track.lessons
+  // Find lesson navigation - collect all lessons from sections and main lessons array
+  const allLessons: Array<{ id: string; slug: string; title: string }> = []
+  
+  // Add lessons from sections first (they're already ordered)
+  track.sections.forEach(section => {
+    section.lessons.forEach(lesson => {
+      allLessons.push(lesson)
+    })
+  })
+  
+  // Add lessons not in any section
+  const lessonIdsInSections = new Set(
+    track.sections.flatMap(section => section.lessons.map(l => l.id))
+  )
+  track.lessons.forEach(lesson => {
+    if (!lessonIdsInSections.has(lesson.id)) {
+      allLessons.push(lesson)
+    }
+  })
+  
   const currentIndex = allLessons.findIndex(l => l.id === lesson.id)
   const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null
   const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null
+  const isLastLesson = currentIndex === allLessons.length - 1
 
   // Check if lesson can be completed
   const canComplete = !isCompleted && (!hasQuiz || quizPassed) && canAccess
+
+  // Handle lesson completion
+  const handleComplete = async () => {
+    if (isCompleting) return
+    
+    setIsCompleting(true)
+    try {
+      const result = await completeLesson({ 
+        lessonId: lesson.id
+      })
+      
+      if (result?.ok) {
+        toast.success('Lesson completed!')
+        
+        // If it's the last lesson, show congratulations and redirect to track page
+        if (isLastLesson) {
+          setTimeout(() => {
+            toast.success(`🎉 Congratulations! You've completed "${track.title}"!`, {
+              duration: 5000,
+            })
+            router.push(`/learn/${track.slug}`)
+          }, 500)
+        } else if (nextLesson) {
+          // Navigate to next lesson
+          setTimeout(() => {
+            router.push(`/learn/${track.slug}/lesson/${nextLesson.slug}`)
+          }, 500)
+        }
+      } else {
+        toast.error('Failed to complete lesson. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error completing lesson:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to complete lesson')
+    } finally {
+      setIsCompleting(false)
+    }
+  }
 
 
   // Show locked lesson view
@@ -366,6 +427,15 @@ export function LessonPlayer({
                   </div>
                 )}
 
+                {/* Description */}
+                {lesson.contentMDX && lesson.contentMDX.trim() && (
+                  <div className="mb-6">
+                    <div className="prose prose-slate max-w-none">
+                      <LessonMDXRenderer content={lesson.contentMDX} />
+                    </div>
+                  </div>
+                )}
+
                 {/* Quiz Section */}
                 {hasQuiz && lesson.quiz && (
                   <QuizComponent
@@ -379,16 +449,24 @@ export function LessonPlayer({
                 {/* Completion Button */}
                 {canComplete && (
                   <div className="mb-8">
-                    <form action={async () => {
-                      await completeLesson({ 
-                        lessonId: lesson.id
-                      })
-                    }}>
-                      <Button type="submit" size="lg" className="w-full">
-                        <CheckCircle className="h-5 w-5 mr-2" />
-                        Mark Complete
-                      </Button>
-                    </form>
+                    <Button 
+                      onClick={handleComplete}
+                      disabled={isCompleting}
+                      size="lg" 
+                      className="w-full"
+                    >
+                      {isCompleting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Completing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-5 w-5 mr-2" />
+                          Mark Complete
+                        </>
+                      )}
+                    </Button>
                   </div>
                 )}
 

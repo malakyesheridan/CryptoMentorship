@@ -63,6 +63,7 @@ model User {
   sessions               Session[]
   memberships            Membership[]
   messages               Message[]
+  channelReads           ChannelRead[]
   audits                 Audit[]
   media                  Media[]
   revisions              Revision[]
@@ -289,6 +290,7 @@ model Channel {
   updatedAt   DateTime @updatedAt
 
   messages Message[]
+  reads    ChannelRead[]
 
   @@index([order])
 }
@@ -307,6 +309,22 @@ model Message {
   @@index([channelId])
   @@index([createdAt(sort: Desc)])
   @@index([channelId, createdAt(sort: Desc)])
+}
+
+model ChannelRead {
+  id         String   @id @default(cuid())
+  userId     String
+  channelId  String
+  lastReadAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channelId])
+  @@index([userId])
+  @@index([channelId])
+  @@index([userId, channelId])
 }
 
 model Audit {

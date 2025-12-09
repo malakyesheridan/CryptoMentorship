@@ -7,7 +7,8 @@ export const runtime = 'nodejs'
 export const maxDuration = 300
 
 const CHUNK_SIZE = 4 * 1024 * 1024 // 4MB chunks
-const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB max
+const MAX_FILE_SIZE_NON_VIDEO = 100 * 1024 * 1024 // 100MB max for non-video files
+const MAX_FILE_SIZE_VIDEO = 200 * 1024 * 1024 // 200MB max for video files
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,10 +43,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate total file size
-    if (fileSize > MAX_FILE_SIZE) {
+    // Validate total file size - 200MB for video files, 100MB for other files
+    const isVideoFile = contentType?.startsWith('video/') || false
+    const maxFileSize = isVideoFile ? MAX_FILE_SIZE_VIDEO : MAX_FILE_SIZE_NON_VIDEO
+    const maxSizeMB = isVideoFile ? 200 : 100
+    if (fileSize > maxFileSize) {
       return NextResponse.json(
-        { error: `File too large. Maximum size is 100MB. Your file is ${(fileSize / (1024 * 1024)).toFixed(2)}MB` },
+        { error: `File too large. Maximum size is ${maxSizeMB}MB. Your file is ${(fileSize / (1024 * 1024)).toFixed(2)}MB` },
         { status: 400 }
       )
     }

@@ -23,6 +23,7 @@ import type {
 const channelsKey = '/api/channels-minimal'
 const messagesKey = (channelId: string | null) =>
   channelId ? `/api/community/messages?channelId=${encodeURIComponent(channelId)}` : null
+const unreadKey = '/api/community/unread'
 
 function useChannels() {
   const { data, error, isLoading, mutate } = useSWR<ListChannelsResponse>(channelsKey, (key) => json<ListChannelsResponse>(key), {
@@ -69,9 +70,28 @@ function useChannelMessages(channelId: string | null) {
   }
 }
 
+function useUnreadCounts() {
+  const { data, error, mutate } = useSWR<{ ok: true; unreadCounts: Record<string, number> }>(
+    unreadKey,
+    (url) => json<{ ok: true; unreadCounts: Record<string, number> }>(url),
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 30000, // Refresh every 30 seconds
+    }
+  )
+
+  return {
+    unreadCounts: data?.unreadCounts ?? {},
+    error,
+    mutate,
+  }
+}
+
 export default function CommunityPage() {
   const { data: session } = useSession()
   const { channels, isLoading: channelsLoading, error: channelsError, refresh: refreshChannels } = useChannels()
+  const { unreadCounts, mutate: refreshUnreadCounts } = useUnreadCounts()
   const [activeChannelId, setActiveChannelId] = useState<string | null>(channels[0]?.id ?? null)
   const [replyTo, setReplyTo] = useState<{ author: string; body: string } | null>(null)
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
@@ -85,6 +105,23 @@ export default function CommunityPage() {
   const { items, isLoading, mutate } = useChannelMessages(activeChannelId)
 
   const optimisticMessages = useRef<Record<string, ChatMessage[]>>({})
+
+  // Mark channel as read when viewing
+  const markChannelAsRead = useCallback(async (channelId: string) => {
+    if (!session?.user?.id) return
+    
+    try {
+      await json('/api/community/mark-read', {
+        method: 'POST',
+        body: JSON.stringify({ channelId })
+      })
+      // Refresh unread counts
+      refreshUnreadCounts()
+    } catch (error) {
+      // Silently fail - not critical
+      console.error('Failed to mark channel as read:', error)
+    }
+  }, [session?.user?.id, refreshUnreadCounts])
 
   // Real-time messaging with SSE - use stable callback
   const handleNewMessage = useCallback((message: ChatMessage) => {
@@ -111,7 +148,12 @@ export default function CommunityPage() {
         items: [...current.items, message]
       }
     }, { revalidate: false })
-  }, [mutate])
+
+    // If message is not from current user and not in active channel, increment unread count
+    if (message.userId !== session?.user?.id && message.channelId !== activeChannelId) {
+      refreshUnreadCounts()
+    }
+  }, [mutate, session?.user?.id, activeChannelId, refreshUnreadCounts])
 
   const { isConnected, connectionError, reconnect } = useSSE({
     channelId: activeChannelId,
@@ -135,7 +177,7 @@ export default function CommunityPage() {
     return merged
   }, [activeChannelId, items])
 
-  // Auto-scroll to bottom when channel changes (initial load)
+  // Auto-scroll to bottom when channel changes (initial load) and mark as read
   const prevChannelRef = React.useRef<string | null>(null)
   React.useEffect(() => {
     const container = document.getElementById('messages-container')
@@ -144,13 +186,20 @@ export default function CommunityPage() {
     // Always update the ref to track current channel, regardless of container existence
     prevChannelRef.current = activeChannelId
     
-    if (channelChanged && container) {
+    if (channelChanged) {
+      // Mark channel as read when switching to it
+      if (activeChannelId) {
+        markChannelAsRead(activeChannelId)
+      }
+      
       // Scroll to bottom when switching channels
-      setTimeout(() => {
-        container.scrollTop = container.scrollHeight
-      }, 150)
+      if (container) {
+        setTimeout(() => {
+          container.scrollTop = container.scrollHeight
+        }, 150)
+      }
     }
-  }, [activeChannelId])
+  }, [activeChannelId, markChannelAsRead])
 
   const handleSend = useCallback(
     async (text: string) => {
@@ -351,28 +400,46 @@ export default function CommunityPage() {
               ) : channels.length === 0 ? (
                 <div className="text-sm text-slate-500 text-center py-4 bg-slate-100 rounded-lg">No channels yet.</div>
               ) : (
-                channels.map((channel: Channel) => (
-                  <button
-                    key={channel.id}
-                    onClick={() => {
-                      setActiveChannelId(channel.id)
-                      setReplyTo(null) // Clear reply when switching channels
-                    }}
-                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      activeChannelId === channel.id
-                        ? 'bg-yellow-500 text-white shadow-md'
-                        : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-400">#</span>
-                      <span>{channel.name}</span>
-                    </div>
-                    {channel.description && (
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-1">{channel.description}</p>
-                    )}
-                  </button>
-                ))
+                channels.map((channel: Channel) => {
+                  const unreadCount = unreadCounts[channel.id] || 0
+                  return (
+                    <button
+                      key={channel.id}
+                      onClick={() => {
+                        setActiveChannelId(channel.id)
+                        setReplyTo(null) // Clear reply when switching channels
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative ${
+                        activeChannelId === channel.id
+                          ? 'bg-yellow-500 text-white shadow-md'
+                          : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className={activeChannelId === channel.id ? 'text-yellow-100' : 'text-slate-400'}>#</span>
+                          <span className="truncate">{channel.name}</span>
+                        </div>
+                        {unreadCount > 0 && (
+                          <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            activeChannelId === channel.id
+                              ? 'bg-white text-yellow-600'
+                              : 'bg-red-500 text-white'
+                          }`}>
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      {channel.description && (
+                        <p className={`text-xs mt-1 line-clamp-1 ${
+                          activeChannelId === channel.id ? 'text-yellow-100' : 'text-slate-400'
+                        }`}>
+                          {channel.description}
+                        </p>
+                      )}
+                    </button>
+                  )
+                })
               )}
             </div>
           </aside>

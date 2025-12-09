@@ -138,23 +138,27 @@ export default async function TrackPage({
                 Back to Learning Hub
               </Button>
             </Link>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-slate-900">{track.title}</h1>
-              <p className="text-slate-600 mt-2">{track.summary}</p>
-            </div>
           </div>
 
           {/* Track Cover */}
           {track.coverUrl && (
-            <div className="aspect-video relative mb-8 rounded-lg overflow-hidden">
-              <Image
-                src={track.coverUrl}
-                alt={track.title}
-                fill
-                className="object-cover"
-              />
+            <div className="mb-6 flex justify-center">
+              <div className="aspect-video relative w-full max-w-[75%] rounded-lg overflow-hidden">
+                <Image
+                  src={track.coverUrl}
+                  alt={track.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             </div>
           )}
+
+          {/* Title and Description */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-slate-900">{track.title}</h1>
+            <p className="text-slate-600 mt-2">{track.summary}</p>
+          </div>
 
           {/* Simple Progress and Action */}
           {enrollment && (
