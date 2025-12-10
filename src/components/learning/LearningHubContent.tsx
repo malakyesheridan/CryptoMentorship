@@ -238,17 +238,11 @@ export function LearningHubContent({
           />
 
           {/* Real-Time Progress */}
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-green-600" />
-              Live Progress
-            </h2>
-            <RealTimeProgress 
-              userId={userId}
-              showAchievements={true}
-              showStreak={true}
-            />
-          </div>
+          <RealTimeProgress 
+            userId={userId}
+            showAchievements={true}
+            showStreak={true}
+          />
 
           {/* Analytics Section */}
           <Suspense fallback={<div className="text-center py-8">Loading analytics...</div>}>
