@@ -14,9 +14,13 @@ import {
   Clock, 
   Loader2,
   Share2,
-  ExternalLink
+  ExternalLink,
+  Edit2,
+  Save,
+  X
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 
 interface ReferralData {
   referralCode: string
@@ -61,13 +65,73 @@ export default function ReferralsPage() {
   const [isLoadingCommissions, setIsLoadingCommissions] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentSlug, setCurrentSlug] = useState<string | null>(null)
+  const [isEditingSlug, setIsEditingSlug] = useState(false)
+  const [newSlug, setNewSlug] = useState('')
+  const [isSavingSlug, setIsSavingSlug] = useState(false)
 
   useEffect(() => {
     if (session?.user) {
       fetchReferralData()
       fetchCommissions()
+      fetchCurrentSlug()
     }
   }, [session])
+
+  const fetchCurrentSlug = async () => {
+    try {
+      const res = await fetch('/api/referrals/slug')
+      if (res.ok) {
+        const data = await res.json()
+        setCurrentSlug(data.slug)
+      }
+    } catch (err) {
+      console.error('Failed to fetch current slug:', err)
+    }
+  }
+
+  const handleEditSlug = () => {
+    setNewSlug(currentSlug || '')
+    setIsEditingSlug(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingSlug(false)
+    setNewSlug('')
+  }
+
+  const handleSaveSlug = async () => {
+    if (!newSlug.trim()) {
+      toast.error('Slug cannot be empty')
+      return
+    }
+
+    setIsSavingSlug(true)
+    try {
+      const res = await fetch('/api/referrals/slug', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: newSlug.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update slug')
+      }
+
+      toast.success('Referral slug updated successfully!')
+      setCurrentSlug(data.slug)
+      setIsEditingSlug(false)
+      setNewSlug('')
+      // Refresh referral data to get updated links
+      fetchReferralData()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update slug')
+    } finally {
+      setIsSavingSlug(false)
+    }
+  }
 
   const fetchReferralData = async () => {
     try {
@@ -147,6 +211,87 @@ export default function ReferralsPage() {
         subtitle="Share your link and earn up to 25% commission on referrals"
       />
 
+      {/* Referral Slug Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Referral Slug</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {!isEditingSlug ? (
+              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg border">
+                <div className="flex-1">
+                  <label className="text-sm font-medium text-slate-700 mb-1 block">
+                    Current Slug
+                  </label>
+                  <code className="text-lg font-mono text-slate-900">
+                    {currentSlug || referralData.referralCode}
+                  </code>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Your referral link: {referralData.shortLink}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEditSlug}
+                >
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-2 block">
+                    Custom Slug
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newSlug}
+                      onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="example"
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent font-mono"
+                      disabled={isSavingSlug}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                      disabled={isSavingSlug}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSaveSlug}
+                      disabled={isSavingSlug || !newSlug.trim()}
+                      className="bg-yellow-500 hover:bg-yellow-600"
+                    >
+                      {isSavingSlug ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Only lowercase letters, numbers, and hyphens. 3-50 characters.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Affiliate Link Card */}
       <Card>
         <CardHeader>
@@ -156,7 +301,7 @@ export default function ReferralsPage() {
           <div className="space-y-4">
             {/* Short Link (Preferred) */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Short Link (Recommended)</label>
+              <label className="text-sm font-medium text-slate-700">Your Referral Link</label>
               <div className="flex items-center gap-2 p-4 bg-slate-50 rounded-lg border">
                 <code className="flex-1 text-sm break-all">{referralData.shortLink}</code>
                 <Button
@@ -196,23 +341,6 @@ export default function ReferralsPage() {
                 >
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
-                </Button>
-              </div>
-            </div>
-            
-            {/* Full Link (Alternative) */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Full Link</label>
-              <div className="flex items-center gap-2 p-4 bg-slate-50 rounded-lg border">
-                <code className="flex-1 text-sm break-all">{referralData.affiliateLink}</code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(referralData.affiliateLink)}
-                  className="flex-shrink-0"
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy
                 </Button>
               </div>
             </div>

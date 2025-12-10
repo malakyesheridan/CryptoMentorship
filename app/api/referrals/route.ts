@@ -27,10 +27,12 @@ export async function GET(req: NextRequest) {
 
     const userId = session.user.id
 
-    // Get or create referral code
+    // Get or create referral code (slug)
     const referralCode = await getOrCreateReferralCode(userId)
+    // New format: domain.com/{slug}
+    const shortLink = `${referralConfig.appUrl}/${referralCode}`
+    // Legacy format for backward compatibility
     const affiliateLink = `${referralConfig.appUrl}/register?ref=${referralCode}`
-    const shortLink = `${referralConfig.appUrl}/ref/${referralCode}`
     
     logger.info('Referral link generated', {
       userId,

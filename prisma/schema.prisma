@@ -56,6 +56,7 @@ model User {
   timezone            String?
   preferences         String?
   clientId            String? // Multi-tenant support
+  referralSlug        String?  @unique // Custom referral slug (e.g., "example")
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -100,6 +101,7 @@ model User {
   @@index([createdAt])
   @@index([lastLoginAt])
   @@index([clientId])
+  @@index([referralSlug])
 }
 
 model Client {

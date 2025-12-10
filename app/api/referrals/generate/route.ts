@@ -25,11 +25,15 @@ export async function POST(req: NextRequest) {
     }
 
     const referralCode = await getOrCreateReferralCode(session.user.id)
+    // New format: domain.com/{slug}
+    const shortLink = `${referralConfig.appUrl}/${referralCode}`
+    // Legacy format for backward compatibility
     const affiliateLink = `${referralConfig.appUrl}/register?ref=${referralCode}`
 
     return NextResponse.json({
       referralCode,
       affiliateLink,
+      shortLink,
     })
   } catch (error) {
     logger.error(

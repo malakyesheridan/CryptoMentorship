@@ -5,35 +5,65 @@ import { Prisma } from '@prisma/client'
 import Decimal from 'decimal.js'
 
 /**
- * Generate a unique referral code for a user
- * Format: REF-{USER_ID_PREFIX}-{TIMESTAMP}
+ * Generate a default referral slug for a user
+ * Format: user{USER_ID_PREFIX}{RANDOM}
+ * This is used as a fallback if the user hasn't set a custom slug
  */
-export async function generateReferralCode(userId: string): Promise<string> {
+export async function generateDefaultReferralSlug(userId: string): Promise<string> {
   if (!referralConfig.enabled) {
     throw new Error('Referral system is disabled')
   }
 
-  const userPrefix = userId.slice(0, 8).toUpperCase()
-  const timestamp = Date.now().toString(36).toUpperCase()
-  const code = `REF-${userPrefix}-${timestamp}`
+  const userPrefix = userId.slice(0, 6).toLowerCase()
+  const randomSuffix = Math.random().toString(36).substring(2, 6).toLowerCase()
+  const slug = `user${userPrefix}${randomSuffix}`
 
-  // Ensure uniqueness (very unlikely collision, but safety first)
-  // Now using findFirst since referralCode is no longer unique
-  const existing = await prisma.referral.findFirst({
-    where: { referralCode: code },
+  // Ensure uniqueness
+  const existing = await prisma.user.findUnique({
+    where: { referralSlug: slug },
+    select: { id: true },
   })
 
   if (existing) {
     // Retry with additional randomness
-    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase()
-    return `REF-${userPrefix}-${timestamp}-${randomSuffix}`
+    const extraRandom = Math.random().toString(36).substring(2, 4).toLowerCase()
+    return `user${userPrefix}${randomSuffix}${extraRandom}`
   }
 
-  return code
+  return slug
+}
+
+/**
+ * Get or generate a referral slug for a user
+ * Returns the user's custom slug if set, otherwise generates a default one
+ */
+export async function getOrGenerateReferralSlug(userId: string): Promise<string> {
+  if (!referralConfig.enabled) {
+    throw new Error('Referral system is disabled')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { referralSlug: true },
+  })
+
+  if (user?.referralSlug) {
+    return user.referralSlug
+  }
+
+  // Generate and save a default slug
+  const slug = await generateDefaultReferralSlug(userId)
+  await prisma.user.update({
+    where: { id: userId },
+    data: { referralSlug: slug },
+  })
+
+  return slug
 }
 
 /**
  * Get or create a referral code for a user
+ * Uses the user's referral slug (custom or generated)
  * Returns existing master template code if one exists, otherwise creates a new one
  * The master template (status: 'pending', referredUserId: null) can be reused for multiple referrals
  */
@@ -42,6 +72,9 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
     throw new Error('Referral system is disabled')
   }
 
+  // Get or generate the user's referral slug
+  const referralSlug = await getOrGenerateReferralSlug(userId)
+
   // Find the master template referral code (the reusable one)
   // This is the original record with status 'pending' and no referredUserId
   const masterReferral = await prisma.referral.findFirst({
@@ -49,6 +82,7 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
       referrerId: userId,
       status: 'pending',
       referredUserId: null, // Master template hasn't been used
+      referralCode: referralSlug, // Use slug as the code
     },
     orderBy: { createdAt: 'asc' }, // Get the original one
   })
@@ -57,8 +91,7 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
     return masterReferral.referralCode
   }
 
-  // Create new master template referral code
-  const referralCode = await generateReferralCode(userId)
+  // Create new master template referral code using the slug
   const expiresAt = referralConfig.codeExpiryDays
     ? new Date(Date.now() + referralConfig.codeExpiryDays * 24 * 60 * 60 * 1000)
     : null
@@ -66,19 +99,20 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
   await prisma.referral.create({
     data: {
       referrerId: userId,
-      referralCode,
+      referralCode: referralSlug, // Use slug as the code
       expiresAt,
       status: 'pending',
       referredUserId: null, // Master template
     },
   })
 
-  return referralCode
+  return referralSlug
 }
 
 /**
- * Validate a referral code
+ * Validate a referral code (slug or legacy code)
  * Returns true if code is valid and can be used
+ * Supports both new slug format and legacy REF-* format for backward compatibility
  * Codes can be reused multiple times - we find the master template or any valid referral
  */
 export async function validateReferralCode(code: string): Promise<{
@@ -94,34 +128,88 @@ export async function validateReferralCode(code: string): Promise<{
     return { valid: false, error: 'Referral code is required' }
   }
 
-  // First, try to find the master template (reusable one)
+  // Try to find user by referral slug first (new format)
+  const userBySlug = await prisma.user.findUnique({
+    where: { referralSlug: code },
+    select: { id: true },
+  })
+
+  let referralCode = code
+  let referrerId: string | null = null
+
+  if (userBySlug) {
+    // Found user by slug - use their ID as referrer
+    referrerId = userBySlug.id
+    // Look for referral records with this slug as the code
+  } else {
+    // Not a slug - could be legacy REF-* format
+    // Check if any referral exists with this code
+    const existingReferral = await prisma.referral.findFirst({
+      where: { referralCode: code },
+      orderBy: { createdAt: 'asc' },
+      select: { referrerId: true },
+    })
+
+    if (existingReferral) {
+      referrerId = existingReferral.referrerId
+    } else {
+      // Code doesn't exist
+      return { valid: false, error: 'Invalid referral code' }
+    }
+  }
+
+  if (!referrerId) {
+    return { valid: false, error: 'Invalid referral code' }
+  }
+
+  // Find the master template (reusable one)
   let referral = await prisma.referral.findFirst({
     where: {
-      referralCode: code,
+      referrerId: referrerId,
+      referralCode: referralCode,
       status: 'pending',
       referredUserId: null, // Master template
     },
-    orderBy: { createdAt: 'asc' }, // Get the original one
+    orderBy: { createdAt: 'asc' },
   })
 
   // If no master template found, check if any referral with this code exists
-  // (to validate the code exists and get referrerId)
   if (!referral) {
     referral = await prisma.referral.findFirst({
-      where: { referralCode: code },
-      orderBy: { createdAt: 'asc' }, // Get the original one
+      where: {
+        referrerId: referrerId,
+        referralCode: referralCode,
+      },
+      orderBy: { createdAt: 'asc' },
     })
 
     if (!referral) {
-      return { valid: false, error: 'Invalid referral code' }
+      // Create a master template if using slug and none exists
+      if (userBySlug) {
+        const expiresAt = referralConfig.codeExpiryDays
+          ? new Date(Date.now() + referralConfig.codeExpiryDays * 24 * 60 * 60 * 1000)
+          : null
+
+        referral = await prisma.referral.create({
+          data: {
+            referrerId: referrerId,
+            referralCode: referralCode,
+            expiresAt,
+            status: 'pending',
+            referredUserId: null,
+          },
+        })
+      } else {
+        return { valid: false, error: 'Invalid referral code' }
+      }
     }
 
-    // Check if cancelled (applies to all referrals with this code)
+    // Check if cancelled
     if (referral.status === 'cancelled') {
       return { valid: false, error: 'Referral code has been cancelled' }
     }
 
-    // Check expiration from the original referral
+    // Check expiration
     if (referral.expiresAt && referral.expiresAt < new Date()) {
       return { valid: false, error: 'Referral code has expired' }
     }
@@ -131,7 +219,7 @@ export async function validateReferralCode(code: string): Promise<{
     return {
       valid: true,
       referral: {
-        id: referral.id, // Use as reference, but we'll create a new record
+        id: referral.id,
         referrerId: referral.referrerId,
         status: 'pending', // Treat as valid for reuse
       },
