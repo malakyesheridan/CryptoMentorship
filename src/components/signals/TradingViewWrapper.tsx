@@ -8,7 +8,7 @@ export default function TradingViewWrapper() {
         width="100%" 
         height="800" 
         style={{ border: 0, borderRadius: "12px" }} 
-        allowFullScreen 
+        allowFullScreen={true}
       />
     </div>
   );
