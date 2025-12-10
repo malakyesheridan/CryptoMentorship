@@ -53,6 +53,13 @@ export function ProgressTimeline({
   const milestones = useMemo(() => {
     const allMilestones: Milestone[] = []
 
+    // Helper function to convert date string to Date object
+    const toDate = (date: string | Date | null | undefined): Date => {
+      if (!date) return new Date()
+      if (date instanceof Date) return date
+      return new Date(date)
+    }
+
     // Add enrollment milestones
     enrollments.forEach(enrollment => {
       allMilestones.push({
@@ -60,7 +67,7 @@ export function ProgressTimeline({
         type: 'enrollment',
         title: `Started "${enrollment.track.title}"`,
         description: `Started ${enrollment.track.title} learning track`,
-        date: enrollment.startedAt,
+        date: toDate(enrollment.startedAt),
         icon: <BookOpen className="h-4 w-4" />,
         color: 'bg-blue-500',
         link: `/learn/${enrollment.track.slug}`
@@ -73,7 +80,7 @@ export function ProgressTimeline({
           type: 'completion',
           title: `Completed "${enrollment.track.title}"`,
           description: `Finished all lessons in ${enrollment.track.title}`,
-          date: enrollment.completedAt,
+          date: toDate(enrollment.completedAt),
           icon: <CheckCircle className="h-4 w-4" />,
           color: 'bg-green-500',
           badge: 'Completed',
@@ -89,7 +96,7 @@ export function ProgressTimeline({
         type: 'certificate',
         title: `Earned Certificate`,
         description: `Received certificate for ${certificate.track.title}`,
-        date: certificate.issuedAt,
+        date: toDate(certificate.issuedAt),
         icon: <Award className="h-4 w-4" />,
         color: 'bg-yellow-500',
         badge: 'Certificate',
@@ -153,7 +160,12 @@ export function ProgressTimeline({
     }
 
     // Sort by date (most recent first)
-    return allMilestones.sort((a, b) => b.date.getTime() - a.date.getTime())
+    // Ensure dates are Date objects before sorting
+    return allMilestones.sort((a, b) => {
+      const dateA = a.date instanceof Date ? a.date : new Date(a.date)
+      const dateB = b.date instanceof Date ? b.date : new Date(b.date)
+      return dateB.getTime() - dateA.getTime()
+    })
   }, [enrollments, progress, certificates, streak])
 
   const getMilestoneIcon = (type: string) => {
