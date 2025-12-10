@@ -31,7 +31,7 @@ export default function TradingViewWrapper() {
       <div className="w-full" style={{ height: '500px' }}>
         <iframe
           key={symbol}
-          src={`https://www.tradingview.com/widgetembed/?symbol=${encodedSymbol}&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=1e1e1e&studies=&theme=dark&style=1&timezone=Etc/UTC`}
+          src={`https://www.tradingview.com/widgetembed/?symbol=${encodedSymbol}&interval=D&hidesidetoolbar=0&symboledit=1&saveimage=0&toolbarbg=1e1e1e&studies=&theme=dark&style=1&timezone=Etc/UTC`}
           width="100%"
           height="500"
           frameBorder="0"
