@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PortfolioContent } from '@/components/signals/PortfolioContent'
 import DailySignalManager from '@/components/signals/DailySignalManager'
+import TradingViewWrapper from '@/components/signals/TradingViewWrapper'
 import { getOpenPositions, getClosedTrades } from '@/lib/portfolio/metrics'
 import { unstable_cache } from 'next/cache'
 import { Suspense } from 'react'
@@ -225,6 +226,9 @@ export default async function PortfolioPage() {
         <div className="mb-8">
           <DailySignalManager userTier={userTier} userRole={userRole} />
         </div>
+
+        {/* TradingView Chart */}
+        <TradingViewWrapper />
 
         {/* Unified Portfolio Content with Tabs */}
         <Suspense fallback={
