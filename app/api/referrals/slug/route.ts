@@ -161,7 +161,7 @@ export async function PUT(req: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid slug format', details: error.errors },
+        { error: 'Invalid slug format', details: error.issues },
         { status: 400 }
       )
     }
