@@ -34,7 +34,7 @@ interface AnalyticsData {
   }
   recentActivity: Array<{
     id: string
-    completedAt: Date
+    completedAt: string | Date
     lesson: {
       title: string
       track: {
@@ -53,8 +53,8 @@ interface AnalyticsData {
     trackTitle: string
     trackSlug: string
     progressPct: number
-    startedAt: Date
-    completedAt: Date | null
+    startedAt: string | Date
+    completedAt: string | Date | null
   }>
 }
 
@@ -95,11 +95,28 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
     return `${minutes}m`
   }
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
+  const formatDate = (date: string | Date) => {
+    const dateObj = date instanceof Date ? date : new Date(date)
+    return dateObj.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric'
     })
+  }
+
+  // Helper to convert date to ISO string safely
+  const toISOString = (date: string | Date | null | undefined): string => {
+    if (!date) return new Date().toISOString()
+    if (date instanceof Date) return date.toISOString()
+    // If it's already a string, check if it's a valid ISO string
+    if (typeof date === 'string') {
+      // If it's already an ISO string, return it
+      if (date.includes('T') || date.includes('Z')) {
+        return date
+      }
+      // Otherwise, convert it
+      return new Date(date).toISOString()
+    }
+    return new Date().toISOString()
   }
 
   if (loading) {
@@ -238,7 +255,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
                 <div>
                   <h4 className="font-medium">{track.trackTitle}</h4>
                   <p className="text-sm text-slate-600">
-                    Started {formatDate(track.startedAt.toISOString())}
+                    Started {formatDate(toISOString(track.startedAt))}
                   </p>
                 </div>
                 <div className="text-right">
@@ -270,7 +287,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
                   <p className="text-sm text-slate-600">{activity.lesson.track.title}</p>
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  {formatDate(activity.completedAt.toISOString())}
+                  {formatDate(toISOString(activity.completedAt))}
                 </Badge>
               </div>
             ))}

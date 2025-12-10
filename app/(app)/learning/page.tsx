@@ -211,7 +211,11 @@ async function getLearningActivity(userId: string, days: number = 7) {
       // Group by date and count lessons per day
       const activityByDate = activity.reduce((acc, item) => {
         if (item.completedAt) {
-          const date = item.completedAt.toISOString().split('T')[0]
+          // Handle both Date objects and strings
+          const dateObj = item.completedAt instanceof Date 
+            ? item.completedAt 
+            : new Date(item.completedAt)
+          const date = dateObj.toISOString().split('T')[0]
           acc[date] = (acc[date] || 0) + 1
         }
         return acc
