@@ -48,36 +48,36 @@ function generateUpdateSection(signal: DailySignal): string {
   const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
 
   return `
-    <div style="background: ${tierColor.bg}; border: 2px solid ${tierColor.border}; border-radius: 8px; padding: 24px; margin-bottom: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <div class="signal-box" style="background: ${tierColor.bg}; border: 2px solid ${tierColor.border}; border-radius: 12px; padding: 32px 28px; margin-bottom: 36px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <!-- Header -->
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 20px;">⚡</span>
-          <h3 style="font-size: 18px; font-weight: bold; color: #1e293b; margin: 0;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px;">
+          <span style="font-size: 24px;">⚡</span>
+          <h3 style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0; line-height: 1.4;">
             Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel} ⚡
           </h3>
         </div>
-        <span style="font-size: 12px; color: #64748b;">
+        <span style="font-size: 14px; color: #64748b; white-space: nowrap;">
           ${publishedDate}
         </span>
       </div>
 
       <!-- Update -->
-      <div style="margin-bottom: 16px;">
-        <h4 style="font-weight: bold; color: #1e293b; margin: 0 0 8px 0; font-size: 16px;">Update:</h4>
-        <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
-          <div style="font-size: 18px; color: #1e293b; margin: 0;">
-            ${escapeHtml(signal.signal).split('\n').filter(line => line.trim().length > 0).map(line => `<p style="margin: 0 0 4px 0; padding: 0;">${line.trim()}</p>`).join('')}
+      <div style="margin-bottom: 24px;">
+        <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Update:</h4>
+        <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 16px; color: #1e293b; margin: 0; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word;">
+            ${escapeHtml(signal.signal).split('\n').filter(line => line.trim().length > 0).map(line => `<p style="margin: 0 0 12px 0; padding: 0; line-height: 1.8;">${line.trim()}</p>`).join('')}
           </div>
         </div>
       </div>
 
       ${signal.executiveSummary ? `
       <!-- Executive Summary -->
-      <div style="margin-bottom: 16px;">
-        <h4 style="font-weight: bold; color: #1e293b; margin: 0 0 8px 0; font-size: 16px;">Executive Summary:</h4>
-        <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
-          <p style="color: #334155; margin: 0; white-space: pre-wrap;">
+      <div style="margin-bottom: 24px;">
+        <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Executive Summary:</h4>
+        <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
+          <p style="color: #334155; margin: 0; white-space: pre-wrap; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word; font-size: 16px;">
             ${escapeHtml(signal.executiveSummary)}
           </p>
         </div>
@@ -87,9 +87,9 @@ function generateUpdateSection(signal: DailySignal): string {
       ${signal.associatedData ? `
       <!-- Associated Data -->
       <div>
-        <h4 style="font-weight: bold; color: #1e293b; margin: 0 0 8px 0; font-size: 16px;">Associated Data:</h4>
-        <div style="background: white; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0;">
-          <p style="color: #334155; margin: 0; white-space: pre-wrap;">
+        <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Associated Data:</h4>
+        <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
+          <p style="color: #334155; margin: 0; white-space: pre-wrap; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word; font-size: 16px;">
             ${escapeHtml(signal.associatedData)}
           </p>
         </div>
@@ -136,37 +136,66 @@ export async function sendDailySignalEmail({
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Daily Portfolio Update</title>
+        <style>
+          @media only screen and (max-width: 600px) {
+            .container {
+              width: 100% !important;
+              max-width: 100% !important;
+              padding: 16px !important;
+            }
+            .content-box {
+              padding: 24px 20px !important;
+            }
+            .header-box {
+              padding: 30px 20px !important;
+            }
+            .signal-box {
+              padding: 20px 16px !important;
+            }
+            .text-box {
+              padding: 16px 14px !important;
+            }
+            h1 {
+              font-size: 24px !important;
+            }
+            h3 {
+              font-size: 16px !important;
+            }
+          }
+        </style>
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%); padding: 40px 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h1 style="color: #d4af37; margin: 0 0 10px 0; font-size: 28px;">Daily Portfolio Update</h1>
-        </div>
-        
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <p style="margin: 0 0 20px 0; font-size: 16px;">
-            ${greeting}
-          </p>
-          
-          <p style="margin: 0 0 24px 0; font-size: 16px; color: #475569;">
-            Here's your daily portfolio update${hasMultipleCategories ? 's' : ''}:
-          </p>
-
-          ${signalSections}
-
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${portfolioUrl}" 
-               style="display: inline-block; background: #d4af37; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
-              View Full Portfolio
-            </a>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1e293b; margin: 0; padding: 0; background-color: #f5f5f5;">
+        <div class="container" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 32px 24px;">
+          <div class="header-box" style="background: linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%); padding: 40px 32px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+            <h1 style="color: #d4af37; margin: 0; font-size: 32px; font-weight: 700;">Daily Portfolio Update</h1>
           </div>
           
-          <p style="margin: 30px 0 0 0; font-size: 14px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-            <a href="${preferencesUrl}" style="color: #3b82f6; text-decoration: none;">Manage notification preferences</a>
-          </p>
-        </div>
-        
-        <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #94a3b8;">
-          <p style="margin: 0;">© ${new Date().getFullYear()} CryptoMentorship. All rights reserved.</p>
+          <div class="content-box" style="background: white; padding: 40px 36px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p style="margin: 0 0 24px 0; font-size: 18px; line-height: 1.7;">
+              ${greeting}
+            </p>
+            
+            <p style="margin: 0 0 32px 0; font-size: 17px; color: #475569; line-height: 1.7;">
+              Here's your daily portfolio update${hasMultipleCategories ? 's' : ''}:
+            </p>
+
+            ${signalSections}
+
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${portfolioUrl}" 
+                 style="display: inline-block; background: #d4af37; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 17px; transition: background-color 0.2s;">
+                View Full Portfolio
+              </a>
+            </div>
+            
+            <p style="margin: 32px 0 0 0; font-size: 15px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 24px; line-height: 1.6;">
+              <a href="${preferencesUrl}" style="color: #3b82f6; text-decoration: none;">Manage notification preferences</a>
+            </p>
+          </div>
+          
+          <div style="margin-top: 32px; text-align: center; font-size: 13px; color: #94a3b8;">
+            <p style="margin: 0;">© ${new Date().getFullYear()} CryptoMentorship. All rights reserved.</p>
+          </div>
         </div>
       </body>
     </html>
