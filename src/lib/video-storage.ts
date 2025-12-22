@@ -70,7 +70,7 @@ export function validateVideoFile(file: File): { valid: boolean; error?: string 
   if (file.size > VIDEO_CONFIG.MAX_FILE_SIZE) {
     return {
       valid: false,
-      error: `File too large. Maximum size is ${VIDEO_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`
+      error: `File too large. Maximum size is ${VIDEO_CONFIG.MAX_FILE_SIZE / (1024 * 1024 * 1024)}GB`
     }
   }
   

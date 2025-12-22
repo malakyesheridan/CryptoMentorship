@@ -59,9 +59,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, message: 'Only PDF files are allowed' }, { status: 400 })
     }
 
-    // Validate file size (50MB limit)
-    if (file.size > 50 * 1024 * 1024) {
-      return NextResponse.json({ ok: false, message: 'File size must be less than 50MB' }, { status: 400 })
+    // Validate file size (1GB limit)
+    if (file.size > 1024 * 1024 * 1024) {
+      return NextResponse.json({ ok: false, message: 'File size must be less than 1GB' }, { status: 400 })
     }
 
     // Ensure upload directory exists

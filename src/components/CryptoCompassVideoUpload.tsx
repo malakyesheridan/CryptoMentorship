@@ -145,7 +145,7 @@ export default function CryptoCompassVideoUpload({ onUploadSuccess }: CryptoComp
                   <div className="space-y-2">
                     <Upload className="w-6 h-6 text-slate-400 mx-auto" />
                     <p className="font-medium text-slate-800">Click to select video file</p>
-                    <p className="text-sm text-slate-600">MP4, WebM, MOV, AVI up to 500MB</p>
+                    <p className="text-sm text-slate-600">MP4, WebM, MOV, AVI up to 1GB</p>
                   </div>
                 )}
               </label>

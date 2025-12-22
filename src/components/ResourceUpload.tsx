@@ -30,9 +30,9 @@ export default function ResourceUpload() {
         return
       }
 
-      // Validate file size (max 50MB)
-      if (file.size > 50 * 1024 * 1024) {
-        setErrorMessage('File size must be less than 50MB')
+      // Validate file size (max 1GB)
+      if (file.size > 1024 * 1024 * 1024) {
+        setErrorMessage('File size must be less than 1GB')
         return
       }
 
@@ -158,7 +158,7 @@ export default function ResourceUpload() {
                   <div className="space-y-2">
                     <Upload className="w-6 h-6 text-slate-400 mx-auto" />
                     <p className="font-medium text-slate-800">Click to select PDF file</p>
-                    <p className="text-sm text-slate-600">PDF files up to 50MB</p>
+                    <p className="text-sm text-slate-600">PDF files up to 1GB</p>
                   </div>
                 )}
               </label>
