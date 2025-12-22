@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
 export const maxDuration = 300
 
 const CHUNK_SIZE = 4 * 1024 * 1024 // 4MB chunks (under Vercel's 4.5MB limit)
-const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB max
+const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB max
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Validate total file size
     if (fileSize > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `File too large. Maximum size is 100MB. Your file is ${(fileSize / (1024 * 1024)).toFixed(2)}MB` },
+        { error: `File too large. Maximum size is 1GB. Your file is ${(fileSize / (1024 * 1024 * 1024)).toFixed(2)}GB` },
         { status: 400 }
       )
     }

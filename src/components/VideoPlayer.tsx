@@ -33,6 +33,7 @@ export default function VideoPlayer({
   const [isLoading, setIsLoading] = useState(true)
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false) // Lazy loading state
 
   // Format time helper
   const formatTime = (time: number) => {
@@ -41,9 +42,23 @@ export default function VideoPlayer({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
-  // Handle play/pause
+  // Handle play/pause - Load video source on first play
   const togglePlay = () => {
     if (videoRef.current) {
+      // Load video source when user first attempts to play
+      if (!shouldLoadVideo) {
+        setShouldLoadVideo(true)
+        // Set src after state update to trigger load
+        setTimeout(() => {
+          if (videoRef.current && !videoRef.current.src) {
+            videoRef.current.src = src
+            videoRef.current.load()
+          }
+          videoRef.current?.play()
+        }, 0)
+        return
+      }
+      
       if (isPlaying) {
         videoRef.current.pause()
       } else {
@@ -303,12 +318,14 @@ export default function VideoPlayer({
         }
       }}
     >
-      {/* Video Element */}
+      {/* Video Element - Lazy loaded for performance */}
       <video
         ref={videoRef}
-        src={src}
+        src={shouldLoadVideo ? src : undefined}
         poster={poster}
         className="w-full h-full"
+        preload="none"
+        playsInline
       />
 
       {/* Error Overlay */}

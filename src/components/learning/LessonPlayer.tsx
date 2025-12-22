@@ -415,6 +415,7 @@ export function LessonPlayer({
                           src={lesson.videoUrl.replace('watch?v=', 'embed/')}
                           className="w-full h-full"
                           allowFullScreen
+                          loading="lazy"
                         />
                       ) : (
                         <VideoPlayer

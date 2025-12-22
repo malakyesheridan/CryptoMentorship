@@ -9,7 +9,7 @@ export const VIDEO_CONFIG = {
   THUMBNAIL_DIR: join(process.cwd(), 'uploads', 'thumbnails'),
   
   // File size limits (in bytes)
-  MAX_FILE_SIZE: 200 * 1024 * 1024, // 200MB
+  MAX_FILE_SIZE: 1024 * 1024 * 1024, // 1GB
   
   // Allowed video formats
   ALLOWED_MIME_TYPES: [

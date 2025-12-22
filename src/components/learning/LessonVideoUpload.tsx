@@ -31,10 +31,10 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // Validate file size (200MB limit)
-      const maxFileSize = 200 * 1024 * 1024 // 200MB
+      // Validate file size (1GB limit)
+      const maxFileSize = 1024 * 1024 * 1024 // 1GB
       if (file.size > maxFileSize) {
-        setErrorMessage(`File too large. Maximum size is 200MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+        setErrorMessage(`File too large. Maximum size is 1GB. Your file is ${(file.size / (1024 * 1024 * 1024)).toFixed(2)}GB`)
         setUploadStatus('error')
         return
       }

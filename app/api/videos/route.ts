@@ -74,11 +74,11 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes)
     logger.debug('File converted', { size: bytes.byteLength })
     
-    // ✅ Validate file size (max 200MB for videos)
-    if (!validateFileSize(buffer, 200)) {
+    // ✅ Validate file size (max 1GB for videos)
+    if (!validateFileSize(buffer, 1024)) {
       logger.warn('File too large', { size: buffer.length })
       return NextResponse.json(
-        { ok: false, error: 'File too large (max 200MB)' },
+        { ok: false, error: 'File too large (max 1GB)' },
         { status: 400 }
       )
     }
