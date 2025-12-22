@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
         // Cleanup chunks on error (non-blocking)
         // First, try to clean up chunks we already found
         chunkUrls.forEach(url => {
-          del(url).catch(() => {})
+          del(url, { token: blobToken }).catch(() => {})
         })
         
         // Also try to find and clean up any remaining chunks
