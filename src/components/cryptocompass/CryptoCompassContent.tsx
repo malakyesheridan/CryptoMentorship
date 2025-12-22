@@ -162,6 +162,11 @@ export function CryptoCompassContent({
     return `${hours} hr ${remainingMinutes} min`
   }
 
+  const getCoverUrl = (url: string | null) => {
+    if (!url) return null
+    return url.startsWith('http') || url.startsWith('/') ? url : null
+  }
+
   return (
     <div className="space-y-8">
       {/* Tab Navigation */}
@@ -195,10 +200,10 @@ export function CryptoCompassContent({
                 <article className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 border border-slate-200 overflow-hidden">
                   <div className="flex flex-col lg:flex-row">
                     {/* Episode Image */}
-                    <div className="lg:w-80 lg:h-48 h-64 relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
-                      {episode.coverUrl ? (
+                  <div className="lg:w-80 lg:h-48 h-64 relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+                      {getCoverUrl(episode.coverUrl) ? (
                         <img
-                          src={episode.coverUrl}
+                          src={getCoverUrl(episode.coverUrl) as string}
                           alt={episode.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />

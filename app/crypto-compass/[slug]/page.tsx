@@ -36,6 +36,10 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
   
   // All episodes are accessible to everyone
   const canView = true
+  const coverUrl =
+    episode.coverUrl && (episode.coverUrl.startsWith('http') || episode.coverUrl.startsWith('/'))
+      ? episode.coverUrl
+      : null
 
   // Debug: Log video URL for troubleshooting
   if (episode.videoUrl) {
@@ -126,7 +130,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
             <VideoPlayer
               src={episode.videoUrl}
               title={episode.title}
-              poster={episode.coverUrl || undefined}
+              poster={coverUrl || undefined}
               className="w-full"
             />
           </div>
@@ -145,10 +149,10 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
         ) : null}
 
         {/* Cover Image */}
-        {episode.coverUrl && (
+        {!episode.videoUrl && coverUrl && (
           <div className="mb-8">
             <img
-              src={episode.coverUrl}
+              src={coverUrl}
               alt={episode.title}
               className="w-full h-64 sm:h-80 object-cover rounded-2xl"
             />
