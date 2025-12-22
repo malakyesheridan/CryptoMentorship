@@ -63,7 +63,7 @@ const nextConfig = {
               "font-src 'self'",
               "connect-src 'self' https://*.public.blob.vercel-storage.com https://vercel.com",
               "media-src 'self' blob: https://*.public.blob.vercel-storage.com",
-              "frame-src https://js.stripe.com https://hooks.stripe.com https://www.tradingview.com",
+              "frame-src https://js.stripe.com https://hooks.stripe.com https://www.tradingview.com https://www.youtube.com https://player.vimeo.com",
               "frame-ancestors 'none'",
               "form-action 'self'"
             ].join('; ')

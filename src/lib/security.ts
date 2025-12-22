@@ -108,7 +108,7 @@ export function securityHeaders(req: NextRequest) {
     "font-src 'self'",
     "connect-src 'self' https://api.neon.tech https://api.stripe.com https://api.clover.stripe.com https://*.public.blob.vercel-storage.com https://vercel.com",
     "media-src 'self' blob: https://*.public.blob.vercel-storage.com",
-    "frame-src https://js.stripe.com https://hooks.stripe.com https://www.tradingview.com",
+    "frame-src https://js.stripe.com https://hooks.stripe.com https://www.tradingview.com https://www.youtube.com https://player.vimeo.com",
     "frame-ancestors 'none'"
   ].join('; ')
   

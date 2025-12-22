@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { uploadFile } from '@/lib/actions/upload'
+import { uploadImage } from '@/lib/image-upload'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
 
 interface FileUploadProps {
@@ -12,9 +12,16 @@ interface FileUploadProps {
   onChange: (url: string) => void
   label?: string
   accept?: string
+  folder?: string
 }
 
-export function FileUpload({ value, onChange, label = 'Upload Image', accept = 'image/*' }: FileUploadProps) {
+export function FileUpload({
+  value,
+  onChange,
+  label = 'Upload Image',
+  accept = 'image/*',
+  folder = 'covers'
+}: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -27,10 +34,10 @@ export function FileUpload({ value, onChange, label = 'Upload Image', accept = '
     setError(null)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      
-      const result = await uploadFile(formData)
+      const result = await uploadImage({ file, folder })
+      if (!result.success || !result.url) {
+        throw new Error(result.error || 'Upload failed')
+      }
       onChange(result.url)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')

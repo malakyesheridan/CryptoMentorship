@@ -82,6 +82,26 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
     }
   }
 
+  const isEmbedUrl = (url: string) =>
+    url.includes('youtube.com') ||
+    url.includes('youtu.be') ||
+    url.includes('vimeo.com')
+
+  const toEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/watch')) {
+      return url.replace('watch?v=', 'embed/')
+    }
+    if (url.includes('youtu.be/')) {
+      const id = url.split('youtu.be/')[1]?.split(/[?&]/)[0]
+      return id ? `https://www.youtube.com/embed/${id}` : url
+    }
+    if (url.includes('vimeo.com/')) {
+      const id = url.split('vimeo.com/')[1]?.split(/[?&]/)[0]
+      return id ? `https://player.vimeo.com/video/${id}` : url
+    }
+    return url
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Info */}
@@ -188,12 +208,22 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
           </CardHeader>
           <CardContent>
             <div className="aspect-video bg-black rounded-xl overflow-hidden">
-              <iframe
-                src={formData.videoUrl}
-                className="w-full h-full"
-                allowFullScreen
-                title="Episode preview"
-              />
+              {isEmbedUrl(formData.videoUrl) ? (
+                <iframe
+                  src={toEmbedUrl(formData.videoUrl)}
+                  className="w-full h-full"
+                  allowFullScreen
+                  title="Episode preview"
+                />
+              ) : (
+                <video
+                  src={formData.videoUrl}
+                  poster={formData.coverUrl || undefined}
+                  className="w-full h-full"
+                  controls
+                  preload="metadata"
+                />
+              )}
             </div>
           </CardContent>
         </Card>
