@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth-server'
+import { requireRoleAPI } from '@/lib/auth-server'
 import { put, del, list } from '@vercel/blob'
 import { sanitizeFilename } from '@/lib/file-validation'
 
@@ -10,9 +10,18 @@ const CHUNK_SIZE = 4 * 1024 * 1024 // 4MB chunks
 const MAX_FILE_SIZE_NON_VIDEO = 1024 * 1024 * 1024 // 1GB max for non-video files
 const MAX_FILE_SIZE_VIDEO = 1024 * 1024 * 1024 // 1GB max for video files
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'POST, OPTIONS',
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireRole(['admin', 'editor'])
+    await requireRoleAPI(['admin', 'editor'])
     
     // Check for BLOB_READ_WRITE_TOKEN early
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN
@@ -295,6 +304,9 @@ export async function POST(request: NextRequest) {
       complete: false
     })
   } catch (error) {
+    if (error instanceof NextResponse) {
+      return error
+    }
     console.error('Chunk upload error:', error)
     
     // Provide more helpful error messages

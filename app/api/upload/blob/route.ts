@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth-server'
+import { requireRoleAPI } from '@/lib/auth-server'
 import { put } from '@vercel/blob'
 import { sanitizeFilename } from '@/lib/file-validation'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'POST, OPTIONS',
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireRole(['admin', 'editor'])
+    await requireRoleAPI(['admin', 'editor'])
     
     // Check for BLOB_READ_WRITE_TOKEN early
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN
@@ -90,6 +99,9 @@ export async function POST(request: NextRequest) {
       )
     }
   } catch (error) {
+    if (error instanceof NextResponse) {
+      return error
+    }
     console.error('Blob upload error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Upload failed' },

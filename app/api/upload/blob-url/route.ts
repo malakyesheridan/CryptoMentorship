@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth-server'
+import { requireRoleAPI } from '@/lib/auth-server'
 import { put } from '@vercel/blob'
 
 // Generate a signed URL for direct client-side upload to Vercel Blob Storage
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireRole(['admin', 'editor'])
+    await requireRoleAPI(['admin', 'editor'])
     
     const body = await request.json()
     const { filename, contentType, folder = 'uploads' } = body
@@ -33,6 +33,9 @@ export async function POST(request: NextRequest) {
       filename: sanitizedFilename
     })
   } catch (error) {
+    if (error instanceof NextResponse) {
+      return error
+    }
     console.error('Blob URL generation error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to generate upload URL' },

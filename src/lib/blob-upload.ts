@@ -71,6 +71,7 @@ async function uploadDirectToBlob(
     const response = await fetch('/api/upload/blob', {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     })
 
     onProgress?.(90)
@@ -130,6 +131,7 @@ async function uploadChunkedToBlob(
       const response = await fetch('/api/upload/blob-chunk', {
         method: 'POST',
         body: chunkFormData,
+        credentials: 'include',
       })
 
       if (!response.ok) {
