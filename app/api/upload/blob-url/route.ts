@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoleAPI } from '@/lib/auth-server'
-import { put } from '@vercel/blob'
+import { requireUploadRole } from '@/lib/upload-auth'
 
 // Generate a signed URL for direct client-side upload to Vercel Blob Storage
 export async function POST(request: NextRequest) {
   try {
-    await requireRoleAPI(['admin', 'editor'])
+    const auth = await requireUploadRole(request, ['admin', 'editor'])
+    if (auth instanceof NextResponse) {
+      return auth
+    }
     
     const body = await request.json()
     const { filename, contentType, folder = 'uploads' } = body

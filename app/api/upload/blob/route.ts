@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireRoleAPI } from '@/lib/auth-server'
-import { put } from '@vercel/blob'
 import { sanitizeFilename } from '@/lib/file-validation'
+import { requireUploadRole } from '@/lib/upload-auth'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -17,7 +16,10 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRoleAPI(['admin', 'editor'])
+    const auth = await requireUploadRole(request, ['admin', 'editor'])
+    if (auth instanceof NextResponse) {
+      return auth
+    }
     
     // Check for BLOB_READ_WRITE_TOKEN early
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN
@@ -41,6 +43,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const { put } = await import('@vercel/blob')
 
     // Validate file size - 1GB for all files
     const isVideoFile = file.type.startsWith('video/')
