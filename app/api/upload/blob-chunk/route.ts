@@ -61,13 +61,37 @@ export async function POST(request: NextRequest) {
     const bytes = await chunk.arrayBuffer()
     const buffer = Buffer.from(bytes)
     
-    // Upload chunk to blob storage
-    await put(chunkBlobPath, buffer, {
-      access: 'public',
-      contentType: 'application/octet-stream',
-      addRandomSuffix: false, // Keep predictable path for assembly
-      token: blobToken,
-    })
+    // Upload chunk to blob storage with retry logic
+    let uploadSuccess = false
+    let lastUploadError: Error | null = null
+    const MAX_UPLOAD_RETRIES = 3
+    
+    for (let attempt = 0; attempt < MAX_UPLOAD_RETRIES; attempt++) {
+      try {
+        await put(chunkBlobPath, buffer, {
+          access: 'public',
+          contentType: 'application/octet-stream',
+          addRandomSuffix: false, // Keep predictable path for assembly
+          token: blobToken,
+        })
+        uploadSuccess = true
+        break
+      } catch (uploadError) {
+        lastUploadError = uploadError instanceof Error ? uploadError : new Error(String(uploadError))
+        
+        // Don't retry on the last attempt
+        if (attempt < MAX_UPLOAD_RETRIES - 1) {
+          // Exponential backoff: wait 500ms, 1s, 2s
+          const backoffMs = 500 * Math.pow(2, attempt)
+          await new Promise(resolve => setTimeout(resolve, backoffMs))
+          continue
+        }
+      }
+    }
+    
+    if (!uploadSuccess) {
+      throw new Error(`Failed to upload chunk ${chunkIndex} after ${MAX_UPLOAD_RETRIES} attempts: ${lastUploadError?.message || 'Unknown error'}`)
+    }
 
     // If this is the last chunk, assemble the file and upload to Blob Storage
     if (chunkIndex === totalChunks - 1) {
@@ -114,17 +138,73 @@ export async function POST(request: NextRequest) {
           chunkUrls.push(chunkBlob.url)
         }
         
-        // Now fetch all chunks in parallel
-        const chunkPromises = chunkUrls.map(async (url, index) => {
-          const chunkResponse = await fetch(url)
-          if (!chunkResponse.ok) {
-            throw new Error(`Failed to read chunk ${index} from blob storage: HTTP ${chunkResponse.status}`)
-          }
-          const chunkArrayBuffer = await chunkResponse.arrayBuffer()
-          return Buffer.from(chunkArrayBuffer)
-        })
+        // Fetch chunks with retry logic and timeout handling
+        // For large files, fetch in smaller batches to avoid connection issues
+        const BATCH_SIZE = 10 // Fetch 10 chunks at a time
+        const FETCH_TIMEOUT = 30000 // 30 second timeout per chunk
+        const MAX_RETRIES = 3
         
-        chunkBuffers.push(...await Promise.all(chunkPromises))
+        const fetchChunkWithRetry = async (url: string, index: number): Promise<Buffer> => {
+          let lastError: Error | null = null
+          
+          for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+              // Create abort controller for timeout
+              const controller = new AbortController()
+              const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+              
+              try {
+                const chunkResponse = await fetch(url, {
+                  signal: controller.signal,
+                  headers: {
+                    'Accept': 'application/octet-stream',
+                  }
+                })
+                
+                clearTimeout(timeoutId)
+                
+                if (!chunkResponse.ok) {
+                  throw new Error(`HTTP ${chunkResponse.status}: ${chunkResponse.statusText}`)
+                }
+                
+                const chunkArrayBuffer = await chunkResponse.arrayBuffer()
+                return Buffer.from(chunkArrayBuffer)
+              } catch (fetchError) {
+                clearTimeout(timeoutId)
+                
+                if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+                  throw new Error(`Timeout fetching chunk ${index} after ${FETCH_TIMEOUT}ms`)
+                }
+                throw fetchError
+              }
+            } catch (error) {
+              lastError = error instanceof Error ? error : new Error(String(error))
+              
+              // Don't retry on the last attempt
+              if (attempt < MAX_RETRIES - 1) {
+                // Exponential backoff: wait 1s, 2s, 4s
+                const backoffMs = 1000 * Math.pow(2, attempt)
+                await new Promise(resolve => setTimeout(resolve, backoffMs))
+                continue
+              }
+            }
+          }
+          
+          throw new Error(`Failed to fetch chunk ${index} after ${MAX_RETRIES} attempts: ${lastError?.message || 'Unknown error'}`)
+        }
+        
+        // Fetch chunks in batches to avoid overwhelming connections
+        for (let batchStart = 0; batchStart < chunkUrls.length; batchStart += BATCH_SIZE) {
+          const batchEnd = Math.min(batchStart + BATCH_SIZE, chunkUrls.length)
+          const batch = chunkUrls.slice(batchStart, batchEnd)
+          
+          const batchPromises = batch.map((url, batchIndex) => 
+            fetchChunkWithRetry(url, batchStart + batchIndex)
+          )
+          
+          const batchBuffers = await Promise.all(batchPromises)
+          chunkBuffers.push(...batchBuffers)
+        }
 
         // Assemble all chunks
         const finalFileData = Buffer.concat(chunkBuffers)
@@ -216,8 +296,26 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Chunk upload error:', error)
+    
+    // Provide more helpful error messages
+    let errorMessage = 'Upload failed'
+    if (error instanceof Error) {
+      if (error.message.includes('ECONNRESET') || error.message.includes('terminated')) {
+        errorMessage = 'Connection error during upload. Please try again. If the problem persists, try uploading a smaller file or check your internet connection.'
+      } else if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+        errorMessage = 'Upload timed out. Please try again with a smaller file or better internet connection.'
+      } else if (error.message.includes('Missing chunk')) {
+        errorMessage = 'Some upload chunks are missing. Please try uploading again.'
+      } else {
+        errorMessage = error.message
+      }
+    }
+    
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Upload failed' },
+      { 
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     )
   }
