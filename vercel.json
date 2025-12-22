@@ -13,6 +13,9 @@
     "app/api/upload/blob-chunk/route.ts": {
       "maxDuration": 300
     },
+    "app/api/crypto-compass/upload/route.ts": {
+      "maxDuration": 300
+    },
     "app/api/admin/learn/lessons/upload/route.ts": {
       "maxDuration": 300
     },

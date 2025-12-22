@@ -109,14 +109,13 @@ export default function CryptoCompassUpload() {
       const slug = generateSlug(episodeData.title)
       
       // Upload video to Vercel Blob Storage
-      const { uploadToBlob } = await import('@/lib/blob-upload')
-      
-      const uploadResult = await uploadToBlob({
+      const { uploadCryptoCompassVideo } = await import('@/lib/crypto-compass-upload')
+
+      const uploadResult = await uploadCryptoCompassVideo({
         file: episodeData.video,
-        folder: 'episodes',
         onProgress: (progress) => {
           setUploadProgress(progress)
-        }
+        },
       })
 
       if (!uploadResult.success || !uploadResult.url) {

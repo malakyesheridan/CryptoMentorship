@@ -61,7 +61,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self'",
-              "connect-src 'self'",
+              "connect-src 'self' https://*.public.blob.vercel-storage.com",
               "media-src 'self' blob: https://*.public.blob.vercel-storage.com",
               "frame-src https://js.stripe.com https://hooks.stripe.com https://www.tradingview.com",
               "frame-ancestors 'none'",
