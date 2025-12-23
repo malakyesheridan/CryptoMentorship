@@ -72,7 +72,7 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
       })
 
       if (response.ok) {
-        router.push('/admin/episodes')
+        router.push('/admin')
       } else {
         console.error('Failed to save episode')
       }
@@ -99,7 +99,7 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
       })
 
       if (response.ok) {
-        router.push('/admin/episodes')
+        router.push('/admin')
       } else {
         const payload = await response.json().catch(() => ({}))
         console.error('Failed to delete episode', payload)

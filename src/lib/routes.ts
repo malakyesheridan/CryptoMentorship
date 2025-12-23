@@ -99,7 +99,7 @@ export const routes = {
     
     // Episodes
     episodes: {
-      list: () => '/admin/episodes',
+      list: () => '/admin',
       new: () => '/admin/episodes/new'
     },
     
