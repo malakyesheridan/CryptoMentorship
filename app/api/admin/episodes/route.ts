@@ -192,3 +192,83 @@ export async function PUT(request: NextRequest) {
     return handleError(error)
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = await requireRole(['admin', 'editor'])
+    const body = await request.json().catch(() => ({}))
+    const id = body?.id as string | undefined
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Episode ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const existingEpisode = await prisma.episode.findUnique({
+      where: { id }
+    })
+
+    if (!existingEpisode) {
+      return NextResponse.json(
+        { error: 'Episode not found' },
+        { status: 404 }
+      )
+    }
+
+    const deletedEpisode = await prisma.$transaction(async (tx) => {
+      await tx.bookmark.deleteMany({
+        where: { episodeId: id }
+      })
+
+      await tx.viewEvent.deleteMany({
+        where: { entityType: 'episode', entityId: id }
+      })
+
+      await tx.notification.deleteMany({
+        where: { entityType: 'episode', entityId: id }
+      })
+
+      const deleted = await tx.episode.delete({
+        where: { id }
+      })
+
+      await logAudit(
+        tx,
+        user.id,
+        'delete',
+        'episode',
+        deleted.id,
+        { title: deleted.title }
+      )
+
+      return deleted
+    })
+
+    const deleteBlobIfNeeded = async (url?: string | null) => {
+      if (!url) return
+      try {
+        const parsed = new URL(url)
+        if (!parsed.hostname.endsWith('.public.blob.vercel-storage.com')) {
+          return
+        }
+        const token = process.env.BLOB_READ_WRITE_TOKEN
+        if (!token) return
+        const { del } = await import('@vercel/blob')
+        await del(url, { token })
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+
+    await Promise.all([
+      deleteBlobIfNeeded(existingEpisode.videoUrl),
+      deleteBlobIfNeeded(existingEpisode.coverUrl)
+    ])
+
+    return NextResponse.json({ success: true, id: deletedEpisode.id })
+  } catch (error) {
+    return handleError(error)
+  }
+}

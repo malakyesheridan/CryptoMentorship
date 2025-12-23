@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileUpload } from './FileUpload'
-import { Save, Eye, Play } from 'lucide-react'
+import { Save, Play, Trash2 } from 'lucide-react'
 
 interface EpisodeFormProps {
   initialData?: {
@@ -26,6 +26,7 @@ interface EpisodeFormProps {
 export function EpisodeForm({ initialData }: EpisodeFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -79,6 +80,36 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
       console.error('Error saving episode:', error)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!initialData?.id || isDeleting) return
+    const confirmed = window.confirm('Delete this episode permanently? This cannot be undone.')
+    if (!confirmed) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch('/api/admin/episodes', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: initialData.id }),
+      })
+
+      if (response.ok) {
+        router.push('/admin/episodes')
+      } else {
+        const payload = await response.json().catch(() => ({}))
+        console.error('Failed to delete episode', payload)
+        window.alert(payload?.error || 'Failed to delete episode')
+      }
+    } catch (error) {
+      console.error('Error deleting episode:', error)
+      window.alert('Error deleting episode')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -238,6 +269,17 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancel
         </Button>
+        {initialData?.id ? (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {isDeleting ? 'Deleting...' : 'Delete Episode'}
+          </Button>
+        ) : null}
       </div>
     </form>
   )
