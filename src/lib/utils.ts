@@ -11,11 +11,13 @@ export function canView(content: { locked: boolean }, user: { role: string }) {
 }
 
 export function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en-US', {
+  const parts = new Intl.DateTimeFormat('en-GB', {
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date)
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const get = (type: string) => parts.find(part => part.type === type)?.value || ''
+  return `${get('day')}-${get('month')}-${get('year')}`
 }
 
 export function formatRelativeTime(date: Date) {

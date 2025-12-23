@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { formatDate } from '@/lib/dates'
 
 export const dynamic = 'force-dynamic'
 
@@ -250,7 +251,7 @@ export default async function AdminTracksPage() {
                             
                             <td className="px-6 py-4">
                               <div className="text-sm text-slate-900">
-                                {track.createdAt.toLocaleDateString()}
+                                {formatDate(track.createdAt)}
                               </div>
                               <div className="text-sm text-slate-500">
                                 {track.createdAt.toLocaleTimeString()}

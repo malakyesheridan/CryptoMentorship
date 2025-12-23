@@ -22,6 +22,7 @@ import {
 import Link from 'next/link'
 import { enrollInCohort, leaveCohort } from '@/lib/actions/cohorts'
 import { getCohortProgress, formatRelativeTime } from '@/lib/cohorts'
+import { formatDate } from '@/lib/dates'
 
 // Revalidate every 5 minutes - cohort content is published, not real-time
 export const revalidate = 300
@@ -340,7 +341,7 @@ export default async function CohortDashboardPage({
                             )}
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              Released {release.releaseAt.toLocaleDateString()}
+                              Released {formatDate(release.releaseAt)}
                             </span>
                           </div>
                         </div>

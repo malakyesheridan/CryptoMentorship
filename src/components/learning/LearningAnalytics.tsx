@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { json } from '@/lib/http'
+import { formatDate as formatDateDMY } from '@/lib/dates'
 
 interface AnalyticsData {
   overview: {
@@ -97,10 +98,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
 
   const formatDate = (date: string | Date) => {
     const dateObj = date instanceof Date ? date : new Date(date)
-    return dateObj.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    })
+    return formatDateDMY(dateObj)
   }
 
   // Helper to convert date to ISO string safely

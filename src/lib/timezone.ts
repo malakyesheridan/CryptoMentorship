@@ -5,19 +5,34 @@ export function formatEventTime(
   format: string = 'PPP p'
 ): string {
   try {
-    // Use native Intl.DateTimeFormat for timezone formatting
-    return new Intl.DateTimeFormat('en-US', {
+    const parts = new Intl.DateTimeFormat('en-GB', {
       timeZone: timezone,
-      dateStyle: 'full',
-      timeStyle: 'short'
-    }).format(date)
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).formatToParts(date)
+    const get = (type: string) => parts.find(part => part.type === type)?.value || ''
+    const datePart = `${get('day')}-${get('month')}-${get('year')}`
+    const timePart = get('dayPeriod') ? `${get('hour')}:${get('minute')} ${get('dayPeriod')}` : `${get('hour')}:${get('minute')}`
+    return `${datePart} ${timePart}`.trim()
   } catch (error) {
     // Fallback to regular formatting if timezone is invalid
     console.warn('Invalid timezone:', timezone, error)
-    return new Intl.DateTimeFormat('en-US', {
-      dateStyle: 'full',
-      timeStyle: 'short'
-    }).format(date)
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).formatToParts(date)
+    const get = (type: string) => parts.find(part => part.type === type)?.value || ''
+    const datePart = `${get('day')}-${get('month')}-${get('year')}`
+    const timePart = get('dayPeriod') ? `${get('hour')}:${get('minute')} ${get('dayPeriod')}` : `${get('hour')}:${get('minute')}`
+    return `${datePart} ${timePart}`.trim()
   }
 }
 

@@ -19,6 +19,7 @@ import {
   Clock
 } from 'lucide-react'
 import Link from 'next/link'
+import { formatDate } from '@/lib/dates'
 
 // Force dynamic rendering for admin pages (auth-gated)
 export const dynamic = 'force-dynamic'
@@ -168,7 +169,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                     <div>
                       <h4 className="font-medium text-slate-900 mb-2">Exit Date</h4>
                       <p className="text-slate-600">
-                        {signal.exitTime ? new Date(signal.exitTime).toLocaleDateString() : 'N/A'}
+                        {signal.exitTime ? formatDate(signal.exitTime) : 'N/A'}
                       </p>
                     </div>
                     
@@ -209,7 +210,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Entry Date</span>
                   <span className="text-sm font-medium">
-                    {new Date(signal.createdAt).toLocaleDateString()}
+                    {formatDate(signal.createdAt)}
                   </span>
                 </div>
                 
@@ -217,7 +218,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Exit Date</span>
                     <span className="text-sm font-medium">
-                      {new Date(signal.exitTime).toLocaleDateString()}
+                      {formatDate(signal.exitTime)}
                     </span>
                   </div>
                 )}

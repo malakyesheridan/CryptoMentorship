@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { emit } from '@/lib/events'
 import { z } from 'zod'
+import { formatDate } from '@/lib/dates'
 
 const eventSchema = z.object({
   title: z.string().min(1).max(200),
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       await emit({
         type: 'announcement',
         title: `New live session: ${data.title}`,
-        body: data.summary || `Join us for "${data.title}" on ${new Date(data.startAt).toLocaleDateString()}`,
+        body: data.summary || `Join us for "${data.title}" on ${formatDate(data.startAt)}`,
         url: `/events/${data.slug}`
       })
     }

@@ -5,6 +5,31 @@
 
 import { Decimal, D, toNum } from '@/lib/num'
 
+function formatDateParts(dateObj: Date): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).formatToParts(dateObj)
+
+  const get = (type: string) => parts.find(part => part.type === type)?.value || ''
+  return `${get('day')}-${get('month')}-${get('year')}`
+}
+
+function formatTimeParts(dateObj: Date): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }).formatToParts(dateObj)
+
+  const get = (type: string) => parts.find(part => part.type === type)?.value || ''
+  const hour = get('hour')
+  const minute = get('minute')
+  const dayPeriod = get('dayPeriod')
+  return dayPeriod ? `${hour}:${minute} ${dayPeriod}` : `${hour}:${minute}`
+}
+
 /**
  * Format currency value
  */
@@ -52,7 +77,7 @@ export function formatInteger(value: Decimal | number): string {
 /**
  * Format date
  */
-export function formatDate(date: Date | string | null | undefined, format: 'short' | 'long' | 'full' = 'short'): string {
+export function formatDate(date: Date | string | null | undefined, _format: 'short' | 'long' | 'full' = 'short'): string {
   // Handle null/undefined
   if (!date) {
     return '—'
@@ -74,15 +99,7 @@ export function formatDate(date: Date | string | null | undefined, format: 'shor
     return '—'
   }
 
-  const formatOptions: Record<string, Intl.DateTimeFormatOptions> = {
-    short: { month: 'short', day: 'numeric' },
-    long: { year: 'numeric', month: 'long', day: 'numeric' },
-    full: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-  }
-  
-  const options = formatOptions[format]
-
-  return new Intl.DateTimeFormat('en-US', options).format(dateObj)
+  return formatDateParts(dateObj)
 }
 
 /**
@@ -110,14 +127,7 @@ export function formatDateTime(date: Date | string | null | undefined): string {
     return '—'
   }
 
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  }).format(dateObj)
+  return `${formatDateParts(dateObj)} ${formatTimeParts(dateObj)}`
 }
 
 /**

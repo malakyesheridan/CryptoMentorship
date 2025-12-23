@@ -16,37 +16,66 @@ export function toDate(v: Dateish): Date | null {
   return null;
 }
 
-export function formatDate(v: Dateish, fmt: string = 'PPP'): string {
-  const d = toDate(v);
-  if (!d) return 'â€”';
-  
-  // Handle custom format aliases
+function normalizeDateFormat(fmt: string): string {
   const formatMap: Record<string, string> = {
-    'short': 'MMM d', // Jan 5
-    'long': 'PPP', // Jan 5, 2025
-    'full': 'PPpp', // Jan 5, 2025 at 3:04 PM
+    short: 'dd-MM-yyyy',
+    long: 'dd-MM-yyyy',
+    full: 'dd-MM-yyyy h:mm a',
+    PPP: 'dd-MM-yyyy',
+    PPpp: 'dd-MM-yyyy h:mm a',
+    'PPP p': 'dd-MM-yyyy h:mm a',
+    'MMM d, yyyy': 'dd-MM-yyyy',
+    'MMM dd, yyyy': 'dd-MM-yyyy',
+    'MMMM d, yyyy': 'dd-MM-yyyy',
+    'MMMM yyyy': 'dd-MM-yyyy',
+    'MMM d': 'dd-MM-yyyy',
+    'MMM dd': 'dd-MM-yyyy',
+    'MMM d, yyyy h:mm a': 'dd-MM-yyyy h:mm a',
+    'MMM d, h:mm a': 'dd-MM-yyyy h:mm a',
+    'MMM d, yyyy HH:mm': 'dd-MM-yyyy HH:mm',
   };
-  
-  const actualFormat = formatMap[fmt] || fmt;
+
+  if (formatMap[fmt]) {
+    return formatMap[fmt];
+  }
+
+  const hasDateTokens = /[yYMdP]/.test(fmt);
+  if (!hasDateTokens) {
+    return fmt;
+  }
+
+  const hasTimeTokens = /[Hhmsa]|p/.test(fmt);
+  if (!hasTimeTokens) {
+    return 'dd-MM-yyyy';
+  }
+
+  const use24Hour = fmt.includes('H');
+  return use24Hour ? 'dd-MM-yyyy HH:mm' : 'dd-MM-yyyy h:mm a';
+}
+
+export function formatDate(v: Dateish, fmt: string = 'dd-MM-yyyy'): string {
+  const d = toDate(v);
+  if (!d) return 'ƒ?"';
+
+  const actualFormat = normalizeDateFormat(fmt);
   return format(d, actualFormat);
-  // Examples: 'PPP' â†’ Jan 5, 2025; 'PPpp' â†’ Jan 5, 2025 at 3:04 PM; 'short' â†’ Jan 5
 }
 
 export function formatDateTime(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'â€”';
-  return format(d, 'PPP p');
+  if (!d) return 'ƒ?"';
+  return format(d, 'dd-MM-yyyy h:mm a');
 }
 
 export function formatTime(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'â€”';
+  if (!d) return 'ƒ?"';
   return format(d, 'p');
 }
 
 export function formatRelative(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'â€”';
+  if (!d) return 'ƒ?"';
   
   const now = new Date();
   const diffInMinutes = Math.floor((now.getTime() - d.getTime()) / (1000 * 60));
@@ -60,19 +89,19 @@ export function formatRelative(v: Dateish): string {
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) return `${diffInDays}d ago`;
   
-  return formatDate(d, 'MMM d');
+  return formatDate(d, 'dd-MM-yyyy');
 }
 
 export function timeago(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'â€”';
+  if (!d) return 'ƒ?"';
   return formatDistanceToNowStrict(d, { addSuffix: true });
 }
 
 export function formatTimeline(v: Dateish): { relative: string; absolute: string } {
   const d = toDate(v);
   if (!d) {
-    return { relative: 'â€”', absolute: 'â€”' };
+    return { relative: 'ƒ?"', absolute: 'ƒ?"' };
   }
 
   return {

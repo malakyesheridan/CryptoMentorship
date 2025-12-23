@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { CertificateActions } from '@/components/CertificateActions'
 import Link from 'next/link'
+import { formatDate } from '@/lib/dates'
 
 async function getCertificate(code: string) {
   const certificate = await prisma.certificate.findUnique({
@@ -104,11 +105,7 @@ export default async function CertificatePage({
                     <span className="text-sm font-medium text-slate-600">Issued On</span>
                   </div>
                   <p className="text-lg font-semibold text-slate-900">
-                    {new Date(certificate.issuedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
+                    {formatDate(certificate.issuedAt)}
                   </p>
                 </div>
                 
@@ -163,7 +160,7 @@ export default async function CertificatePage({
                 <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <span className="text-sm font-medium text-slate-600">Issued</span>
                   <span className="text-sm text-slate-900">
-                    {new Date(certificate.issuedAt).toLocaleDateString()}
+                    {formatDate(certificate.issuedAt)}
                   </span>
                 </div>
                 

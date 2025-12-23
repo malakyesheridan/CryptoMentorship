@@ -23,6 +23,7 @@ import {
   CSVColumnMapping,
   CSVImportRow
 } from '@/lib/perf/csv-import'
+import { formatDate } from '@/lib/dates'
 
 interface ImportStep {
   step: 'upload' | 'mapping' | 'preview' | 'import'
@@ -330,7 +331,7 @@ export default function CSVImportPage() {
                               {row.direction}
                             </span>
                           </td>
-                          <td className="px-3 py-2">{new Date(row.entryTime).toLocaleDateString()}</td>
+                          <td className="px-3 py-2">{formatDate(row.entryTime)}</td>
                           <td className="px-3 py-2">${row.entryPrice}</td>
                           <td className="px-3 py-2">{row.conviction}/5</td>
                           <td className="px-3 py-2">{row.riskPct}%</td>

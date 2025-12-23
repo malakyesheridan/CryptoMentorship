@@ -18,6 +18,7 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
+import { formatDate, formatTime } from '@/lib/dates'
 
 // Force dynamic rendering for admin pages (auth-gated)
 export const dynamic = 'force-dynamic'
@@ -136,8 +137,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-slate-500" />
                     <span className="text-sm text-slate-600">
-                      {new Date(event.startAt).toLocaleDateString()} at{' '}
-                      {new Date(event.startAt).toLocaleTimeString()}
+                      {formatDate(event.startAt)} at {formatTime(event.startAt)}
                     </span>
                   </div>
                   

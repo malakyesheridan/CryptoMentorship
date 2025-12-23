@@ -18,6 +18,7 @@ import {
   Activity
 } from 'lucide-react'
 import { startLearningSession, endLearningSession, getLessonTimeTracking } from '@/lib/actions/time-tracking'
+import { formatDateTime } from '@/lib/dates'
 
 interface TimeTrackingProps {
   lessonId: string
@@ -129,12 +130,7 @@ export function TimeTracking({ lessonId, userId, className = '' }: TimeTrackingP
 
   // Format date
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    return formatDateTime(date)
   }
 
   // Calculate average session time
