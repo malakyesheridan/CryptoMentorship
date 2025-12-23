@@ -68,8 +68,8 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   // Build API URL with date parameter if selected
-  const apiUrl = selectedDate 
-    ? `/api/portfolio-daily-signals?date=${selectedDate}`
+  const apiUrl = selectedDate
+    ? `/api/portfolio-daily-signals?date=${selectedDate}&tzOffset=${new Date().getTimezoneOffset()}`
     : '/api/portfolio-daily-signals'
 
   const { data, error, isLoading } = useSWR<{ 

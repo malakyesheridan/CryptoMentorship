@@ -29,15 +29,16 @@ export async function GET(request: NextRequest) {
     
     let dateFilter: { gte?: Date; lt?: Date } | undefined
     if (dateParam) {
-      // Parse date string (YYYY-MM-DD) and create UTC dates to avoid timezone issues
-      // The date string is in local date format, but we need to query in UTC
+      const tzOffsetParam = searchParams.get('tzOffset')
+      const tzOffsetMinutes = tzOffsetParam ? Number(tzOffsetParam) : 0
+      const safeOffsetMinutes = Number.isFinite(tzOffsetMinutes) ? tzOffsetMinutes : 0
+
+      // Parse date string (YYYY-MM-DD) and create UTC dates aligned to the user's local day
       const [year, month, day] = dateParam.split('-').map(Number)
       
-      // Create start of day in UTC (00:00:00 UTC)
-      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
-      
-      // Create end of day in UTC (23:59:59.999 UTC)
-      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+      // Convert local day boundaries to UTC using the user's timezone offset (in minutes)
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + safeOffsetMinutes * 60 * 1000)
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999) + safeOffsetMinutes * 60 * 1000)
       
       dateFilter = {
         gte: startOfDay,

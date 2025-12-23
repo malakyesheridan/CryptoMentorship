@@ -75,15 +75,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createDailySignalSchema.parse(body)
 
-    // Delete the most recent update for this tier (and category if T2/Elite) to replace it
-    // This ensures only one active update exists per tier/category combination
+    // Delete any existing update for this tier/category for today only (keep history)
     let whereClause: any
+    const now = new Date()
+    const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
+    const endOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
+    const todayFilter = {
+      gte: startOfTodayUtc,
+      lt: new Date(endOfTodayUtc.getTime() + 1)
+    }
     
     if (data.tier === 'T2' && data.category) {
       // For T2 (Elite), filter by tier and category
       whereClause = {
         tier: data.tier,
-        category: data.category
+        category: data.category,
+        publishedAt: todayFilter
       }
     } else if (data.tier === 'T1') {
       // For T1 (Growth), find signals with tier T1 OR old T2 signals without category
@@ -92,27 +99,21 @@ export async function POST(request: NextRequest) {
         OR: [
           { tier: 'T1', category: null },
           { tier: 'T2', category: null }
-        ]
+        ],
+        publishedAt: todayFilter
       }
     } else {
       // Fallback (shouldn't happen with current schema)
       whereClause = {
         tier: data.tier,
+        publishedAt: todayFilter
       }
     }
 
-    // Find the most recent update for this tier/category
-    const existingSignal = await prisma.portfolioDailySignal.findFirst({
+    // Delete any updates for this tier/category for today only
+    await prisma.portfolioDailySignal.deleteMany({
       where: whereClause,
-      orderBy: { publishedAt: 'desc' },
     })
-
-    // Delete it if it exists
-    if (existingSignal) {
-      await prisma.portfolioDailySignal.delete({
-        where: { id: existingSignal.id },
-      })
-    }
 
     // Create new update
     // For T1 (Growth), ensure category is explicitly null (not undefined)
