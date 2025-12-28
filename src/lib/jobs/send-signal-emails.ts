@@ -283,6 +283,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         // For T2 users, prepare signals array (may include both majors and memecoins)
         // Always put majors (market rotation) first, then memecoins
         let signalsForEmail: DailySignal[] = [signalToSend]
+        let shouldSkipEmail = false
         
         if (userTier === 'T2' && signalTier === 'T2') {
           // Get the date of the created signal (start of day)
@@ -306,11 +307,20 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
             })
             
             if (memecoinsSignal) {
+              // Both signals exist - include both in email
               signalsForEmail = [createdSignal as DailySignal, memecoinsSignal as DailySignal]
               logger.info('Found memecoins signal for same day - will include in email', {
                 userId: user.id,
                 majorsSignalId: createdSignal.id,
                 memecoinsSignalId: memecoinsSignal.id,
+              })
+            } else {
+              // Only majors exists - skip email (will be sent when memecoins is created)
+              shouldSkipEmail = true
+              logger.info('Skipping email for T2 majors signal - memecoins signal not yet created for same day', {
+                userId: user.id,
+                majorsSignalId: createdSignal.id,
+                signalDate: signalDate.toISOString(),
               })
             }
           } else if (createdSignal.category === 'memecoins') {
@@ -328,14 +338,33 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
             })
             
             if (majorsSignal) {
+              // Both signals exist - include both in email
               signalsForEmail = [majorsSignal as DailySignal, createdSignal as DailySignal]
               logger.info('Found majors signal for same day - will include in email', {
                 userId: user.id,
                 memecoinsSignalId: createdSignal.id,
                 majorsSignalId: majorsSignal.id,
               })
+            } else {
+              // Only memecoins exists - skip email (will be sent when majors is created)
+              shouldSkipEmail = true
+              logger.info('Skipping email for T2 memecoins signal - majors signal not yet created for same day', {
+                userId: user.id,
+                memecoinsSignalId: createdSignal.id,
+                signalDate: signalDate.toISOString(),
+              })
             }
           }
+        }
+        
+        // Skip email if we determined we should wait for the other signal
+        if (shouldSkipEmail) {
+          logger.info('Skipping email - will be sent when both signals are available', {
+            userId: user.id,
+            signalId: createdSignal.id,
+            category: createdSignal.category,
+          })
+          continue
         }
 
         // Send email with the signals (may be one or two for T2 users)
