@@ -55,7 +55,7 @@ function normalizeDateFormat(fmt: string): string {
 
 export function formatDate(v: Dateish, fmt: string = 'dd-MM-yyyy'): string {
   const d = toDate(v);
-  if (!d) return 'ƒ?"';
+  if (!d) return 'â€”';
 
   const actualFormat = normalizeDateFormat(fmt);
   return format(d, actualFormat);
@@ -63,19 +63,19 @@ export function formatDate(v: Dateish, fmt: string = 'dd-MM-yyyy'): string {
 
 export function formatDateTime(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'ƒ?"';
+  if (!d) return 'â€”';
   return format(d, 'dd-MM-yyyy h:mm a');
 }
 
 export function formatTime(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'ƒ?"';
+  if (!d) return 'â€”';
   return format(d, 'p');
 }
 
 export function formatRelative(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'ƒ?"';
+  if (!d) return 'â€”';
   
   const now = new Date();
   const diffInMinutes = Math.floor((now.getTime() - d.getTime()) / (1000 * 60));
@@ -94,14 +94,14 @@ export function formatRelative(v: Dateish): string {
 
 export function timeago(v: Dateish): string {
   const d = toDate(v);
-  if (!d) return 'ƒ?"';
+  if (!d) return 'â€”';
   return formatDistanceToNowStrict(d, { addSuffix: true });
 }
 
 export function formatTimeline(v: Dateish): { relative: string; absolute: string } {
   const d = toDate(v);
   if (!d) {
-    return { relative: 'ƒ?"', absolute: 'ƒ?"' };
+    return { relative: 'â€”', absolute: 'â€”' };
   }
 
   return {
