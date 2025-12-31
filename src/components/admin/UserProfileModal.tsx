@@ -171,12 +171,19 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
                     <div>
                       <p className="text-sm text-slate-500 mb-2">Membership</p>
                       {data.membership ? (
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="secondary">{data.membership.tier}</Badge>
-                          <Badge variant="outline" className="capitalize">
-                            {data.membership.status}
-                          </Badge>
-                        </div>
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="secondary">{data.membership.tier}</Badge>
+                            <Badge variant="outline" className="capitalize">
+                              {data.membership.status}
+                            </Badge>
+                          </div>
+                          {data.membership.currentPeriodEnd && (
+                            <p className="text-sm text-slate-600 mb-2">
+                              Trial ends: {formatDate(new Date(data.membership.currentPeriodEnd), 'MMM d, yyyy h:mm a')}
+                            </p>
+                          )}
+                        </>
                       ) : (
                         <p className="text-sm text-slate-400 mb-2">No membership</p>
                       )}
@@ -186,7 +193,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
                         onClick={() => setShowTrialModal(true)}
                         className="w-full"
                       >
-                        {data.membership ? 'Update Trial Subscription' : 'Create Trial Subscription'}
+                        {data.membership ? 'Extend Trial Subscription' : 'Create Trial Subscription'}
                       </Button>
                     </div>
                     <div>
@@ -377,6 +384,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
           userId={data.user.id}
           userName={data.user.name || data.user.email}
           userEmail={data.user.email}
+          currentMembership={data.membership}
           onSuccess={async () => {
             // Refresh user data
             await fetchUserProfile()

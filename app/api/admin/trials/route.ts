@@ -35,9 +35,30 @@ export async function POST(req: NextRequest) {
       )
     }
     
+    // Check if user already has a membership
+    const existingMembership = await prisma.membership.findUnique({
+      where: { userId },
+      select: { currentPeriodEnd: true, currentPeriodStart: true },
+    })
+    
     // Calculate trial end date
-    const trialEndDate = new Date()
-    trialEndDate.setDate(trialEndDate.getDate() + durationDays)
+    // If user has an existing membership with a future end date, extend from that date
+    // Otherwise, calculate from today
+    let trialEndDate: Date
+    let trialStartDate: Date
+    
+    if (existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > new Date()) {
+      // Extend from existing end date
+      trialEndDate = new Date(existingMembership.currentPeriodEnd)
+      trialEndDate.setDate(trialEndDate.getDate() + durationDays)
+      // Keep the original start date when extending
+      trialStartDate = existingMembership.currentPeriodStart || new Date()
+    } else {
+      // Create new trial or extend from expired date - start from today
+      trialEndDate = new Date()
+      trialEndDate.setDate(trialEndDate.getDate() + durationDays)
+      trialStartDate = new Date()
+    }
     
     // Get or create membership
     const membership = await prisma.membership.upsert({
@@ -45,7 +66,7 @@ export async function POST(req: NextRequest) {
       update: {
         tier,
         status: 'trial', // Trial status - only paying users should have 'active' status
-        currentPeriodStart: new Date(),
+        currentPeriodStart: trialStartDate,
         currentPeriodEnd: trialEndDate,
         // Clear Stripe subscription if exists (trial is manual/managed)
         stripeSubscriptionId: null,
@@ -55,17 +76,22 @@ export async function POST(req: NextRequest) {
         userId,
         tier,
         status: 'trial', // Trial status - only paying users should have 'active' status
-        currentPeriodStart: new Date(),
+        currentPeriodStart: trialStartDate,
         currentPeriodEnd: trialEndDate,
       },
     })
     
-    logger.info('Trial subscription created', {
+    const isExtension = existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > new Date()
+    
+    logger.info(isExtension ? 'Trial subscription extended' : 'Trial subscription created', {
       userId,
       userEmail: user.email,
       tier,
       durationDays,
       trialEndDate: trialEndDate.toISOString(),
+      trialStartDate: trialStartDate.toISOString(),
+      previousEndDate: existingMembership?.currentPeriodEnd?.toISOString() || null,
+      isExtension,
       createdBy: admin.id,
       createdByEmail: admin.email,
     })

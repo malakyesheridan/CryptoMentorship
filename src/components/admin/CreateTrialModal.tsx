@@ -1,25 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { X } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatDate } from '@/lib/dates'
 
 interface CreateTrialModalProps {
   userId: string
   userName: string
   userEmail: string
+  currentMembership?: {
+    tier: string
+    status: string
+    currentPeriodEnd: string | null
+  } | null
   onSuccess?: () => void
   onClose: () => void
 }
 
-export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClose }: CreateTrialModalProps) {
+export function CreateTrialModal({ userId, userName, userEmail, currentMembership, onSuccess, onClose }: CreateTrialModalProps) {
   const [tier, setTier] = useState<'T1' | 'T2'>('T2') // Default to T2 (Elite) for all trial accounts
   const [durationDays, setDurationDays] = useState(30)
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Set tier from existing membership if available
+  useEffect(() => {
+    if (currentMembership?.tier && (currentMembership.tier === 'T1' || currentMembership.tier === 'T2')) {
+      setTier(currentMembership.tier as 'T1' | 'T2')
+    }
+  }, [currentMembership])
+  
+  // Check if we're extending an existing trial
+  const isExtending = currentMembership?.currentPeriodEnd && new Date(currentMembership.currentPeriodEnd) > new Date()
+  const currentEndDate = currentMembership?.currentPeriodEnd ? new Date(currentMembership.currentPeriodEnd) : null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +55,8 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
         throw new Error(data.error || 'Failed to create trial')
       }
 
-      toast.success(`Trial subscription created for ${userName || userEmail}`)
+      const action = isExtending ? 'extended' : 'created'
+      toast.success(`Trial subscription ${action} for ${userName || userEmail}`)
       onSuccess?.()
       // Small delay to ensure data is saved before closing
       setTimeout(() => {
@@ -55,7 +73,7 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
       <Card className="w-full max-w-md my-auto" onClick={(e) => e.stopPropagation()}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle>Create Trial Subscription</CardTitle>
+          <CardTitle>{isExtending ? 'Extend Trial Subscription' : 'Create Trial Subscription'}</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -66,6 +84,18 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
               <Label>User</Label>
               <Input value={userName || userEmail} disabled className="mt-1" />
             </div>
+            
+            {isExtending && currentEndDate && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm font-medium text-blue-900">Current Trial End Date</p>
+                <p className="text-sm text-blue-700 mt-1">
+                  {formatDate(currentEndDate, 'MMM d, yyyy h:mm a')}
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Adding {durationDays} days will extend the trial to {formatDate(new Date(currentEndDate.getTime() + durationDays * 24 * 60 * 60 * 1000), 'MMM d, yyyy h:mm a')}
+                </p>
+              </div>
+            )}
             
             <div>
               <Label htmlFor="tier">Tier</Label>
@@ -81,7 +111,7 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
             </div>
             
             <div>
-              <Label htmlFor="duration">Trial Duration (days)</Label>
+              <Label htmlFor="duration">{isExtending ? 'Additional Days to Add' : 'Trial Duration (days)'}</Label>
               <Input
                 id="duration"
                 type="number"
@@ -92,7 +122,9 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
                 className="mt-1"
               />
               <p className="text-sm text-slate-500 mt-1">
-                Default: 30 days (1 month)
+                {isExtending 
+                  ? `Add ${durationDays} day${durationDays !== 1 ? 's' : ''} to the current trial`
+                  : 'Default: 30 days (1 month)'}
               </p>
             </div>
             
@@ -101,7 +133,9 @@ export function CreateTrialModal({ userId, userName, userEmail, onSuccess, onClo
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading} className="w-full sm:w-auto min-h-[44px]">
-                {isLoading ? 'Creating...' : 'Create Trial'}
+                {isLoading 
+                  ? (isExtending ? 'Extending...' : 'Creating...') 
+                  : (isExtending ? 'Extend Trial' : 'Create Trial')}
               </Button>
             </div>
           </form>
