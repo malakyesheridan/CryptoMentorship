@@ -250,3 +250,161 @@ Manage notification preferences: ${preferencesUrl}
   })
 }
 
+/**
+ * Send trial notification email to user
+ */
+export async function sendTrialNotificationEmail({
+  to,
+  userName,
+  tier,
+  trialEndDate,
+  isExtension,
+  loginUrl,
+}: {
+  to: string
+  userName?: string | null
+  tier: 'T1' | 'T2'
+  trialEndDate: Date
+  isExtension: boolean
+  loginUrl: string
+}): Promise<void> {
+  const greeting = userName ? `Hi ${userName},` : 'Hi there,'
+  const tierLabel = tierLabels[tier]
+  const tierColor = tierColors[tier]
+  const formattedEndDate = formatDate(trialEndDate, 'MMMM d, yyyy')
+  const formattedEndDateTime = formatDate(trialEndDate, 'MMMM d, yyyy h:mm a')
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${isExtension ? 'Trial Extended' : 'Trial Subscription Activated'}</title>
+        <style>
+          @media only screen and (max-width: 600px) {
+            .container {
+              width: 100% !important;
+              max-width: 100% !important;
+              padding: 16px !important;
+            }
+            .content-box {
+              padding: 24px 20px !important;
+            }
+            .header-box {
+              padding: 30px 20px !important;
+            }
+            .trial-box {
+              padding: 20px 16px !important;
+            }
+            h1 {
+              font-size: 24px !important;
+            }
+          }
+        </style>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1e293b; margin: 0; padding: 0; background-color: #f5f5f5;">
+        <div class="container" style="max-width: 900px; width: 100%; margin: 0 auto; padding: 32px 24px;">
+          <div class="header-box" style="background: linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%); padding: 40px 32px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+            <h1 style="color: #d4af37; margin: 0; font-size: 32px; font-weight: 700;">${isExtension ? 'Trial Extended' : 'Trial Subscription Activated'}</h1>
+          </div>
+          
+          <div class="content-box" style="background: white; padding: 40px 36px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p style="margin: 0 0 24px 0; font-size: 18px; line-height: 1.7;">
+              ${greeting}
+            </p>
+            
+            <p style="margin: 0 0 32px 0; font-size: 17px; color: #475569; line-height: 1.7;">
+              ${isExtension 
+                ? `Great news! Your trial subscription has been extended.`
+                : `We're excited to let you know that a trial subscription has been activated for your account.`}
+            </p>
+
+            <div class="trial-box" style="background: ${tierColor.bg}; border: 2px solid ${tierColor.border}; border-radius: 12px; padding: 32px 28px; margin-bottom: 36px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <span style="font-size: 24px;">🎉</span>
+                <h3 style="font-size: 20px; font-weight: bold; color: ${tierColor.text}; margin: 0; line-height: 1.4;">
+                  ${tierLabel} Tier Trial
+                </h3>
+              </div>
+
+              <div style="margin-bottom: 24px;">
+                <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Trial Details:</h4>
+                <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
+                  <div style="font-size: 16px; color: #1e293b; margin: 0; line-height: 1.8;">
+                    <p style="margin: 0 0 12px 0; padding: 0; line-height: 1.8;">
+                      <strong>Tier:</strong> ${tierLabel}
+                    </p>
+                    <p style="margin: 0 0 12px 0; padding: 0; line-height: 1.8;">
+                      <strong>Trial End Date:</strong> ${formattedEndDateTime}
+                    </p>
+                    <p style="margin: 0; padding: 0; line-height: 1.8; color: #64748b; font-size: 15px;">
+                      Your trial access will remain active until ${formattedEndDate}.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p style="margin: 0 0 24px 0; font-size: 17px; color: #475569; line-height: 1.7;">
+              ${isExtension
+                ? `You can continue enjoying all the benefits of your ${tierLabel} tier subscription.`
+                : `You now have access to all the features and content available in the ${tierLabel} tier.`}
+            </p>
+
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${loginUrl}" 
+                 style="display: inline-block; background: #d4af37; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 17px; transition: background-color 0.2s;">
+                Access Your Account
+              </a>
+            </div>
+            
+            <p style="margin: 32px 0 0 0; font-size: 15px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 24px; line-height: 1.6;">
+              If you have any questions or need assistance, please don't hesitate to reach out to our support team.
+            </p>
+          </div>
+          
+          <div style="margin-top: 32px; text-align: center; font-size: 13px; color: #94a3b8;">
+            <p style="margin: 0;">© ${new Date().getFullYear()} CryptoMentorship. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `
+
+  const text = `
+${isExtension ? 'Trial Extended' : 'Trial Subscription Activated'}
+
+${greeting}
+
+${isExtension 
+  ? `Great news! Your trial subscription has been extended.`
+  : `We're excited to let you know that a trial subscription has been activated for your account.`}
+
+${tierLabel} Tier Trial
+
+Trial Details:
+- Tier: ${tierLabel}
+- Trial End Date: ${formattedEndDateTime}
+
+Your trial access will remain active until ${formattedEndDate}.
+
+${isExtension
+  ? `You can continue enjoying all the benefits of your ${tierLabel} tier subscription.`
+  : `You now have access to all the features and content available in the ${tierLabel} tier.`}
+
+Access Your Account: ${loginUrl}
+
+If you have any questions or need assistance, please don't hesitate to reach out to our support team.
+
+© ${new Date().getFullYear()} CryptoMentorship. All rights reserved.
+  `.trim()
+
+  await sendEmail({
+    to,
+    subject: isExtension ? `Trial Extended - ${tierLabel} Tier` : `Trial Subscription Activated - ${tierLabel} Tier`,
+    html,
+    text,
+  })
+}
+
