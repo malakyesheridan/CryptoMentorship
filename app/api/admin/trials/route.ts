@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       },
     })
     
-    const isExtension = existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > new Date()
+    const isExtension = !!(existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > new Date())
     
     logger.info(isExtension ? 'Trial subscription extended' : 'Trial subscription created', {
       userId,
