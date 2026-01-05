@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const filter = searchParams.get('filter') || 'all'
 
     // Build where clause based on filter
-    const where: any = { userId: session.user.id }
+    const where: any = { userId: session.user.id, channel: 'inapp' }
     
     if (filter === 'unread') {
       where.readAt = null
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/notifications/mark-read - Mark specific notifications as read
+// POST /api/notifications - Mark specific notifications as read
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
       where: {
         id: { in: ids },
         userId: session.user.id,
+        channel: 'inapp',
         readAt: null
       },
       data: {

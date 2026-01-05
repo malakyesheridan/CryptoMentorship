@@ -105,6 +105,7 @@ export default function CommunityPage() {
   const { items, isLoading, mutate } = useChannelMessages(activeChannelId)
 
   const optimisticMessages = useRef<Record<string, ChatMessage[]>>({})
+  const lastReadUpdateRef = useRef<Record<string, number>>({})
 
   // Mark channel as read when viewing
   const markChannelAsRead = useCallback(async (channelId: string) => {
@@ -149,11 +150,23 @@ export default function CommunityPage() {
       }
     }, { revalidate: false })
 
-    // If message is not from current user and not in active channel, increment unread count
-    if (message.userId !== session?.user?.id && message.channelId !== activeChannelId) {
+    const isOwnMessage = message.userId === session?.user?.id
+
+    if (!isOwnMessage && message.channelId === activeChannelId) {
+      const now = Date.now()
+      const lastUpdate = lastReadUpdateRef.current[message.channelId] || 0
+      if (now - lastUpdate > 5000) {
+        lastReadUpdateRef.current[message.channelId] = now
+        markChannelAsRead(message.channelId)
+      }
+      return
+    }
+
+    // If message is not from current user and not in active channel, refresh unread count
+    if (!isOwnMessage) {
       refreshUnreadCounts()
     }
-  }, [mutate, session?.user?.id, activeChannelId, refreshUnreadCounts])
+  }, [mutate, session?.user?.id, activeChannelId, refreshUnreadCounts, markChannelAsRead])
 
   const { isConnected, connectionError, reconnect } = useSSE({
     channelId: activeChannelId,

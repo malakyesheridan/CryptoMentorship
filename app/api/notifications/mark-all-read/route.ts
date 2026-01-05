@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     await prisma.notification.updateMany({
       where: {
         userId: session.user.id,
+        channel: 'inapp',
         readAt: null
       },
       data: {

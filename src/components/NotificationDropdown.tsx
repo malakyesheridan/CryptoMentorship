@@ -86,7 +86,7 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await fetch('/api/notifications/mark-read', {
+      await fetch('/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: [notificationId] })
@@ -223,7 +223,12 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
                             <Link
                               href={notification.url}
                               className="block"
-                              onClick={() => setIsOpen(false)}
+                              onClick={() => {
+                                if (!notification.readAt) {
+                                  markAsRead(notification.id)
+                                }
+                                setIsOpen(false)
+                              }}
                             >
                               <h4 className="font-medium text-slate-800 hover:text-gold-600 transition-colors">
                                 {notification.title}

@@ -40,7 +40,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
   const limit = 20
 
   // Build where clause based on filter
-  const where: any = { userId: session.user.id }
+  const where: any = { userId: session.user.id, channel: 'inapp' }
   
   if (filter === 'unread') {
     where.readAt = null
@@ -72,7 +72,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
 
   // Get unread count for all filters
   const unreadCount = await prisma.notification.count({
-    where: { userId: session.user.id, readAt: null }
+    where: { userId: session.user.id, channel: 'inapp', readAt: null }
   })
 
   const getNotificationIcon = (type: string) => {
