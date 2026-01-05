@@ -35,7 +35,7 @@
     "test:e2e": "playwright test",
     "test:ui": "playwright test --ui",
     "typecheck": "tsc --noEmit",
-    "audit:routes": "npx ts-node scripts/auditRoutes.ts",
+    "audit:routes": "tsx scripts/auditRoutes.ts",
     "check:links": "npx ts-node scripts/checkLinks.ts",
     "test:ports": "node scripts/verify-port-fallback.mjs",
     "test:prisma": "node scripts/test-prisma.mjs",
@@ -107,3 +107,4 @@
     "typescript": "^5.9.2"
   }
 }
+

@@ -1,87 +1,10 @@
-import { getContent } from '@/lib/content'
-import { formatContentDate } from '@/lib/content'
 import { getSession } from '@/lib/auth-server'
-import { canViewContent } from '@/lib/content'
-import Link from 'next/link'
-import { TrendingUp, Lock, Eye, Target, Calendar, ArrowRight, BarChart3, TrendingDown } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { PortfolioContent } from '@/components/signals/PortfolioContent'
 import DailySignalManager from '@/components/signals/DailySignalManager'
 import TradingViewWrapper from '@/components/signals/TradingViewWrapper'
-import { getOpenPositions, getClosedTrades } from '@/lib/portfolio/metrics'
 import { unstable_cache } from 'next/cache'
-import { Suspense } from 'react'
 
 // Revalidate every 5 minutes (300 seconds) - portfolio data is historical, not real-time
 export const revalidate = 300
-
-// Cache portfolio metrics for 5 minutes
-const getCachedPortfolioMetrics = unstable_cache(
-  async () => {
-    try {
-      const { getPortfolioMetrics } = await import('@/lib/portfolio/metrics')
-      return await getPortfolioMetrics('ALL')
-    } catch (error) {
-      console.error('Error fetching portfolio metrics:', error)
-      return null
-    }
-  },
-  ['portfolio-metrics'],
-  { revalidate: 300 } // 5 minutes
-)
-
-async function getPortfolioMetrics() {
-  return getCachedPortfolioMetrics()
-}
-
-// ✅ Cache getContent() calls for signals - CRITICAL: This was causing slow initial loads
-const getCachedSignals = unstable_cache(
-  async () => {
-    try {
-      const { getContent } = await import('@/lib/content')
-      const signalsResult = await getContent({ kind: 'signal' })
-      return Array.isArray(signalsResult) ? signalsResult : signalsResult.data
-    } catch (error) {
-      console.error('Error fetching content:', error)
-      return []
-    }
-  },
-  ['portfolio-signals'],
-  { revalidate: 300 } // 5 minutes
-)
-
-// ✅ Cache open positions for 5 minutes - CRITICAL: This was causing slow initial loads
-const getCachedOpenPositions = unstable_cache(
-  async () => {
-    try {
-      const { getOpenPositions } = await import('@/lib/portfolio/metrics')
-      return await getOpenPositions()
-    } catch (error) {
-      console.error('Error fetching open positions:', error)
-      return []
-    }
-  },
-  ['portfolio-open-positions'],
-  { revalidate: 300 } // 5 minutes
-)
-
-// ✅ Cache closed trades for 5 minutes - CRITICAL: This was causing slow initial loads
-// Create cached function at module level (not inside function) to ensure proper caching
-// Since we only use limit=50, create a cached function for that specific limit
-const getCachedClosedTrades = unstable_cache(
-  async () => {
-    try {
-      const { getClosedTrades } = await import('@/lib/portfolio/metrics')
-      return await getClosedTrades(50)
-    } catch (error) {
-      console.error('Error fetching closed trades:', error)
-      return []
-    }
-  },
-  ['portfolio-closed-trades-50'], // Stable cache key with limit in the key
-  { revalidate: 300 } // 5 minutes
-)
 
 // Cache performance data for 5 minutes
 const getCachedPerformanceData = unstable_cache(
@@ -192,16 +115,6 @@ export default async function PortfolioPage() {
     const session = await getSession()
     const userRole = session?.user?.role || 'guest'
     const userTier = (session?.user as any)?.membershipTier || null
-    
-    // ✅ OPTIMIZED: All data fetching is now cached - this should dramatically improve initial load times
-    // All queries are cached for 5 minutes, so subsequent loads will be instant
-    const [signals, metrics, openPositions, closedTrades] = await Promise.all([
-      getCachedSignals(),
-      getPortfolioMetrics(),
-      getCachedOpenPositions(),
-      getCachedClosedTrades(),
-      // performanceData removed - loads client-side via API route
-    ])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -229,22 +142,6 @@ export default async function PortfolioPage() {
 
         {/* TradingView Chart */}
         <TradingViewWrapper />
-
-        {/* Unified Portfolio Content with Tabs */}
-        <Suspense fallback={
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
-          </div>
-        }>
-          <PortfolioContent
-            metrics={metrics}
-            openPositions={openPositions}
-            closedTrades={closedTrades}
-            signals={signals}
-            userRole={userRole}
-            userTier={userTier}
-          />
-        </Suspense>
 
         {/* Disclaimer */}
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mt-12">
@@ -276,3 +173,7 @@ export default async function PortfolioPage() {
     )
   }
 }
+
+
+
+
