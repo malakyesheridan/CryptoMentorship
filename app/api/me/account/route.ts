@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { requireUser } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
 // Cache for 60 seconds - account data doesn't change frequently
 export const revalidate = 60
+
+const updateAccountBody = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(80, 'Name must be 80 characters or less'),
+})
 
 /**
  * GET /api/me/account
@@ -97,6 +102,66 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json(
       { error: 'Failed to get account data' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * PATCH /api/me/account
+ * Update current user's account details
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await requireUser()
+
+    let body: unknown
+    try {
+      body = await req.json()
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid JSON payload' },
+        { status: 400 }
+      )
+    }
+
+    const parsed = updateAccountBody.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid payload' },
+        { status: 400 }
+      )
+    }
+
+    const { name } = parsed.data
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { name },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        role: true,
+      },
+    })
+
+    logger.info('Updated account name', { userId: user.id })
+
+    return NextResponse.json({ user: updatedUser })
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error(
+      'Update account error',
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+        errorMessage,
+      }
+    )
+    return NextResponse.json(
+      { error: 'Failed to update account' },
       { status: 500 }
     )
   }

@@ -1,13 +1,16 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { SectionHeader } from '@/components/SectionHeader'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { User, Mail, Shield, Calendar, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { NotificationPreferences } from '@/components/NotificationPreferences'
 import { formatDate } from '@/lib/dates'
+import { toast } from 'sonner'
 
 interface AccountData {
   user: {
@@ -39,10 +42,14 @@ interface AccountData {
 }
 
 export default function AccountPage() {
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [accountData, setAccountData] = useState<AccountData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState('')
+  const [isSavingName, setIsSavingName] = useState(false)
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [isNameDirty, setIsNameDirty] = useState(false)
 
   useEffect(() => {
     async function fetchAccountData() {
@@ -53,6 +60,8 @@ export default function AccountPage() {
         }
         const data = await res.json()
         setAccountData(data)
+        setDisplayName(data?.user?.name || '')
+        setIsNameDirty(false)
       } catch (err) {
         console.error('Error fetching account data:', err)
         setError(err instanceof Error ? err.message : 'Failed to load account data')
@@ -65,6 +74,54 @@ export default function AccountPage() {
       fetchAccountData()
     }
   }, [session?.user?.id])
+
+  const handleNameSave = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setNameError(null)
+
+    const trimmedName = displayName.trim()
+    if (!trimmedName) {
+      setNameError('Name is required.')
+      return
+    }
+    if (trimmedName.length > 80) {
+      setNameError('Name must be 80 characters or less.')
+      return
+    }
+
+    const currentName = accountData?.user?.name || session?.user?.name || ''
+    if (trimmedName === currentName) {
+      setIsNameDirty(false)
+      return
+    }
+
+    setIsSavingName(true)
+    try {
+      const res = await fetch('/api/me/account', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmedName }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update name')
+      }
+
+      setAccountData((prev) =>
+        prev ? { ...prev, user: { ...prev.user, name: trimmedName } } : prev
+      )
+      await updateSession({ name: trimmedName })
+      setIsNameDirty(false)
+      toast.success('Name updated successfully.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update name'
+      setNameError(message)
+      toast.error(message)
+    } finally {
+      setIsSavingName(false)
+    }
+  }
 
   // Format tier name for display
   const getTierDisplayName = (tier: string) => {
@@ -128,11 +185,40 @@ export default function AccountPage() {
           <h3 className="heading-2 text-xl mb-6">Profile Information</h3>
           
           <div className="space-y-4">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-start space-x-3">
               <User className="h-5 w-5 text-slate-400" />
               <div>
                 <p className="text-sm text-slate-500">Name</p>
-                <p className="font-medium text-slate-800">{user?.name || 'Not provided'}</p>
+                <form onSubmit={handleNameSave} className="mt-2 space-y-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      value={displayName}
+                      onChange={(event) => {
+                        setDisplayName(event.target.value)
+                        setIsNameDirty(true)
+                        if (nameError) {
+                          setNameError(null)
+                        }
+                      }}
+                      maxLength={80}
+                      placeholder="Enter your name"
+                      disabled={isSavingName}
+                    />
+                    <Button type="submit" disabled={isSavingName || !isNameDirty}>
+                      {isSavingName ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving
+                        </>
+                      ) : (
+                        'Save'
+                      )}
+                    </Button>
+                  </div>
+                  {nameError && (
+                    <p className="text-sm text-red-600">{nameError}</p>
+                  )}
+                </form>
               </div>
             </div>
             

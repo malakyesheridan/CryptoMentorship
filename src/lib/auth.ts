@@ -303,7 +303,16 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
+      if (trigger === 'update' && typeof session?.name === 'string') {
+        const updatedName = session.name.trim()
+        if (updatedName) {
+          token.name = updatedName
+          token.lastRefreshed = Math.floor(Date.now() / 1000)
+        }
+        return token
+      }
+
       // Initial sign in - user object provided
       if (user) {
         logger.info('JWT callback - initial sign in', { 
