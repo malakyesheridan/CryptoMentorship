@@ -8,6 +8,7 @@ import { seedSignals } from './seeds/signals'
 import { seedCommunity } from '../src/lib/seeds/community'
 import { seedLearningTracks } from '../src/lib/seeds/learning'
 import { seedCohorts } from '../src/lib/seeds/cohorts'
+import { seedRoiDashboard } from '../src/lib/seeds/roi-dashboard'
 
 const prisma = new PrismaClient()
 
@@ -36,6 +37,9 @@ async function main() {
     // Seed signals (requires users)
     await seedSignals()
 
+    // Seed ROI dashboard data
+    await seedRoiDashboard()
+
     // Seed community demo messages
     await seedCommunity()
 
@@ -54,6 +58,7 @@ async function main() {
     console.log('- 15+ RSVPs with realistic data')
     console.log('- 8 signal trades (6 closed, 2 open)')
     console.log('- Portfolio settings for performance calculations')
+    console.log('- ROI dashboard settings, series, allocation, and change log')
     console.log('- Community channels and demo messages')
     console.log('\n🚀 Login credentials:')
     console.log('- Admin: admin@demo.com')

@@ -9,12 +9,21 @@ import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { SubscriptionGuard } from '@/components/SubscriptionGuard'
+import { getRoiDashboardPayload } from '@/lib/roi-dashboard'
+import { RoiDashboard } from '@/components/roi-dashboard/RoiDashboard'
 
 // Revalidate every 5 minutes - dashboard is mostly static
 export const revalidate = 300
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
+  let roiPayload = null
+
+  try {
+    roiPayload = await getRoiDashboardPayload()
+  } catch (error) {
+    console.error('Failed to load ROI dashboard payload', error)
+  }
   
   // Check subscription for dashboard access
   // ✅ OPTIMIZED: Admins bypass, others checked via client-side (non-blocking)
@@ -44,6 +53,23 @@ export default async function DashboardPage() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
+        {/* ROI Dashboard */}
+        <div className="mb-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-slate-900">ROI Dashboard</h2>
+            <p className="text-slate-600 mt-2">
+              Snapshot of model performance, benchmarks, and allocation updates.
+            </p>
+          </div>
+          {roiPayload ? (
+            <RoiDashboard payload={roiPayload} />
+          ) : (
+            <div className="card p-6 text-center text-slate-500">
+              ROI data is not available yet. Please check back soon.
+            </div>
+          )}
+        </div>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <Link href="/crypto-compass" className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">

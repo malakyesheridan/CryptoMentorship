@@ -59,6 +59,7 @@ export const routes = {
   admin: {
     home: () => '/admin',
     announce: () => '/admin/announce',
+    roi: () => '/admin/roi',
     
     // Events
     events: {
@@ -157,6 +158,15 @@ export const routes = {
         export: () => '/api/admin/signals/export.csv',
         settings: () => '/api/admin/signals/settings'
       },
+
+      roi: {
+        settings: () => '/api/admin/roi/settings',
+        series: () => '/api/admin/roi/series',
+        import: () => '/api/admin/roi/series/import',
+        allocation: () => '/api/admin/roi/allocation',
+        changeLog: () => '/api/admin/roi/change-log',
+        preview: () => '/api/admin/roi/preview'
+      },
       
       content: () => '/api/admin/content',
       episodes: () => '/api/admin/episodes',
@@ -176,6 +186,10 @@ export const routes = {
       list: () => '/api/notifications',
       markAllRead: () => '/api/notifications/mark-all-read',
       unreadCount: () => '/api/notifications/unread-count'
+    },
+
+    roi: {
+      dashboard: () => '/api/roi/dashboard'
     },
     
     // Certificates

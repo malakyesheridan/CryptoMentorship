@@ -94,6 +94,9 @@ model User {
   referralsAsReferrer    Referral[]              @relation("Referrer")
   referralsAsReferred    Referral?               @relation("Referred")
   commissions            Commission[]
+  dashboardSettingsUpdated DashboardSetting[]
+  allocationSnapshotsUpdated AllocationSnapshot[]
+  changeLogEventsCreated ChangeLogEvent[]
 
   @@index([email])
   @@index([role])
@@ -647,6 +650,77 @@ model PerfSnapshot {
   createdAt DateTime @default(now())
 
   @@index([scope, hash])
+  @@index([createdAt])
+}
+
+model DashboardSetting {
+  id                String   @id @default("dashboard_settings")
+  inceptionDate     DateTime
+  disclaimerText    String   @default("")
+  showBtcBenchmark  Boolean  @default(true)
+  showEthBenchmark  Boolean  @default(true)
+  showSimulator     Boolean  @default(true)
+  showChangeLog     Boolean  @default(true)
+  showAllocation    Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  updatedByUserId   String?
+
+  updatedByUser User? @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([updatedAt])
+}
+
+model PerformanceSeries {
+  id         String   @id @default(cuid())
+  seriesType String
+  date       DateTime
+  value      Decimal
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([seriesType, date])
+  @@index([seriesType, date])
+}
+
+model AllocationSnapshot {
+  id              String   @id @default("allocation_snapshot")
+  asOfDate        DateTime
+  items           Json
+  cashWeight      Decimal
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  updatedByUserId String?
+
+  updatedByUser User? @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([updatedAt])
+}
+
+model ChangeLogEvent {
+  id              String   @id @default(cuid())
+  date            DateTime
+  title           String
+  summary         String
+  linkUrl         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdByUserId String?
+
+  createdByUser User? @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([date])
+  @@index([createdAt])
+}
+
+model RoiDashboardSnapshot {
+  id        String   @id @default(cuid())
+  scope     String
+  cacheKey  String
+  payload   String
+  createdAt DateTime @default(now())
+
+  @@index([scope, cacheKey])
   @@index([createdAt])
 }
 

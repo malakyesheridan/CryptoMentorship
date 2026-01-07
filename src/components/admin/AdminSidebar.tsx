@@ -6,11 +6,13 @@ import { cn } from '@/lib/utils'
 import { 
   LayoutDashboard,
   Users,
-  Settings
+  Settings,
+  BarChart3
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'ROI Dashboard', href: '/admin/roi', icon: BarChart3 },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
