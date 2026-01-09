@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { LessonPlayer } from '@/components/learning/LessonPlayer'
 import { ViewTracker } from '@/components/ViewTracker'
 import { checkLessonAccess } from '@/lib/cohorts'
+import { normalizePdfResources } from '@/lib/learning/resources'
 
 // Revalidate every 5 minutes - lesson content is published, not real-time
 export const revalidate = 300
@@ -158,7 +159,7 @@ export default async function LessonPage({
           durationMin: lesson.durationMin ?? undefined,
           videoUrl: lesson.videoUrl ?? undefined,
           contentMDX: lesson.contentMDX ?? undefined,
-          pdfResources: lesson.pdfResources ?? undefined,
+          pdfResources: normalizePdfResources(lesson.pdfResources),
           quiz: lesson.quiz ?? undefined,
           section: lesson.section ?? undefined
         }}
