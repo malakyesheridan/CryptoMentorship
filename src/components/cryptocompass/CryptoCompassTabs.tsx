@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Calendar, BarChart3, TrendingUp } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 
 export type CategoryType = 'all' | 'daily-update' | 'analysis' | 'breakdown'
 
@@ -19,26 +19,11 @@ interface CryptoCompassTabsProps {
 
 export function CryptoCompassTabs({ activeCategory, onCategoryChange, counts }: CryptoCompassTabsProps) {
   const categories = [
-    { 
-      id: 'all' as CategoryType, 
-      name: `All Episodes${counts ? ` (${counts.all})` : ''}`, 
-      icon: Calendar 
-    },
-    { 
-      id: 'daily-update' as CategoryType, 
-      name: `Weekly Update${counts ? ` (${counts.dailyUpdate})` : ''}`, 
-      icon: Calendar 
-    },
-    { 
-      id: 'analysis' as CategoryType, 
-      name: `Analysis${counts ? ` (${counts.analysis})` : ''}`, 
-      icon: BarChart3 
-    },
-    { 
-      id: 'breakdown' as CategoryType, 
-      name: `Breakdown${counts ? ` (${counts.breakdown})` : ''}`, 
-      icon: TrendingUp 
-    },
+    {
+      id: 'all' as CategoryType,
+      name: `All Episodes${counts ? ` (${counts.all})` : ''}`,
+      icon: Calendar
+    }
   ]
 
   return (
