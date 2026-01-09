@@ -1,6 +1,5 @@
 import { getSession } from '@/lib/auth-server'
 import DailySignalManager from '@/components/signals/DailySignalManager'
-import TradingViewWrapper from '@/components/signals/TradingViewWrapper'
 import { unstable_cache } from 'next/cache'
 
 // Revalidate every 5 minutes (300 seconds) - portfolio data is historical, not real-time
@@ -139,9 +138,6 @@ export default async function PortfolioPage() {
         <div className="mb-8">
           <DailySignalManager userTier={userTier} userRole={userRole} />
         </div>
-
-        {/* TradingView Chart */}
-        <TradingViewWrapper />
 
         {/* Disclaimer */}
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mt-12">

@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth-server'
 import { SubscriptionGuard } from '@/components/SubscriptionGuard'
 import { getRoiDashboardPayload } from '@/lib/roi-dashboard'
 import { RoiDashboard } from '@/components/roi-dashboard/RoiDashboard'
+import TradingViewWrapper from '@/components/signals/TradingViewWrapper'
 
 // Revalidate every 5 minutes - dashboard is mostly static
 export const revalidate = 300
@@ -60,6 +61,11 @@ export default async function DashboardPage() {
               ROI data is not available yet. Please check back soon.
             </div>
           )}
+        </div>
+
+        {/* TradingView Chart */}
+        <div className="mb-12">
+          <TradingViewWrapper />
         </div>
 
         {/* Welcome Message */}
