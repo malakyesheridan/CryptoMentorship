@@ -1,10 +1,7 @@
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/dates'
 import type { RoiDashboardPayload } from '@/lib/roi-dashboard'
 import { RoiEquityChart } from './RoiEquityChart'
-import { RoiSimulator } from './RoiSimulator'
-import { RoiAllocationChart } from './RoiAllocationChart'
 
 function formatPercent(value: number) {
   const sign = value >= 0 ? '+' : ''
@@ -12,19 +9,9 @@ function formatPercent(value: number) {
 }
 
 export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
-  const { metrics, settings, series, allocation, changeLogEvents } = payload
+  const { metrics, settings, series } = payload
   const lastUpdated = metrics.lastUpdatedAt ? formatDateTime(metrics.lastUpdatedAt) : '--'
   const asOfDate = metrics.asOfDate ?? '--'
-
-  const lastModelDate = series.model[series.model.length - 1]?.date
-  const inceptionDate = settings.inceptionDate
-  const defaultStartDate = (() => {
-    if (!lastModelDate) return inceptionDate
-    const lastDate = new Date(`${lastModelDate}T00:00:00.000Z`)
-    const oneYearAgo = new Date(lastDate.getTime() - 365 * 24 * 60 * 60 * 1000)
-    const inception = new Date(`${inceptionDate}T00:00:00.000Z`)
-    return (oneYearAgo.getTime() > inception.getTime() ? oneYearAgo : inception).toISOString().split('T')[0]
-  })()
 
   return (
     <div className="space-y-8">
@@ -76,47 +63,6 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
         showBtcDefault={settings.showBtcBenchmark}
         showEthDefault={settings.showEthBenchmark}
       />
-
-      {settings.showSimulator && (
-        <RoiSimulator
-          modelSeries={series.model}
-          defaultStartDate={defaultStartDate}
-          disclaimerText={settings.disclaimerText}
-        />
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {settings.showChangeLog && (
-          <Card className="card">
-            <CardHeader>
-              <CardTitle>What Changed</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {changeLogEvents.length === 0 ? (
-                <p className="text-sm text-slate-500">No updates yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {changeLogEvents.map((event) => (
-                    <div key={event.id} className="border-b border-[color:var(--border-subtle)] pb-3 last:border-b-0">
-                      <p className="text-xs text-slate-500">{event.date}</p>
-                      <p className="text-sm font-semibold text-slate-900">{event.title}</p>
-                      <p className="text-sm text-slate-600">{event.summary}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="text-sm text-slate-600">
-                <Link href="/portfolio" className="text-gold-600 font-semibold">
-                  Go to My Portfolio {'>'}
-                </Link>
-                <p className="text-xs text-slate-500 mt-1">Change log only, not trading signals.</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {settings.showAllocation && <RoiAllocationChart allocation={allocation} />}
-      </div>
     </div>
   )
 }
