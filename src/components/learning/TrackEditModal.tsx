@@ -25,6 +25,9 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LessonVideoUpload } from './LessonVideoUpload'
+import { PdfAttachmentsField } from './PdfAttachmentsField'
+import type { PdfResource } from '@/lib/learning/resources'
+import { normalizePdfResources } from '@/lib/learning/resources'
 
 interface TrackEditModalProps {
   trackId: string
@@ -54,6 +57,7 @@ export function TrackEditModal({
     summary: '',
     coverImage: null as File | null,
     coverUrl: '', // Existing cover URL
+    pdfResources: [] as PdfResource[],
     minTier: 'member' as 'guest' | 'member' | 'editor' | 'admin',
     publishedAt: '',
   })
@@ -79,6 +83,7 @@ export function TrackEditModal({
         summary: track.summary || '',
         coverImage: null,
         coverUrl: track.coverUrl || '',
+        pdfResources: normalizePdfResources(track.pdfResources),
         minTier: track.minTier || 'member',
         publishedAt: track.publishedAt ? new Date(track.publishedAt).toISOString().slice(0, 16) : '',
       })
@@ -146,6 +151,7 @@ export function TrackEditModal({
         slug: formData.slug,
         summary: formData.summary,
         coverUrl: coverUrl || undefined,
+        pdfResources: formData.pdfResources,
         minTier: formData.minTier,
         publishedAt: formData.publishedAt || undefined,
       })
@@ -360,6 +366,14 @@ export function TrackEditModal({
                   Upload a cover image from your computer (JPG, PNG, WebP up to 10MB). Leave empty to keep existing image.
                 </p>
               </div>
+
+              <PdfAttachmentsField
+                label="Track PDFs"
+                helperText="Upload PDFs to share with students on the track page."
+                value={formData.pdfResources}
+                onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+                folder="learning/track-pdfs"
+              />
             </div>
           )}
 

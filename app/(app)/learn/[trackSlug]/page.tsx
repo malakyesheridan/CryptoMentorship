@@ -11,11 +11,13 @@ import {
   CheckCircle,
   Lock,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { enrollInTrack } from '@/lib/actions/enrollment'
+import { normalizePdfResources } from '@/lib/learning/resources'
 
 // Revalidate every 5 minutes - track content is published, not real-time
 export const revalidate = 300
@@ -125,6 +127,7 @@ export default async function TrackPage({
 
   // Find next lesson
   const nextLesson = track.lessons.find(lesson => !userProgress[lesson.id])
+  const trackPdfResources = normalizePdfResources(track.pdfResources)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -212,18 +215,44 @@ export default async function TrackPage({
             </div>
           )}
 
-          {!hasAccess && (
-            <div className="mb-8">
-              <Button disabled size="lg">
-                <Lock className="h-5 w-5 mr-2" />
-                Upgrade to {track.minTier} tier to access this track
-              </Button>
-            </div>
-          )}
-        </div>
+        {!hasAccess && (
+          <div className="mb-8">
+            <Button disabled size="lg">
+              <Lock className="h-5 w-5 mr-2" />
+              Upgrade to {track.minTier} tier to access this track
+            </Button>
+          </div>
+        )}
+      </div>
 
-        {/* Lessons List - Prominent and Easy to Navigate */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+      {hasAccess && trackPdfResources.length > 0 && (
+        <div className="mb-8">
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-5 w-5 text-slate-600" />
+              <h2 className="text-lg font-semibold text-slate-900">Track PDFs</h2>
+            </div>
+            <div className="space-y-2">
+              {trackPdfResources.map((resource) => (
+                <div key={resource.url} className="flex items-center justify-between gap-4">
+                  <span className="text-sm text-slate-700">{resource.title}</span>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-medium text-yellow-600 hover:text-yellow-700"
+                  >
+                    View PDF
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lessons List - Prominent and Easy to Navigate */}
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200">
           <div className="p-6 border-b border-slate-200">
             <h2 className="text-xl font-bold text-slate-900">Lessons</h2>
             <p className="text-sm text-slate-600 mt-1">Select a lesson to watch</p>

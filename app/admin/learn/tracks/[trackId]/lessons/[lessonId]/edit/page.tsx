@@ -10,6 +10,9 @@ import { ArrowLeft, Save, Trash2, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { updateLesson, deleteLesson } from '@/lib/actions/learning'
 import { toast } from 'sonner'
+import { PdfAttachmentsField } from '@/components/learning/PdfAttachmentsField'
+import type { PdfResource } from '@/lib/learning/resources'
+import { normalizePdfResources } from '@/lib/learning/resources'
 
 interface EditLessonPageProps {
   params: {
@@ -28,7 +31,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
     contentMDX: '',
     durationMin: '',
     videoUrl: '',
-    resources: '',
+    pdfResources: [] as PdfResource[],
     publishedAt: '',
   })
 
@@ -47,7 +50,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
           contentMDX: lesson.contentMDX || '',
           durationMin: lesson.durationMin?.toString() || '',
           videoUrl: lesson.videoUrl || '',
-          resources: lesson.resources || '',
+          pdfResources: normalizePdfResources(lesson.pdfResources),
           publishedAt: lesson.publishedAt ? new Date(lesson.publishedAt).toISOString().slice(0, 16) : '',
         })
       } catch (error) {
@@ -72,7 +75,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
         contentMDX: formData.contentMDX,
         durationMin: formData.durationMin ? parseInt(formData.durationMin) : undefined,
         videoUrl: formData.videoUrl || undefined,
-        resources: formData.resources || undefined,
+        pdfResources: formData.pdfResources,
         publishedAt: formData.publishedAt || undefined,
       })
 
@@ -216,18 +219,13 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Resources (JSON array)
-                    </label>
-                    <textarea
-                      value={formData.resources}
-                      onChange={(e) => setFormData(prev => ({ ...prev, resources: e.target.value }))}
-                      placeholder='[{"title": "Resource 1", "url": "https://example.com/resource1"}]'
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
-                      rows={3}
-                    />
-                  </div>
+                  <PdfAttachmentsField
+                    label="Lesson PDFs"
+                    helperText="Upload PDFs to share with students in this lesson."
+                    value={formData.pdfResources}
+                    onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+                    folder="learning/lesson-pdfs"
+                  />
                 </CardContent>
               </Card>
 

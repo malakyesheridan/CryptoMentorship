@@ -10,6 +10,8 @@ import { ArrowLeft, Save, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { createLesson } from '@/lib/actions/learning'
 import { toast } from 'sonner'
+import { PdfAttachmentsField } from '@/components/learning/PdfAttachmentsField'
+import type { PdfResource } from '@/lib/learning/resources'
 
 interface NewLessonPageProps {
   params: {
@@ -28,7 +30,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
     contentMDX: '# Lesson Content\n\nWrite your lesson content here using Markdown or MDX.',
     durationMin: '',
     videoUrl: '',
-    resources: '',
+    pdfResources: [] as PdfResource[],
     publishedAt: '',
   })
 
@@ -45,7 +47,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
         contentMDX: formData.contentMDX,
         durationMin: formData.durationMin ? parseInt(formData.durationMin) : undefined,
         videoUrl: formData.videoUrl || undefined,
-        resources: formData.resources || undefined,
+        pdfResources: formData.pdfResources,
         publishedAt: formData.publishedAt || undefined,
       })
 
@@ -160,21 +162,13 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Resources (JSON array)
-                    </label>
-                    <textarea
-                      value={formData.resources}
-                      onChange={(e) => setFormData(prev => ({ ...prev, resources: e.target.value }))}
-                      placeholder='[{"title": "Resource 1", "url": "https://example.com/resource1"}]'
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
-                      rows={3}
-                    />
-                    <p className="text-sm text-slate-500 mt-1">
-                      JSON array of resource objects with title and url
-                    </p>
-                  </div>
+                  <PdfAttachmentsField
+                    label="Lesson PDFs"
+                    helperText="Upload PDFs to share with students in this lesson."
+                    value={formData.pdfResources}
+                    onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+                    folder="learning/lesson-pdfs"
+                  />
                 </CardContent>
               </Card>
 

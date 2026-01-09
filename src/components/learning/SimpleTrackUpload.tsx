@@ -11,6 +11,8 @@ import { CheckCircle, AlertCircle, Upload, BookOpen, Shield } from 'lucide-react
 import { toast } from 'sonner'
 import { createTrack } from '@/lib/actions/learning'
 import { useRouter } from 'next/navigation'
+import { PdfAttachmentsField } from './PdfAttachmentsField'
+import type { PdfResource } from '@/lib/learning/resources'
 
 interface SimpleTrackUploadProps {
   onSuccess?: () => void
@@ -26,6 +28,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
     title: '',
     summary: '',
     coverImage: null as File | null,
+    pdfResources: [] as PdfResource[],
   })
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
   const [coverUploadProgress, setCoverUploadProgress] = useState(0)
@@ -84,6 +87,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
         slug: slug,
         summary: formData.summary.trim() || '',
         coverUrl: coverUrl,
+        pdfResources: formData.pdfResources,
         minTier: 'member',
         publishedAt: new Date().toISOString(),
       })
@@ -95,6 +99,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
           title: '',
           summary: '',
           coverImage: null,
+          pdfResources: [],
         })
         setCoverImagePreview(null)
         setCoverUploadProgress(0)
@@ -233,6 +238,14 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
               Upload a cover image from your computer (JPG, PNG, WebP up to 10MB)
             </p>
           </div>
+
+          <PdfAttachmentsField
+            label="Track PDFs"
+            helperText="Upload PDFs to share with students on the track page."
+            value={formData.pdfResources}
+            onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+            folder="learning/track-pdfs"
+          />
 
           {/* Error Message */}
           {errorMessage && (

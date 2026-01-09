@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { createTrack } from '@/lib/actions/learning'
+import { PdfAttachmentsField } from '@/components/learning/PdfAttachmentsField'
+import type { PdfResource } from '@/lib/learning/resources'
 
 export default function NewTrackPage() {
   const router = useRouter()
@@ -28,6 +30,7 @@ export default function NewTrackPage() {
     slug: '',
     summary: '',
     coverUrl: '',
+    pdfResources: [] as PdfResource[],
     minTier: 'member' as 'guest' | 'member' | 'editor' | 'admin',
     publishedAt: '',
   })
@@ -51,6 +54,7 @@ export default function NewTrackPage() {
         slug: formData.slug,
         summary: formData.summary,
         coverUrl: formData.coverUrl || undefined,
+        pdfResources: formData.pdfResources,
         minTier: formData.minTier,
         description: formData.summary, // Use summary as description for simplicity
         publishedAt: formData.publishedAt || undefined,
@@ -166,6 +170,14 @@ export default function NewTrackPage() {
                       </div>
                     )}
                   </div>
+
+                  <PdfAttachmentsField
+                    label="Track PDFs"
+                    helperText="Upload PDFs to share with students on the track page."
+                    value={formData.pdfResources}
+                    onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+                    folder="learning/track-pdfs"
+                  />
                 </CardContent>
               </Card>
 

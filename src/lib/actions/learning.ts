@@ -6,6 +6,11 @@ import { requireUser } from '@/lib/auth-server'
 import { broadcastUserProgress, broadcastTrackProgress, broadcastAchievement } from '@/lib/learning/sse'
 import { revalidatePath, revalidateTag } from 'next/cache'
 
+const PdfResourceSchema = z.object({
+  title: z.string().min(1),
+  url: z.string().url()
+})
+
 const CompleteLessonSchema = z.object({ 
   lessonId: z.string().min(1),
   timeSpentMs: z.number().optional().default(0)
@@ -21,6 +26,7 @@ const CreateTrackSchema = z.object({
   slug: z.string().min(1, "Slug is required"),
   summary: z.string().optional(),
   coverUrl: z.string().optional(),
+  pdfResources: z.array(PdfResourceSchema).optional(),
   minTier: z.enum(['guest', 'member', 'editor', 'admin']).optional(),
   publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
 })
@@ -30,6 +36,7 @@ const UpdateTrackSchema = z.object({
   slug: z.string().min(1).optional(),
   summary: z.string().optional(),
   coverUrl: z.string().optional(),
+  pdfResources: z.array(PdfResourceSchema).optional(),
   minTier: z.enum(['guest', 'member', 'editor', 'admin']).optional(),
   publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
   order: z.number().optional(),
@@ -56,6 +63,7 @@ const CreateLessonSchema = z.object({
   contentMDX: z.string().optional(), // Optional - can be empty for video-only lessons
   durationMin: z.number().optional(),
   videoUrl: z.string().optional(),
+  pdfResources: z.array(PdfResourceSchema).optional(),
   publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
   order: z.number().optional(),
 })
@@ -66,6 +74,7 @@ const UpdateLessonSchema = z.object({
   contentMDX: z.string().optional(),
   durationMin: z.number().optional(),
   videoUrl: z.string().optional(),
+  pdfResources: z.array(PdfResourceSchema).optional(),
   publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
   order: z.number().optional(),
 })
@@ -208,6 +217,7 @@ export async function createTrack(input: unknown) {
       slug: data.slug,
       summary: data.summary,
       coverUrl: data.coverUrl,
+      pdfResources: data.pdfResources,
       minTier: data.minTier || 'member',
       publishedAt: data.publishedAt,
     }
@@ -470,6 +480,7 @@ export async function createLesson(input: unknown) {
       contentMDX: data.contentMDX,
       durationMin: data.durationMin,
       videoUrl: data.videoUrl,
+      pdfResources: data.pdfResources,
       publishedAt: data.publishedAt,
       order: order,
     }

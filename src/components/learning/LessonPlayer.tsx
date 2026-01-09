@@ -28,6 +28,8 @@ import { useSession } from 'next-auth/react'
 import VideoPlayer from '@/components/VideoPlayer'
 import { LessonMDXRenderer } from '@/components/learning/LessonMDXRenderer'
 import { toast } from 'sonner'
+import { normalizePdfResources } from '@/lib/learning/resources'
+import type { PdfResource } from '@/lib/learning/resources'
 
 interface LessonPlayerProps {
   track: {
@@ -56,6 +58,7 @@ interface LessonPlayerProps {
     durationMin?: number
     videoUrl?: string
     contentMDX?: string
+    pdfResources?: PdfResource[] | null
     quiz?: {
       id: string
       questions: string
@@ -100,6 +103,7 @@ export function LessonPlayer({
   const quizPassed = quizSubmission?.passed || false
   const isLocked = accessInfo?.isLocked || false
   const canAccess = accessInfo?.canAccess !== false
+  const pdfResources = normalizePdfResources(lesson.pdfResources)
 
   // Find lesson navigation - collect all lessons from sections and main lessons array
   const allLessons: Array<{ id: string; slug: string; title: string }> = []
@@ -433,6 +437,32 @@ export function LessonPlayer({
                   <div className="mb-6">
                     <div className="prose prose-slate max-w-none">
                       <LessonMDXRenderer content={lesson.contentMDX} />
+                    </div>
+                  </div>
+                )}
+
+                {pdfResources.length > 0 && (
+                  <div className="mb-6">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FileText className="h-4 w-4 text-slate-600" />
+                        <h3 className="text-sm font-semibold text-slate-900">Lesson PDFs</h3>
+                      </div>
+                      <div className="space-y-2">
+                        {pdfResources.map((resource) => (
+                          <div key={resource.url} className="flex items-center justify-between gap-4">
+                            <span className="text-sm text-slate-700">{resource.title}</span>
+                            <a
+                              href={resource.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-sm font-medium text-yellow-600 hover:text-yellow-700"
+                            >
+                              View PDF
+                            </a>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

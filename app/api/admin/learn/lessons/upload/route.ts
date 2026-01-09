@@ -20,6 +20,9 @@ export async function POST(request: NextRequest) {
     const videoUrl = body.videoUrl
     const durationSeconds = body.duration ? parseInt(body.duration) : null
     const durationMin = durationSeconds ? Math.round(durationSeconds / 60) : null
+    const pdfResources = Array.isArray(body.pdfResources)
+      ? body.pdfResources.filter((item: any) => item?.title && item?.url)
+      : []
 
     console.log('[Lesson Creation] Request received:', {
       title: title?.substring(0, 50),
@@ -110,6 +113,7 @@ export async function POST(request: NextRequest) {
           contentMDX: description?.trim() || '', // Optional - can be empty for video-only lessons
           videoUrl: videoUrl.trim(),
           durationMin: durationMin,
+          pdfResources: pdfResources.length > 0 ? pdfResources : undefined,
           publishedAt: new Date(),
           order: order,
         }

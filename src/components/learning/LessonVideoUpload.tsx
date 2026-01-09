@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import { CheckCircle, AlertCircle, Upload, Video } from 'lucide-react'
 import { toast } from 'sonner'
+import { PdfAttachmentsField } from './PdfAttachmentsField'
+import type { PdfResource } from '@/lib/learning/resources'
 
 interface LessonVideoUploadProps {
   trackId: string
@@ -26,6 +27,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     description: '',
     video: null as File | null,
     duration: null as number | null,
+    pdfResources: [] as PdfResource[],
   })
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,6 +134,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           trackId: trackId,
           videoUrl: uploadResult.url,
           duration: formData.duration,
+          pdfResources: formData.pdfResources,
         }),
       })
 
@@ -152,6 +155,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           description: '',
           video: null,
           duration: null,
+          pdfResources: [],
         })
         // Call callback after state updates are complete
         if (onUploadSuccess) {
@@ -273,6 +277,14 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
               disabled={isUploading}
             />
           </div>
+
+          <PdfAttachmentsField
+            label="Lesson PDFs"
+            helperText="Upload PDFs to share with students in this lesson."
+            value={formData.pdfResources}
+            onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+            folder="learning/lesson-pdfs"
+          />
 
           {/* Upload Progress */}
           {isUploading && uploadProgress > 0 && (

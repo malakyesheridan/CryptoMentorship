@@ -730,6 +730,7 @@ model Track {
   title       String
   summary     String?
   coverUrl    String?
+  pdfResources Json?
   minTier     String    @default("member") // member | editor | admin
   publishedAt DateTime?
   order       Int       @default(0)
@@ -767,6 +768,7 @@ model Lesson {
   contentMDX  String? // Optional - can be empty for video-only lessons
   durationMin Int? // estimated
   videoUrl    String?
+  pdfResources Json?
   quizId      String?
   publishedAt DateTime?
   order       Int       @default(0)

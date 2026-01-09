@@ -19,6 +19,9 @@ import {
 import Link from 'next/link'
 import { updateTrack } from '@/lib/actions/learning'
 import { toast } from 'sonner'
+import { PdfAttachmentsField } from '@/components/learning/PdfAttachmentsField'
+import type { PdfResource } from '@/lib/learning/resources'
+import { normalizePdfResources } from '@/lib/learning/resources'
 
 interface TrackEditPageProps {
   params: {
@@ -35,6 +38,7 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
     slug: '',
     summary: '',
     coverUrl: '',
+    pdfResources: [] as PdfResource[],
     minTier: 'member' as 'guest' | 'member' | 'editor' | 'admin',
     publishedAt: '',
   })
@@ -53,6 +57,7 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
           slug: track.slug || '',
           summary: track.summary || '',
           coverUrl: track.coverUrl || '',
+          pdfResources: normalizePdfResources(track.pdfResources),
           minTier: track.minTier || 'member',
           publishedAt: track.publishedAt ? new Date(track.publishedAt).toISOString().slice(0, 16) : '',
         })
@@ -216,6 +221,14 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                       </div>
                     )}
                   </div>
+
+                  <PdfAttachmentsField
+                    label="Track PDFs"
+                    helperText="Upload PDFs to share with students on the track page."
+                    value={formData.pdfResources}
+                    onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+                    folder="learning/track-pdfs"
+                  />
                 </CardContent>
               </Card>
 
