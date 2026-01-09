@@ -1,19 +1,15 @@
-import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { 
   BookOpen, 
   Clock, 
   Users, 
   Play, 
   CheckCircle,
-  Lock,
-  TrendingUp,
   ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
@@ -105,9 +101,6 @@ export default async function LearningPage() {
     getUserProgress(session.user.id),
   ])
 
-  const tierLevels = { guest: 0, member: 1, editor: 2, admin: 3 }
-  const userTierLevel = tierLevels[session.user.role as keyof typeof tierLevels] || 0
-
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -179,7 +172,6 @@ export default async function LearningPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tracks.map((track) => {
             const progress = userProgress[track.id]
-            const hasAccess = userTierLevel >= tierLevels[track.minTier as keyof typeof tierLevels]
             
             // Calculate total duration
             const totalDuration = track.lessons.reduce((sum, lesson) => sum + (lesson.durationMin || 0), 0)
@@ -208,10 +200,6 @@ export default async function LearningPage() {
                         {track.summary}
                       </CardDescription>
                     </div>
-                    
-                    {!hasAccess && (
-                      <Lock className="h-5 w-5 text-slate-400 ml-2 flex-shrink-0" />
-                    )}
                   </div>
                 </CardHeader>
 
@@ -248,24 +236,9 @@ export default async function LearningPage() {
                     </div>
                   )}
 
-                  {/* Tier Badge */}
-                  <div className="mb-4">
-                    <Badge 
-                      variant={track.minTier === 'member' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {track.minTier} tier
-                    </Badge>
-                  </div>
-
                   {/* Action Button */}
                   <div className="flex gap-2">
-                    {!hasAccess ? (
-                      <Button disabled className="flex-1">
-                        <Lock className="h-4 w-4 mr-2" />
-                        Upgrade Required
-                      </Button>
-                    ) : progress ? (
+                    {progress ? (
                       <Link href={`/learn/${track.slug}`} className="flex-1">
                         <Button className="w-full">
                           {progress.completedLessons === totalLessons ? (

@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
@@ -11,17 +10,14 @@ import {
   Clock, 
   Play, 
   CheckCircle,
-  Lock,
   Users,
   Calendar,
   ArrowLeft,
-  Award,
   UserPlus,
   UserMinus
 } from 'lucide-react'
 import Link from 'next/link'
 import { enrollInCohort, leaveCohort } from '@/lib/actions/cohorts'
-import { getCohortProgress, formatRelativeTime } from '@/lib/cohorts'
 import { formatDate } from '@/lib/dates'
 
 // Revalidate every 5 minutes - cohort content is published, not real-time
@@ -39,7 +35,6 @@ async function getCohort(trackSlug: string, cohortSlug: string) {
           id: true,
           slug: true,
           title: true,
-          minTier: true,
           publishedAt: true,
         },
       },
@@ -89,13 +84,10 @@ async function getUserProgress(userId: string, cohortId: string) {
 
   if (!cohort) return null
 
-  const now = new Date()
-
-  // Get all released lessons for this cohort
+  // Get all published lessons for this cohort
   const releasedLessons = await prisma.lessonRelease.findMany({
     where: {
       cohortId,
-      releaseAt: { lte: now },
     },
     include: {
       lesson: {
@@ -124,14 +116,14 @@ async function getUserProgress(userId: string, cohortId: string) {
     },
   })
 
-  const totalReleasedLessons = publishedReleasedLessons.length
-  const progressPct = totalReleasedLessons > 0 
-    ? Math.round((completedLessons / totalReleasedLessons) * 100) 
+  const totalLessons = publishedReleasedLessons.length
+  const progressPct = totalLessons > 0 
+    ? Math.round((completedLessons / totalLessons) * 100) 
     : 0
 
   return {
     completedLessons,
-    totalReleasedLessons,
+    totalLessons,
     progressPct,
   }
 }
@@ -158,23 +150,12 @@ export default async function CohortDashboardPage({
     getUserProgress(session.user.id, cohort.id),
   ])
 
-  const tierLevels = { guest: 0, member: 1, editor: 2, admin: 3 }
-  const userTierLevel = tierLevels[session.user.role as keyof typeof tierLevels] || 0
-  const hasAccess = userTierLevel >= tierLevels[cohort.track.minTier as keyof typeof tierLevels]
-
   const now = new Date()
   const isEnrolled = !!enrollment
   const isActive = cohort.startsAt <= now && (!cohort.endsAt || cohort.endsAt >= now)
   const isUpcoming = cohort.startsAt > now
-  const isPast = cohort.endsAt && cohort.endsAt < now
 
-  // Separate released and locked lessons
-  const releasedLessons = cohort.releases.filter(release => 
-    release.releaseAt <= now && release.lesson.publishedAt
-  )
-  const lockedLessons = cohort.releases.filter(release => 
-    release.releaseAt > now && release.lesson.publishedAt
-  )
+  const availableLessons = cohort.releases.filter(release => release.lesson.publishedAt)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -203,7 +184,7 @@ export default async function CohortDashboardPage({
           </div>
 
           {/* Cohort Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -219,23 +200,11 @@ export default async function CohortDashboardPage({
             <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Released</p>
-                  <p className="text-2xl font-bold text-green-600">{releasedLessons.length}</p>
+                  <p className="text-sm font-medium text-slate-600">Available</p>
+                  <p className="text-2xl font-bold text-green-600">{availableLessons.length}</p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Locked</p>
-                  <p className="text-2xl font-bold text-yellow-600">{lockedLessons.length}</p>
-                </div>
-                <div className="h-8 w-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Lock className="h-4 w-4 text-yellow-600" />
                 </div>
               </div>
             </div>
@@ -259,7 +228,7 @@ export default async function CohortDashboardPage({
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-900">Your Progress</h3>
                 <span className="text-sm text-slate-600">
-                  {userProgress.completedLessons} of {userProgress.totalReleasedLessons} released lessons completed
+                  {userProgress.completedLessons} of {userProgress.totalLessons} lessons completed
                 </span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-3">
@@ -273,12 +242,7 @@ export default async function CohortDashboardPage({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-4 mb-8">
-            {!hasAccess ? (
-              <Button disabled size="lg">
-                <Lock className="h-5 w-5 mr-2" />
-                Upgrade to {cohort.track.minTier} tier to access this cohort
-              </Button>
-            ) : !isEnrolled ? (
+            {!isEnrolled ? (
               <form action={async () => {
                 'use server'
                 await enrollInCohort({ cohortId: cohort.id, role: 'member' })
@@ -304,23 +268,23 @@ export default async function CohortDashboardPage({
 
         {/* Schedule Timeline */}
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-slate-900">Learning Schedule</h2>
+          <h2 className="text-xl font-semibold text-slate-900">Lessons</h2>
           
-          {/* Released Lessons */}
-          {releasedLessons.length > 0 && (
+          {/* Available Lessons */}
+          {availableLessons.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  Available Lessons
+                  Lessons
                 </CardTitle>
                 <CardDescription>
-                  These lessons are now available for you to complete
+                  All lessons are available to watch
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {releasedLessons.map((release) => (
+                  {availableLessons.map((release) => (
                     <div
                       key={release.id}
                       className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg"
@@ -341,72 +305,18 @@ export default async function CohortDashboardPage({
                             )}
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              Released {formatDate(release.releaseAt)}
+                              Release date {formatDate(release.releaseAt)}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {isEnrolled && (
-                        <Link href={`/learn/${cohort.track.slug}/lesson/${release.lesson.slug}`}>
-                          <Button>
-                            <Play className="h-4 w-4 mr-2" />
-                            Start Lesson
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Locked Lessons */}
-          {lockedLessons.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-yellow-600" />
-                  Upcoming Lessons
-                </CardTitle>
-                <CardDescription>
-                  These lessons will be released according to the schedule
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {lockedLessons.map((release) => (
-                    <div
-                      key={release.id}
-                      className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                          <Lock className="h-4 w-4 text-yellow-600" />
-                        </div>
-                        
-                        <div>
-                          <h4 className="font-medium text-slate-900">{release.lesson.title}</h4>
-                          <div className="flex items-center gap-4 text-sm text-slate-600">
-                            {release.lesson.durationMin && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {release.lesson.durationMin}m
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {formatRelativeTime(release.releaseAt)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button disabled variant="outline">
-                        <Lock className="h-4 w-4 mr-2" />
-                        Locked
-                      </Button>
+                      <Link href={`/learn/${cohort.track.slug}/lesson/${release.lesson.slug}`}>
+                        <Button>
+                          <Play className="h-4 w-4 mr-2" />
+                          Start Lesson
+                        </Button>
+                      </Link>
                     </div>
                   ))}
                 </div>

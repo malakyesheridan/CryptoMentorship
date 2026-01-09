@@ -55,20 +55,11 @@ export async function enrollInTrack(data: z.infer<typeof EnrollTrackSchema>) {
     // Check track exists and user has access
     const track = await prisma.track.findUnique({
       where: { id: validatedData.trackId },
-      select: { slug: true, minTier: true, publishedAt: true },
+      select: { slug: true, publishedAt: true },
     })
 
     if (!track || !track.publishedAt) {
       throw new Error('Track not found or not published')
-    }
-
-    // Check tier access
-    const tierLevels = { guest: 0, member: 1, editor: 2, admin: 3 }
-    const userTierLevel = tierLevels[session.user.role as keyof typeof tierLevels] || 0
-    const requiredTierLevel = tierLevels[track.minTier as keyof typeof tierLevels] || 0
-
-    if (userTierLevel < requiredTierLevel) {
-      throw new Error('Insufficient access level')
     }
 
     // Wrap in transaction for atomicity

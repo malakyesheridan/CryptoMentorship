@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge'
 import { 
   Play, 
   CheckCircle,
-  Lock,
   ArrowLeft,
   ArrowRight,
   FileText
@@ -115,10 +114,6 @@ export default async function TrackPage({
     getUserProgress(session.user.id, track.id),
   ])
 
-  const tierLevels = { guest: 0, member: 1, editor: 2, admin: 3 }
-  const userTierLevel = tierLevels[session.user.role as keyof typeof tierLevels] || 0
-  const hasAccess = userTierLevel >= tierLevels[track.minTier as keyof typeof tierLevels]
-
   // Calculate stats
   const totalLessons = track.lessons.length
   const completedLessons = Object.values(userProgress).filter(Boolean).length
@@ -182,50 +177,39 @@ export default async function TrackPage({
           )}
 
           {/* Action Button */}
-          {hasAccess && (
-            <div className="mb-8">
-              {enrollment ? (
-                nextLesson ? (
-                  <Link href={`/learn/${track.slug}/lesson/${nextLesson.slug}`}>
-                    <Button size="lg">
-                      <Play className="h-5 w-5 mr-2" />
-                      Continue Learning
-                    </Button>
-                  </Link>
-                ) : (
-                  // Allow re-watching completed tracks - start from first lesson
-                  <Link href={`/learn/${track.slug}/lesson/${track.lessons[0]?.slug}`}>
-                    <Button size="lg" variant="outline">
-                      <Play className="h-5 w-5 mr-2" />
-                      Watch Again
-                    </Button>
-                  </Link>
-                )
-              ) : (
-                <form action={async () => {
-                  'use server'
-                  await enrollInTrack({ trackId: track.id })
-                }}>
-                  <Button type="submit" size="lg">
-                    <Play className="h-5 w-5 mr-2" />
-                    Start Track
-                  </Button>
-                </form>
-              )}
-            </div>
-          )}
-
-        {!hasAccess && (
           <div className="mb-8">
-            <Button disabled size="lg">
-              <Lock className="h-5 w-5 mr-2" />
-              Upgrade to {track.minTier} tier to access this track
-            </Button>
+            {enrollment ? (
+              nextLesson ? (
+                <Link href={`/learn/${track.slug}/lesson/${nextLesson.slug}`}>
+                  <Button size="lg">
+                    <Play className="h-5 w-5 mr-2" />
+                    Continue Learning
+                  </Button>
+                </Link>
+              ) : (
+                // Allow re-watching completed tracks - start from first lesson
+                <Link href={`/learn/${track.slug}/lesson/${track.lessons[0]?.slug}`}>
+                  <Button size="lg" variant="outline">
+                    <Play className="h-5 w-5 mr-2" />
+                    Watch Again
+                  </Button>
+                </Link>
+              )
+            ) : (
+              <form action={async () => {
+                'use server'
+                await enrollInTrack({ trackId: track.id })
+              }}>
+                <Button type="submit" size="lg">
+                  <Play className="h-5 w-5 mr-2" />
+                  Start Track
+                </Button>
+              </form>
+            )}
           </div>
-        )}
       </div>
 
-      {hasAccess && trackPdfResources.length > 0 && (
+      {trackPdfResources.length > 0 && (
         <div className="mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -277,10 +261,8 @@ export default async function TrackPage({
                   return (
                     <Link
                       key={lesson.id}
-                      href={hasAccess ? `/learn/${track.slug}/lesson/${lesson.slug}` : '#'}
-                      className={`block px-6 py-4 hover:bg-slate-50 transition-colors ${
-                        !hasAccess ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
+                      href={`/learn/${track.slug}/lesson/${lesson.slug}`}
+                      className="block px-6 py-4 hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
@@ -316,12 +298,10 @@ export default async function TrackPage({
                           )}
                         </div>
 
-                        {hasAccess && (
-                          <Button variant="ghost" size="sm" className="flex-shrink-0">
-                            {isCompleted ? 'Review' : 'Watch'}
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </Button>
-                        )}
+                        <Button variant="ghost" size="sm" className="flex-shrink-0">
+                          {isCompleted ? 'Review' : 'Watch'}
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
                       </div>
                     </Link>
                   )
@@ -356,10 +336,8 @@ export default async function TrackPage({
                   return (
                     <Link
                       key={lesson.id}
-                      href={hasAccess ? `/learn/${track.slug}/lesson/${lesson.slug}` : '#'}
-                      className={`block px-6 py-4 hover:bg-slate-50 transition-colors ${
-                        !hasAccess ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
+                      href={`/learn/${track.slug}/lesson/${lesson.slug}`}
+                      className="block px-6 py-4 hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
@@ -395,12 +373,10 @@ export default async function TrackPage({
                           )}
                         </div>
 
-                        {hasAccess && (
-                          <Button variant="ghost" size="sm" className="flex-shrink-0">
-                            {isCompleted ? 'Review' : 'Watch'}
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </Button>
-                        )}
+                        <Button variant="ghost" size="sm" className="flex-shrink-0">
+                          {isCompleted ? 'Review' : 'Watch'}
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
                       </div>
                     </Link>
                   )

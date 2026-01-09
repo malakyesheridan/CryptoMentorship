@@ -11,11 +11,11 @@ export interface LessonAccessInfo {
  * Check if a user can access a lesson based on cohort enrollment and release schedule
  */
 export async function checkLessonAccess(
-  userId: string,
+  _userId: string,
   lessonId: string,
   trackId: string
 ): Promise<LessonAccessInfo> {
-  // First check if lesson is published
+  // Ensure lesson belongs to track and is published
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
     select: {
@@ -28,93 +28,13 @@ export async function checkLessonAccess(
     return { canAccess: false, isLocked: true }
   }
 
-  // Check if user is enrolled in any cohorts for this track
-  const cohortEnrollments = await prisma.cohortEnrollment.findMany({
-    where: {
-      userId,
-      cohort: {
-        trackId,
-      },
-    },
-    include: {
-      cohort: {
-        select: {
-          id: true,
-          slug: true,
-        },
-      },
-    },
-  })
-
-  // If no cohort enrollments, check if track has any cohorts
-  const trackCohorts = await prisma.cohort.findMany({
-    where: { trackId },
-    select: { id: true },
-  })
-
-  // If track has cohorts but user isn't enrolled in any, lesson is locked
-  if (trackCohorts.length > 0 && cohortEnrollments.length === 0) {
-    return { canAccess: false, isLocked: true }
-  }
-
-  // If no cohorts exist for this track, it's self-paced (immediate access)
-  if (trackCohorts.length === 0) {
-    return { canAccess: true, isLocked: false }
-  }
-
-  // Check release schedule for enrolled cohorts
-  const now = new Date()
-  let earliestRelease: Date | null = null
-  let accessibleCohortId: string | null = null
-
-  for (const enrollment of cohortEnrollments) {
-    const release = await prisma.lessonRelease.findUnique({
-      where: {
-        cohortId_lessonId: {
-          cohortId: enrollment.cohort.id,
-          lessonId,
-        },
-      },
-      select: {
-        releaseAt: true,
-      },
-    })
-
-    if (release && release.releaseAt <= now) {
-      // User can access this lesson
-      return { 
-        canAccess: true, 
-        isLocked: false,
-        cohortId: enrollment.cohort.id 
-      }
-    }
-
-    if (release && (!earliestRelease || release.releaseAt < earliestRelease)) {
-      earliestRelease = release.releaseAt
-      accessibleCohortId = enrollment.cohort.id
-    }
-  }
-
-  // If we have a release date but it's in the future
-  if (earliestRelease) {
-    return {
-      canAccess: false,
-      isLocked: true,
-      releaseAt: earliestRelease,
-      cohortId: accessibleCohortId || undefined,
-    }
-  }
-
-  // No release schedule found for this lesson in any enrolled cohort
-  return { canAccess: false, isLocked: true }
+  return { canAccess: true, isLocked: false }
 }
 
 /**
  * Get all accessible lessons for a user in a track (considering cohort releases)
  */
 export async function getAccessibleLessons(userId: string, trackId: string) {
-  const now = new Date()
-
   // Get all published lessons in the track
   const allLessons = await prisma.lesson.findMany({
     where: {
@@ -137,86 +57,12 @@ export async function getAccessibleLessons(userId: string, trackId: string) {
     orderBy: { order: 'asc' },
   })
 
-  // Check if track has cohorts
-  const trackCohorts = await prisma.cohort.findMany({
-    where: { trackId },
-    select: { id: true },
-  })
-
-  // If no cohorts, all published lessons are accessible (self-paced)
-  if (trackCohorts.length === 0) {
-    return allLessons.map(lesson => ({
-      ...lesson,
-      canAccess: true,
-      isLocked: false,
-      releaseAt: null,
-    }))
-  }
-
-  // Check cohort enrollments
-  const cohortEnrollments = await prisma.cohortEnrollment.findMany({
-    where: {
-      userId,
-      cohort: { trackId },
-    },
-    select: { cohortId: true },
-  })
-
-  // If no enrollments but track has cohorts, all lessons are locked
-  if (cohortEnrollments.length === 0) {
-    return allLessons.map(lesson => ({
-      ...lesson,
-      canAccess: false,
-      isLocked: true,
-      releaseAt: null,
-    }))
-  }
-
-  const enrolledCohortIds = cohortEnrollments.map(e => e.cohortId)
-
-  // Process each lesson
-  return allLessons.map(lesson => {
-    // Find releases for enrolled cohorts
-    const relevantReleases = lesson.releases.filter(release =>
-      enrolledCohortIds.includes(release.cohortId)
-    )
-
-    if (relevantReleases.length === 0) {
-      return {
-        ...lesson,
-        canAccess: false,
-        isLocked: true,
-        releaseAt: null,
-      }
-    }
-
-    // Find the earliest release that has passed
-    const accessibleRelease = relevantReleases.find(release => release.releaseAt <= now)
-    
-    if (accessibleRelease) {
-      return {
-        ...lesson,
-        canAccess: true,
-        isLocked: false,
-        releaseAt: accessibleRelease.releaseAt,
-      }
-    }
-
-    // Find the next release
-    const nextRelease = relevantReleases.reduce((earliest, release) => {
-      if (!earliest || release.releaseAt < earliest.releaseAt) {
-        return release
-      }
-      return earliest
-    }, null as typeof relevantReleases[0] | null)
-
-    return {
-      ...lesson,
-      canAccess: false,
-      isLocked: true,
-      releaseAt: nextRelease?.releaseAt || null,
-    }
-  })
+  return allLessons.map(lesson => ({
+    ...lesson,
+    canAccess: true,
+    isLocked: false,
+    releaseAt: null,
+  }))
 }
 
 /**

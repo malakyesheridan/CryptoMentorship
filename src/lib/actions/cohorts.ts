@@ -146,21 +146,12 @@ export async function enrollInCohort(data: z.infer<typeof EnrollCohortSchema>) {
     const cohort = await prisma.cohort.findUnique({
       where: { id: validatedData.cohortId },
       include: {
-        track: { select: { slug: true, minTier: true, publishedAt: true } },
+        track: { select: { slug: true, publishedAt: true } },
       },
     })
 
     if (!cohort || !cohort.track.publishedAt) {
       throw new Error('Cohort not found or track not published')
-    }
-
-    // Check tier access
-    const tierLevels = { guest: 0, member: 1, editor: 2, admin: 3 }
-    const userTierLevel = tierLevels[session.user.role as keyof typeof tierLevels] || 0
-    const requiredTierLevel = tierLevels[cohort.track.minTier as keyof typeof tierLevels] || 0
-
-    if (userTierLevel < requiredTierLevel) {
-      throw new Error('Insufficient access level')
     }
 
     const enrollment = await prisma.cohortEnrollment.create({
