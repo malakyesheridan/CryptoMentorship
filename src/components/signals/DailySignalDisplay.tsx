@@ -149,7 +149,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
         <CardContent className="pt-6">
           <div className="flex items-center space-x-2 text-red-600">
             <AlertCircle className="w-5 h-5" />
-            <span>Error loading daily signals. Please try again later.</span>
+            <span>Error loading daily updates. Please try again later.</span>
           </div>
         </CardContent>
       </Card>
@@ -173,7 +173,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
           </div>
           <div className="text-center py-8">
             <TrendingUp className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Daily Signals Available</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Daily Updates Available</h3>
             <p className="text-slate-600">
               {selectedDate 
                 ? `No updates found for the selected date.`

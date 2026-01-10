@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { CheckCircle, AlertCircle } from 'lucide-react'
 import { json } from '@/lib/http'
 import { toast } from 'sonner'
-import { portfolioAssets, type PortfolioAsset } from '@/lib/portfolio-assets'
+import { buildAllocationSplits, portfolioAssets, type PortfolioAsset } from '@/lib/portfolio-assets'
 
 interface DailySignalUploadProps {
   tier: 'T1' | 'T2'
@@ -38,6 +38,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [isEditing, setIsEditing] = useState(!!existingSignal)
+  const [showPreview, setShowPreview] = useState(false)
 
   const parseAssetsFromSignal = (signal: string): PortfolioAsset[] => {
     if (!signal) return []
@@ -92,6 +93,19 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
     executiveSummary: existingSignal?.executiveSummary || '',
     associatedData: existingSignal?.associatedData || '',
   })
+  const hasPreviewAssets = Boolean(
+    formData.primaryAsset &&
+    formData.secondaryAsset &&
+    formData.tertiaryAsset
+  )
+  const previewSplits = hasPreviewAssets
+    ? buildAllocationSplits(
+        formData.primaryAsset as PortfolioAsset,
+        formData.secondaryAsset as PortfolioAsset,
+        formData.tertiaryAsset as PortfolioAsset
+      )
+    : []
+  const previewCategoryLabel = category === 'majors' ? 'Market Rotation' : category === 'memecoins' ? 'Memecoins' : ''
 
   // Update form when existingSignal changes
   useEffect(() => {
@@ -102,6 +116,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         associatedData: existingSignal.associatedData || '',
       })
       setIsEditing(true)
+      setShowPreview(false)
     } else {
       setFormData({
         ...getAssetDefaults(),
@@ -109,6 +124,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         associatedData: '',
       })
       setIsEditing(false)
+      setShowPreview(false)
     }
   }, [existingSignal])
 
@@ -315,6 +331,66 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
             Additional conditions, warnings, or data points
           </p>
         </div>
+
+        {/* Preview */}
+        <div className="flex items-center justify-between">
+          <Label className="text-base font-semibold text-slate-900">Preview</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPreview((prev) => !prev)}
+          >
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+        </div>
+
+        {showPreview && (
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-slate-900">
+                Portfolio Update - {tierLabels[tier]}{previewCategoryLabel ? ` ${previewCategoryLabel}` : ''}
+              </h4>
+              <span className="text-xs text-slate-500">Preview</span>
+            </div>
+
+            {hasPreviewAssets ? (
+              <div className="mb-4">
+                <h5 className="text-sm font-semibold text-slate-900 mb-2">Allocation Split:</h5>
+                <div className="space-y-2 text-sm text-slate-800">
+                  {previewSplits.map((split) => (
+                    <div key={split.label} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="font-semibold text-slate-900">{split.label}</span>
+                      <span className="text-slate-700">
+                        {split.allocations
+                          .map((allocation) => `${allocation.percent}% ${allocation.asset}`)
+                          .join(' / ')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 mb-4">
+                Select primary, secondary, and tertiary assets to preview the allocation split.
+              </p>
+            )}
+
+            {formData.executiveSummary.trim() && (
+              <div className="mb-4">
+                <h5 className="text-sm font-semibold text-slate-900 mb-2">Executive Summary:</h5>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{formData.executiveSummary}</p>
+              </div>
+            )}
+
+            {formData.associatedData.trim() && (
+              <div>
+                <h5 className="text-sm font-semibold text-slate-900 mb-2">Associated Data:</h5>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{formData.associatedData}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Status Messages */}
         {uploadStatus === 'success' && (
