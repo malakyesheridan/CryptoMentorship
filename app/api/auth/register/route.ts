@@ -13,12 +13,19 @@ const registerSchema = z.object({
   password: z.string().min(12, 'Password must be at least 12 characters'),
   name: z.string().min(2).max(100).optional(),
   referralCode: z.string().optional(), // Optional referral code
+  trial: z.boolean().optional(),
 })
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { email, password, name, referralCode } = registerSchema.parse(body)
+    const { email, password, name, referralCode, trial } = registerSchema.parse(body)
+    const shouldCreateTrial = Boolean(trial)
+    const trialDurationDays = 30
+    const trialEndDate = shouldCreateTrial ? new Date() : null
+    if (trialEndDate) {
+      trialEndDate.setDate(trialEndDate.getDate() + trialDurationDays)
+    }
 
     // Validate password strength
     const passwordValidation = validatePassword(password)
@@ -45,17 +52,29 @@ export async function POST(req: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
-    // Create user only (no membership - user must subscribe or be granted trial by admin)
+    // Create user, and optionally attach a trial membership
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
           email,
           name: name || null,
           passwordHash,
-          role: 'member',
+          role: shouldCreateTrial ? 'guest' : 'member',
           emailVerified: null, // Require email verification
         },
       })
+
+      if (shouldCreateTrial && trialEndDate) {
+        await tx.membership.create({
+          data: {
+            userId: newUser.id,
+            tier: 'T2',
+            status: 'trial',
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: trialEndDate,
+          },
+        })
+      }
 
       // Link referral if code provided (defensive: errors don't block registration)
       if (referralCode && referralConfig.enabled) {
@@ -88,7 +107,12 @@ export async function POST(req: NextRequest) {
       return newUser
     })
 
-    logger.info('User registered', { userId: user.id, email })
+    logger.info('User registered', { 
+      userId: user.id, 
+      email, 
+      isTrial: shouldCreateTrial,
+      trialEndDate: trialEndDate?.toISOString() || null,
+    })
 
     return NextResponse.json({
       success: true,

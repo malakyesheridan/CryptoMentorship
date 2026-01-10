@@ -11,6 +11,8 @@ function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isTrial, setIsTrial] = useState(false)
+  const [callbackUrl, setCallbackUrl] = useState('/dashboard')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -25,6 +27,14 @@ function RegisterForm() {
     const refCode = searchParams.get('ref')
     if (refCode) {
       setFormData((prev) => ({ ...prev, referralCode: refCode }))
+    }
+    const trialParam = searchParams.get('trial')
+    setIsTrial(trialParam === 'true' || trialParam === '1')
+    const callback = searchParams.get('callbackUrl')
+    if (callback && callback.startsWith('/') && !callback.startsWith('/login') && !callback.startsWith('/register')) {
+      setCallbackUrl(callback)
+    } else {
+      setCallbackUrl('/dashboard')
     }
   }, [searchParams])
 
@@ -43,6 +53,9 @@ function RegisterForm() {
       }
       if (formData.referralCode) {
         registerData.referralCode = formData.referralCode
+      }
+      if (isTrial) {
+        registerData.trial = true
       }
 
       const res = await fetch('/api/auth/register', {
@@ -74,15 +87,15 @@ function RegisterForm() {
             // Wait a moment for session to be established
             await new Promise(resolve => setTimeout(resolve, 500))
             // Redirect to subscribe page smoothly
-            window.location.href = '/subscribe?newuser=true'
+            window.location.href = isTrial ? callbackUrl : '/subscribe?newuser=true'
           } else {
             // If auto-login fails, redirect to login page
-            router.push('/login?registered=true')
+            router.push(isTrial ? '/login?registered=trial' : '/login?registered=true')
           }
         } catch (err) {
           console.error('Auto-login error:', err)
           // If auto-login fails, redirect to login page
-          router.push('/login?registered=true')
+          router.push(isTrial ? '/login?registered=trial' : '/login?registered=true')
         }
       }, 1500)
     } catch (err) {
@@ -100,10 +113,12 @@ function RegisterForm() {
             <div className="bg-[#FFFDF7] rounded-2xl p-8 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
               <div className="text-5xl mb-4 text-green-500">✓</div>
               <h1 className="text-2xl font-bold mb-2 text-slate-900">
-                Account Created!
+                {isTrial ? 'Trial Activated!' : 'Account Created!'}
               </h1>
               <p className="text-slate-600 mb-6">
-                Your account has been created successfully. Redirecting to choose your subscription...
+                {isTrial
+                  ? 'Your free trial is active. Redirecting to your dashboard...'
+                  : 'Your account has been created successfully. Redirecting to choose your subscription...'}
               </p>
             </div>
           </div>
@@ -124,10 +139,11 @@ function RegisterForm() {
               marginBottom: '0.5rem',
               color: '#1e293b'
             }}>
-              Create Account
+              {isTrial ? 'Start Free Trial' : 'Create Account'}
             </h1>
             <p style={{ color: '#64748b', fontSize: '1rem' }}>
-              Join <span style={{ color: '#d4af37' }}>STEWART & CO</span>
+              {isTrial ? 'Begin your trial with ' : 'Join '}
+              <span style={{ color: '#d4af37' }}>STEWART & CO</span>
             </p>
           </div>
 
@@ -250,7 +266,9 @@ function RegisterForm() {
                 transition: 'all 0.2s',
               }}
             >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isLoading
+                ? (isTrial ? 'Starting Trial...' : 'Creating Account...')
+                : (isTrial ? 'Start Free Trial' : 'Create Account')}
             </button>
 
             <p style={{ 

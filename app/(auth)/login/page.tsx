@@ -16,6 +16,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const router = useRouter()
+  const registerParams = new URLSearchParams()
+  if (callbackUrl && callbackUrl !== '/dashboard') {
+    registerParams.set('callbackUrl', callbackUrl)
+  }
+  const registerUrl = registerParams.toString()
+    ? `/register?${registerParams.toString()}`
+    : '/register'
+  const trialRegisterParams = new URLSearchParams(registerParams)
+  trialRegisterParams.set('trial', 'true')
+  const trialRegisterUrl = `/register?${trialRegisterParams.toString()}`
 
   useEffect(() => {
     // Get callback URL from window.location.search to avoid useSearchParams issues
@@ -338,7 +348,7 @@ export default function LoginPage() {
               ) : (
                 <>
                   <div className="space-y-4">
-                    <Link href="/register" className="block">
+                    <Link href={trialRegisterUrl} className="block">
                       <Button
                         disabled={isLoading}
                         className="w-full bg-gold-400 hover:bg-gold-500 text-slate-900 font-semibold h-12 rounded-lg transition-all shadow-md hover:shadow-lg"
@@ -349,8 +359,17 @@ export default function LoginPage() {
                             Processing...
                           </>
                         ) : (
-                          'Create Account'
+                          'Start Free Trial'
                         )}
+                      </Button>
+                    </Link>
+                    <Link href={registerUrl} className="block">
+                      <Button
+                        disabled={isLoading}
+                        variant="outline"
+                        className="w-full h-12 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-50"
+                      >
+                        Create Account
                       </Button>
                     </Link>
                     
