@@ -1,5 +1,6 @@
 import { sendEmail } from './email'
 import { formatDate } from './dates'
+import { buildAllocationSplits, type PortfolioAsset } from './portfolio-assets'
 
 /**
  * Escape HTML to prevent XSS in email templates
@@ -19,6 +20,9 @@ interface DailySignal {
   tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
+  primaryAsset?: string | null
+  secondaryAsset?: string | null
+  tertiaryAsset?: string | null
   executiveSummary?: string | null
   associatedData?: string | null
   publishedAt: Date | string
@@ -44,10 +48,49 @@ function generateUpdateSection(signal: DailySignal): string {
     ? ' Memecoins' 
     : ''
   
-  const tierColor = tierColors[signal.tier]
-  const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
+    const tierColor = tierColors[signal.tier]
+    const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
+    const hasAllocation = Boolean(signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset)
+    const allocationHtml = hasAllocation
+      ? (() => {
+          const splits = buildAllocationSplits(
+            signal.primaryAsset as PortfolioAsset,
+            signal.secondaryAsset as PortfolioAsset,
+            signal.tertiaryAsset as PortfolioAsset
+          )
+          const splitRows = splits
+            .map(
+              (split) => `
+                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 12px;">
+                  <span style="font-weight: 700; color: #1e293b;">${split.label}</span>
+                  <span style="color: #334155;">
+                    ${split.allocations.map((allocation) => `${allocation.percent}% ${allocation.asset}`).join(' / ')}
+                  </span>
+                </div>`
+            )
+            .join('')
 
-  return `
+          return `
+            <div style="margin-bottom: 24px;">
+              <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Allocation Split:</h4>
+              <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
+                ${splitRows}
+              </div>
+            </div>
+          `
+        })()
+      : `
+        <div style="margin-bottom: 24px;">
+          <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Update:</h4>
+          <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 16px; color: #1e293b; margin: 0; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word;">
+              ${escapeHtml(signal.signal).split('\\n').filter(line => line.trim().length > 0).map(line => `<p style="margin: 0 0 12px 0; padding: 0; line-height: 1.8;">${line.trim()}</p>`).join('')}
+            </div>
+          </div>
+        </div>
+      `
+  
+    return `
     <div class="signal-box" style="background: ${tierColor.bg}; border: 2px solid ${tierColor.border}; border-radius: 12px; padding: 32px 28px; margin-bottom: 36px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <!-- Header -->
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
@@ -61,18 +104,9 @@ function generateUpdateSection(signal: DailySignal): string {
           ${publishedDate}
         </span>
       </div>
+        ${allocationHtml}
 
-      <!-- Update -->
-      <div style="margin-bottom: 24px;">
-        <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Update:</h4>
-        <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
-          <div style="font-size: 16px; color: #1e293b; margin: 0; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word;">
-            ${escapeHtml(signal.signal).split('\n').filter(line => line.trim().length > 0).map(line => `<p style="margin: 0 0 12px 0; padding: 0; line-height: 1.8;">${line.trim()}</p>`).join('')}
-          </div>
-        </div>
-      </div>
-
-      ${signal.executiveSummary ? `
+        ${signal.executiveSummary ? `
       <!-- Executive Summary -->
       <div style="margin-bottom: 24px;">
         <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Executive Summary:</h4>
@@ -211,7 +245,20 @@ export async function sendDailySignalEmail({
     
     let text = `Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel}\n`
     text += `Published: ${formatDate(new Date(signal.publishedAt), 'short')}\n\n`
-    text += `Update:\n${signal.signal}\n\n`
+    const hasAllocation = Boolean(signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset)
+    if (hasAllocation) {
+      const splits = buildAllocationSplits(
+        signal.primaryAsset as PortfolioAsset,
+        signal.secondaryAsset as PortfolioAsset,
+        signal.tertiaryAsset as PortfolioAsset
+      )
+      const allocationLines = splits
+        .map((split) => `${split.label}: ${split.allocations.map((allocation) => `${allocation.percent}% ${allocation.asset}`).join(' / ')}`)
+        .join('\n')
+      text += `Allocation Split:\n${allocationLines}\n\n`
+    } else {
+      text += `Update:\n${signal.signal}\n\n`
+    }
     
     if (signal.executiveSummary) {
       text += `Executive Summary:\n• ${signal.executiveSummary}\n\n`

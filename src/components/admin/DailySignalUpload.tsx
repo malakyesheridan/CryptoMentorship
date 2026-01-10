@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { CheckCircle, AlertCircle } from 'lucide-react'
 import { json } from '@/lib/http'
 import { toast } from 'sonner'
+import { portfolioAssets, type PortfolioAsset } from '@/lib/portfolio-assets'
 
 interface DailySignalUploadProps {
   tier: 'T1' | 'T2'
@@ -17,6 +18,9 @@ interface DailySignalUploadProps {
   existingSignal?: {
     id: string
     signal: string
+    primaryAsset?: string | null
+    secondaryAsset?: string | null
+    tertiaryAsset?: string | null
     executiveSummary?: string | null
     associatedData?: string | null
   }
@@ -35,17 +39,56 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   const [errorMessage, setErrorMessage] = useState('')
   const [isEditing, setIsEditing] = useState(!!existingSignal)
 
-  // Strip bullet points when loading existing signal for editing
-  const stripBulletPoints = (text: string | null | undefined): string => {
-    if (!text) return ''
-    return text
-      .split('\n')
-      .map(line => line.trim().replace(/^•\s*/, '')) // Remove bullet point prefix
-      .join('\n')
+  const parseAssetsFromSignal = (signal: string): PortfolioAsset[] => {
+    if (!signal) return []
+    try {
+      const parsed = JSON.parse(signal) as {
+        primaryAsset?: string
+        secondaryAsset?: string
+        tertiaryAsset?: string
+      }
+      if (parsed && typeof parsed === 'object') {
+        const assets: PortfolioAsset[] = []
+        if (parsed.primaryAsset && portfolioAssets.includes(parsed.primaryAsset as PortfolioAsset)) {
+          assets.push(parsed.primaryAsset as PortfolioAsset)
+        }
+        if (parsed.secondaryAsset && portfolioAssets.includes(parsed.secondaryAsset as PortfolioAsset)) {
+          assets.push(parsed.secondaryAsset as PortfolioAsset)
+        }
+        if (parsed.tertiaryAsset && portfolioAssets.includes(parsed.tertiaryAsset as PortfolioAsset)) {
+          assets.push(parsed.tertiaryAsset as PortfolioAsset)
+        }
+        if (assets.length > 0) {
+          return assets
+        }
+      }
+    } catch {
+      // Not JSON, fall back to string parsing
+    }
+
+    const upperSignal = signal.toUpperCase()
+    return portfolioAssets
+      .map((asset) => ({ asset, index: upperSignal.indexOf(asset) }))
+      .filter(({ index }) => index >= 0)
+      .sort((a, b) => a.index - b.index)
+      .map(({ asset }) => asset)
+  }
+
+  const getAssetDefaults = (signal?: DailySignalUploadProps['existingSignal']) => {
+    if (!signal) {
+      return { primaryAsset: '', secondaryAsset: '', tertiaryAsset: '' }
+    }
+
+    const parsedAssets = parseAssetsFromSignal(signal.signal)
+    return {
+      primaryAsset: signal.primaryAsset || parsedAssets[0] || '',
+      secondaryAsset: signal.secondaryAsset || parsedAssets[1] || '',
+      tertiaryAsset: signal.tertiaryAsset || parsedAssets[2] || '',
+    }
   }
 
   const [formData, setFormData] = useState({
-    signal: stripBulletPoints(existingSignal?.signal),
+    ...getAssetDefaults(existingSignal),
     executiveSummary: existingSignal?.executiveSummary || '',
     associatedData: existingSignal?.associatedData || '',
   })
@@ -54,14 +97,14 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   useEffect(() => {
     if (existingSignal) {
       setFormData({
-        signal: stripBulletPoints(existingSignal.signal),
+        ...getAssetDefaults(existingSignal),
         executiveSummary: existingSignal.executiveSummary || '',
         associatedData: existingSignal.associatedData || '',
       })
       setIsEditing(true)
     } else {
       setFormData({
-        signal: '',
+        ...getAssetDefaults(),
         executiveSummary: '',
         associatedData: '',
       })
@@ -72,14 +115,11 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.signal.trim()) {
-      setErrorMessage('Please enter an update')
+    if (!formData.primaryAsset || !formData.secondaryAsset || !formData.tertiaryAsset) {
+      setErrorMessage('Please select a primary, secondary, and tertiary asset')
       setUploadStatus('error')
       return
     }
-    
-    // Use signal text as-is, no bullet point conversion
-    const processedSignal = formData.signal.trim()
 
     setIsUploading(true)
     setUploadStatus('uploading')
@@ -93,7 +133,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           {
             method: 'PUT',
             body: JSON.stringify({
-              signal: processedSignal,
+              primaryAsset: formData.primaryAsset,
+              secondaryAsset: formData.secondaryAsset,
+              tertiaryAsset: formData.tertiaryAsset,
               executiveSummary: formData.executiveSummary.trim() || undefined,
               associatedData: formData.associatedData.trim() || undefined,
             }),
@@ -125,7 +167,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         const requestBody = {
           tier,
           ...(tier === 'T2' && category ? { category } : {}),
-          signal: processedSignal,
+          primaryAsset: formData.primaryAsset,
+          secondaryAsset: formData.secondaryAsset,
+          tertiaryAsset: formData.tertiaryAsset,
           executiveSummary: formData.executiveSummary.trim() || undefined,
           associatedData: formData.associatedData.trim() || undefined,
         }
@@ -148,7 +192,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} update posted successfully!`)
         setUploadStatus('success')
         setFormData({
-          signal: '',
+          ...getAssetDefaults(),
           executiveSummary: '',
           associatedData: '',
         })
@@ -180,22 +224,64 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Signal */}
-        <div className="space-y-2">
-          <Label htmlFor={`signal-${tier}`}>Update *</Label>
-          <Textarea
-            id={`signal-${tier}`}
-            value={formData.signal}
-            onChange={(e) => setFormData({ ...formData, signal: e.target.value })}
-            placeholder="e.g., 100% Cash 💰"
-            required
-            disabled={isUploading}
-            maxLength={500}
-            rows={3}
-          />
-          <p className="text-xs text-slate-500">
-            Main update text
-          </p>
+        {/* Asset Selection */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor={`primary-asset-${tier}`}>Primary Asset *</Label>
+            <Select
+              id={`primary-asset-${tier}`}
+              value={formData.primaryAsset}
+              onChange={(e) => setFormData({ ...formData, primaryAsset: e.target.value })}
+              disabled={isUploading}
+              required
+            >
+              <option value="" disabled>Select primary asset</option>
+              {portfolioAssets.map((asset) => (
+                <option key={asset} value={asset}>
+                  {asset}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`secondary-asset-${tier}`}>Secondary Asset *</Label>
+            <Select
+              id={`secondary-asset-${tier}`}
+              value={formData.secondaryAsset}
+              onChange={(e) => setFormData({ ...formData, secondaryAsset: e.target.value })}
+              disabled={isUploading}
+              required
+            >
+              <option value="" disabled>Select secondary asset</option>
+              {portfolioAssets.map((asset) => (
+                <option key={asset} value={asset}>
+                  {asset}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`tertiary-asset-${tier}`}>Tertiary Asset *</Label>
+            <Select
+              id={`tertiary-asset-${tier}`}
+              value={formData.tertiaryAsset}
+              onChange={(e) => setFormData({ ...formData, tertiaryAsset: e.target.value })}
+              disabled={isUploading}
+              required
+            >
+              <option value="" disabled>Select tertiary asset</option>
+              {portfolioAssets.map((asset) => (
+                <option key={asset} value={asset}>
+                  {asset}
+                </option>
+              ))}
+            </Select>
+            <p className="text-xs text-slate-500">
+              Select the primary, secondary, and tertiary assets for allocation splits
+            </p>
+          </div>
         </div>
 
         {/* Executive Summary */}
@@ -249,7 +335,12 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         <Button
           type="submit"
           className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-6 text-lg"
-          disabled={isUploading || !formData.signal.trim()}
+          disabled={
+            isUploading ||
+            !formData.primaryAsset ||
+            !formData.secondaryAsset ||
+            !formData.tertiaryAsset
+          }
         >
           {isUploading 
             ? (isEditing ? 'Updating...' : 'Posting Update...')

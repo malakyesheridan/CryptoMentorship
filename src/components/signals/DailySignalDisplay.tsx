@@ -8,12 +8,16 @@ import { Zap, TrendingUp, AlertCircle, Lock, Edit } from 'lucide-react'
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { CalendarDatePicker } from './CalendarDatePicker'
+import { buildAllocationSplits, type PortfolioAsset } from '@/lib/portfolio-assets'
 
 interface DailySignal {
   id: string
   tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
+  primaryAsset?: string | null
+  secondaryAsset?: string | null
+  tertiaryAsset?: string | null
   executiveSummary?: string | null
   associatedData?: string | null
   publishedAt: string
@@ -194,6 +198,18 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   
   const currentSignal = getCurrentSignal()
   const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive, userRole) : false
+  const hasAllocation = Boolean(
+    currentSignal?.primaryAsset &&
+    currentSignal?.secondaryAsset &&
+    currentSignal?.tertiaryAsset
+  )
+  const allocationSplits = hasAllocation && currentSignal
+    ? buildAllocationSplits(
+        currentSignal.primaryAsset as PortfolioAsset,
+        currentSignal.secondaryAsset as PortfolioAsset,
+        currentSignal.tertiaryAsset as PortfolioAsset
+      )
+    : []
 
   return (
     <Card>
@@ -316,19 +332,39 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                   </div>
                 </div>
 
-                {/* Update */}
-                <div className="mb-4">
-                  <h4 className="font-bold text-slate-900 mb-2">Update:</h4>
-                  <div className="bg-white rounded-lg p-4 border border-slate-200">
-                    <div className="text-lg text-slate-800">
-                      {currentSignal.signal.split('\n').map((line, index) => (
-                        <p key={index} className="mb-1 last:mb-0">
-                          {line.trim() || '\u00A0'}
-                        </p>
-                      ))}
+                {/* Allocation Split */}
+                {hasAllocation ? (
+                  <div className="mb-4">
+                    <h4 className="font-bold text-slate-900 mb-2">Allocation Split:</h4>
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <div className="space-y-3 text-slate-800">
+                        {allocationSplits.map((split) => (
+                          <div key={split.label} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="font-semibold text-slate-900">{split.label}</span>
+                            <span className="text-slate-700">
+                              {split.allocations
+                                .map((allocation) => `${allocation.percent}% ${allocation.asset}`)
+                                .join(' / ')}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="mb-4">
+                    <h4 className="font-bold text-slate-900 mb-2">Update:</h4>
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <div className="text-lg text-slate-800">
+                        {currentSignal.signal.split('\n').map((line, index) => (
+                          <p key={index} className="mb-1 last:mb-0">
+                            {line.trim() || '\u00A0'}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Executive Summary */}
                 {currentSignal.executiveSummary && (

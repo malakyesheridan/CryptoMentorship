@@ -5,11 +5,14 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
 import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
+import { formatAllocationSignal, portfolioAssets } from '@/lib/portfolio-assets'
 
 export const dynamic = 'force-dynamic'
 
 const updateDailySignalSchema = z.object({
-  signal: z.string().min(1).max(500).optional(),
+  primaryAsset: z.enum(portfolioAssets),
+  secondaryAsset: z.enum(portfolioAssets),
+  tertiaryAsset: z.enum(portfolioAssets),
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
 })
@@ -41,7 +44,10 @@ export async function PUT(
     const updatedSignal = await prisma.portfolioDailySignal.update({
       where: { id: params.id },
       data: {
-        ...(data.signal !== undefined && { signal: data.signal.trim() }),
+        signal: formatAllocationSignal(data.primaryAsset, data.secondaryAsset, data.tertiaryAsset),
+        primaryAsset: data.primaryAsset,
+        secondaryAsset: data.secondaryAsset,
+        tertiaryAsset: data.tertiaryAsset,
         ...(data.executiveSummary !== undefined && { 
           executiveSummary: data.executiveSummary.trim() || null 
         }),

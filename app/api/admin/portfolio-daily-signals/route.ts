@@ -5,13 +5,16 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
 import { logger } from '@/lib/logger'
+import { formatAllocationSignal, portfolioAssets } from '@/lib/portfolio-assets'
 
 export const dynamic = 'force-dynamic'
 
 const createDailySignalSchema = z.object({
   tier: z.enum(['T1', 'T2']),
   category: z.enum(['majors', 'memecoins']).optional(),
-  signal: z.string().min(1).max(500),
+  primaryAsset: z.enum(portfolioAssets),
+  secondaryAsset: z.enum(portfolioAssets),
+  tertiaryAsset: z.enum(portfolioAssets),
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
 }).refine((data) => {
@@ -119,7 +122,10 @@ export async function POST(request: NextRequest) {
     // For T1 (Growth), ensure category is explicitly null (not undefined)
     const createData: any = {
       tier: data.tier,
-      signal: data.signal,
+      signal: formatAllocationSignal(data.primaryAsset, data.secondaryAsset, data.tertiaryAsset),
+      primaryAsset: data.primaryAsset,
+      secondaryAsset: data.secondaryAsset,
+      tertiaryAsset: data.tertiaryAsset,
       executiveSummary: data.executiveSummary || null,
       associatedData: data.associatedData || null,
       createdById: session.user.id

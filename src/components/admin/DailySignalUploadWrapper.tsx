@@ -14,6 +14,9 @@ interface DailySignalUploadWrapperProps {
     tier: 'T1' | 'T2' | 'T3' // Allow T3 for backward compatibility with existing data
     category?: 'majors' | 'memecoins' | null
     signal: string
+    primaryAsset?: string | null
+    secondaryAsset?: string | null
+    tertiaryAsset?: string | null
     executiveSummary?: string | null
     associatedData?: string | null
   } | null
@@ -151,6 +154,9 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
             ? {
                 id: editingSignal.id,
                 signal: editingSignal.signal,
+                primaryAsset: editingSignal.primaryAsset,
+                secondaryAsset: editingSignal.secondaryAsset,
+                tertiaryAsset: editingSignal.tertiaryAsset,
                 executiveSummary: editingSignal.executiveSummary,
                 associatedData: editingSignal.associatedData,
               }

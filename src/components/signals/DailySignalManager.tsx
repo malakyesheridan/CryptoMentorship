@@ -9,6 +9,9 @@ interface DailySignal {
   tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
   signal: string
+  primaryAsset?: string | null
+  secondaryAsset?: string | null
+  tertiaryAsset?: string | null
   executiveSummary?: string | null
   associatedData?: string | null
   publishedAt: string
