@@ -198,7 +198,8 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   
   const currentSignal = getCurrentSignal()
   const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive, userRole) : false
-  const allocationAssets = currentSignal
+  const showAllocations = currentSignal?.category !== 'memecoins'
+  const allocationAssets = currentSignal && showAllocations
     ? currentSignal.primaryAsset &&
       currentSignal.secondaryAsset &&
       currentSignal.tertiaryAsset

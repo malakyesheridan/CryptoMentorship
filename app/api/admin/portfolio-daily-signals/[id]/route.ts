@@ -10,9 +10,10 @@ import { formatAllocationSignal, portfolioAssets } from '@/lib/portfolio-assets'
 export const dynamic = 'force-dynamic'
 
 const updateDailySignalSchema = z.object({
-  primaryAsset: z.enum(portfolioAssets),
-  secondaryAsset: z.enum(portfolioAssets),
-  tertiaryAsset: z.enum(portfolioAssets),
+  signal: z.string().optional(),
+  primaryAsset: z.enum(portfolioAssets).optional(),
+  secondaryAsset: z.enum(portfolioAssets).optional(),
+  tertiaryAsset: z.enum(portfolioAssets).optional(),
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
 })
@@ -40,11 +41,42 @@ export async function PUT(
       return NextResponse.json({ error: 'Update not found' }, { status: 404 })
     }
 
+    const isMemecoins = existingSignal.category === 'memecoins'
+    let signalValue: string
+
+    if (isMemecoins) {
+      if (!data.signal || !data.signal.trim()) {
+        return NextResponse.json({
+          error: 'Invalid input',
+          details: [
+            {
+              path: ['signal'],
+              message: 'Signal text is required for memecoins updates',
+            },
+          ],
+        }, { status: 400 })
+      }
+      signalValue = data.signal.trim()
+    } else {
+      if (!data.primaryAsset || !data.secondaryAsset || !data.tertiaryAsset) {
+        return NextResponse.json({
+          error: 'Invalid input',
+          details: [
+            {
+              path: ['primaryAsset'],
+              message: 'Primary, secondary, and tertiary assets are required',
+            },
+          ],
+        }, { status: 400 })
+      }
+      signalValue = formatAllocationSignal(data.primaryAsset, data.secondaryAsset, data.tertiaryAsset)
+    }
+
     // Update update
     const updatedSignal = await prisma.portfolioDailySignal.update({
       where: { id: params.id },
       data: {
-        signal: formatAllocationSignal(data.primaryAsset, data.secondaryAsset, data.tertiaryAsset),
+        signal: signalValue,
         ...(data.executiveSummary !== undefined && { 
           executiveSummary: data.executiveSummary.trim() || null 
         }),

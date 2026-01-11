@@ -12,20 +12,42 @@ export const dynamic = 'force-dynamic'
 const createDailySignalSchema = z.object({
   tier: z.enum(['T1', 'T2']),
   category: z.enum(['majors', 'memecoins']).optional(),
-  primaryAsset: z.enum(portfolioAssets),
-  secondaryAsset: z.enum(portfolioAssets),
-  tertiaryAsset: z.enum(portfolioAssets),
+  signal: z.string().optional(),
+  primaryAsset: z.enum(portfolioAssets).optional(),
+  secondaryAsset: z.enum(portfolioAssets).optional(),
+  tertiaryAsset: z.enum(portfolioAssets).optional(),
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
-}).refine((data) => {
+}).superRefine((data, ctx) => {
   // Category is required for T2 (Elite), optional for T1 (Growth)
   if (data.tier === 'T2') {
-    return data.category === 'majors' || data.category === 'memecoins'
+    if (data.category !== 'majors' && data.category !== 'memecoins') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Category must be 'majors' or 'memecoins' for T2 (Elite) tier",
+        path: ['category'],
+      })
+    }
   }
-  return true
-}, {
-  message: "Category must be 'majors' or 'memecoins' for T2 (Elite) tier",
-  path: ['category']
+
+  const requiresTextSignal = data.category === 'memecoins'
+  if (requiresTextSignal) {
+    if (!data.signal || !data.signal.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Signal text is required for memecoins updates',
+        path: ['signal'],
+      })
+    }
+  } else {
+    if (!data.primaryAsset || !data.secondaryAsset || !data.tertiaryAsset) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Primary, secondary, and tertiary assets are required',
+        path: ['primaryAsset'],
+      })
+    }
+  }
 })
 
 // GET /api/admin/portfolio-daily-signals - Get all daily updates
@@ -120,9 +142,13 @@ export async function POST(request: NextRequest) {
 
     // Create new update
     // For T1 (Growth), ensure category is explicitly null (not undefined)
+    const signalValue = data.category === 'memecoins'
+      ? data.signal!.trim()
+      : formatAllocationSignal(data.primaryAsset!, data.secondaryAsset!, data.tertiaryAsset!)
+
     const createData: any = {
       tier: data.tier,
-      signal: formatAllocationSignal(data.primaryAsset, data.secondaryAsset, data.tertiaryAsset),
+      signal: signalValue,
       executiveSummary: data.executiveSummary || null,
       associatedData: data.associatedData || null,
       createdById: session.user.id

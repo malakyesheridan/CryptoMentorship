@@ -39,6 +39,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   const [errorMessage, setErrorMessage] = useState('')
   const [isEditing, setIsEditing] = useState(!!existingSignal)
   const [showPreview, setShowPreview] = useState(false)
+  const isMemecoins = category === 'memecoins'
 
   const parseAssetsFromSignal = (signal: string): PortfolioAsset[] => {
     if (!signal) return []
@@ -88,8 +89,34 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
     }
   }
 
+  const getSignalTextDefault = (signal?: DailySignalUploadProps['existingSignal']) => {
+    if (!signal) {
+      return ''
+    }
+
+    try {
+      const parsed = JSON.parse(signal.signal) as {
+        primaryAsset?: string
+        secondaryAsset?: string
+        tertiaryAsset?: string
+      }
+      if (
+        parsed?.primaryAsset &&
+        parsed?.secondaryAsset &&
+        parsed?.tertiaryAsset
+      ) {
+        return ''
+      }
+    } catch {
+      // Not JSON, fall back to raw text
+    }
+
+    return signal.signal
+  }
+
   const [formData, setFormData] = useState({
     ...getAssetDefaults(existingSignal),
+    signalText: getSignalTextDefault(existingSignal),
     executiveSummary: existingSignal?.executiveSummary || '',
     associatedData: existingSignal?.associatedData || '',
   })
@@ -112,6 +139,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
     if (existingSignal) {
       setFormData({
         ...getAssetDefaults(existingSignal),
+        signalText: getSignalTextDefault(existingSignal),
         executiveSummary: existingSignal.executiveSummary || '',
         associatedData: existingSignal.associatedData || '',
       })
@@ -120,6 +148,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
     } else {
       setFormData({
         ...getAssetDefaults(),
+        signalText: '',
         executiveSummary: '',
         associatedData: '',
       })
@@ -131,7 +160,13 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.primaryAsset || !formData.secondaryAsset || !formData.tertiaryAsset) {
+    if (isMemecoins) {
+      if (!formData.signalText.trim()) {
+        setErrorMessage('Please enter the allocation update')
+        setUploadStatus('error')
+        return
+      }
+    } else if (!formData.primaryAsset || !formData.secondaryAsset || !formData.tertiaryAsset) {
       setErrorMessage('Please select a primary, secondary, and tertiary asset')
       setUploadStatus('error')
       return
@@ -149,9 +184,13 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           {
             method: 'PUT',
             body: JSON.stringify({
-              primaryAsset: formData.primaryAsset,
-              secondaryAsset: formData.secondaryAsset,
-              tertiaryAsset: formData.tertiaryAsset,
+              ...(isMemecoins
+                ? { signal: formData.signalText.trim() }
+                : {
+                    primaryAsset: formData.primaryAsset,
+                    secondaryAsset: formData.secondaryAsset,
+                    tertiaryAsset: formData.tertiaryAsset,
+                  }),
               executiveSummary: formData.executiveSummary.trim() || undefined,
               associatedData: formData.associatedData.trim() || undefined,
             }),
@@ -183,9 +222,13 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         const requestBody = {
           tier,
           ...(tier === 'T2' && category ? { category } : {}),
-          primaryAsset: formData.primaryAsset,
-          secondaryAsset: formData.secondaryAsset,
-          tertiaryAsset: formData.tertiaryAsset,
+          ...(isMemecoins
+            ? { signal: formData.signalText.trim() }
+            : {
+                primaryAsset: formData.primaryAsset,
+                secondaryAsset: formData.secondaryAsset,
+                tertiaryAsset: formData.tertiaryAsset,
+              }),
           executiveSummary: formData.executiveSummary.trim() || undefined,
           associatedData: formData.associatedData.trim() || undefined,
         }
@@ -209,6 +252,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         setUploadStatus('success')
         setFormData({
           ...getAssetDefaults(),
+          signalText: '',
           executiveSummary: '',
           associatedData: '',
         })
@@ -240,65 +284,83 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Asset Selection */}
-        <div className="space-y-4">
+        {isMemecoins ? (
           <div className="space-y-2">
-            <Label htmlFor={`primary-asset-${tier}`}>Primary Asset *</Label>
-            <Select
-              id={`primary-asset-${tier}`}
-              value={formData.primaryAsset}
-              onChange={(e) => setFormData({ ...formData, primaryAsset: e.target.value })}
-              disabled={isUploading}
+            <Label htmlFor={`signal-text-${tier}`}>Allocation *</Label>
+            <Textarea
+              id={`signal-text-${tier}`}
+              value={formData.signalText}
+              onChange={(e) => setFormData({ ...formData, signalText: e.target.value })}
+              placeholder="Enter the memecoin allocation update..."
               required
-            >
-              <option value="" disabled>Select primary asset</option>
-              {portfolioAssets.map((asset) => (
-                <option key={asset} value={asset}>
-                  {asset}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={`secondary-asset-${tier}`}>Secondary Asset *</Label>
-            <Select
-              id={`secondary-asset-${tier}`}
-              value={formData.secondaryAsset}
-              onChange={(e) => setFormData({ ...formData, secondaryAsset: e.target.value })}
               disabled={isUploading}
-              required
-            >
-              <option value="" disabled>Select secondary asset</option>
-              {portfolioAssets.map((asset) => (
-                <option key={asset} value={asset}>
-                  {asset}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={`tertiary-asset-${tier}`}>Tertiary Asset *</Label>
-            <Select
-              id={`tertiary-asset-${tier}`}
-              value={formData.tertiaryAsset}
-              onChange={(e) => setFormData({ ...formData, tertiaryAsset: e.target.value })}
-              disabled={isUploading}
-              required
-            >
-              <option value="" disabled>Select tertiary asset</option>
-              {portfolioAssets.map((asset) => (
-                <option key={asset} value={asset}>
-                  {asset}
-                </option>
-              ))}
-            </Select>
+              maxLength={500}
+              rows={3}
+            />
             <p className="text-xs text-slate-500">
-              Select the primary, secondary, and tertiary assets for allocation splits
+              Provide the allocation update for memecoins
             </p>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor={`primary-asset-${tier}`}>Primary Asset *</Label>
+              <Select
+                id={`primary-asset-${tier}`}
+                value={formData.primaryAsset}
+                onChange={(e) => setFormData({ ...formData, primaryAsset: e.target.value })}
+                disabled={isUploading}
+                required
+              >
+                <option value="" disabled>Select primary asset</option>
+                {portfolioAssets.map((asset) => (
+                  <option key={asset} value={asset}>
+                    {asset}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`secondary-asset-${tier}`}>Secondary Asset *</Label>
+              <Select
+                id={`secondary-asset-${tier}`}
+                value={formData.secondaryAsset}
+                onChange={(e) => setFormData({ ...formData, secondaryAsset: e.target.value })}
+                disabled={isUploading}
+                required
+              >
+                <option value="" disabled>Select secondary asset</option>
+                {portfolioAssets.map((asset) => (
+                  <option key={asset} value={asset}>
+                    {asset}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`tertiary-asset-${tier}`}>Tertiary Asset *</Label>
+              <Select
+                id={`tertiary-asset-${tier}`}
+                value={formData.tertiaryAsset}
+                onChange={(e) => setFormData({ ...formData, tertiaryAsset: e.target.value })}
+                disabled={isUploading}
+                required
+              >
+                <option value="" disabled>Select tertiary asset</option>
+                {portfolioAssets.map((asset) => (
+                  <option key={asset} value={asset}>
+                    {asset}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-xs text-slate-500">
+                Select the primary, secondary, and tertiary assets for allocation splits
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Executive Summary */}
         <div className="space-y-2">
@@ -354,7 +416,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
               <span className="text-xs text-slate-500">Preview</span>
             </div>
 
-            {hasPreviewAssets ? (
+            {!isMemecoins && hasPreviewAssets ? (
               <div className="mb-4">
                 <h5 className="text-sm font-semibold text-slate-900 mb-2">Allocation Split:</h5>
                 <div className="space-y-2 text-sm text-slate-800">
@@ -369,6 +431,13 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
                     </div>
                   ))}
                 </div>
+              </div>
+            ) : isMemecoins ? (
+              <div className="mb-4">
+                <h5 className="text-sm font-semibold text-slate-900 mb-2">Update:</h5>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                  {formData.signalText.trim() || 'Enter the memecoin allocation update to preview.'}
+                </p>
               </div>
             ) : (
               <p className="text-sm text-slate-500 mb-4">
@@ -413,9 +482,11 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-6 text-lg"
           disabled={
             isUploading ||
-            !formData.primaryAsset ||
-            !formData.secondaryAsset ||
-            !formData.tertiaryAsset
+            (isMemecoins
+              ? !formData.signalText.trim()
+              : !formData.primaryAsset ||
+                !formData.secondaryAsset ||
+                !formData.tertiaryAsset)
           }
         >
           {isUploading 

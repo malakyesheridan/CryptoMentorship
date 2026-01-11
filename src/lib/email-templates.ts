@@ -50,13 +50,16 @@ function generateUpdateSection(signal: DailySignal): string {
   
     const tierColor = tierColors[signal.tier]
     const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
-    const allocationAssets = signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset
-      ? {
-          primaryAsset: signal.primaryAsset as PortfolioAsset,
-          secondaryAsset: signal.secondaryAsset as PortfolioAsset,
-          tertiaryAsset: signal.tertiaryAsset as PortfolioAsset,
-        }
-      : parseAllocationAssets(signal.signal)
+    const isMemecoins = signal.category === 'memecoins'
+    const allocationAssets = !isMemecoins
+      ? signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset
+        ? {
+            primaryAsset: signal.primaryAsset as PortfolioAsset,
+            secondaryAsset: signal.secondaryAsset as PortfolioAsset,
+            tertiaryAsset: signal.tertiaryAsset as PortfolioAsset,
+          }
+        : parseAllocationAssets(signal.signal)
+      : null
     const allocationHtml = allocationAssets
       ? (() => {
           const splits = buildAllocationSplits(
@@ -251,13 +254,16 @@ export async function sendDailySignalEmail({
     
     let text = `Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel}\n`
     text += `Published: ${formatDate(new Date(signal.publishedAt), 'short')}\n\n`
-    const allocationAssets = signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset
-      ? {
-          primaryAsset: signal.primaryAsset as PortfolioAsset,
-          secondaryAsset: signal.secondaryAsset as PortfolioAsset,
-          tertiaryAsset: signal.tertiaryAsset as PortfolioAsset,
-        }
-      : parseAllocationAssets(signal.signal)
+    const isMemecoins = signal.category === 'memecoins'
+    const allocationAssets = !isMemecoins
+      ? signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset
+        ? {
+            primaryAsset: signal.primaryAsset as PortfolioAsset,
+            secondaryAsset: signal.secondaryAsset as PortfolioAsset,
+            tertiaryAsset: signal.tertiaryAsset as PortfolioAsset,
+          }
+        : parseAllocationAssets(signal.signal)
+      : null
     if (allocationAssets) {
       const splits = buildAllocationSplits(
         allocationAssets.primaryAsset,
