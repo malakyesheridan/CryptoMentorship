@@ -8,7 +8,7 @@ import { Zap, TrendingUp, AlertCircle, Lock, Edit } from 'lucide-react'
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { CalendarDatePicker } from './CalendarDatePicker'
-import { buildAllocationSplits, type PortfolioAsset } from '@/lib/portfolio-assets'
+import { buildAllocationSplits, parseAllocationAssets, type PortfolioAsset } from '@/lib/portfolio-assets'
 
 interface DailySignal {
   id: string
@@ -198,16 +198,22 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   
   const currentSignal = getCurrentSignal()
   const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive, userRole) : false
-  const hasAllocation = Boolean(
-    currentSignal?.primaryAsset &&
-    currentSignal?.secondaryAsset &&
-    currentSignal?.tertiaryAsset
-  )
-  const allocationSplits = hasAllocation && currentSignal
+  const allocationAssets = currentSignal
+    ? currentSignal.primaryAsset &&
+      currentSignal.secondaryAsset &&
+      currentSignal.tertiaryAsset
+      ? {
+          primaryAsset: currentSignal.primaryAsset as PortfolioAsset,
+          secondaryAsset: currentSignal.secondaryAsset as PortfolioAsset,
+          tertiaryAsset: currentSignal.tertiaryAsset as PortfolioAsset,
+        }
+      : parseAllocationAssets(currentSignal.signal)
+    : null
+  const allocationSplits = allocationAssets
     ? buildAllocationSplits(
-        currentSignal.primaryAsset as PortfolioAsset,
-        currentSignal.secondaryAsset as PortfolioAsset,
-        currentSignal.tertiaryAsset as PortfolioAsset
+        allocationAssets.primaryAsset,
+        allocationAssets.secondaryAsset,
+        allocationAssets.tertiaryAsset
       )
     : []
 
@@ -333,7 +339,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                 </div>
 
                 {/* Allocation Split */}
-                {hasAllocation ? (
+                {allocationSplits.length > 0 ? (
                   <div className="mb-4">
                     <h4 className="font-bold text-slate-900 mb-2">Allocation Split:</h4>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">

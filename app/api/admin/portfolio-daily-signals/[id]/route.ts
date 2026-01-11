@@ -45,9 +45,6 @@ export async function PUT(
       where: { id: params.id },
       data: {
         signal: formatAllocationSignal(data.primaryAsset, data.secondaryAsset, data.tertiaryAsset),
-        primaryAsset: data.primaryAsset,
-        secondaryAsset: data.secondaryAsset,
-        tertiaryAsset: data.tertiaryAsset,
         ...(data.executiveSummary !== undefined && { 
           executiveSummary: data.executiveSummary.trim() || null 
         }),

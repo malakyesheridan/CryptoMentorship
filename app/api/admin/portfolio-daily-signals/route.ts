@@ -123,9 +123,6 @@ export async function POST(request: NextRequest) {
     const createData: any = {
       tier: data.tier,
       signal: formatAllocationSignal(data.primaryAsset, data.secondaryAsset, data.tertiaryAsset),
-      primaryAsset: data.primaryAsset,
-      secondaryAsset: data.secondaryAsset,
-      tertiaryAsset: data.tertiaryAsset,
       executiveSummary: data.executiveSummary || null,
       associatedData: data.associatedData || null,
       createdById: session.user.id

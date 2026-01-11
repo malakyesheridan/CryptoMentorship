@@ -1,6 +1,6 @@
 import { sendEmail } from './email'
 import { formatDate } from './dates'
-import { buildAllocationSplits, type PortfolioAsset } from './portfolio-assets'
+import { buildAllocationSplits, parseAllocationAssets, type PortfolioAsset } from './portfolio-assets'
 
 /**
  * Escape HTML to prevent XSS in email templates
@@ -50,13 +50,19 @@ function generateUpdateSection(signal: DailySignal): string {
   
     const tierColor = tierColors[signal.tier]
     const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
-    const hasAllocation = Boolean(signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset)
-    const allocationHtml = hasAllocation
+    const allocationAssets = signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset
+      ? {
+          primaryAsset: signal.primaryAsset as PortfolioAsset,
+          secondaryAsset: signal.secondaryAsset as PortfolioAsset,
+          tertiaryAsset: signal.tertiaryAsset as PortfolioAsset,
+        }
+      : parseAllocationAssets(signal.signal)
+    const allocationHtml = allocationAssets
       ? (() => {
           const splits = buildAllocationSplits(
-            signal.primaryAsset as PortfolioAsset,
-            signal.secondaryAsset as PortfolioAsset,
-            signal.tertiaryAsset as PortfolioAsset
+            allocationAssets.primaryAsset,
+            allocationAssets.secondaryAsset,
+            allocationAssets.tertiaryAsset
           )
           const splitRows = splits
             .map(
@@ -245,12 +251,18 @@ export async function sendDailySignalEmail({
     
     let text = `Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel}\n`
     text += `Published: ${formatDate(new Date(signal.publishedAt), 'short')}\n\n`
-    const hasAllocation = Boolean(signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset)
-    if (hasAllocation) {
+    const allocationAssets = signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset
+      ? {
+          primaryAsset: signal.primaryAsset as PortfolioAsset,
+          secondaryAsset: signal.secondaryAsset as PortfolioAsset,
+          tertiaryAsset: signal.tertiaryAsset as PortfolioAsset,
+        }
+      : parseAllocationAssets(signal.signal)
+    if (allocationAssets) {
       const splits = buildAllocationSplits(
-        signal.primaryAsset as PortfolioAsset,
-        signal.secondaryAsset as PortfolioAsset,
-        signal.tertiaryAsset as PortfolioAsset
+        allocationAssets.primaryAsset,
+        allocationAssets.secondaryAsset,
+        allocationAssets.tertiaryAsset
       )
       const allocationLines = splits
         .map((split) => `${split.label}: ${split.allocations.map((allocation) => `${allocation.percent}% ${allocation.asset}`).join(' / ')}`)

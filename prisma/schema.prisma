@@ -628,9 +628,6 @@ model PortfolioDailySignal {
   tier             String // 'T1' | 'T2' | 'T3'
   category         String? // 'majors' | 'memecoins' (only for T3)
   signal           String // Main signal text (e.g., "100% Cash")
-  primaryAsset     String? // Primary major asset for allocation splits
-  secondaryAsset   String? // Secondary major asset for allocation splits
-  tertiaryAsset    String? // Tertiary major asset for allocation splits
   executiveSummary String? // Executive summary text
   associatedData   String? // Associated data/conditions (JSON string)
   publishedAt      DateTime @default(now())
