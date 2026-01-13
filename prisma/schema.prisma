@@ -103,6 +103,7 @@ model User {
   dashboardSettingsUpdated DashboardSetting[]
   allocationSnapshotsUpdated AllocationSnapshot[]
   changeLogEventsCreated ChangeLogEvent[]
+  roiDashboardSnapshotsUpdated RoiDashboardSnapshot[]
 
   @@index([email])
   @@index([role])
