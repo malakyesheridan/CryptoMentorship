@@ -41,7 +41,7 @@ async function ingestPrices(symbols: string[], startDate: string, endDate: strin
   if (symbols.length === 0) return
   const closesBySymbol = await getDailyCloses(symbols, startDate, endDate)
 
-  for (const [symbol, closes] of closesBySymbol.entries()) {
+  for (const [symbol, closes] of Array.from(closesBySymbol.entries())) {
     if (closes.length === 0) continue
     const source = symbol === 'CASH' ? 'cash' : 'coingecko'
     for (const close of closes) {
@@ -81,7 +81,7 @@ function fillPricesForDates(
     rowsBySymbol.set(row.symbol, existing)
   }
 
-  for (const [symbol, entries] of rowsBySymbol.entries()) {
+  for (const [symbol, entries] of Array.from(rowsBySymbol.entries())) {
     entries.sort((a, b) => (a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : 0))
   }
 
