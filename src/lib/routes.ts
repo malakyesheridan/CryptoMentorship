@@ -189,7 +189,8 @@ export const routes = {
     },
 
     roi: {
-      dashboard: () => '/api/roi/dashboard'
+      dashboard: () => '/api/roi/dashboard',
+      portfolio: () => '/api/roi'
     },
     
     // Certificates
@@ -202,6 +203,7 @@ export const routes = {
       eventReminders: () => '/api/cron/event-reminders',
       publish: () => '/api/cron/publish',
       cohortReleases: () => '/api/cron/cohort-releases',
+      portfolioRoi: () => '/api/cron/portfolio-roi',
       fastForward: () => '/api/cron/dev/fast-forward'
     }
   }

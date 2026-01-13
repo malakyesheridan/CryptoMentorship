@@ -5,13 +5,16 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
 import { logger } from '@/lib/logger'
-import { formatAllocationSignal, portfolioAssets } from '@/lib/portfolio-assets'
+import { formatAllocationSignal, parseAllocationAssets, portfolioAssets } from '@/lib/portfolio-assets'
+import { deriveAllocations } from '@/lib/portfolio/deriveAllocations'
+import { buildPortfolioKey } from '@/lib/portfolio/portfolio-key'
 
 export const dynamic = 'force-dynamic'
 
 const createDailySignalSchema = z.object({
   tier: z.enum(['T1', 'T2']),
   category: z.enum(['majors', 'memecoins']).optional(),
+  riskProfile: z.enum(['AGGRESSIVE', 'SEMI', 'CONSERVATIVE']),
   signal: z.string().optional(),
   primaryAsset: z.enum(portfolioAssets).optional(),
   secondaryAsset: z.enum(portfolioAssets).optional(),
@@ -148,6 +151,7 @@ export async function POST(request: NextRequest) {
 
     const createData: any = {
       tier: data.tier,
+      riskProfile: data.riskProfile,
       signal: signalValue,
       executiveSummary: data.executiveSummary || null,
       associatedData: data.associatedData || null,
@@ -175,22 +179,120 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Send email notifications - await to ensure completion
-    // This blocks the API response but ensures emails are sent reliably
-    try {
-      await sendSignalEmails(signal.id)
+    const portfolioKey = buildPortfolioKey({
+      tier: signal.tier,
+      category: signal.category,
+      riskProfile: signal.riskProfile
+    })
+    const publishedAt = signal.publishedAt
+    const asOfDate = new Date(Date.UTC(
+      publishedAt.getUTCFullYear(),
+      publishedAt.getUTCMonth(),
+      publishedAt.getUTCDate()
+    ))
+
+    const allocationAssets = parseAllocationAssets(signal.signal)
+    if (allocationAssets) {
+      try {
+        const allocations = deriveAllocations(signal.riskProfile, {
+          primary: allocationAssets.primaryAsset,
+          secondary: allocationAssets.secondaryAsset,
+          tertiary: allocationAssets.tertiaryAsset
+        })
+
+        await prisma.allocationSnapshot.upsert({
+          where: {
+            portfolioKey_asOfDate: {
+              portfolioKey,
+              asOfDate
+            }
+          },
+          update: {
+            items: allocations.map((allocation) => ({
+              asset: allocation.symbol,
+              weight: allocation.weight
+            })),
+            cashWeight: 0,
+            updatedByUserId: session.user.id
+          },
+          create: {
+            portfolioKey,
+            asOfDate,
+            items: allocations.map((allocation) => ({
+              asset: allocation.symbol,
+              weight: allocation.weight
+            })),
+            cashWeight: 0,
+            updatedByUserId: session.user.id
+          }
+        })
+
+        const recomputeFromDate = new Date(asOfDate)
+        recomputeFromDate.setUTCDate(recomputeFromDate.getUTCDate() - 2)
+
+        const existingSnapshot = await prisma.roiDashboardSnapshot.findUnique({
+          where: {
+            scope_portfolioKey: {
+              scope: 'PORTFOLIO',
+              portfolioKey
+            }
+          }
+        })
+
+        const nextRecomputeFromDate = existingSnapshot?.recomputeFromDate
+          ? (existingSnapshot.recomputeFromDate < recomputeFromDate ? existingSnapshot.recomputeFromDate : recomputeFromDate)
+          : recomputeFromDate
+
+        await prisma.roiDashboardSnapshot.upsert({
+          where: {
+            scope_portfolioKey: {
+              scope: 'PORTFOLIO',
+              portfolioKey
+            }
+          },
+          update: {
+            needsRecompute: true,
+            recomputeFromDate: nextRecomputeFromDate,
+            updatedByUserId: session.user.id
+          },
+          create: {
+            scope: 'PORTFOLIO',
+            portfolioKey,
+            cacheKey: portfolioKey,
+            payload: '{}',
+            needsRecompute: true,
+            recomputeFromDate: nextRecomputeFromDate,
+            updatedByUserId: session.user.id
+          }
+        })
+      } catch (error) {
+        logger.error('Failed to derive allocations for update', error instanceof Error ? error : new Error(String(error)), {
+          signalId: signal.id,
+          tier: signal.tier,
+          category: signal.category
+        })
+      }
+    } else {
+      logger.warn('Allocation assets missing for update; skipping model recompute mark', {
+        signalId: signal.id,
+        tier: signal.tier,
+        category: signal.category
+      })
+    }
+
+    // Send email notifications without blocking the response
+    void sendSignalEmails(signal.id).then(() => {
       logger.info('Email sending completed successfully', {
         signalId: signal.id,
         tier: signal.tier,
       })
-    } catch (error) {
-      // Log error but don't fail the API response
+    }).catch((error) => {
       logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: signal.id,
         tier: signal.tier,
       })
       console.error('[POST] Failed to send update emails:', error)
-    }
+    })
 
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {

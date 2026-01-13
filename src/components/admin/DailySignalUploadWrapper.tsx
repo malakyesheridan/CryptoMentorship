@@ -17,6 +17,7 @@ interface DailySignalUploadWrapperProps {
     primaryAsset?: string | null
     secondaryAsset?: string | null
     tertiaryAsset?: string | null
+    riskProfile?: 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE' | null
     executiveSummary?: string | null
     associatedData?: string | null
   } | null
@@ -157,6 +158,7 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
                 primaryAsset: editingSignal.primaryAsset,
                 secondaryAsset: editingSignal.secondaryAsset,
                 tertiaryAsset: editingSignal.tertiaryAsset,
+                riskProfile: editingSignal.riskProfile,
                 executiveSummary: editingSignal.executiveSummary,
                 associatedData: editingSignal.associatedData,
               }

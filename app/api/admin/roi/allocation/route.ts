@@ -20,8 +20,9 @@ const WEIGHT_TOLERANCE = 0.005
 export async function GET() {
   try {
     await requireRoleAPI(['admin'])
-    const allocation = await prisma.allocationSnapshot.findUnique({
-      where: { id: 'allocation_snapshot' }
+    const allocation = await prisma.allocationSnapshot.findFirst({
+      where: { portfolioKey: 'dashboard' },
+      orderBy: { asOfDate: 'desc' }
     })
 
     if (!allocation) {
@@ -59,15 +60,19 @@ export async function POST(request: Request) {
     }
 
     const allocation = await prisma.allocationSnapshot.upsert({
-      where: { id: 'allocation_snapshot' },
+      where: {
+        portfolioKey_asOfDate: {
+          portfolioKey: 'dashboard',
+          asOfDate
+        }
+      },
       update: {
-        asOfDate,
         cashWeight: data.cashWeight,
         items: data.items,
         updatedByUserId: user.id
       },
       create: {
-        id: 'allocation_snapshot',
+        portfolioKey: 'dashboard',
         asOfDate,
         cashWeight: data.cashWeight,
         items: data.items,

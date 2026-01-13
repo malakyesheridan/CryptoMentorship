@@ -22,23 +22,27 @@ export async function POST(request: Request) {
     }
 
     if (data.replaceExisting) {
-      await prisma.performanceSeries.deleteMany({ where: { seriesType: data.seriesType } })
+      await prisma.performanceSeries.deleteMany({
+        where: { seriesType: data.seriesType, portfolioKey: 'dashboard' }
+      })
     }
 
     await prisma.$transaction(
       parsed.points.map((point) =>
         prisma.performanceSeries.upsert({
           where: {
-            seriesType_date: {
+            seriesType_date_portfolioKey: {
               seriesType: data.seriesType,
-              date: new Date(`${point.date}T00:00:00.000Z`)
+              date: new Date(`${point.date}T00:00:00.000Z`),
+              portfolioKey: 'dashboard'
             }
           },
           update: { value: point.value },
           create: {
             seriesType: data.seriesType,
             date: new Date(`${point.date}T00:00:00.000Z`),
-            value: point.value
+            value: point.value,
+            portfolioKey: 'dashboard'
           }
         })
       )

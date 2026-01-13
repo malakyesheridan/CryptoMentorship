@@ -33,46 +33,52 @@ export async function seedRoiDashboard() {
   for (const point of seriesData) {
     await prisma.performanceSeries.upsert({
       where: {
-        seriesType_date: {
+        seriesType_date_portfolioKey: {
           seriesType: 'MODEL',
-          date: point.date
+          date: point.date,
+          portfolioKey: 'dashboard'
         }
       },
       update: { value: new Decimal(point.model.toFixed(6)) },
       create: {
         seriesType: 'MODEL',
         date: point.date,
-        value: new Decimal(point.model.toFixed(6))
+        value: new Decimal(point.model.toFixed(6)),
+        portfolioKey: 'dashboard'
       }
     })
 
     await prisma.performanceSeries.upsert({
       where: {
-        seriesType_date: {
+        seriesType_date_portfolioKey: {
           seriesType: 'BTC',
-          date: point.date
+          date: point.date,
+          portfolioKey: 'dashboard'
         }
       },
       update: { value: new Decimal(point.btc.toFixed(6)) },
       create: {
         seriesType: 'BTC',
         date: point.date,
-        value: new Decimal(point.btc.toFixed(6))
+        value: new Decimal(point.btc.toFixed(6)),
+        portfolioKey: 'dashboard'
       }
     })
 
     await prisma.performanceSeries.upsert({
       where: {
-        seriesType_date: {
+        seriesType_date_portfolioKey: {
           seriesType: 'ETH',
-          date: point.date
+          date: point.date,
+          portfolioKey: 'dashboard'
         }
       },
       update: { value: new Decimal(point.eth.toFixed(6)) },
       create: {
         seriesType: 'ETH',
         date: point.date,
-        value: new Decimal(point.eth.toFixed(6))
+        value: new Decimal(point.eth.toFixed(6)),
+        portfolioKey: 'dashboard'
       }
     })
   }
@@ -103,9 +109,13 @@ export async function seedRoiDashboard() {
   })
 
   await prisma.allocationSnapshot.upsert({
-    where: { id: 'allocation_snapshot' },
+    where: {
+      portfolioKey_asOfDate: {
+        portfolioKey: 'dashboard',
+        asOfDate: today
+      }
+    },
     update: {
-      asOfDate: today,
       cashWeight: new Decimal('0.15'),
       items: [
         { asset: 'BTC', weight: 0.45 },
@@ -115,7 +125,7 @@ export async function seedRoiDashboard() {
       updatedByUserId: admin.id
     },
     create: {
-      id: 'allocation_snapshot',
+      portfolioKey: 'dashboard',
       asOfDate: today,
       cashWeight: new Decimal('0.15'),
       items: [

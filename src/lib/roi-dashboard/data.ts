@@ -114,12 +114,16 @@ function mapChangeLogEvents(records: Array<any>): ChangeLogEvent[] {
 export async function getRoiDashboardPayload(options?: { forceRefresh?: boolean }): Promise<RoiDashboardPayload> {
   const [settingsRecord, allocationRecord, changeLogLatest, seriesMeta] = await Promise.all([
     prisma.dashboardSetting.findUnique({ where: { id: 'dashboard_settings' } }),
-    prisma.allocationSnapshot.findUnique({ where: { id: 'allocation_snapshot' } }),
+    prisma.allocationSnapshot.findFirst({
+      where: { portfolioKey: 'dashboard' },
+      orderBy: { asOfDate: 'desc' }
+    }),
     prisma.changeLogEvent.findFirst({ orderBy: { updatedAt: 'desc' } }),
     prisma.performanceSeries.groupBy({
       by: ['seriesType'],
       _count: { _all: true },
-      _max: { updatedAt: true }
+      _max: { updatedAt: true },
+      where: { portfolioKey: 'dashboard' }
     })
   ])
 
@@ -146,7 +150,7 @@ export async function getRoiDashboardPayload(options?: { forceRefresh?: boolean 
   }
 
   const seriesRows = await prisma.performanceSeries.findMany({
-    where: { seriesType: { in: ['MODEL', 'BTC', 'ETH'] } },
+    where: { seriesType: { in: ['MODEL', 'BTC', 'ETH'] }, portfolioKey: 'dashboard' },
     orderBy: { date: 'asc' }
   })
   const series = mapSeriesRows(seriesRows)
@@ -233,5 +237,5 @@ export async function getRoiDashboardPayload(options?: { forceRefresh?: boolean 
 }
 
 export async function invalidateRoiDashboardCache() {
-  await prisma.roiDashboardSnapshot.deleteMany({})
+  await prisma.roiDashboardSnapshot.deleteMany({ where: { scope: CACHE_SCOPE } })
 }

@@ -1,22 +1,14 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { SubscriptionGuard } from '@/components/SubscriptionGuard'
-import { getRoiDashboardPayload } from '@/lib/roi-dashboard'
-import { RoiDashboard } from '@/components/roi-dashboard/RoiDashboard'
 import TradingViewWrapper from '@/components/signals/TradingViewWrapper'
+import { PortfolioRoiPanel } from '@/components/roi-dashboard/PortfolioRoiPanel'
 
 // Revalidate every 5 minutes - dashboard is mostly static
 export const revalidate = 300
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
-  let roiPayload = null
-
-  try {
-    roiPayload = await getRoiDashboardPayload()
-  } catch (error) {
-    console.error('Failed to load ROI dashboard payload', error)
-  }
   
   // Check subscription for dashboard access
   // ✅ OPTIMIZED: Admins bypass, others checked via client-side (non-blocking)
@@ -54,13 +46,7 @@ export default async function DashboardPage() {
               Snapshot of model performance, benchmarks, and allocation updates.
             </p>
           </div>
-          {roiPayload ? (
-            <RoiDashboard payload={roiPayload} />
-          ) : (
-            <div className="card p-6 text-center text-slate-500">
-              ROI data is not available yet. Please check back soon.
-            </div>
-          )}
+          <PortfolioRoiPanel />
         </div>
 
         {/* TradingView Chart */}

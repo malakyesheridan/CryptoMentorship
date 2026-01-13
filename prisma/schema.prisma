@@ -11,6 +11,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum RiskProfile {
+  AGGRESSIVE
+  SEMI
+  CONSERVATIVE
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -627,6 +633,7 @@ model PortfolioDailySignal {
   id               String   @id @default(cuid())
   tier             String // 'T1' | 'T2' | 'T3'
   category         String? // 'majors' | 'memecoins' (only for T3)
+  riskProfile      RiskProfile @default(CONSERVATIVE)
   signal           String // Main signal text (e.g., "100% Cash")
   executiveSummary String? // Executive summary text
   associatedData   String? // Associated data/conditions (JSON string)
@@ -674,27 +681,45 @@ model DashboardSetting {
 model PerformanceSeries {
   id         String   @id @default(cuid())
   seriesType String
+  portfolioKey String @default("dashboard")
   date       DateTime
   value      Decimal
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([seriesType, date])
+  @@unique([seriesType, date, portfolioKey])
   @@index([seriesType, date])
+  @@index([portfolioKey, date])
 }
 
 model AllocationSnapshot {
-  id              String   @id @default("allocation_snapshot")
+  id              String   @id @default(cuid())
+  portfolioKey    String
   asOfDate        DateTime
   items           Json
-  cashWeight      Decimal
+  cashWeight      Decimal  @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   updatedByUserId String?
 
   updatedByUser User? @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)
 
+  @@unique([portfolioKey, asOfDate])
+  @@index([portfolioKey, asOfDate])
   @@index([updatedAt])
+}
+
+model AssetPriceDaily {
+  id        String   @id @default(cuid())
+  symbol    String
+  date      DateTime
+  close     Decimal
+  source    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([symbol, date])
+  @@index([symbol, date])
 }
 
 model ChangeLogEvent {
@@ -714,14 +739,30 @@ model ChangeLogEvent {
 }
 
 model RoiDashboardSnapshot {
-  id        String   @id @default(cuid())
-  scope     String
-  cacheKey  String
-  payload   String
-  createdAt DateTime @default(now())
+  id                String   @id @default(cuid())
+  scope             String
+  cacheKey          String
+  payload           String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  portfolioKey      String?
+  needsRecompute    Boolean  @default(false)
+  recomputeFromDate DateTime?
+  asOfDate          DateTime?
+  roiInception      Decimal?
+  roi30d            Decimal?
+  maxDrawdown       Decimal?
+  volatility        Decimal?
+  lastComputedAt    DateTime?
+  updatedByUserId   String?
+
+  updatedByUser User? @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)
 
   @@index([scope, cacheKey])
   @@index([createdAt])
+  @@index([portfolioKey])
+  @@index([needsRecompute])
+  @@unique([scope, portfolioKey])
 }
 
 model Track {

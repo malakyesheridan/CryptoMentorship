@@ -37,6 +37,7 @@ export async function PUT(
         where: {
           seriesType: existing.seriesType,
           date: parsedDate,
+          portfolioKey: 'dashboard',
           NOT: { id: existing.id }
         }
       })

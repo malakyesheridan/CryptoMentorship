@@ -25,9 +25,9 @@ export async function GET(request: Request) {
     const skip = (page - 1) * pageSize
 
     const [total, rows] = await Promise.all([
-      prisma.performanceSeries.count({ where: { seriesType } }),
+      prisma.performanceSeries.count({ where: { seriesType, portfolioKey: 'dashboard' } }),
       prisma.performanceSeries.findMany({
-        where: { seriesType },
+        where: { seriesType, portfolioKey: 'dashboard' },
         orderBy: { date: 'desc' },
         skip,
         take: pageSize
@@ -67,16 +67,18 @@ export async function POST(request: Request) {
 
     const record = await prisma.performanceSeries.upsert({
       where: {
-        seriesType_date: {
+        seriesType_date_portfolioKey: {
           seriesType: data.seriesType,
-          date
+          date,
+          portfolioKey: 'dashboard'
         }
       },
       update: { value: data.value },
       create: {
         seriesType: data.seriesType,
         date,
-        value: data.value
+        value: data.value,
+        portfolioKey: 'dashboard'
       }
     })
 
