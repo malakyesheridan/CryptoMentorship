@@ -18,7 +18,6 @@ interface DailySignal {
   primaryAsset?: string | null
   secondaryAsset?: string | null
   tertiaryAsset?: string | null
-  riskProfile?: 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE' | null
   executiveSummary?: string | null
   associatedData?: string | null
   publishedAt: string

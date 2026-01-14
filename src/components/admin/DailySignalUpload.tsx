@@ -15,13 +15,13 @@ interface DailySignalUploadProps {
   tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins'
   userRole?: string
+  formIdPrefix?: string
   existingSignal?: {
     id: string
     signal: string
     primaryAsset?: string | null
     secondaryAsset?: string | null
     tertiaryAsset?: string | null
-    riskProfile?: 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE' | null
     executiveSummary?: string | null
     associatedData?: string | null
   }
@@ -33,13 +33,7 @@ const tierLabels = {
   T2: 'Elite',
 }
 
-const riskProfileLabels: Record<'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE', string> = {
-  AGGRESSIVE: 'Aggressive',
-  SEMI: 'Semi Aggressive',
-  CONSERVATIVE: 'Conservative',
-}
-
-export default function DailySignalUpload({ tier, category, userRole, existingSignal, onEditComplete }: DailySignalUploadProps) {
+export default function DailySignalUpload({ tier, category, userRole, formIdPrefix, existingSignal, onEditComplete }: DailySignalUploadProps) {
   const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
@@ -47,6 +41,7 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   const [isEditing, setIsEditing] = useState(!!existingSignal)
   const [showPreview, setShowPreview] = useState(false)
   const isMemecoins = category === 'memecoins'
+  const idPrefix = formIdPrefix ?? `${tier}-${category ?? 'default'}`
 
   const parseAssetsFromSignal = (signal: string): PortfolioAsset[] => {
     if (!signal) return []
@@ -123,7 +118,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
 
   const [formData, setFormData] = useState({
     ...getAssetDefaults(existingSignal),
-    riskProfile: existingSignal?.riskProfile || 'CONSERVATIVE',
     signalText: getSignalTextDefault(existingSignal),
     executiveSummary: existingSignal?.executiveSummary || '',
     associatedData: existingSignal?.associatedData || '',
@@ -147,7 +141,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
     if (existingSignal) {
       setFormData({
         ...getAssetDefaults(existingSignal),
-        riskProfile: existingSignal.riskProfile || 'CONSERVATIVE',
         signalText: getSignalTextDefault(existingSignal),
         executiveSummary: existingSignal.executiveSummary || '',
         associatedData: existingSignal.associatedData || '',
@@ -157,7 +150,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
     } else {
       setFormData({
         ...getAssetDefaults(),
-        riskProfile: 'CONSERVATIVE',
         signalText: '',
         executiveSummary: '',
         associatedData: '',
@@ -169,12 +161,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!formData.riskProfile) {
-      setErrorMessage('Please select a risk profile')
-      setUploadStatus('error')
-      return
-    }
 
     if (isMemecoins) {
       if (!formData.signalText.trim()) {
@@ -200,7 +186,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           {
             method: 'PUT',
             body: JSON.stringify({
-              riskProfile: formData.riskProfile,
               ...(isMemecoins
                 ? { signal: formData.signalText.trim() }
                 : {
@@ -239,7 +224,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         const requestBody = {
           tier,
           ...(tier === 'T2' && category ? { category } : {}),
-          riskProfile: formData.riskProfile,
           ...(isMemecoins
             ? { signal: formData.signalText.trim() }
             : {
@@ -270,7 +254,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         setUploadStatus('success')
         setFormData({
           ...getAssetDefaults(),
-          riskProfile: 'CONSERVATIVE',
           signalText: '',
           executiveSummary: '',
           associatedData: '',
@@ -303,32 +286,11 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor={`risk-profile-${tier}`}>Risk Profile *</Label>
-          <Select
-            id={`risk-profile-${tier}`}
-            value={formData.riskProfile}
-            onChange={(e) => setFormData({ ...formData, riskProfile: e.target.value as 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE' })}
-            disabled={isUploading}
-            required
-          >
-            <option value="" disabled>Select risk profile</option>
-            {Object.entries(riskProfileLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </Select>
-          <p className="text-xs text-slate-500">
-            Determines the allocation weights for the model portfolio
-          </p>
-        </div>
-
         {isMemecoins ? (
           <div className="space-y-2">
-            <Label htmlFor={`signal-text-${tier}`}>Allocation *</Label>
+            <Label htmlFor={`signal-text-${idPrefix}`}>Allocation *</Label>
             <Textarea
-              id={`signal-text-${tier}`}
+              id={`signal-text-${idPrefix}`}
               value={formData.signalText}
               onChange={(e) => setFormData({ ...formData, signalText: e.target.value })}
               placeholder="Enter the memecoin allocation update..."
@@ -344,9 +306,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor={`primary-asset-${tier}`}>Primary Asset *</Label>
+              <Label htmlFor={`primary-asset-${idPrefix}`}>Primary Asset *</Label>
               <Select
-                id={`primary-asset-${tier}`}
+                id={`primary-asset-${idPrefix}`}
                 value={formData.primaryAsset}
                 onChange={(e) => setFormData({ ...formData, primaryAsset: e.target.value })}
                 disabled={isUploading}
@@ -362,9 +324,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={`secondary-asset-${tier}`}>Secondary Asset *</Label>
+              <Label htmlFor={`secondary-asset-${idPrefix}`}>Secondary Asset *</Label>
               <Select
-                id={`secondary-asset-${tier}`}
+                id={`secondary-asset-${idPrefix}`}
                 value={formData.secondaryAsset}
                 onChange={(e) => setFormData({ ...formData, secondaryAsset: e.target.value })}
                 disabled={isUploading}
@@ -380,9 +342,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={`tertiary-asset-${tier}`}>Tertiary Asset *</Label>
+              <Label htmlFor={`tertiary-asset-${idPrefix}`}>Tertiary Asset *</Label>
               <Select
-                id={`tertiary-asset-${tier}`}
+                id={`tertiary-asset-${idPrefix}`}
                 value={formData.tertiaryAsset}
                 onChange={(e) => setFormData({ ...formData, tertiaryAsset: e.target.value })}
                 disabled={isUploading}
@@ -404,9 +366,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
 
         {/* Executive Summary */}
         <div className="space-y-2">
-          <Label htmlFor={`summary-${tier}`}>Executive Summary</Label>
+          <Label htmlFor={`summary-${idPrefix}`}>Executive Summary</Label>
           <Textarea
-            id={`summary-${tier}`}
+            id={`summary-${idPrefix}`}
             value={formData.executiveSummary}
             onChange={(e) => setFormData({ ...formData, executiveSummary: e.target.value })}
             placeholder="Positions will continue to be actively managed. Check in every day, signals will change frequently."
@@ -420,9 +382,9 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
 
         {/* Associated Data */}
         <div className="space-y-2">
-          <Label htmlFor={`data-${tier}`}>Associated Data / Conditions</Label>
+          <Label htmlFor={`data-${idPrefix}`}>Associated Data / Conditions</Label>
           <Textarea
-            id={`data-${tier}`}
+            id={`data-${idPrefix}`}
             value={formData.associatedData}
             onChange={(e) => setFormData({ ...formData, associatedData: e.target.value })}
             placeholder="BTC leverage condition = BTC Leverage Impermissible ❌💀"
@@ -485,13 +447,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
               </p>
             )}
 
-            <div className="mb-4">
-              <h5 className="text-sm font-semibold text-slate-900 mb-2">Risk Profile:</h5>
-              <p className="text-sm text-slate-700">
-                {riskProfileLabels[formData.riskProfile as keyof typeof riskProfileLabels]}
-              </p>
-            </div>
-
             {formData.executiveSummary.trim() && (
               <div className="mb-4">
                 <h5 className="text-sm font-semibold text-slate-900 mb-2">Executive Summary:</h5>
@@ -529,7 +484,6 @@ export default function DailySignalUpload({ tier, category, userRole, existingSi
           className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-6 text-lg"
           disabled={
             isUploading ||
-            !formData.riskProfile ||
             (isMemecoins
               ? !formData.signalText.trim()
               : !formData.primaryAsset ||

@@ -17,7 +17,6 @@ interface DailySignalUploadWrapperProps {
     primaryAsset?: string | null
     secondaryAsset?: string | null
     tertiaryAsset?: string | null
-    riskProfile?: 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE' | null
     executiveSummary?: string | null
     associatedData?: string | null
   } | null
@@ -38,6 +37,16 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
   const [activeTier, setActiveTier] = useState<Tier>('T1')
   const [activeCategory, setActiveCategory] = useState<Category>('majors')
 
+  const mapEditingSignal = (signal: NonNullable<DailySignalUploadWrapperProps['editingSignal']>) => {
+    if (signal.tier === 'T3') {
+      return { tier: 'T2' as Tier, category: signal.category ?? 'majors' }
+    }
+    if (signal.tier === 'T2' && signal.category) {
+      return { tier: 'T2' as Tier, category: signal.category }
+    }
+    return { tier: 'T1' as Tier, category: undefined }
+  }
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -52,21 +61,10 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
   // When editing signal is provided, set the active tier/category and scroll to form
   useEffect(() => {
     if (editingSignal) {
-      // Map old tiers to new tiers
-      let mappedTier: Tier = 'T1'
-      if (editingSignal.tier === 'T3') {
-        mappedTier = 'T2' // Old T3 → new T2 (Elite)
-      } else if (editingSignal.tier === 'T2' && editingSignal.category) {
-        mappedTier = 'T2' // T2 with category → T2 (Elite)
-      } else if (editingSignal.tier === 'T2' && !editingSignal.category) {
-        mappedTier = 'T1' // Old T2 without category → new T1 (Growth)
-      } else if (editingSignal.tier === 'T1') {
-        mappedTier = 'T1' // T1 → T1 (Growth) - explicit handling
-      }
-      
-      setActiveTier(mappedTier)
-      if (mappedTier === 'T2' && editingSignal.category) {
-        setActiveCategory(editingSignal.category)
+      const mapped = mapEditingSignal(editingSignal)
+      setActiveTier(mapped.tier)
+      if (mapped.tier === 'T2' && mapped.category) {
+        setActiveCategory(mapped.category)
       }
       // Scroll to upload section
       setTimeout(() => {
@@ -144,31 +142,44 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
         )}
 
         {/* Active Tab Content */}
-        <DailySignalUpload 
-          tier={activeTier} 
-          category={activeTier === 'T2' ? activeCategory : undefined}
-          userRole={userRole}
-          existingSignal={editingSignal && 
-            ((editingSignal.tier === 'T2' && activeTier === 'T2' && (!editingSignal.category || editingSignal.category === activeCategory)) ||
-             (editingSignal.tier === 'T3' && activeTier === 'T2' && editingSignal.category === activeCategory) ||
-             ((editingSignal.tier === 'T2' || editingSignal.tier === 'T1') && activeTier === 'T1' && !editingSignal.category))
-            ? {
-                id: editingSignal.id,
-                signal: editingSignal.signal,
-                primaryAsset: editingSignal.primaryAsset,
-                secondaryAsset: editingSignal.secondaryAsset,
-                tertiaryAsset: editingSignal.tertiaryAsset,
-                riskProfile: editingSignal.riskProfile,
-                executiveSummary: editingSignal.executiveSummary,
-                associatedData: editingSignal.associatedData,
-              }
-            : undefined}
-          onEditComplete={() => {
-            if (onEditComplete) {
-              onEditComplete()
-            }
-          }}
-        />
+        {([
+          { tier: 'T1' as Tier, category: undefined },
+          { tier: 'T2' as Tier, category: 'majors' as Category },
+          { tier: 'T2' as Tier, category: 'memecoins' as Category },
+        ]).map((form) => {
+          const isActive = activeTier === form.tier && (form.tier !== 'T2' || activeCategory === form.category)
+          const mappedEditing = editingSignal ? mapEditingSignal(editingSignal) : null
+          const shouldHydrate = mappedEditing
+            ? mappedEditing.tier === form.tier && (form.tier !== 'T2' || mappedEditing.category === form.category)
+            : false
+
+          return (
+            <div key={`${form.tier}-${form.category ?? 'default'}`} className={isActive ? 'block' : 'hidden'}>
+              <DailySignalUpload 
+                tier={form.tier}
+                category={form.category}
+                userRole={userRole}
+                formIdPrefix={`${form.tier}-${form.category ?? 'default'}`}
+                existingSignal={editingSignal && shouldHydrate
+                  ? {
+                      id: editingSignal.id,
+                      signal: editingSignal.signal,
+                      primaryAsset: editingSignal.primaryAsset,
+                      secondaryAsset: editingSignal.secondaryAsset,
+                      tertiaryAsset: editingSignal.tertiaryAsset,
+                      executiveSummary: editingSignal.executiveSummary,
+                      associatedData: editingSignal.associatedData,
+                    }
+                  : undefined}
+                onEditComplete={() => {
+                  if (onEditComplete) {
+                    onEditComplete()
+                  }
+                }}
+              />
+            </div>
+          )
+        })}
       </CardContent>
     </Card>
   )

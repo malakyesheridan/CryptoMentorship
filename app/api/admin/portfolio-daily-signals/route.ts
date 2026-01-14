@@ -11,10 +11,22 @@ import { buildPortfolioKey } from '@/lib/portfolio/portfolio-key'
 
 export const dynamic = 'force-dynamic'
 
+type RiskProfile = 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE'
+
+function deriveRiskProfileFromAssets(input: {
+  primaryAsset?: string
+  secondaryAsset?: string
+  tertiaryAsset?: string
+}): RiskProfile {
+  if (input.tertiaryAsset) return 'CONSERVATIVE'
+  if (input.secondaryAsset) return 'SEMI'
+  if (input.primaryAsset) return 'AGGRESSIVE'
+  return 'CONSERVATIVE'
+}
+
 const createDailySignalSchema = z.object({
   tier: z.enum(['T1', 'T2']),
   category: z.enum(['majors', 'memecoins']).optional(),
-  riskProfile: z.enum(['AGGRESSIVE', 'SEMI', 'CONSERVATIVE']),
   signal: z.string().optional(),
   primaryAsset: z.enum(portfolioAssets).optional(),
   secondaryAsset: z.enum(portfolioAssets).optional(),
@@ -143,16 +155,19 @@ export async function POST(request: NextRequest) {
       where: whereClause,
     })
 
-    // Create new update
-    // For T1 (Growth), ensure category is explicitly null (not undefined)
-    const signalValue = data.category === 'memecoins'
-      ? data.signal!.trim()
-      : formatAllocationSignal(data.primaryAsset!, data.secondaryAsset!, data.tertiaryAsset!)
+  // Create new update
+  // For T1 (Growth), ensure category is explicitly null (not undefined)
+  const signalValue = data.category === 'memecoins'
+    ? data.signal!.trim()
+    : formatAllocationSignal(data.primaryAsset!, data.secondaryAsset!, data.tertiaryAsset!)
+  const riskProfile = data.category === 'memecoins'
+    ? 'CONSERVATIVE'
+    : deriveRiskProfileFromAssets(data)
 
-    const createData: any = {
-      tier: data.tier,
-      riskProfile: data.riskProfile,
-      signal: signalValue,
+  const createData: any = {
+    tier: data.tier,
+    riskProfile,
+    signal: signalValue,
       executiveSummary: data.executiveSummary || null,
       associatedData: data.associatedData || null,
       createdById: session.user.id

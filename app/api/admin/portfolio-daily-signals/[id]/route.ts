@@ -11,12 +11,24 @@ import { buildPortfolioKey } from '@/lib/portfolio/portfolio-key'
 
 export const dynamic = 'force-dynamic'
 
+type RiskProfile = 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE'
+
+function deriveRiskProfileFromAssets(input: {
+  primaryAsset?: string
+  secondaryAsset?: string
+  tertiaryAsset?: string
+}): RiskProfile {
+  if (input.tertiaryAsset) return 'CONSERVATIVE'
+  if (input.secondaryAsset) return 'SEMI'
+  if (input.primaryAsset) return 'AGGRESSIVE'
+  return 'CONSERVATIVE'
+}
+
 const updateDailySignalSchema = z.object({
   signal: z.string().optional(),
   primaryAsset: z.enum(portfolioAssets).optional(),
   secondaryAsset: z.enum(portfolioAssets).optional(),
   tertiaryAsset: z.enum(portfolioAssets).optional(),
-  riskProfile: z.enum(['AGGRESSIVE', 'SEMI', 'CONSERVATIVE']).optional(),
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
 })
@@ -46,6 +58,7 @@ export async function PUT(
 
     const isMemecoins = existingSignal.category === 'memecoins'
     let signalValue: string
+    const nextRiskProfile = isMemecoins ? existingSignal.riskProfile : deriveRiskProfileFromAssets(data)
 
     if (isMemecoins) {
       if (!data.signal || !data.signal.trim()) {
@@ -80,7 +93,7 @@ export async function PUT(
       where: { id: params.id },
       data: {
         signal: signalValue,
-        ...(data.riskProfile && { riskProfile: data.riskProfile }),
+        ...(isMemecoins ? {} : { riskProfile: nextRiskProfile }),
         ...(data.executiveSummary !== undefined && { 
           executiveSummary: data.executiveSummary.trim() || null 
         }),
