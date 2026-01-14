@@ -280,19 +280,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Send email notifications without blocking the response
-    void sendSignalEmails(signal.id).then(() => {
+    try {
+      await sendSignalEmails(signal.id)
       logger.info('Email sending completed successfully', {
         signalId: signal.id,
         tier: signal.tier,
       })
-    }).catch((error) => {
+    } catch (error) {
       logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: signal.id,
         tier: signal.tier,
       })
       console.error('[POST] Failed to send update emails:', error)
-    })
+    }
 
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {

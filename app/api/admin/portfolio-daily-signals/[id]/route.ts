@@ -207,20 +207,20 @@ export async function PUT(
       })
     }
 
-    // Send email notifications without blocking the response
     logger.info('Triggering email sending for updated signal', {
       signalId: updatedSignal.id,
       tier: updatedSignal.tier,
       category: updatedSignal.category,
     })
-    
-    void sendSignalEmails(updatedSignal.id).then(() => {
+
+    try {
+      await sendSignalEmails(updatedSignal.id)
       logger.info('Email sending completed successfully', {
         signalId: updatedSignal.id,
         tier: updatedSignal.tier,
         category: updatedSignal.category,
       })
-    }).catch((error) => {
+    } catch (error) {
       logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
         signalId: updatedSignal.id,
         tier: updatedSignal.tier,
@@ -229,7 +229,7 @@ export async function PUT(
         errorStack: error instanceof Error ? error.stack : undefined,
       })
       console.error('[PUT] Failed to send update emails:', error)
-    })
+    }
 
     return NextResponse.json(updatedSignal)
   } catch (error) {

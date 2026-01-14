@@ -57,12 +57,12 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       allUsers = await prisma.user.findMany({
         where: {
           role: { in: ['member', 'editor', 'admin'] },
+          isActive: true,
         },
         include: {
           memberships: {
             where: {
               status: { in: ['active', 'trial'] },
-              currentPeriodEnd: { gte: new Date() }, // Not expired
             },
             orderBy: { createdAt: 'desc' },
             take: 1,
@@ -81,9 +81,12 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     // Filter users by email preferences (we'll check tier access when sending)
     // If user doesn't have preferences, use defaults (email: true, onSignal: true)
     console.log('[sendSignalEmails] Filtering eligible users')
+    const now = new Date()
     const eligibleUsers = allUsers.filter(user => {
-      // Must have active subscription
-      if (user.memberships.length === 0) return false
+      const membership = user.memberships[0]
+      if (!membership) return false
+      if (membership.status !== 'active' && membership.status !== 'trial') return false
+      if (membership.currentPeriodEnd && membership.currentPeriodEnd < now) return false
 
       // Check email preferences
       const prefs = user.notificationPreference

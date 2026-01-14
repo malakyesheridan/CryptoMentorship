@@ -102,8 +102,8 @@ export async function getDailyCloses(
 
     const providerId = COINGECKO_IDS[symbol]
     if (!providerId) {
-      logger.warn('No provider mapping for symbol', { symbol })
-      results.set(symbol, [])
+      logger.warn('No provider mapping for symbol; using flat price series', { symbol })
+      results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
       continue
     }
 
