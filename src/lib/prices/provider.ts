@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger'
 export type DailyClose = { date: string; close: number }
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3'
+const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY
 
 const COINGECKO_IDS: Record<string, string | null> = {
   BTC: 'bitcoin',
@@ -22,6 +23,18 @@ const COINGECKO_IDS: Record<string, string | null> = {
 const MAX_RETRIES = 3
 const BASE_DELAY_MS = 750
 
+function buildRequestHeaders() {
+  const headers: Record<string, string> = { accept: 'application/json' }
+  if (COINGECKO_API_KEY) {
+    headers['x-cg-demo-api-key'] = COINGECKO_API_KEY
+  }
+  return headers
+}
+
+function getProviderId(symbol: string) {
+  return COINGECKO_IDS[symbol] ?? null
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -31,16 +44,32 @@ function toUnixSeconds(date: string, endOfDay = false): number {
   return Math.floor(new Date(`${date}${suffix}`).getTime() / 1000)
 }
 
-async function fetchWithRetry(url: string): Promise<any> {
+async function fetchWithRetry(url: string, meta: { symbol: string; providerId: string }): Promise<any> {
   let attempt = 0
   while (attempt < MAX_RETRIES) {
     attempt += 1
-    const response = await fetch(url, { headers: { accept: 'application/json' } })
+    const response = await fetch(url, { headers: buildRequestHeaders() })
     if (response.status === 429) {
+      logger.warn('Price provider rate limited', {
+        provider: 'coingecko',
+        symbol: meta.symbol,
+        providerId: meta.providerId,
+        status: response.status,
+        attempt
+      })
       const retryAfter = response.headers.get('retry-after')
       const delayMs = retryAfter ? Number(retryAfter) * 1000 : BASE_DELAY_MS * attempt
       await sleep(delayMs)
       continue
+    }
+    if (response.status === 401 || response.status === 403) {
+      logger.error('Price provider auth error', undefined, {
+        provider: 'coingecko',
+        symbol: meta.symbol,
+        providerId: meta.providerId,
+        status: response.status,
+        hasApiKey: !!COINGECKO_API_KEY
+      })
     }
     if (!response.ok) {
       if (attempt >= MAX_RETRIES) {
@@ -49,6 +78,12 @@ async function fetchWithRetry(url: string): Promise<any> {
       await sleep(BASE_DELAY_MS * attempt)
       continue
     }
+    logger.info('Price provider response', {
+      provider: 'coingecko',
+      symbol: meta.symbol,
+      providerId: meta.providerId,
+      status: response.status
+    })
     return response.json()
   }
   throw new Error('Price provider failed after retries')
@@ -100,7 +135,7 @@ export async function getDailyCloses(
       continue
     }
 
-    const providerId = COINGECKO_IDS[symbol]
+    const providerId = getProviderId(symbol)
     if (!providerId) {
       logger.warn('No provider mapping for symbol; using flat price series', { symbol })
       results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
@@ -111,18 +146,42 @@ export async function getDailyCloses(
     const to = toUnixSeconds(endDate, true)
     const url = `${COINGECKO_BASE_URL}/coins/${providerId}/market_chart/range?vs_currency=usd&from=${from}&to=${to}`
 
-    const payload = await fetchWithRetry(url)
-    const prices = Array.isArray(payload?.prices) ? payload.prices : []
-    const closeMap = buildDailyCloseMap(prices)
-    logMissingDays(symbol, expectedDates, closeMap)
+    try {
+      logger.info('Price provider request', {
+        provider: 'coingecko',
+        symbol,
+        providerId,
+        startDate,
+        endDate,
+        url
+      })
 
-    const dailyCloses = expectedDates
-      .filter((date) => closeMap.has(date))
-      .map((date) => ({
-        date,
-        close: closeMap.get(date) ?? 0
-      }))
-    results.set(symbol, dailyCloses)
+      const payload = await fetchWithRetry(url, { symbol, providerId })
+      const prices = Array.isArray(payload?.prices) ? payload.prices : []
+      if (prices.length === 0) {
+        logger.warn('Price provider returned empty prices', { symbol, providerId, startDate, endDate })
+        results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
+        continue
+      }
+      const closeMap = buildDailyCloseMap(prices)
+      logMissingDays(symbol, expectedDates, closeMap)
+
+      const dailyCloses = expectedDates
+        .filter((date) => closeMap.has(date))
+        .map((date) => ({
+          date,
+          close: closeMap.get(date) ?? 0
+        }))
+      results.set(symbol, dailyCloses)
+    } catch (error) {
+      logger.error('Price provider request failed; using flat series', error instanceof Error ? error : new Error(String(error)), {
+        symbol,
+        providerId,
+        startDate,
+        endDate
+      })
+      results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
+    }
   }
 
   return results

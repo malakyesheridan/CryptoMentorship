@@ -33,6 +33,23 @@ const updateDailySignalSchema = z.object({
   associatedData: z.string().optional(),
 })
 
+function triggerPortfolioRoiRecompute(request: NextRequest, portfolioKey: string) {
+  const origin = request.nextUrl.origin
+  const url = new URL('/api/cron/portfolio-roi', origin)
+  if (process.env.VERCEL_CRON_SECRET) {
+    url.searchParams.set('secret', process.env.VERCEL_CRON_SECRET)
+  }
+  url.searchParams.set('portfolioKey', portfolioKey)
+
+  void fetch(url.toString(), { method: 'POST' })
+    .catch((error) => {
+      logger.warn('Failed to trigger portfolio ROI recompute', {
+        portfolioKey,
+        error: error instanceof Error ? error.message : String(error)
+      })
+    })
+}
+
 // PUT /api/admin/portfolio-daily-signals/[id] - Update daily update
 export async function PUT(
   request: NextRequest,
@@ -205,6 +222,8 @@ export async function PUT(
             updatedByUserId: session.user.id
           }
         })
+
+        triggerPortfolioRoiRecompute(request, portfolioKey)
       } catch (error) {
         logger.error('Failed to derive allocations for updated signal', error instanceof Error ? error : new Error(String(error)), {
           signalId: updatedSignal.id,

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { getDailyCloses } from '@/lib/prices/provider'
@@ -5,8 +6,33 @@ import { Decimal, D, toNum } from '@/lib/num/dec'
 
 const PORTFOLIO_SCOPE = 'PORTFOLIO'
 const NAV_SERIES_TYPE = 'MODEL_NAV'
+const JOB_LOCK_SCOPE = 'PORTFOLIO_JOB_LOCK'
+const JOB_LOCK_KEY = 'GLOBAL'
+const JOB_LOCK_TTL_MS = 30 * 60 * 1000
 
 type AllocationItem = { asset: string; weight: number }
+type PriceIngestSummary = {
+  symbol: string
+  requested: number
+  inserted: number
+  updated: number
+  source: string
+}
+
+type RoiJobOptions = {
+  portfolioKey?: string
+  forceStartDate?: Date
+  forceEndDate?: Date
+  includeClean?: boolean
+  trigger?: string
+  requestedBy?: string
+}
+
+type JobContext = {
+  runId: string
+  trigger: string
+  requestedBy?: string
+}
 
 function toUtcDate(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
@@ -37,15 +63,44 @@ function listDates(startDate: Date, endDate: Date): Date[] {
   return dates
 }
 
-async function ingestPrices(symbols: string[], startDate: string, endDate: string) {
-  if (symbols.length === 0) return
+async function ingestPrices(
+  symbols: string[],
+  startDate: string,
+  endDate: string,
+  context: { portfolioKey: string; runId?: string; trigger?: string }
+): Promise<PriceIngestSummary[]> {
+  if (symbols.length === 0) return []
   const closesBySymbol = await getDailyCloses(symbols, startDate, endDate)
+  const summaries: PriceIngestSummary[] = []
 
-  for (const [symbol, closes] of Array.from(closesBySymbol.entries())) {
-    if (closes.length === 0) continue
+  for (const symbol of symbols) {
+    const closes = closesBySymbol.get(symbol) ?? []
+    if (closes.length === 0) {
+      summaries.push({ symbol, requested: 0, inserted: 0, updated: 0, source: 'none' })
+      continue
+    }
     const source = symbol === 'CASH' ? 'cash' : 'coingecko'
+    const existingRows = await prisma.assetPriceDaily.findMany({
+      where: {
+        symbol,
+        date: {
+          gte: parseDateKey(startDate),
+          lte: parseDateKey(endDate)
+        }
+      },
+      select: { date: true }
+    })
+    const existingDates = new Set(existingRows.map((row) => toDateKey(row.date)))
+    let inserted = 0
+    let updated = 0
+
     for (const close of closes) {
       const date = parseDateKey(close.date)
+      if (existingDates.has(close.date)) {
+        updated += 1
+      } else {
+        inserted += 1
+      }
       await prisma.assetPriceDaily.upsert({
         where: {
           symbol_date: {
@@ -65,7 +120,30 @@ async function ingestPrices(symbols: string[], startDate: string, endDate: strin
         }
       })
     }
+
+    const summary = {
+      symbol,
+      requested: closes.length,
+      inserted,
+      updated,
+      source
+    }
+    summaries.push(summary)
+    logger.info('Price ingest summary', {
+      runId: context.runId ?? null,
+      trigger: context.trigger ?? null,
+      portfolioKey: context.portfolioKey,
+      symbol,
+      requested: summary.requested,
+      inserted: summary.inserted,
+      updated: summary.updated,
+      source: summary.source,
+      startDate,
+      endDate
+    })
   }
+
+  return summaries
 }
 
 function fillPricesForDates(
@@ -135,6 +213,7 @@ function computeNavSeries(params: {
 
     let dailyReturn = D(0)
     let hasPrices = true
+    const missingSymbols: string[] = []
 
     for (const allocation of allocations) {
       const symbolPrices = params.pricesBySymbol.get(allocation.asset)
@@ -142,6 +221,7 @@ function computeNavSeries(params: {
       const pricePrev = symbolPrices?.get(prevDateKey)
       if (!priceToday || !pricePrev) {
         hasPrices = false
+        missingSymbols.push(allocation.asset)
         break
       }
 
@@ -154,7 +234,11 @@ function computeNavSeries(params: {
       if (!initialized) {
         continue
       }
-      logger.warn('Missing price data for NAV calculation day', { date: dateKey })
+      logger.warn('Missing price data for NAV calculation day; forward-filling', {
+        date: dateKey,
+        missingSymbols
+      })
+      navSeries.push({ dateKey, nav, dailyReturn: D(0) })
       continue
     }
 
@@ -244,129 +328,306 @@ function computeMetrics(navSeries: Array<{ dateKey: string; nav: Decimal; dailyR
   }
 }
 
-export async function runPortfolioRoiJob() {
-  const dirtyPortfolios = await prisma.roiDashboardSnapshot.findMany({
-    where: { scope: PORTFOLIO_SCOPE, needsRecompute: true }
-  })
-
-  if (dirtyPortfolios.length === 0) {
-    return { processed: 0 }
+async function acquireJobLock(context: JobContext) {
+  const now = new Date()
+  const holder = process.env.VERCEL_REGION || process.env.HOSTNAME || 'local'
+  const payload = {
+    runId: context.runId,
+    trigger: context.trigger,
+    requestedBy: context.requestedBy ?? null,
+    holder,
+    lockedAt: now.toISOString()
   }
-
-  for (const snapshot of dirtyPortfolios) {
-    if (!snapshot.portfolioKey) {
-      continue
-    }
-
-    const portfolioKey = snapshot.portfolioKey
-    const allocations = await prisma.allocationSnapshot.findMany({
-      where: { portfolioKey },
-      orderBy: { asOfDate: 'asc' }
-    })
-
-    if (allocations.length === 0) {
-      logger.warn('No allocation snapshots for portfolio key', { portfolioKey })
-      await prisma.roiDashboardSnapshot.update({
-        where: { id: snapshot.id },
-        data: {
-          needsRecompute: false,
-          recomputeFromDate: null,
-          lastComputedAt: new Date()
-        }
-      })
-      continue
-    }
-
-    const earliestAllocationDate = toUtcDate(allocations[0].asOfDate)
-    const recomputeFrom = snapshot.recomputeFromDate ? toUtcDate(snapshot.recomputeFromDate) : earliestAllocationDate
-    const startDate = recomputeFrom < earliestAllocationDate ? recomputeFrom : earliestAllocationDate
-    const endDate = toUtcDate(new Date())
-    const priceStartDate = addDays(startDate, -2)
-
-    const symbols = Array.from(
-      new Set(
-        allocations
-          .flatMap((allocation) => Array.isArray(allocation.items) ? allocation.items : [])
-          .map((item: any) => String(item.asset ?? '').trim().toUpperCase())
-          .filter((item) => item.length > 0)
-      )
-    )
-
-    if (symbols.length === 0) {
-      logger.warn('No allocation symbols for portfolio key', { portfolioKey })
-      continue
-    }
-
-    await ingestPrices(symbols, toDateKey(priceStartDate), toDateKey(endDate))
-
-    const priceRows = await prisma.assetPriceDaily.findMany({
-      where: {
-        symbol: { in: symbols },
-        date: {
-          gte: priceStartDate,
-          lte: endDate
-        }
-      },
-      orderBy: { date: 'asc' }
-    })
-
-    const dateRange = listDates(priceStartDate, endDate)
-    const pricesBySymbol = fillPricesForDates(symbols, priceRows, dateRange)
-    const allocationsByDate = buildAllocationsByDate(
-      allocations.map((allocation) => ({
-        asOfDate: toUtcDate(allocation.asOfDate),
-        items: Array.isArray(allocation.items) ? (allocation.items as AllocationItem[]) : []
-      })),
-      dateRange
-    )
-
-    const navSeries = computeNavSeries({
-      dates: dateRange,
-      allocationsByDate,
-      pricesBySymbol
-    })
-
-    if (navSeries.length === 0) {
-      logger.warn('No NAV series computed for portfolio key', { portfolioKey })
-      continue
-    }
-
-    await prisma.$transaction(
-      navSeries.map((point) =>
-        prisma.performanceSeries.upsert({
-          where: {
-            seriesType_date_portfolioKey: {
-              seriesType: NAV_SERIES_TYPE,
-              date: parseDateKey(point.dateKey),
-              portfolioKey
-            }
-          },
-          update: { value: point.nav },
-          create: {
-            seriesType: NAV_SERIES_TYPE,
-            date: parseDateKey(point.dateKey),
-            portfolioKey,
-            value: point.nav
-          }
-        })
-      )
-    )
-
-    const metrics = computeMetrics(navSeries)
-    await prisma.roiDashboardSnapshot.update({
-      where: { id: snapshot.id },
+  try {
+    await prisma.roiDashboardSnapshot.create({
       data: {
-        needsRecompute: false,
-        recomputeFromDate: null,
-        asOfDate: metrics.asOfDate,
-        roiInception: metrics.roiInception,
-        roi30d: metrics.roi30d,
-        maxDrawdown: metrics.maxDrawdown,
-        volatility: metrics.volatility,
-        lastComputedAt: new Date()
+        scope: JOB_LOCK_SCOPE,
+        portfolioKey: JOB_LOCK_KEY,
+        cacheKey: JOB_LOCK_KEY,
+        payload: JSON.stringify(payload)
       }
     })
+    logger.info('Portfolio ROI job lock acquired', {
+      runId: context.runId,
+      trigger: context.trigger,
+      holder
+    })
+    return true
+  } catch (error: any) {
+    if (error?.code !== 'P2002') {
+      logger.error('Failed to acquire ROI job lock', error instanceof Error ? error : new Error(String(error)))
+      return false
+    }
   }
 
-  return { processed: dirtyPortfolios.length }
+  const existing = await prisma.roiDashboardSnapshot.findUnique({
+    where: {
+      scope_portfolioKey: {
+        scope: JOB_LOCK_SCOPE,
+        portfolioKey: JOB_LOCK_KEY
+      }
+    }
+  })
+  const existingPayload = existing?.payload ? JSON.parse(existing.payload) as Record<string, any> : null
+  const existingHolder = existingPayload?.holder ?? 'unknown'
+  const existingRunId = existingPayload?.runId ?? 'unknown'
+  const existingLockedAt = existingPayload?.lockedAt ?? null
+
+  const staleBefore = new Date(now.getTime() - JOB_LOCK_TTL_MS)
+  if (existing && existing.updatedAt < staleBefore) {
+    await prisma.roiDashboardSnapshot.update({
+      where: { id: existing.id },
+      data: {
+        payload: JSON.stringify({ ...payload, stolen: true, previousRunId: existingRunId })
+      }
+    })
+    logger.warn('Portfolio ROI job lock was stale and has been stolen', {
+      runId: context.runId,
+      previousRunId: existingRunId,
+      previousHolder: existingHolder,
+      previousLockedAt: existingLockedAt
+    })
+    return true
+  }
+
+  logger.warn('Portfolio ROI job lock is currently held', {
+    runId: context.runId,
+    currentRunId: existingRunId,
+    currentHolder: existingHolder,
+    lockedAt: existingLockedAt
+  })
+  return false
+}
+
+async function releaseJobLock() {
+  await prisma.roiDashboardSnapshot.deleteMany({
+    where: { scope: JOB_LOCK_SCOPE, portfolioKey: JOB_LOCK_KEY }
+  })
+  logger.info('Portfolio ROI job lock released')
+}
+
+export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
+  const context: JobContext = {
+    runId: randomUUID(),
+    trigger: options.trigger ?? 'cron',
+    requestedBy: options.requestedBy
+  }
+  logger.info('Portfolio ROI job starting', {
+    runId: context.runId,
+    trigger: context.trigger,
+    portfolioKey: options.portfolioKey ?? null,
+    forceStartDate: options.forceStartDate ? toDateKey(options.forceStartDate) : null,
+    forceEndDate: options.forceEndDate ? toDateKey(options.forceEndDate) : null
+  })
+  if (!process.env.COINGECKO_API_KEY) {
+    logger.warn('COINGECKO_API_KEY is not set; provider may be rate-limited')
+  }
+  const lockAcquired = await acquireJobLock(context)
+  if (!lockAcquired) {
+    return { processed: 0, skipped: 'locked', runId: context.runId }
+  }
+
+  try {
+    const dirtyPortfolios = await prisma.roiDashboardSnapshot.findMany({
+      where: {
+        scope: PORTFOLIO_SCOPE,
+        ...(options.portfolioKey ? { portfolioKey: options.portfolioKey } : {}),
+        ...(options.includeClean ? {} : { needsRecompute: true })
+      },
+      orderBy: { updatedAt: 'asc' }
+    })
+
+    if (dirtyPortfolios.length === 0) {
+      logger.info('Portfolio ROI job found no dirty portfolios', {
+        runId: context.runId,
+        trigger: context.trigger
+      })
+      return { processed: 0 }
+    }
+
+    logger.info('Portfolio ROI job found dirty portfolios', {
+      runId: context.runId,
+      trigger: context.trigger,
+      count: dirtyPortfolios.length,
+      portfolioKeys: dirtyPortfolios.map((snapshot) => snapshot.portfolioKey).filter(Boolean)
+    })
+
+    for (const snapshot of dirtyPortfolios) {
+      if (!snapshot.portfolioKey) {
+        continue
+      }
+
+      const portfolioKey = snapshot.portfolioKey
+      try {
+        const allocations = await prisma.allocationSnapshot.findMany({
+          where: { portfolioKey },
+          orderBy: { asOfDate: 'asc' }
+        })
+
+        if (allocations.length === 0) {
+          logger.warn('No allocation snapshots for portfolio key', { portfolioKey })
+          await prisma.roiDashboardSnapshot.update({
+            where: { id: snapshot.id },
+            data: {
+              needsRecompute: false,
+              recomputeFromDate: null,
+              lastComputedAt: new Date()
+            }
+          })
+          continue
+        }
+
+        const latestAllocation = allocations[allocations.length - 1]
+        const latestItems = Array.isArray(latestAllocation.items) ? latestAllocation.items : []
+        const earliestAllocationDate = toUtcDate(allocations[0].asOfDate)
+        const recomputeFrom = options.forceStartDate
+          ? toUtcDate(options.forceStartDate)
+          : (snapshot.recomputeFromDate ? toUtcDate(snapshot.recomputeFromDate) : earliestAllocationDate)
+        const startDate = recomputeFrom < earliestAllocationDate ? recomputeFrom : earliestAllocationDate
+        const endDate = options.forceEndDate ? toUtcDate(options.forceEndDate) : toUtcDate(new Date())
+        const priceStartDate = addDays(startDate, -2)
+
+        const symbols = Array.from(
+          new Set(
+            allocations
+              .flatMap((allocation) => Array.isArray(allocation.items) ? allocation.items : [])
+              .map((item: any) => String(item.asset ?? '').trim().toUpperCase())
+              .filter((item) => item.length > 0)
+          )
+        )
+
+        if (symbols.length === 0) {
+          logger.warn('No allocation symbols for portfolio key', { portfolioKey })
+          continue
+        }
+
+        try {
+          logger.info('Portfolio ROI recompute context', {
+            runId: context.runId,
+            portfolioKey,
+            needsRecompute: snapshot.needsRecompute,
+            recomputeFromDate: snapshot.recomputeFromDate ? toDateKey(snapshot.recomputeFromDate) : null,
+            lastComputedAt: snapshot.lastComputedAt?.toISOString() ?? null,
+            asOfDate: snapshot.asOfDate ? toDateKey(snapshot.asOfDate) : null,
+            latestAllocationDate: toDateKey(latestAllocation.asOfDate),
+            allocationCount: latestItems.length,
+            allocations: latestItems,
+            symbolCount: symbols.length,
+            symbols,
+            startDate: toDateKey(startDate),
+            endDate: toDateKey(endDate),
+            priceStartDate: toDateKey(priceStartDate)
+          })
+
+          await ingestPrices(symbols, toDateKey(priceStartDate), toDateKey(endDate), {
+            portfolioKey,
+            runId: context.runId,
+            trigger: context.trigger
+          })
+        } catch (error) {
+          logger.error(
+            'Price ingest failed for portfolio key',
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              portfolioKey
+            }
+          )
+          continue
+        }
+
+        const priceRows = await prisma.assetPriceDaily.findMany({
+          where: {
+            symbol: { in: symbols },
+            date: {
+              gte: priceStartDate,
+              lte: endDate
+            }
+          },
+          orderBy: { date: 'asc' }
+        })
+
+        const dateRange = listDates(priceStartDate, endDate)
+        const pricesBySymbol = fillPricesForDates(symbols, priceRows, dateRange)
+        const allocationsByDate = buildAllocationsByDate(
+          allocations.map((allocation) => ({
+            asOfDate: toUtcDate(allocation.asOfDate),
+            items: Array.isArray(allocation.items) ? (allocation.items as AllocationItem[]) : []
+          })),
+          dateRange
+        )
+
+        const navSeries = computeNavSeries({
+          dates: dateRange,
+          allocationsByDate,
+          pricesBySymbol
+        })
+
+        if (navSeries.length === 0) {
+          logger.warn('No NAV series computed for portfolio key', { portfolioKey })
+          continue
+        }
+
+        await prisma.$transaction(
+          navSeries.map((point) =>
+            prisma.performanceSeries.upsert({
+              where: {
+                seriesType_date_portfolioKey: {
+                  seriesType: NAV_SERIES_TYPE,
+                  date: parseDateKey(point.dateKey),
+                  portfolioKey
+                }
+              },
+              update: { value: point.nav },
+              create: {
+                seriesType: NAV_SERIES_TYPE,
+                date: parseDateKey(point.dateKey),
+                portfolioKey,
+                value: point.nav
+              }
+            })
+          )
+        )
+
+        logger.info('NAV series computed', {
+          runId: context.runId,
+          portfolioKey,
+          computedDays: navSeries.length,
+          writtenRows: navSeries.length
+        })
+
+        const metrics = computeMetrics(navSeries)
+        await prisma.roiDashboardSnapshot.update({
+          where: { id: snapshot.id },
+          data: {
+            needsRecompute: false,
+            recomputeFromDate: null,
+            asOfDate: metrics.asOfDate,
+            roiInception: metrics.roiInception,
+            roi30d: metrics.roi30d,
+            maxDrawdown: metrics.maxDrawdown,
+            volatility: metrics.volatility,
+            lastComputedAt: new Date()
+          }
+        })
+      } catch (error) {
+        logger.error(
+          'Portfolio ROI recompute failed',
+          error instanceof Error ? error : new Error(String(error)),
+          {
+            portfolioKey
+          }
+        )
+        continue
+      }
+    }
+
+    logger.info('Portfolio ROI job finished', {
+      runId: context.runId,
+      trigger: context.trigger,
+      processed: dirtyPortfolios.length
+    })
+    return { processed: dirtyPortfolios.length, runId: context.runId }
+  } finally {
+    await releaseJobLock()
+  }
 }

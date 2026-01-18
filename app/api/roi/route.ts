@@ -3,9 +3,11 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { toNum } from '@/lib/num/dec'
-import { buildPortfolioKey } from '@/lib/portfolio/portfolio-key'
+import { buildPortfolioKey, parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
 
 const NAV_SERIES_TYPE = 'MODEL_NAV'
+const PRICE_STALE_DAYS = 2
+export const dynamic = 'force-dynamic'
 
 const RANGE_DAYS: Record<string, number | null> = {
   '1m': 30,
@@ -19,6 +21,12 @@ function toDateKey(date: Date): string {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
     .toISOString()
     .slice(0, 10)
+}
+
+function dateKeyToDate(dateKey: string | null) {
+  if (!dateKey) return null
+  const date = new Date(`${dateKey}T00:00:00.000Z`)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 function parseTierFromPortfolioKey(portfolioKey: string): 'T1' | 'T2' | null {
@@ -59,6 +67,32 @@ async function getDefaultPortfolioKey(userTier: string | null) {
     category: preferredTier === 'T2' ? preferredCategory : 'majors',
     riskProfile: signal?.riskProfile ?? fallbackRiskProfile
   })
+}
+
+async function getLatestSignalDate(portfolioKey: string) {
+  const parsed = parsePortfolioKey(portfolioKey)
+  if (!parsed) return null
+
+  const where = parsed.tier === 'T1'
+    ? {
+        riskProfile: parsed.riskProfile,
+        OR: [
+          { tier: 'T1', category: null },
+          { tier: 'T2', category: null }
+        ]
+      }
+    : {
+        tier: 'T2',
+        category: parsed.category,
+        riskProfile: parsed.riskProfile
+      }
+
+  const signal = await prisma.portfolioDailySignal.findFirst({
+    where,
+    orderBy: { publishedAt: 'desc' }
+  })
+
+  return signal?.publishedAt ?? null
 }
 
 function canAccessPortfolioKey(userTier: string | null, portfolioKey: string, isActive: boolean, userRole?: string) {
@@ -123,28 +157,55 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const latestPoint = await prisma.performanceSeries.findFirst({
-      where: { seriesType: NAV_SERIES_TYPE, portfolioKey },
-      orderBy: { date: 'desc' }
-    })
+    const [latestPoint, snapshot, lastRebalance, lastSignalDate] = await Promise.all([
+      prisma.performanceSeries.findFirst({
+        where: { seriesType: NAV_SERIES_TYPE, portfolioKey },
+        orderBy: { date: 'desc' }
+      }),
+      prisma.roiDashboardSnapshot.findUnique({
+        where: {
+          scope_portfolioKey: {
+            scope: 'PORTFOLIO',
+            portfolioKey
+          }
+        }
+      }),
+      prisma.allocationSnapshot.findFirst({
+        where: { portfolioKey },
+        orderBy: { asOfDate: 'desc' }
+      }),
+      getLatestSignalDate(portfolioKey)
+    ])
 
-    if (!latestPoint) {
-      return NextResponse.json({
-        portfolioKey,
-        navSeries: [],
-        kpis: null,
-        lastRebalance: null
-      })
-    }
+    const allocationItems = Array.isArray(lastRebalance?.items) ? lastRebalance?.items : []
+    const allocationSymbols = Array.from(new Set(
+      allocationItems
+        .map((item: any) => String(item.asset ?? '').trim().toUpperCase())
+        .filter((symbol) => symbol.length > 0)
+    ))
+
+    const priceMeta = allocationSymbols.length > 0
+      ? await prisma.assetPriceDaily.groupBy({
+          by: ['symbol'],
+          _max: { date: true },
+          where: { symbol: { in: allocationSymbols } }
+        })
+      : []
+
+    const lastPriceDate = priceMeta.reduce<Date | null>((latest, entry) => {
+      if (!entry._max.date) return latest
+      if (!latest) return entry._max.date
+      return entry._max.date > latest ? entry._max.date : latest
+    }, null)
 
     const rangeDays = RANGE_DAYS[rangeParam] ?? RANGE_DAYS['1y']
-    const latestDate = latestPoint.date
+    const latestDate = latestPoint?.date ?? null
     const startDate = rangeDays === null
       ? null
       : new Date(Date.UTC(
-          latestDate.getUTCFullYear(),
-          latestDate.getUTCMonth(),
-          latestDate.getUTCDate() - rangeDays
+          latestDate?.getUTCFullYear() ?? new Date().getUTCFullYear(),
+          latestDate?.getUTCMonth() ?? new Date().getUTCMonth(),
+          (latestDate?.getUTCDate() ?? new Date().getUTCDate()) - rangeDays
         ))
 
     const navRows = await prisma.performanceSeries.findMany({
@@ -154,20 +215,6 @@ export async function GET(request: NextRequest) {
         ...(startDate ? { date: { gte: startDate } } : {})
       },
       orderBy: { date: 'asc' }
-    })
-
-    const snapshot = await prisma.roiDashboardSnapshot.findUnique({
-      where: {
-        scope_portfolioKey: {
-          scope: 'PORTFOLIO',
-          portfolioKey
-        }
-      }
-    })
-
-    const lastRebalance = await prisma.allocationSnapshot.findFirst({
-      where: { portfolioKey },
-      orderBy: { asOfDate: 'desc' }
     })
 
     const navSeries = navRows.map((row) => ({
@@ -184,8 +231,44 @@ export async function GET(request: NextRequest) {
         }
       : computeKpisFromNav(navSeries)
 
+    const lastSignalDateKey = lastSignalDate ? toDateKey(lastSignalDate) : null
+    const lastPriceDateKey = lastPriceDate ? toDateKey(lastPriceDate) : null
+    const asOfDate = kpis?.as_of_date ?? null
+    const asOfDateValue = dateKeyToDate(asOfDate)
+    const lastSignalValue = dateKeyToDate(lastSignalDateKey)
+    const lastPriceValue = dateKeyToDate(lastPriceDateKey)
+    const todayKey = toDateKey(new Date())
+    const todayValue = dateKeyToDate(todayKey)
+    const priceStaleCutoff = todayValue ? new Date(todayValue.getTime()) : null
+    if (priceStaleCutoff) {
+      priceStaleCutoff.setUTCDate(priceStaleCutoff.getUTCDate() - PRICE_STALE_DAYS)
+    }
+
+    const hasNav = navSeries.length > 0
+    const needsRecompute = snapshot?.needsRecompute ?? false
+    const signalAhead = !!(lastSignalValue && asOfDateValue && asOfDateValue < lastSignalValue)
+    const priceStale = !!(lastPriceValue && priceStaleCutoff && lastPriceValue < priceStaleCutoff)
+    const missingPrices = allocationSymbols.length > 0 && !lastPriceValue
+    const isStale = signalAhead || priceStale || missingPrices
+    const awaitingData = !!lastSignalValue || !!lastRebalance
+
+    let status: 'ok' | 'updating' | 'stale' | 'error' = 'ok'
+    if (needsRecompute) {
+      status = 'updating'
+    } else if (!hasNav) {
+      status = awaitingData ? 'updating' : 'error'
+    } else if (isStale) {
+      status = 'stale'
+    }
+
     return NextResponse.json({
       portfolioKey,
+      status,
+      needsRecompute,
+      asOfDate,
+      lastComputedAt: snapshot?.lastComputedAt ? snapshot.lastComputedAt.toISOString() : null,
+      lastSignalDate: lastSignalDateKey,
+      lastPriceDate: lastPriceDateKey,
       navSeries,
       kpis,
       lastRebalance: lastRebalance

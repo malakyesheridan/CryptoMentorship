@@ -1,12 +1,20 @@
 'use client'
 
+import React from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent } from '@/components/ui/card'
 import { RoiEquityChart } from '@/components/roi-dashboard/RoiEquityChart'
 
 type RoiResponse = {
   portfolioKey: string
+  status: 'ok' | 'updating' | 'stale' | 'error'
+  needsRecompute: boolean
+  asOfDate: string | null
+  lastComputedAt: string | null
+  lastSignalDate: string | null
+  lastPriceDate: string | null
   navSeries: Array<{ date: string; nav: number }>
   kpis: {
     roi_inception: number | null
@@ -20,12 +28,33 @@ type RoiResponse = {
   } | null
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error('Failed to load ROI data')
+  }
+  return res.json()
+}
 
 function formatPercent(value: number | null) {
-  if (value === null || Number.isNaN(value)) return '—'
+  if (value === null || Number.isNaN(value)) return '--'
   const sign = value >= 0 ? '+' : ''
   return `${sign}${value.toFixed(2)}%`
+}
+
+function dateKeyToDate(dateKey: string | null) {
+  if (!dateKey) return null
+  const date = new Date(`${dateKey}T00:00:00.000Z`)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function shouldPollRoi(data: RoiResponse) {
+  if (data.needsRecompute) return true
+  const today = dateKeyToDate(new Date().toISOString().slice(0, 10))
+  const asOfDate = dateKeyToDate(data.asOfDate)
+  if (today && asOfDate && asOfDate < today) return true
+  if (data.navSeries.length === 0 && data.lastSignalDate) return true
+  return false
 }
 
 function computeKpis(navSeries: Array<{ date: string; nav: number }>) {
@@ -59,16 +88,30 @@ function computeKpis(navSeries: Array<{ date: string; nav: number }>) {
 }
 
 export function PortfolioRoiPanel() {
-  const { data, error, isLoading } = useSWR<RoiResponse>(
+  const { data, error, isLoading, mutate } = useSWR<RoiResponse>(
     '/api/roi?range=all',
     fetcher,
     { revalidateOnFocus: false }
   )
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
+
+  const status = data?.status ?? 'updating'
+  const showStatusBadge = status === 'updating' || status === 'stale'
+  const pollingEnabled = data ? shouldPollRoi(data) : false
+
+  React.useEffect(() => {
+    if (!pollingEnabled) return
+    const intervalId = setInterval(() => {
+      void mutate()
+    }, 30 * 60 * 1000)
+    return () => clearInterval(intervalId)
+  }, [mutate, pollingEnabled])
 
   if (isLoading) {
     return (
       <div className="card p-6 text-center text-slate-500">
-        Loading portfolio performance…
+        Loading portfolio performance...
       </div>
     )
   }
@@ -76,7 +119,25 @@ export function PortfolioRoiPanel() {
   if (error || !data) {
     return (
       <div className="card p-6 text-center text-slate-500">
-        ROI data is not available yet. Please check back soon.
+        ROI data is temporarily unavailable. Please try again soon.
+      </div>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="card p-6 text-center text-slate-500">
+        ROI data is unavailable right now. Please check back soon.
+        {isAdmin && data.portfolioKey ? (
+          <div className="mt-3">
+            <Link
+              href={`/admin/roi/diagnostics?portfolioKey=${encodeURIComponent(data.portfolioKey)}`}
+              className="text-yellow-600 hover:text-yellow-700 font-medium"
+            >
+              View diagnostics
+            </Link>
+          </div>
+        ) : null}
       </div>
     )
   }
@@ -84,7 +145,7 @@ export function PortfolioRoiPanel() {
   if (data.navSeries.length === 0) {
     return (
       <div className="card p-6 text-center text-slate-500">
-        ROI data is not available yet. Please check back soon.
+        Data updating... Please check back soon.
       </div>
     )
   }
@@ -98,10 +159,17 @@ export function PortfolioRoiPanel() {
   const roiInception = data.kpis?.roi_inception ?? computed.roiInception
   const roi30d = data.kpis?.roi_30d ?? computed.roi30d
   const maxDrawdown = data.kpis?.max_drawdown ?? computed.maxDrawdown
-  const asOfDate = data.kpis?.as_of_date ?? data.lastRebalance?.effective_date ?? null
+  const asOfDate = data.asOfDate ?? data.kpis?.as_of_date ?? data.lastRebalance?.effective_date ?? null
 
   return (
     <div className="space-y-8">
+      {showStatusBadge ? (
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+            Updating / waiting for latest data
+          </span>
+        </div>
+      ) : null}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card">
           <CardContent className="p-5">
@@ -128,7 +196,7 @@ export function PortfolioRoiPanel() {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-slate-500">As of</p>
-            <p className="text-xl font-semibold text-slate-800">{asOfDate ?? '—'}</p>
+            <p className="text-xl font-semibold text-slate-800">{asOfDate ?? '--'}</p>
           </CardContent>
         </Card>
       </div>
@@ -143,10 +211,10 @@ export function PortfolioRoiPanel() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
         <span>
-          Last update posted: {data.lastRebalance?.effective_date ?? '—'}
+          Last update posted: {data.lastSignalDate ?? data.lastRebalance?.effective_date ?? '--'}
         </span>
         <Link href="/portfolio" className="text-yellow-600 hover:text-yellow-700 font-medium">
-          View My Portfolio →
+          View My Portfolio
         </Link>
       </div>
     </div>

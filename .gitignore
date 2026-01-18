@@ -4,6 +4,7 @@ node_modules/
 out/
 dist/
 .vercel/
+.tmp/
 
 # OS/editor
 .DS_Store

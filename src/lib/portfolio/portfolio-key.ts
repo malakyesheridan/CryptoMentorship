@@ -8,3 +8,19 @@ export function buildPortfolioKey(params: {
   const riskProfile = params.riskProfile.trim().toLowerCase()
   return `${tier}_${category}_${riskProfile}`
 }
+
+export function parsePortfolioKey(portfolioKey: string): {
+  tier: 'T1' | 'T2'
+  category: string
+  riskProfile: string
+} | null {
+  const [tierRaw, categoryRaw, riskRaw] = portfolioKey.split('_')
+  if (!tierRaw || !categoryRaw || !riskRaw) return null
+  const tier = tierRaw.trim().toLowerCase()
+  if (tier !== 't1' && tier !== 't2') return null
+  return {
+    tier: tier === 't1' ? 'T1' : 'T2',
+    category: categoryRaw.trim().toLowerCase(),
+    riskProfile: riskRaw.trim().toUpperCase()
+  }
+}
