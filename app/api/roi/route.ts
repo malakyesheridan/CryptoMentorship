@@ -287,7 +287,17 @@ export async function GET(request: NextRequest) {
       ? await prisma.portfolioDailySignal.findMany({
           where: {
             ...signalWhere,
-            publishedAt: { lte: navRows[navRows.length - 1].date }
+            publishedAt: {
+              lte: new Date(Date.UTC(
+                navRows[navRows.length - 1].date.getUTCFullYear(),
+                navRows[navRows.length - 1].date.getUTCMonth(),
+                navRows[navRows.length - 1].date.getUTCDate(),
+                23,
+                59,
+                59,
+                999
+              ))
+            }
           },
           orderBy: { publishedAt: 'asc' },
           select: { publishedAt: true, signal: true }
