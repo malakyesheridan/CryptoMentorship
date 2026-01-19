@@ -6,6 +6,7 @@ import { parseAllocationAssets } from '@/lib/portfolio-assets'
 import { parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
 import { getPrimaryTicker, normalizeAssetSymbol } from '@/lib/prices/tickers'
 import { Decimal, D, toNum } from '@/lib/num/dec'
+import { Prisma, RiskProfile } from '@prisma/client'
 
 const PORTFOLIO_SCOPE = 'PORTFOLIO'
 const NAV_SERIES_TYPE = 'MODEL_NAV'
@@ -268,13 +269,14 @@ function computeMetrics(navSeries: Array<{ dateKey: string; nav: Decimal; dailyR
   }
 }
 
-function buildSignalWhere(portfolioKey: string) {
+function buildSignalWhere(portfolioKey: string): Prisma.PortfolioDailySignalWhereInput | null {
   const parsed = parsePortfolioKey(portfolioKey)
   if (!parsed) return null
+  const riskProfile = parsed.riskProfile as RiskProfile
 
   if (parsed.tier === 'T1') {
     return {
-      riskProfile: parsed.riskProfile,
+      riskProfile,
       OR: [
         { tier: 'T1', category: null },
         { tier: 'T2', category: null }
@@ -285,7 +287,7 @@ function buildSignalWhere(portfolioKey: string) {
   return {
     tier: 'T2',
     category: parsed.category,
-    riskProfile: parsed.riskProfile
+    riskProfile
   }
 }
 

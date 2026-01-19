@@ -18,6 +18,16 @@ type AuthContext = {
   cookie: string
 }
 
+type UserRole = 'member' | 'admin' | 'guest' | 'editor'
+
+function normalizeRole(role: string | null | undefined): UserRole {
+  const normalized = (role ?? '').toLowerCase()
+  if (normalized === 'admin' || normalized === 'member' || normalized === 'guest' || normalized === 'editor') {
+    return normalized as UserRole
+  }
+  return 'member'
+}
+
 async function getAuthContext(): Promise<AuthContext> {
   const adminUser = await prisma.user.findFirst({
     where: { role: 'admin' },
@@ -44,7 +54,7 @@ async function getAuthContext(): Promise<AuthContext> {
       sub: user.id,
       email: user.email ?? undefined,
       name: user.name ?? undefined,
-      role: user.role,
+      role: normalizeRole(user.role),
       membershipTier: membership?.tier ?? 'T2',
       lastRefreshed: Math.floor(Date.now() / 1000)
     },
