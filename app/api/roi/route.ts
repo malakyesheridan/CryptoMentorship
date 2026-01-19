@@ -6,6 +6,7 @@ import { toNum } from '@/lib/num/dec'
 import { parseAllocationAssets } from '@/lib/portfolio-assets'
 import { buildPortfolioKey, parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
 import { getPrimaryTicker, normalizeAssetSymbol } from '@/lib/prices/tickers'
+import type { PortfolioDailySignalWhereInput, RiskProfile } from '@prisma/client'
 
 const NAV_SERIES_TYPE = 'MODEL_NAV'
 const PRICE_STALE_DAYS = 2
@@ -71,13 +72,14 @@ async function getDefaultPortfolioKey(userTier: string | null) {
   })
 }
 
-function buildSignalWhere(portfolioKey: string) {
+function buildSignalWhere(portfolioKey: string): PortfolioDailySignalWhereInput | null {
   const parsed = parsePortfolioKey(portfolioKey)
   if (!parsed) return null
+  const riskProfile = parsed.riskProfile as RiskProfile
 
   return parsed.tier === 'T1'
     ? {
-        riskProfile: parsed.riskProfile,
+        riskProfile,
         OR: [
           { tier: 'T1', category: null },
           { tier: 'T2', category: null }
@@ -86,7 +88,7 @@ function buildSignalWhere(portfolioKey: string) {
     : {
         tier: 'T2',
         category: parsed.category,
-        riskProfile: parsed.riskProfile
+        riskProfile
       }
 }
 
