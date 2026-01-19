@@ -103,6 +103,7 @@ export function PortfolioRoiPanel() {
   const showStatusBadge = status === 'updating' || status === 'stale'
   const pollingEnabled = data ? shouldPollRoi(data) : false
   const primaryLabel = data?.primaryTicker ? `Primary: ${data.primaryTicker}` : null
+  const allocationLabel = 'Aggressive allocation (100% primary)'
 
   React.useEffect(() => {
     if (!pollingEnabled) return
@@ -175,6 +176,7 @@ export function PortfolioRoiPanel() {
           <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
             Updating / waiting for latest data
           </span>
+          <span className="text-xs text-slate-400">{allocationLabel}</span>
           {primaryLabel ? <span className="text-xs text-slate-400">{primaryLabel}</span> : null}
         </div>
       ) : null}
@@ -221,6 +223,7 @@ export function PortfolioRoiPanel() {
         <span>
           Last update posted: {data.lastSignalDate ?? data.lastRebalance?.effective_date ?? '--'}
         </span>
+        <span>{allocationLabel}</span>
         <span>{primaryLabel ?? 'Primary: --'}</span>
         <Link href="/portfolio" className="text-yellow-600 hover:text-yellow-700 font-medium">
           View My Portfolio
