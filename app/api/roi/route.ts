@@ -48,8 +48,8 @@ async function getUserTier(userId: string) {
   return { tier: membership?.tier ?? null, isActive }
 }
 
-async function getDefaultPortfolioKey(userTier: string | null) {
-  const preferredTier = userTier === 'T2' ? 'T2' : 'T1'
+async function getDefaultPortfolioKey(userTier: string | null, requestedTier?: 'T1' | 'T2' | null) {
+  const preferredTier = requestedTier ?? (userTier === 'T2' ? 'T2' : 'T1')
   const preferredCategory = preferredTier === 'T2' ? 'majors' : null
 
   const signal = await prisma.portfolioDailySignal.findFirst({
@@ -209,7 +209,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const rangeParam = searchParams.get('range')?.toLowerCase() ?? '1y'
     const requestedKey = searchParams.get('portfolioKey')
-    const portfolioKey = (requestedKey ?? (await getDefaultPortfolioKey(effectiveTier))).toLowerCase()
+    const requestedTierRaw = searchParams.get('tier')?.toUpperCase()
+    const requestedTier = requestedTierRaw === 'T1' || requestedTierRaw === 'T2' ? requestedTierRaw : null
+    const portfolioKey = (requestedKey ?? (await getDefaultPortfolioKey(effectiveTier, requestedTier))).toLowerCase()
 
     if (!canAccessPortfolioKey(effectiveTier, portfolioKey, isActive, session.user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

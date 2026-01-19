@@ -4,6 +4,7 @@ import React from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { RoiEquityChart } from '@/components/roi-dashboard/RoiEquityChart'
 
@@ -92,14 +93,29 @@ function computeKpis(navSeries: Array<{ date: string; nav: number }>) {
 }
 
 export function PortfolioRoiPanel() {
+  const { data: session, status: sessionStatus } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
+  const userTier = (session?.user?.membershipTier ?? null) as 'T1' | 'T2' | null
+  const canAccessT2 = isAdmin || userTier === 'T2'
+  const availableTiers: Array<'T1' | 'T2'> = canAccessT2 ? ['T1', 'T2'] : ['T1']
+  const [activeTier, setActiveTier] = React.useState<'T1' | 'T2'>(canAccessT2 ? 'T2' : 'T1')
+
+  React.useEffect(() => {
+    if (!canAccessT2 && activeTier !== 'T1') {
+      setActiveTier('T1')
+    }
+  }, [canAccessT2, activeTier])
+
+  const effectiveTier = canAccessT2 ? activeTier : 'T1'
+  const swrKey = sessionStatus === 'loading' ? null : `/api/roi?range=all&tier=${effectiveTier}`
   const { data, error, isLoading, mutate } = useSWR<RoiResponse>(
-    '/api/roi?range=all',
+    swrKey,
     fetcher,
     { revalidateOnFocus: false }
   )
-  const { data: session } = useSession()
-  const isAdmin = session?.user?.role === 'admin'
 
+  const loading = isLoading || sessionStatus === 'loading'
+  const tierLabel = effectiveTier === 'T2' ? 'Elite (T2)' : 'Growth (T1)'
   const status = data?.status ?? 'updating'
   const showStatusBadge = status === 'updating' || status === 'stale'
   const pollingEnabled = data ? shouldPollRoi(data) : false
@@ -132,7 +148,7 @@ export function PortfolioRoiPanel() {
     return () => clearInterval(intervalId)
   }, [mutate, pollingEnabled])
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="card p-6 text-center text-slate-500">
         Loading portfolio performance...
@@ -188,8 +204,29 @@ export function PortfolioRoiPanel() {
   const maxDrawdown = data.kpis?.max_drawdown ?? computed.maxDrawdown
   const asOfDate = data.asOfDate ?? data.kpis?.as_of_date ?? data.lastRebalance?.effective_date ?? null
 
+  const tierButtons = availableTiers.length > 1 ? (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      {availableTiers.map((tier) => (
+        <Button
+          key={tier}
+          size="sm"
+          variant={activeTier === tier ? 'default' : 'outline'}
+          onClick={() => setActiveTier(tier)}
+        >
+          {tier === 'T2' ? 'Elite (T2)' : 'Growth (T1)'}
+        </Button>
+      ))}
+    </div>
+  ) : (
+    <div className="text-sm text-slate-500">{tierLabel}</div>
+  )
+
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {tierButtons}
+        <span className="text-sm text-slate-500">Viewing: {tierLabel}</span>
+      </div>
       {showStatusBadge ? (
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
