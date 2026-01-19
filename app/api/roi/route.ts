@@ -118,6 +118,41 @@ function parseSnapshotPayload(payload: string | null | undefined) {
   }
 }
 
+function parsePrimaryFromSignal(signal: string | null | undefined) {
+  if (!signal) return { symbol: null, ticker: null }
+  const primary = parseAllocationAssets(signal)?.primaryAsset ?? null
+  const symbol = normalizeAssetSymbol(primary)
+  return { symbol, ticker: symbol ? getPrimaryTicker(symbol) : null }
+}
+
+function buildPrimaryHistory(params: {
+  navRows: Array<{ date: Date }>
+  signals: Array<{ publishedAt: Date; signal: string }>
+}) {
+  const history: Array<{ date: string; primarySymbol: string | null; primaryTicker: string | null }> = []
+  if (params.navRows.length === 0) return history
+
+  const signals = [...params.signals].sort((a, b) => a.publishedAt.getTime() - b.publishedAt.getTime())
+  let cursor = 0
+  let currentSymbol: string | null = null
+  let currentTicker: string | null = null
+
+  for (const row of params.navRows) {
+    const dateKey = toDateKey(row.date)
+    while (cursor < signals.length && toDateKey(signals[cursor].publishedAt) <= dateKey) {
+      const parsed = parsePrimaryFromSignal(signals[cursor].signal)
+      if (parsed.symbol) {
+        currentSymbol = parsed.symbol
+        currentTicker = parsed.ticker
+      }
+      cursor += 1
+    }
+    history.push({ date: dateKey, primarySymbol: currentSymbol, primaryTicker: currentTicker })
+  }
+
+  return history
+}
+
 function canAccessPortfolioKey(userTier: string | null, portfolioKey: string, isActive: boolean, userRole?: string) {
   if (userRole === 'admin') return true
   if (!userTier || !isActive) return false
@@ -245,6 +280,19 @@ export async function GET(request: NextRequest) {
       nav: toNum(row.value)
     }))
 
+    const signalWhere = buildSignalWhere(portfolioKey)
+    const signalHistory = navRows.length > 0 && signalWhere
+      ? await prisma.portfolioDailySignal.findMany({
+          where: {
+            ...signalWhere,
+            publishedAt: { lte: navRows[navRows.length - 1].date }
+          },
+          orderBy: { publishedAt: 'asc' },
+          select: { publishedAt: true, signal: true }
+        })
+      : []
+    const primaryHistory = buildPrimaryHistory({ navRows, signals: signalHistory })
+
     const kpis = snapshot
       ? {
           roi_inception: snapshot.roiInception !== null ? toNum(snapshot.roiInception) : null,
@@ -297,6 +345,7 @@ export async function GET(request: NextRequest) {
       primarySymbol,
       primaryTicker,
       lastError,
+      primaryHistory,
       navSeries,
       kpis,
       lastRebalance: lastRebalance

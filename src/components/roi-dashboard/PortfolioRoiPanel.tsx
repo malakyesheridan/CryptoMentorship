@@ -18,6 +18,7 @@ type RoiResponse = {
   primarySymbol: string | null
   primaryTicker: string | null
   lastError?: string | null
+  primaryHistory?: Array<{ date: string; primarySymbol: string | null; primaryTicker: string | null }>
   navSeries: Array<{ date: string; nav: number }>
   kpis: {
     roi_inception: number | null
@@ -104,6 +105,24 @@ export function PortfolioRoiPanel() {
   const pollingEnabled = data ? shouldPollRoi(data) : false
   const primaryLabel = data?.primaryTicker ? `Primary: ${data.primaryTicker}` : null
   const allocationLabel = 'Aggressive allocation (100% primary)'
+  const primaryByDate = React.useMemo(() => {
+    if (!data) return {}
+    const map: Record<string, string> = {}
+    const history = data.primaryHistory ?? []
+    if (history.length > 0) {
+      for (const entry of history) {
+        const label = entry.primaryTicker ?? entry.primarySymbol ?? null
+        if (label) map[entry.date] = label
+      }
+      return map
+    }
+    if (data.primaryTicker) {
+      for (const point of data.navSeries) {
+        map[point.date] = data.primaryTicker
+      }
+    }
+    return map
+  }, [data])
 
   React.useEffect(() => {
     if (!pollingEnabled) return
@@ -217,6 +236,7 @@ export function PortfolioRoiPanel() {
         ethSeries={[]}
         showBtcDefault={false}
         showEthDefault={false}
+        primaryByDate={primaryByDate}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">

@@ -29,13 +29,15 @@ export function RoiEquityChart({
   btcSeries,
   ethSeries,
   showBtcDefault,
-  showEthDefault
+  showEthDefault,
+  primaryByDate
 }: {
   modelSeries: PerformancePoint[]
   btcSeries: PerformancePoint[]
   ethSeries: PerformancePoint[]
   showBtcDefault: boolean
   showEthDefault: boolean
+  primaryByDate?: Record<string, string>
 }) {
   const [range, setRange] = useState('1Y')
   const allowBtc = showBtcDefault && btcSeries.length > 0
@@ -73,6 +75,40 @@ export function RoiEquityChart({
       currency: 'USD',
       maximumFractionDigits: 0
     }).format(value)
+
+  const renderTooltip = (props: any) => {
+    const { active, payload, label } = props ?? {}
+    if (!active || !payload || payload.length === 0 || !label) return null
+    const primary = primaryByDate?.[label as string] ?? null
+    const entries = payload as Array<{
+      dataKey?: string
+      name?: string
+      value?: number
+      color?: string
+    }>
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-md">
+        <div className="text-xs font-semibold text-slate-700">
+          {format(parseDate(label as string), 'MMM dd, yyyy')}
+        </div>
+        <div className="mt-2 space-y-1 text-xs text-slate-600">
+          {entries.map((entry) => (
+            <div key={`${entry.dataKey ?? entry.name ?? 'series'}`} className="flex items-center justify-between gap-4">
+              <span className="uppercase" style={{ color: entry.color }}>
+                {entry.name ?? entry.dataKey}
+              </span>
+              <span className="text-slate-700">
+                {formatCurrency(Number(entry.value ?? 0))}
+              </span>
+            </div>
+          ))}
+          {primary ? (
+            <div className="pt-1 text-slate-500">Primary: {primary}</div>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Card className="card">
@@ -123,16 +159,7 @@ export function RoiEquityChart({
                 stroke="#64748b"
                 fontSize={12}
               />
-              <Tooltip
-                formatter={(value: number, name: string) => [formatCurrency(value), name.toUpperCase()]}
-                labelFormatter={(label) => format(parseDate(label), 'MMM dd, yyyy')}
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                }}
-              />
+              <Tooltip content={renderTooltip} />
               <Line type="monotone" dataKey="model" stroke="#10b981" strokeWidth={2} dot={false} name="Model" />
               {allowBtc && showBtc && (
                 <Line type="monotone" dataKey="btc" stroke="#f59e0b" strokeWidth={2} dot={false} name="BTC" />
