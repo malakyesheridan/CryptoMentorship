@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
-import type { PortfolioDailySignalWhereInput, RiskProfile } from '@prisma/client'
+import { Prisma, RiskProfile } from '@prisma/client'
 import { toNum } from '@/lib/num/dec'
 import { parseAllocationAssets } from '@/lib/portfolio-assets'
 import { parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
@@ -15,7 +15,7 @@ function toDateKey(date: Date): string {
     .slice(0, 10)
 }
 
-function buildSignalWhere(portfolioKey: string): PortfolioDailySignalWhereInput | null {
+function buildSignalWhere(portfolioKey: string): Prisma.PortfolioDailySignalWhereInput | null {
   const parsed = parsePortfolioKey(portfolioKey)
   if (!parsed) return null
   const riskProfile = parsed.riskProfile as RiskProfile
