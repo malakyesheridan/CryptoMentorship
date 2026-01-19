@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { toNum } from '@/lib/num/dec'
 import { parseAllocationAssets } from '@/lib/portfolio-assets'
 import { parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
+import { getPrimaryTicker, normalizeAssetSymbol } from '@/lib/prices/tickers'
 
 const NAV_SERIES_TYPE = 'MODEL_NAV'
 
@@ -31,6 +32,22 @@ function buildSignalWhere(portfolioKey: string) {
     tier: 'T2',
     category: parsed.category,
     riskProfile: parsed.riskProfile
+  }
+}
+
+function selectPrimarySymbolFromAllocation(items: Array<{ asset: string; weight: number }>) {
+  if (items.length === 0) return null
+  const sorted = [...items].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))
+  return sorted[0]?.asset ?? null
+}
+
+function parseSnapshotPayload(payload: string | null | undefined) {
+  if (!payload) return {}
+  try {
+    const parsed = JSON.parse(payload)
+    return parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : {}
+  } catch {
+    return {}
   }
 }
 
@@ -73,19 +90,26 @@ export async function GET(request: NextRequest) {
     ])
 
     const allocationItems = Array.isArray(latestAllocation?.items) ? latestAllocation?.items : []
-    const allocationSymbols = Array.from(new Set(
-      allocationItems
-        .map((item: any) => String(item.asset ?? '').trim().toUpperCase())
-        .filter((symbol) => symbol.length > 0)
-    ))
+    const allocationCandidates = allocationItems
+      .map((item: any) => ({
+        asset: String(item?.asset ?? ''),
+        weight: Number(item?.weight ?? 0)
+      }))
 
-    const priceMeta = allocationSymbols.length > 0
-      ? await prisma.assetPriceDaily.groupBy({
-          by: ['symbol'],
-          _max: { date: true },
-          where: { symbol: { in: allocationSymbols } }
+    const primaryFromSignal = latestSignal ? parseAllocationAssets(latestSignal.signal)?.primaryAsset ?? null : null
+    const primaryFromAllocation = selectPrimarySymbolFromAllocation(allocationCandidates)
+    const primarySymbol = normalizeAssetSymbol(primaryFromSignal ?? primaryFromAllocation)
+    const primaryTicker = primarySymbol ? getPrimaryTicker(primarySymbol) : null
+
+    const latestPriceRow = primaryTicker
+      ? await prisma.assetPriceDaily.findFirst({
+          where: { symbol: primaryTicker },
+          orderBy: { date: 'desc' }
         })
-      : []
+      : null
+
+    const payload = parseSnapshotPayload(snapshot?.payload)
+    const lastError = typeof payload.lastError === 'string' ? payload.lastError : null
 
     return NextResponse.json({
       portfolioKey,
@@ -104,22 +128,24 @@ export async function GET(request: NextRequest) {
             allocations: allocationItems
           }
         : null,
+      primary: {
+        symbol: primarySymbol,
+        ticker: primaryTicker
+      },
       latestNav: latestNav
         ? {
             date: toDateKey(latestNav.date),
             nav: toNum(latestNav.value)
           }
         : null,
-      latestPriceDates: priceMeta.map((entry) => ({
-        symbol: entry.symbol,
-        date: entry._max.date ? toDateKey(entry._max.date) : null
-      })),
+      latestPriceDate: latestPriceRow?.date ? toDateKey(latestPriceRow.date) : null,
       snapshot: snapshot
         ? {
             needsRecompute: snapshot.needsRecompute,
             recomputeFromDate: snapshot.recomputeFromDate ? toDateKey(snapshot.recomputeFromDate) : null,
             asOfDate: snapshot.asOfDate ? toDateKey(snapshot.asOfDate) : null,
-            lastComputedAt: snapshot.lastComputedAt ? snapshot.lastComputedAt.toISOString() : null
+            lastComputedAt: snapshot.lastComputedAt ? snapshot.lastComputedAt.toISOString() : null,
+            lastError
           }
         : null,
       providerConfig: {

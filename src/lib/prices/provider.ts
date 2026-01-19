@@ -1,11 +1,12 @@
 import { logger } from '@/lib/logger'
+import { PRIMARY_TICKER_MAP } from '@/lib/prices/tickers'
 
 export type DailyClose = { date: string; close: number }
 
 const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3'
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY
 
-const COINGECKO_IDS: Record<string, string | null> = {
+const COINGECKO_ASSET_IDS: Record<string, string | null> = {
   BTC: 'bitcoin',
   ETH: 'ethereum',
   SOL: 'solana',
@@ -17,11 +18,20 @@ const COINGECKO_IDS: Record<string, string | null> = {
   LINK: 'chainlink',
   XAUTUSD: 'tether-gold',
   HYPEH: null,
-  CASH: null,
+  CASH: null
 }
 
 const MAX_RETRIES = 3
 const BASE_DELAY_MS = 750
+const CASH_TICKERS = new Set(['CASHUSD', 'USD'])
+
+const COINGECKO_TICKER_IDS = Object.entries(PRIMARY_TICKER_MAP).reduce(
+  (acc, [asset, ticker]) => {
+    acc[ticker] = COINGECKO_ASSET_IDS[asset] ?? null
+    return acc
+  },
+  {} as Record<string, string | null>
+)
 
 function buildRequestHeaders() {
   const headers: Record<string, string> = { accept: 'application/json' }
@@ -31,8 +41,8 @@ function buildRequestHeaders() {
   return headers
 }
 
-function getProviderId(symbol: string) {
-  return COINGECKO_IDS[symbol] ?? null
+function getProviderId(ticker: string) {
+  return COINGECKO_TICKER_IDS[ticker] ?? null
 }
 
 function sleep(ms: number) {
@@ -44,7 +54,7 @@ function toUnixSeconds(date: string, endOfDay = false): number {
   return Math.floor(new Date(`${date}${suffix}`).getTime() / 1000)
 }
 
-async function fetchWithRetry(url: string, meta: { symbol: string; providerId: string }): Promise<any> {
+async function fetchWithRetry(url: string, meta: { ticker: string; providerId: string }): Promise<any> {
   let attempt = 0
   while (attempt < MAX_RETRIES) {
     attempt += 1
@@ -52,7 +62,7 @@ async function fetchWithRetry(url: string, meta: { symbol: string; providerId: s
     if (response.status === 429) {
       logger.warn('Price provider rate limited', {
         provider: 'coingecko',
-        symbol: meta.symbol,
+        ticker: meta.ticker,
         providerId: meta.providerId,
         status: response.status,
         attempt
@@ -65,7 +75,7 @@ async function fetchWithRetry(url: string, meta: { symbol: string; providerId: s
     if (response.status === 401 || response.status === 403) {
       logger.error('Price provider auth error', undefined, {
         provider: 'coingecko',
-        symbol: meta.symbol,
+        ticker: meta.ticker,
         providerId: meta.providerId,
         status: response.status,
         hasApiKey: !!COINGECKO_API_KEY
@@ -80,7 +90,7 @@ async function fetchWithRetry(url: string, meta: { symbol: string; providerId: s
     }
     logger.info('Price provider response', {
       provider: 'coingecko',
-      symbol: meta.symbol,
+      ticker: meta.ticker,
       providerId: meta.providerId,
       status: response.status
     })
@@ -109,11 +119,11 @@ function listDateStrings(startDate: string, endDate: string): string[] {
   return dates
 }
 
-function logMissingDays(symbol: string, expectedDates: string[], closeMap: Map<string, number>) {
+function logMissingDays(ticker: string, expectedDates: string[], closeMap: Map<string, number>) {
   const missing = expectedDates.filter((date) => !closeMap.has(date))
   if (missing.length > 0) {
     logger.warn('Missing daily closes from provider', {
-      symbol,
+      ticker,
       missingDays: missing.slice(0, 5),
       missingCount: missing.length
     })
@@ -121,24 +131,24 @@ function logMissingDays(symbol: string, expectedDates: string[], closeMap: Map<s
 }
 
 export async function getDailyCloses(
-  symbols: string[],
+  tickers: string[],
   startDate: string,
   endDate: string
 ): Promise<Map<string, DailyClose[]>> {
   const results = new Map<string, DailyClose[]>()
   const expectedDates = listDateStrings(startDate, endDate)
 
-  for (const rawSymbol of symbols) {
-    const symbol = rawSymbol.trim().toUpperCase()
-    if (symbol === 'CASH') {
-      results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
+  for (const rawTicker of tickers) {
+    const ticker = rawTicker.trim().toUpperCase()
+    if (CASH_TICKERS.has(ticker)) {
+      results.set(ticker, expectedDates.map((date) => ({ date, close: 1 })))
       continue
     }
 
-    const providerId = getProviderId(symbol)
+    const providerId = getProviderId(ticker)
     if (!providerId) {
-      logger.warn('No provider mapping for symbol; using flat price series', { symbol })
-      results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
+      logger.error('No provider mapping for ticker', undefined, { ticker })
+      results.set(ticker, [])
       continue
     }
 
@@ -149,22 +159,22 @@ export async function getDailyCloses(
     try {
       logger.info('Price provider request', {
         provider: 'coingecko',
-        symbol,
+        ticker,
         providerId,
         startDate,
         endDate,
         url
       })
 
-      const payload = await fetchWithRetry(url, { symbol, providerId })
+      const payload = await fetchWithRetry(url, { ticker, providerId })
       const prices = Array.isArray(payload?.prices) ? payload.prices : []
       if (prices.length === 0) {
-        logger.warn('Price provider returned empty prices', { symbol, providerId, startDate, endDate })
-        results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
+        logger.error('Price provider returned empty prices', undefined, { ticker, providerId, startDate, endDate })
+        results.set(ticker, [])
         continue
       }
       const closeMap = buildDailyCloseMap(prices)
-      logMissingDays(symbol, expectedDates, closeMap)
+      logMissingDays(ticker, expectedDates, closeMap)
 
       const dailyCloses = expectedDates
         .filter((date) => closeMap.has(date))
@@ -172,15 +182,15 @@ export async function getDailyCloses(
           date,
           close: closeMap.get(date) ?? 0
         }))
-      results.set(symbol, dailyCloses)
+      results.set(ticker, dailyCloses)
     } catch (error) {
-      logger.error('Price provider request failed; using flat series', error instanceof Error ? error : new Error(String(error)), {
-        symbol,
+      logger.error('Price provider request failed', error instanceof Error ? error : new Error(String(error)), {
+        ticker,
         providerId,
         startDate,
         endDate
       })
-      results.set(symbol, expectedDates.map((date) => ({ date, close: 1 })))
+      results.set(ticker, [])
     }
   }
 

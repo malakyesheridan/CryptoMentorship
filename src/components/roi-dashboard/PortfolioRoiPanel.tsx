@@ -15,6 +15,9 @@ type RoiResponse = {
   lastComputedAt: string | null
   lastSignalDate: string | null
   lastPriceDate: string | null
+  primarySymbol: string | null
+  primaryTicker: string | null
+  lastError?: string | null
   navSeries: Array<{ date: string; nav: number }>
   kpis: {
     roi_inception: number | null
@@ -99,6 +102,7 @@ export function PortfolioRoiPanel() {
   const status = data?.status ?? 'updating'
   const showStatusBadge = status === 'updating' || status === 'stale'
   const pollingEnabled = data ? shouldPollRoi(data) : false
+  const primaryLabel = data?.primaryTicker ? `Primary: ${data.primaryTicker}` : null
 
   React.useEffect(() => {
     if (!pollingEnabled) return
@@ -128,6 +132,9 @@ export function PortfolioRoiPanel() {
     return (
       <div className="card p-6 text-center text-slate-500">
         ROI data is unavailable right now. Please check back soon.
+        {data.lastError ? (
+          <div className="mt-2 text-xs text-slate-400">{data.lastError}</div>
+        ) : null}
         {isAdmin && data.portfolioKey ? (
           <div className="mt-3">
             <Link
@@ -168,6 +175,7 @@ export function PortfolioRoiPanel() {
           <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
             Updating / waiting for latest data
           </span>
+          {primaryLabel ? <span className="text-xs text-slate-400">{primaryLabel}</span> : null}
         </div>
       ) : null}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -213,6 +221,7 @@ export function PortfolioRoiPanel() {
         <span>
           Last update posted: {data.lastSignalDate ?? data.lastRebalance?.effective_date ?? '--'}
         </span>
+        <span>{primaryLabel ?? 'Primary: --'}</span>
         <Link href="/portfolio" className="text-yellow-600 hover:text-yellow-700 font-medium">
           View My Portfolio
         </Link>

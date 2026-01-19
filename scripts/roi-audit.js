@@ -1,6 +1,20 @@
 const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
+const PRIMARY_TICKER_MAP = {
+  BTC: 'BTCUSD',
+  ETH: 'ETHUSD',
+  SOL: 'SOLUSD',
+  XRP: 'XRPUSD',
+  DOGE: 'DOGEUSD',
+  SUI: 'SUIUSD',
+  BNB: 'BNBUSD',
+  TRX: 'TRXUSD',
+  LINK: 'LINKUSD',
+  XAUTUSD: 'XAUTUSD',
+  HYPEH: 'HYPEHUSD',
+  CASH: 'CASHUSD'
+}
 
 function toDateKey(date) {
   if (!date) return null
@@ -34,10 +48,31 @@ async function run() {
     where: { seriesType: 'MODEL_NAV' }
   })
 
+  const primaryTickers = Array.from(new Set(Object.values(PRIMARY_TICKER_MAP)))
+
   const priceGroup = await prisma.assetPriceDaily.groupBy({
     by: ['symbol'],
     _count: { _all: true },
     _max: { date: true }
+  })
+
+  const primaryTickerPriceGroup = await prisma.assetPriceDaily.groupBy({
+    by: ['symbol'],
+    _count: { _all: true },
+    _max: { date: true },
+    where: { symbol: { in: primaryTickers } }
+  })
+
+  const priceSample = await prisma.assetPriceDaily.findMany({
+    where: { symbol: { in: primaryTickers } },
+    orderBy: { date: 'desc' },
+    take: 5
+  })
+
+  const navSample = await prisma.performanceSeries.findMany({
+    where: { seriesType: 'MODEL_NAV' },
+    orderBy: { date: 'desc' },
+    take: 5
   })
 
   const roiSnapshots = await prisma.roiDashboardSnapshot.findMany({
@@ -76,6 +111,14 @@ async function run() {
     }))
   )
 
+  const primaryTickerPriceSummary = sortByKey(
+    primaryTickerPriceGroup.map((row) => ({
+      key: row.symbol,
+      count: row._count._all,
+      latestDate: toDateKey(row._max.date)
+    }))
+  )
+
   const snapshotSummary = sortByKey(
     roiSnapshots
       .filter((row) => !!row.portfolioKey)
@@ -96,6 +139,18 @@ async function run() {
     allocationSummary,
     navSummary,
     priceSummary,
+    primaryTickers,
+    primaryTickerPriceSummary,
+    priceSample: priceSample.map((row) => ({
+      symbol: row.symbol,
+      date: toDateKey(row.date),
+      close: row.close.toString()
+    })),
+    navSample: navSample.map((row) => ({
+      portfolioKey: row.portfolioKey,
+      date: toDateKey(row.date),
+      value: row.value.toString()
+    })),
     snapshotSummary
   }, null, 2))
 }

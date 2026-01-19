@@ -2,6 +2,9 @@ import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { getDailyCloses } from '@/lib/prices/provider'
+import { parseAllocationAssets } from '@/lib/portfolio-assets'
+import { parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
+import { getPrimaryTicker, normalizeAssetSymbol } from '@/lib/prices/tickers'
 import { Decimal, D, toNum } from '@/lib/num/dec'
 
 const PORTFOLIO_SCOPE = 'PORTFOLIO'
@@ -64,25 +67,29 @@ function listDates(startDate: Date, endDate: Date): Date[] {
 }
 
 async function ingestPrices(
-  symbols: string[],
+  tickers: string[],
   startDate: string,
   endDate: string,
   context: { portfolioKey: string; runId?: string; trigger?: string }
 ): Promise<PriceIngestSummary[]> {
-  if (symbols.length === 0) return []
-  const closesBySymbol = await getDailyCloses(symbols, startDate, endDate)
+  if (tickers.length === 0) return []
+  const closesBySymbol = await getDailyCloses(tickers, startDate, endDate)
   const summaries: PriceIngestSummary[] = []
 
-  for (const symbol of symbols) {
-    const closes = closesBySymbol.get(symbol) ?? []
+  for (const ticker of tickers) {
+    const closes = closesBySymbol.get(ticker) ?? []
     if (closes.length === 0) {
-      summaries.push({ symbol, requested: 0, inserted: 0, updated: 0, source: 'none' })
-      continue
+      logger.error('No price data returned for ticker', undefined, {
+        ticker,
+        startDate,
+        endDate
+      })
+      throw new Error(`No daily closes returned for ${ticker}`)
     }
-    const source = symbol === 'CASH' ? 'cash' : 'coingecko'
+    const source = ticker === 'CASHUSD' || ticker === 'USD' ? 'cash' : 'coingecko'
     const existingRows = await prisma.assetPriceDaily.findMany({
       where: {
-        symbol,
+        symbol: ticker,
         date: {
           gte: parseDateKey(startDate),
           lte: parseDateKey(endDate)
@@ -104,7 +111,7 @@ async function ingestPrices(
       await prisma.assetPriceDaily.upsert({
         where: {
           symbol_date: {
-            symbol,
+            symbol: ticker,
             date
           }
         },
@@ -113,7 +120,7 @@ async function ingestPrices(
           source
         },
         create: {
-          symbol,
+          symbol: ticker,
           date,
           close: close.close,
           source
@@ -122,7 +129,7 @@ async function ingestPrices(
     }
 
     const summary = {
-      symbol,
+      symbol: ticker,
       requested: closes.length,
       inserted,
       updated,
@@ -133,7 +140,7 @@ async function ingestPrices(
       runId: context.runId ?? null,
       trigger: context.trigger ?? null,
       portfolioKey: context.portfolioKey,
-      symbol,
+      ticker,
       requested: summary.requested,
       inserted: summary.inserted,
       updated: summary.updated,
@@ -146,99 +153,38 @@ async function ingestPrices(
   return summaries
 }
 
-function fillPricesForDates(
-  symbols: string[],
-  rows: Array<{ symbol: string; date: Date; close: Decimal }>,
-  dates: Date[]
-): Map<string, Map<string, Decimal>> {
-  const rowsBySymbol = new Map<string, Array<{ dateKey: string; close: Decimal }>>()
+function buildPriceMap(rows: Array<{ date: Date; close: Decimal }>) {
+  const map = new Map<string, Decimal>()
   for (const row of rows) {
-    const dateKey = toDateKey(row.date)
-    const existing = rowsBySymbol.get(row.symbol) ?? []
-    existing.push({ dateKey, close: row.close as Decimal })
-    rowsBySymbol.set(row.symbol, existing)
+    map.set(toDateKey(row.date), row.close as Decimal)
   }
-
-  for (const [symbol, entries] of Array.from(rowsBySymbol.entries())) {
-    entries.sort((a, b) => (a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : 0))
-  }
-
-  const filled = new Map<string, Map<string, Decimal>>()
-  const dateKeys = dates.map((date) => toDateKey(date))
-
-  for (const symbol of symbols) {
-    const entries = rowsBySymbol.get(symbol) ?? []
-    let index = 0
-    let lastClose: Decimal | null = null
-    const symbolMap = new Map<string, Decimal>()
-
-    for (const dateKey of dateKeys) {
-      while (index < entries.length && entries[index].dateKey <= dateKey) {
-        lastClose = entries[index].close
-        index += 1
-      }
-      if (lastClose) {
-        symbolMap.set(dateKey, lastClose)
-      }
-    }
-
-    filled.set(symbol, symbolMap)
-  }
-
-  return filled
+  return map
 }
 
-function computeNavSeries(params: {
+function computePrimaryNavSeries(params: {
   dates: Date[]
-  allocationsByDate: Map<string, AllocationItem[]>
-  pricesBySymbol: Map<string, Map<string, Decimal>>
+  priceByDate: Map<string, Decimal>
+  portfolioKey: string
+  ticker: string
 }) {
   const navSeries: Array<{ dateKey: string; nav: Decimal; dailyReturn: Decimal }> = []
   let nav = D(100)
   let initialized = false
+  let prevPrice: Decimal | null = null
+  let lastPrice: Decimal | null = null
+  const missingDays: string[] = []
 
-  for (let index = 0; index < params.dates.length; index += 1) {
-    const date = params.dates[index]
+  for (const date of params.dates) {
     const dateKey = toDateKey(date)
-    const prevDateKey = index > 0 ? toDateKey(params.dates[index - 1]) : null
-    const allocations = params.allocationsByDate.get(dateKey)
-
-    if (!allocations || allocations.length === 0) {
-      continue
+    const priceForDate = params.priceByDate.get(dateKey)
+    if (priceForDate) {
+      lastPrice = priceForDate
+    } else if (lastPrice) {
+      missingDays.push(dateKey)
     }
 
-    if (!prevDateKey) {
-      continue
-    }
-
-    let dailyReturn = D(0)
-    let hasPrices = true
-    const missingSymbols: string[] = []
-
-    for (const allocation of allocations) {
-      const symbolPrices = params.pricesBySymbol.get(allocation.asset)
-      const priceToday = symbolPrices?.get(dateKey)
-      const pricePrev = symbolPrices?.get(prevDateKey)
-      if (!priceToday || !pricePrev) {
-        hasPrices = false
-        missingSymbols.push(allocation.asset)
-        break
-      }
-
-      const weight = D(allocation.weight)
-      const priceRatio = D(priceToday).div(pricePrev).minus(1)
-      dailyReturn = dailyReturn.add(weight.mul(priceRatio))
-    }
-
-    if (!hasPrices) {
-      if (!initialized) {
-        continue
-      }
-      logger.warn('Missing price data for NAV calculation day; forward-filling', {
-        date: dateKey,
-        missingSymbols
-      })
-      navSeries.push({ dateKey, nav, dailyReturn: D(0) })
+    const price = priceForDate ?? lastPrice
+    if (!price) {
       continue
     }
 
@@ -246,38 +192,32 @@ function computeNavSeries(params: {
       initialized = true
       nav = D(100)
       navSeries.push({ dateKey, nav, dailyReturn: D(0) })
+      prevPrice = price
       continue
     }
 
+    if (!prevPrice) {
+      prevPrice = price
+      navSeries.push({ dateKey, nav, dailyReturn: D(0) })
+      continue
+    }
+
+    const dailyReturn = D(price).div(prevPrice).minus(1)
     nav = nav.mul(D(1).add(dailyReturn))
     navSeries.push({ dateKey, nav, dailyReturn })
+    prevPrice = price
+  }
+
+  if (missingDays.length > 0) {
+    logger.warn('Missing daily closes for primary ticker; forward-filled', {
+      portfolioKey: params.portfolioKey,
+      ticker: params.ticker,
+      missingDays: missingDays.slice(0, 5),
+      missingCount: missingDays.length
+    })
   }
 
   return navSeries
-}
-
-function buildAllocationsByDate(
-  allocations: Array<{ asOfDate: Date; items: AllocationItem[] }>,
-  dates: Date[]
-): Map<string, AllocationItem[]> {
-  const allocationMap = new Map<string, AllocationItem[]>()
-  if (allocations.length === 0) return allocationMap
-
-  const sorted = [...allocations].sort((a, b) => a.asOfDate.getTime() - b.asOfDate.getTime())
-  let pointer = 0
-  let active: AllocationItem[] | null = null
-
-  for (const date of dates) {
-    while (pointer < sorted.length && sorted[pointer].asOfDate <= date) {
-      active = sorted[pointer].items
-      pointer += 1
-    }
-    if (active) {
-      allocationMap.set(toDateKey(date), active)
-    }
-  }
-
-  return allocationMap
 }
 
 function computeMetrics(navSeries: Array<{ dateKey: string; nav: Decimal; dailyReturn: Decimal }>) {
@@ -326,6 +266,86 @@ function computeMetrics(navSeries: Array<{ dateKey: string; nav: Decimal; dailyR
     volatility,
     asOfDate: parseDateKey(last.dateKey)
   }
+}
+
+function buildSignalWhere(portfolioKey: string) {
+  const parsed = parsePortfolioKey(portfolioKey)
+  if (!parsed) return null
+
+  if (parsed.tier === 'T1') {
+    return {
+      riskProfile: parsed.riskProfile,
+      OR: [
+        { tier: 'T1', category: null },
+        { tier: 'T2', category: null }
+      ]
+    }
+  }
+
+  return {
+    tier: 'T2',
+    category: parsed.category,
+    riskProfile: parsed.riskProfile
+  }
+}
+
+function selectPrimarySymbolFromSignal(signal: { signal: string | null } | null) {
+  if (!signal?.signal) return null
+  const assets = parseAllocationAssets(signal.signal)
+  return assets?.primaryAsset ?? null
+}
+
+function selectPrimarySymbolFromAllocation(items: AllocationItem[]) {
+  if (items.length === 0) return null
+  const sorted = [...items].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))
+  return sorted[0]?.asset ?? null
+}
+
+function parsePayload(payload: string | null | undefined): Record<string, unknown> {
+  if (!payload) return {}
+  try {
+    const parsed = JSON.parse(payload)
+    return parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : {}
+  } catch {
+    return {}
+  }
+}
+
+function buildPayload(existing: string | null | undefined, updates: Record<string, unknown>) {
+  const current = parsePayload(existing)
+  return JSON.stringify({ ...current, ...updates })
+}
+
+async function markSnapshotError(params: {
+  snapshot: { id: string; payload: string; needsRecompute: boolean }
+  portfolioKey: string
+  message: string
+  primarySymbol?: string | null
+  primaryTicker?: string | null
+  primarySource?: string | null
+  terminal?: boolean
+}) {
+  const payload = buildPayload(params.snapshot.payload, {
+    lastError: params.message,
+    primarySymbol: params.primarySymbol ?? null,
+    primaryTicker: params.primaryTicker ?? null,
+    primarySource: params.primarySource ?? null
+  })
+
+  await prisma.roiDashboardSnapshot.update({
+    where: { id: params.snapshot.id },
+    data: {
+      ...(params.terminal ? { needsRecompute: false } : {}),
+      lastComputedAt: new Date(),
+      payload
+    }
+  })
+
+  logger.warn('Portfolio ROI recompute skipped', {
+    portfolioKey: params.portfolioKey,
+    reason: params.message,
+    terminal: params.terminal ?? false
+  })
 }
 
 async function acquireJobLock(context: JobContext) {
@@ -459,67 +479,118 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
 
       const portfolioKey = snapshot.portfolioKey
       try {
-        const allocations = await prisma.allocationSnapshot.findMany({
-          where: { portfolioKey },
-          orderBy: { asOfDate: 'asc' }
-        })
+        const signalWhere = buildSignalWhere(portfolioKey)
+        const [allocations, latestSignal] = await Promise.all([
+          prisma.allocationSnapshot.findMany({
+            where: { portfolioKey },
+            orderBy: { asOfDate: 'asc' }
+          }),
+          signalWhere
+            ? prisma.portfolioDailySignal.findFirst({
+                where: signalWhere,
+                orderBy: { publishedAt: 'desc' }
+              })
+            : Promise.resolve(null)
+        ])
 
-        if (allocations.length === 0) {
-          logger.warn('No allocation snapshots for portfolio key', { portfolioKey })
-          await prisma.roiDashboardSnapshot.update({
-            where: { id: snapshot.id },
-            data: {
-              needsRecompute: false,
-              recomputeFromDate: null,
-              lastComputedAt: new Date()
-            }
+        const latestAllocation = allocations.length > 0 ? allocations[allocations.length - 1] : null
+        const allocationItems = (Array.isArray(latestAllocation?.items) ? latestAllocation?.items : [])
+          .map((item: any) => ({
+            asset: String(item?.asset ?? ''),
+            weight: Number(item?.weight ?? 0)
+          }))
+
+        const primaryFromSignal = selectPrimarySymbolFromSignal(latestSignal)
+        const primaryFromAllocation = selectPrimarySymbolFromAllocation(allocationItems)
+        const primarySource = primaryFromSignal ? 'signal' : (primaryFromAllocation ? 'allocation' : null)
+        const primarySymbol = normalizeAssetSymbol(primaryFromSignal ?? primaryFromAllocation)
+
+        if (!primarySymbol) {
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: 'Primary asset missing for portfolioKey',
+            terminal: true
           })
           continue
         }
 
-        const latestAllocation = allocations[allocations.length - 1]
-        const latestItems = Array.isArray(latestAllocation.items) ? latestAllocation.items : []
-        const earliestAllocationDate = toUtcDate(allocations[0].asOfDate)
+        const primaryTicker = getPrimaryTicker(primarySymbol)
+        if (!primaryTicker) {
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: `Primary ticker mapping missing for ${primarySymbol}`,
+            primarySymbol,
+            primarySource,
+            terminal: true
+          })
+          continue
+        }
+
+        const baselineDate = allocations.length > 0
+          ? toUtcDate(allocations[0].asOfDate)
+          : (latestSignal ? toUtcDate(latestSignal.publishedAt) : null)
+
+        if (!baselineDate) {
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: 'No baseline date available for primary ROI computation',
+            primarySymbol,
+            primaryTicker,
+            primarySource,
+            terminal: true
+          })
+          continue
+        }
+
+        const existingPayload = parsePayload(snapshot.payload)
+        const previousTicker = typeof existingPayload.primaryTicker === 'string' ? existingPayload.primaryTicker : null
+        const previousMode = typeof existingPayload.primaryMode === 'string' ? existingPayload.primaryMode : null
+        const primaryChanged = previousTicker !== primaryTicker || previousMode !== 'primary-only'
+
         const recomputeFrom = options.forceStartDate
           ? toUtcDate(options.forceStartDate)
-          : (snapshot.recomputeFromDate ? toUtcDate(snapshot.recomputeFromDate) : earliestAllocationDate)
-        const startDate = recomputeFrom < earliestAllocationDate ? recomputeFrom : earliestAllocationDate
+          : (snapshot.recomputeFromDate ? toUtcDate(snapshot.recomputeFromDate) : baselineDate)
+        const startDate = primaryChanged ? baselineDate : recomputeFrom
         const endDate = options.forceEndDate ? toUtcDate(options.forceEndDate) : toUtcDate(new Date())
         const priceStartDate = addDays(startDate, -2)
 
-        const symbols = Array.from(
-          new Set(
-            allocations
-              .flatMap((allocation) => Array.isArray(allocation.items) ? allocation.items : [])
-              .map((item: any) => String(item.asset ?? '').trim().toUpperCase())
-              .filter((item) => item.length > 0)
-          )
-        )
-
-        if (symbols.length === 0) {
-          logger.warn('No allocation symbols for portfolio key', { portfolioKey })
+        if (startDate > endDate) {
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: 'Recompute start date is after end date',
+            primarySymbol,
+            primaryTicker,
+            primarySource
+          })
           continue
         }
 
-        try {
-          logger.info('Portfolio ROI recompute context', {
-            runId: context.runId,
-            portfolioKey,
-            needsRecompute: snapshot.needsRecompute,
-            recomputeFromDate: snapshot.recomputeFromDate ? toDateKey(snapshot.recomputeFromDate) : null,
-            lastComputedAt: snapshot.lastComputedAt?.toISOString() ?? null,
-            asOfDate: snapshot.asOfDate ? toDateKey(snapshot.asOfDate) : null,
-            latestAllocationDate: toDateKey(latestAllocation.asOfDate),
-            allocationCount: latestItems.length,
-            allocations: latestItems,
-            symbolCount: symbols.length,
-            symbols,
-            startDate: toDateKey(startDate),
-            endDate: toDateKey(endDate),
-            priceStartDate: toDateKey(priceStartDate)
-          })
+        logger.info('Portfolio ROI recompute context', {
+          runId: context.runId,
+          portfolioKey,
+          needsRecompute: snapshot.needsRecompute,
+          recomputeFromDate: snapshot.recomputeFromDate ? toDateKey(snapshot.recomputeFromDate) : null,
+          lastComputedAt: snapshot.lastComputedAt?.toISOString() ?? null,
+          asOfDate: snapshot.asOfDate ? toDateKey(snapshot.asOfDate) : null,
+          latestSignalDate: latestSignal ? toDateKey(latestSignal.publishedAt) : null,
+          latestAllocationDate: latestAllocation ? toDateKey(latestAllocation.asOfDate) : null,
+          primarySymbol,
+          primaryTicker,
+          primarySource,
+          primaryChanged,
+          allocationCount: allocationItems.length,
+          allocations: allocationItems,
+          startDate: toDateKey(startDate),
+          endDate: toDateKey(endDate),
+          priceStartDate: toDateKey(priceStartDate)
+        })
 
-          await ingestPrices(symbols, toDateKey(priceStartDate), toDateKey(endDate), {
+        try {
+          await ingestPrices([primaryTicker], toDateKey(priceStartDate), toDateKey(endDate), {
             portfolioKey,
             runId: context.runId,
             trigger: context.trigger
@@ -529,15 +600,24 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
             'Price ingest failed for portfolio key',
             error instanceof Error ? error : new Error(String(error)),
             {
-              portfolioKey
+              portfolioKey,
+              primaryTicker
             }
           )
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: 'Price ingestion failed for primary ticker',
+            primarySymbol,
+            primaryTicker,
+            primarySource
+          })
           continue
         }
 
         const priceRows = await prisma.assetPriceDaily.findMany({
           where: {
-            symbol: { in: symbols },
+            symbol: primaryTicker,
             date: {
               gte: priceStartDate,
               lte: endDate
@@ -546,24 +626,36 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
           orderBy: { date: 'asc' }
         })
 
-        const dateRange = listDates(priceStartDate, endDate)
-        const pricesBySymbol = fillPricesForDates(symbols, priceRows, dateRange)
-        const allocationsByDate = buildAllocationsByDate(
-          allocations.map((allocation) => ({
-            asOfDate: toUtcDate(allocation.asOfDate),
-            items: Array.isArray(allocation.items) ? (allocation.items as AllocationItem[]) : []
-          })),
-          dateRange
-        )
+        if (priceRows.length === 0) {
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: `No price rows stored for ${primaryTicker}`,
+            primarySymbol,
+            primaryTicker,
+            primarySource
+          })
+          continue
+        }
 
-        const navSeries = computeNavSeries({
+        const dateRange = listDates(startDate, endDate)
+        const priceByDate = buildPriceMap(priceRows)
+        const navSeries = computePrimaryNavSeries({
           dates: dateRange,
-          allocationsByDate,
-          pricesBySymbol
+          priceByDate,
+          portfolioKey,
+          ticker: primaryTicker
         })
 
         if (navSeries.length === 0) {
-          logger.warn('No NAV series computed for portfolio key', { portfolioKey })
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: `No NAV series computed for ${primaryTicker}`,
+            primarySymbol,
+            primaryTicker,
+            primarySource
+          })
           continue
         }
 
@@ -591,11 +683,22 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
         logger.info('NAV series computed', {
           runId: context.runId,
           portfolioKey,
+          primaryTicker,
           computedDays: navSeries.length,
           writtenRows: navSeries.length
         })
 
         const metrics = computeMetrics(navSeries)
+        const lastPriceDate = priceRows[priceRows.length - 1]?.date ?? null
+        const payload = buildPayload(snapshot.payload, {
+          primarySymbol,
+          primaryTicker,
+          primarySource,
+          lastPriceDate: lastPriceDate ? toDateKey(lastPriceDate) : null,
+          lastError: null,
+          primaryMode: 'primary-only'
+        })
+
         await prisma.roiDashboardSnapshot.update({
           where: { id: snapshot.id },
           data: {
@@ -606,7 +709,8 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
             roi30d: metrics.roi30d,
             maxDrawdown: metrics.maxDrawdown,
             volatility: metrics.volatility,
-            lastComputedAt: new Date()
+            lastComputedAt: new Date(),
+            payload
           }
         })
       } catch (error) {

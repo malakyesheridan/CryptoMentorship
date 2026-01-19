@@ -3,7 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { toNum } from '@/lib/num/dec'
+import { parseAllocationAssets } from '@/lib/portfolio-assets'
 import { buildPortfolioKey, parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
+import { getPrimaryTicker, normalizeAssetSymbol } from '@/lib/prices/tickers'
 
 const NAV_SERIES_TYPE = 'MODEL_NAV'
 const PRICE_STALE_DAYS = 2
@@ -69,11 +71,11 @@ async function getDefaultPortfolioKey(userTier: string | null) {
   })
 }
 
-async function getLatestSignalDate(portfolioKey: string) {
+function buildSignalWhere(portfolioKey: string) {
   const parsed = parsePortfolioKey(portfolioKey)
   if (!parsed) return null
 
-  const where = parsed.tier === 'T1'
+  return parsed.tier === 'T1'
     ? {
         riskProfile: parsed.riskProfile,
         OR: [
@@ -86,13 +88,32 @@ async function getLatestSignalDate(portfolioKey: string) {
         category: parsed.category,
         riskProfile: parsed.riskProfile
       }
+}
 
-  const signal = await prisma.portfolioDailySignal.findFirst({
+async function getLatestSignal(portfolioKey: string) {
+  const where = buildSignalWhere(portfolioKey)
+  if (!where) return null
+
+  return prisma.portfolioDailySignal.findFirst({
     where,
     orderBy: { publishedAt: 'desc' }
   })
+}
 
-  return signal?.publishedAt ?? null
+function selectPrimarySymbolFromAllocation(items: Array<{ asset: string; weight: number }>) {
+  if (items.length === 0) return null
+  const sorted = [...items].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0))
+  return sorted[0]?.asset ?? null
+}
+
+function parseSnapshotPayload(payload: string | null | undefined) {
+  if (!payload) return {}
+  try {
+    const parsed = JSON.parse(payload)
+    return parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : {}
+  } catch {
+    return {}
+  }
 }
 
 function canAccessPortfolioKey(userTier: string | null, portfolioKey: string, isActive: boolean, userRole?: string) {
@@ -157,7 +178,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const [latestPoint, snapshot, lastRebalance, lastSignalDate] = await Promise.all([
+    const [latestPoint, snapshot, lastRebalance, latestSignal] = await Promise.all([
       prisma.performanceSeries.findFirst({
         where: { seriesType: NAV_SERIES_TYPE, portfolioKey },
         orderBy: { date: 'desc' }
@@ -174,29 +195,29 @@ export async function GET(request: NextRequest) {
         where: { portfolioKey },
         orderBy: { asOfDate: 'desc' }
       }),
-      getLatestSignalDate(portfolioKey)
+      getLatestSignal(portfolioKey)
     ])
 
     const allocationItems = Array.isArray(lastRebalance?.items) ? lastRebalance?.items : []
-    const allocationSymbols = Array.from(new Set(
-      allocationItems
-        .map((item: any) => String(item.asset ?? '').trim().toUpperCase())
-        .filter((symbol) => symbol.length > 0)
-    ))
+    const allocationCandidates = allocationItems
+      .map((item: any) => ({
+        asset: String(item?.asset ?? ''),
+        weight: Number(item?.weight ?? 0)
+      }))
 
-    const priceMeta = allocationSymbols.length > 0
-      ? await prisma.assetPriceDaily.groupBy({
-          by: ['symbol'],
-          _max: { date: true },
-          where: { symbol: { in: allocationSymbols } }
+    const primaryFromSignal = latestSignal ? parseAllocationAssets(latestSignal.signal)?.primaryAsset ?? null : null
+    const primaryFromAllocation = selectPrimarySymbolFromAllocation(allocationCandidates)
+    const primarySymbol = normalizeAssetSymbol(primaryFromSignal ?? primaryFromAllocation)
+    const primaryTicker = primarySymbol ? getPrimaryTicker(primarySymbol) : null
+
+    const lastPriceRow = primaryTicker
+      ? await prisma.assetPriceDaily.findFirst({
+          where: { symbol: primaryTicker },
+          orderBy: { date: 'desc' }
         })
-      : []
+      : null
 
-    const lastPriceDate = priceMeta.reduce<Date | null>((latest, entry) => {
-      if (!entry._max.date) return latest
-      if (!latest) return entry._max.date
-      return entry._max.date > latest ? entry._max.date : latest
-    }, null)
+    const lastPriceDate = lastPriceRow?.date ?? null
 
     const rangeDays = RANGE_DAYS[rangeParam] ?? RANGE_DAYS['1y']
     const latestDate = latestPoint?.date ?? null
@@ -231,7 +252,7 @@ export async function GET(request: NextRequest) {
         }
       : computeKpisFromNav(navSeries)
 
-    const lastSignalDateKey = lastSignalDate ? toDateKey(lastSignalDate) : null
+    const lastSignalDateKey = latestSignal?.publishedAt ? toDateKey(latestSignal.publishedAt) : null
     const lastPriceDateKey = lastPriceDate ? toDateKey(lastPriceDate) : null
     const asOfDate = kpis?.as_of_date ?? null
     const asOfDateValue = dateKeyToDate(asOfDate)
@@ -248,15 +269,17 @@ export async function GET(request: NextRequest) {
     const needsRecompute = snapshot?.needsRecompute ?? false
     const signalAhead = !!(lastSignalValue && asOfDateValue && asOfDateValue < lastSignalValue)
     const priceStale = !!(lastPriceValue && priceStaleCutoff && lastPriceValue < priceStaleCutoff)
-    const missingPrices = allocationSymbols.length > 0 && !lastPriceValue
+    const missingPrices = !!primaryTicker && !lastPriceValue
     const isStale = signalAhead || priceStale || missingPrices
     const awaitingData = !!lastSignalValue || !!lastRebalance
+    const payload = parseSnapshotPayload(snapshot?.payload)
+    const lastError = typeof payload.lastError === 'string' ? payload.lastError : null
 
     let status: 'ok' | 'updating' | 'stale' | 'error' = 'ok'
     if (needsRecompute) {
       status = 'updating'
     } else if (!hasNav) {
-      status = awaitingData ? 'updating' : 'error'
+      status = lastError ? 'error' : (awaitingData ? 'updating' : 'error')
     } else if (isStale) {
       status = 'stale'
     }
@@ -269,6 +292,9 @@ export async function GET(request: NextRequest) {
       lastComputedAt: snapshot?.lastComputedAt ? snapshot.lastComputedAt.toISOString() : null,
       lastSignalDate: lastSignalDateKey,
       lastPriceDate: lastPriceDateKey,
+      primarySymbol,
+      primaryTicker,
+      lastError,
       navSeries,
       kpis,
       lastRebalance: lastRebalance
