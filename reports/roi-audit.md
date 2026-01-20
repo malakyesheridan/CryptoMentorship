@@ -588,3 +588,50 @@ After run evidence:
 - `node scripts/roi-audit.js` shows ticker-keyed price rows (`SUIUSD`, `XAUTUSD`) and `MODEL_NAV` rows for both portfolios, with `needsRecompute=false` and `asOfDate` set.
 - `npx tsx scripts/roi-smoke.ts` shows `/api/roi` returning `status: ok`, populated `navSeries`, and `primaryTicker` for the default portfolio.
 - Job logs confirm primary-only ingestion and NAV writes for the recomputed portfolios.
+
+---
+
+# Growth ROI Audit Update (Primary Timeline)
+
+Date: 2026-01-20
+
+## Finding: Growth NAV used the latest primary for all historical days
+
+Evidence (code path):
+- `src/lib/jobs/portfolio-roi.ts` previously computed NAV with a single `primaryTicker` derived from the latest signal and reused it for the full date range.
+- This produced a mismatch where the tooltip showed the primary asset per day (signal history) but the NAV line reflected only the latest primary.
+
+Impact:
+- Growth (T1) signals changed primary across days, but the NAV line was effectively a single-asset curve, making the chart appear “off” versus the per-day primary labels.
+
+## Fix Implemented
+
+- NAV is now computed using a **primary timeline** derived from `PortfolioDailySignal` history:
+  - For each day in the recompute range, the primary asset is resolved from the latest signal on or before that day.
+  - The ROI job ingests prices for **only those primary tickers** (unique set across the date range).
+  - NAV is computed as a buy-and-hold index that switches to the correct primary per day.
+- Path: `src/lib/jobs/portfolio-roi.ts`
+
+## “Since last update” price move
+
+- `/api/roi` now returns `primaryMove` (percent change from the last update’s close to the latest close).
+- Path: `app/api/roi/route.ts`
+- UI card added: `src/components/roi-dashboard/PortfolioRoiPanel.tsx`
+
+## DB Evidence Status
+
+Attempted to run `scripts/roi-audit.ts` (using a TS runtime shim due to `tsx` spawn restrictions in this environment), but Prisma failed to connect to Neon with:
+
+```
+Error opening a TLS connection: No credentials are available in the security package (os error -2146893042)
+```
+
+Because of this TLS error, before/after DB counts and sample rows could not be captured here. The code changes are complete; re-running the audit scripts in an environment with Neon TLS access should produce the requested before/after evidence.
+
+Suggested run commands (once DB TLS is available):
+```
+set DATABASE_URL=postgresql://.../neondb?sslmode=require
+node -e "<ts runtime shim> require('./scripts/roi-audit.ts')"
+node -e "<ts runtime shim> require('./scripts/roi-backfill.ts')"
+node -e "<ts runtime shim> require('./scripts/roi-audit.ts')"
+```

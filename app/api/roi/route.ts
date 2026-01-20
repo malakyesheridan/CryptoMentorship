@@ -249,6 +249,7 @@ export async function GET(request: NextRequest) {
     const primarySymbol = normalizeAssetSymbol(primaryFromSignal ?? primaryFromAllocation)
     const primaryTicker = primarySymbol ? getPrimaryTicker(primarySymbol) : null
 
+    const lastSignalDateKey = latestSignal?.publishedAt ? toDateKey(latestSignal.publishedAt) : null
     const lastPriceRow = primaryTicker
       ? await prisma.assetPriceDaily.findFirst({
           where: { symbol: primaryTicker },
@@ -257,6 +258,31 @@ export async function GET(request: NextRequest) {
       : null
 
     const lastPriceDate = lastPriceRow?.date ?? null
+    const signalPriceRow = primaryTicker && lastSignalDateKey
+      ? await prisma.assetPriceDaily.findFirst({
+          where: {
+            symbol: primaryTicker,
+            date: {
+              lte: new Date(`${lastSignalDateKey}T00:00:00.000Z`)
+            }
+          },
+          orderBy: { date: 'desc' }
+        })
+      : null
+
+    const latestPriceValue = lastPriceRow?.close !== null && lastPriceRow?.close !== undefined
+      ? toNum(lastPriceRow.close)
+      : null
+    const signalPriceValue = signalPriceRow?.close !== null && signalPriceRow?.close !== undefined
+      ? toNum(signalPriceRow.close)
+      : null
+    const primaryMove = latestPriceValue !== null && signalPriceValue !== null
+      ? {
+          percent: ((latestPriceValue / signalPriceValue) - 1) * 100,
+          fromDate: signalPriceRow ? toDateKey(signalPriceRow.date) : null,
+          toDate: lastPriceRow ? toDateKey(lastPriceRow.date) : null
+        }
+      : null
 
     const rangeDays = RANGE_DAYS[rangeParam] ?? RANGE_DAYS['1y']
     const latestDate = latestPoint?.date ?? null
@@ -314,7 +340,6 @@ export async function GET(request: NextRequest) {
         }
       : computeKpisFromNav(navSeries)
 
-    const lastSignalDateKey = latestSignal?.publishedAt ? toDateKey(latestSignal.publishedAt) : null
     const lastPriceDateKey = lastPriceDate ? toDateKey(lastPriceDate) : null
     const asOfDate = kpis?.as_of_date ?? null
     const asOfDateValue = dateKeyToDate(asOfDate)
@@ -356,6 +381,7 @@ export async function GET(request: NextRequest) {
       lastPriceDate: lastPriceDateKey,
       primarySymbol,
       primaryTicker,
+      primaryMove,
       lastError,
       primaryHistory,
       navSeries,

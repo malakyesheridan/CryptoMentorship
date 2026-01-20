@@ -4,6 +4,7 @@ import React from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { RoiEquityChart } from '@/components/roi-dashboard/RoiEquityChart'
@@ -18,6 +19,11 @@ type RoiResponse = {
   lastPriceDate: string | null
   primarySymbol: string | null
   primaryTicker: string | null
+  primaryMove?: {
+    percent: number
+    fromDate: string | null
+    toDate: string | null
+  } | null
   lastError?: string | null
   primaryHistory?: Array<{ date: string; primarySymbol: string | null; primaryTicker: string | null }>
   navSeries: Array<{ date: string; nav: number }>
@@ -51,6 +57,11 @@ function dateKeyToDate(dateKey: string | null) {
   if (!dateKey) return null
   const date = new Date(`${dateKey}T00:00:00.000Z`)
   return Number.isNaN(date.getTime()) ? null : date
+}
+
+function formatDateKey(dateKey: string | null) {
+  const date = dateKeyToDate(dateKey)
+  return date ? format(date, 'dd-MM-yyyy') : '--'
 }
 
 function shouldPollRoi(data: RoiResponse) {
@@ -203,6 +214,10 @@ export function PortfolioRoiPanel() {
   const roi30d = data.kpis?.roi_30d ?? computed.roi30d
   const maxDrawdown = data.kpis?.max_drawdown ?? computed.maxDrawdown
   const asOfDate = data.asOfDate ?? data.kpis?.as_of_date ?? data.lastRebalance?.effective_date ?? null
+  const lastUpdateDate = data.lastSignalDate ?? data.lastRebalance?.effective_date ?? null
+  const primaryMovePercent = data.primaryMove?.percent ?? null
+  const primaryMoveFrom = data.primaryMove?.fromDate ?? null
+  const primaryMoveTo = data.primaryMove?.toDate ?? null
 
   const tierButtons = availableTiers.length > 1 ? (
     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -236,7 +251,7 @@ export function PortfolioRoiPanel() {
           {primaryLabel ? <span className="text-xs text-slate-400">{primaryLabel}</span> : null}
         </div>
       ) : null}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-slate-500">Model ROI Since Inception</p>
@@ -261,8 +276,19 @@ export function PortfolioRoiPanel() {
         </Card>
         <Card className="card">
           <CardContent className="p-5">
+            <p className="text-xs text-slate-500">Primary Move Since Last Update</p>
+            <p className={primaryMovePercent !== null && primaryMovePercent >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+              {formatPercent(primaryMovePercent)}
+            </p>
+            <p className="mt-1 text-[11px] text-slate-400">
+              {primaryMoveFrom && primaryMoveTo ? `${formatDateKey(primaryMoveFrom)} -> ${formatDateKey(primaryMoveTo)}` : '--'}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="card">
+          <CardContent className="p-5">
             <p className="text-xs text-slate-500">As of</p>
-            <p className="text-xl font-semibold text-slate-800">{asOfDate ?? '--'}</p>
+            <p className="text-xl font-semibold text-slate-800">{formatDateKey(asOfDate)}</p>
           </CardContent>
         </Card>
       </div>
@@ -277,9 +303,7 @@ export function PortfolioRoiPanel() {
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
-        <span>
-          Last update posted: {data.lastSignalDate ?? data.lastRebalance?.effective_date ?? '--'}
-        </span>
+        <span>Last update posted: {formatDateKey(lastUpdateDate)}</span>
         <span>{allocationLabel}</span>
         <span>{primaryLabel ?? 'Primary: --'}</span>
         <Link href="/portfolio" className="text-yellow-600 hover:text-yellow-700 font-medium">

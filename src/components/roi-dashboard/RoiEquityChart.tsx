@@ -89,7 +89,7 @@ export function RoiEquityChart({
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-md">
         <div className="text-xs font-semibold text-slate-700">
-          {format(parseDate(label as string), 'MMM dd, yyyy')}
+          {format(parseDate(label as string), 'dd-MM-yyyy')}
         </div>
         <div className="mt-2 space-y-1 text-xs text-slate-600">
           {entries.map((entry) => (

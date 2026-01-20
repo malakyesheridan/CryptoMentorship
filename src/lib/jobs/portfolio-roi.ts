@@ -154,65 +154,154 @@ async function ingestPrices(
   return summaries
 }
 
-function buildPriceMap(rows: Array<{ date: Date; close: Decimal }>) {
+function buildFilledPriceMap(rows: Array<{ date: Date; close: Decimal }>, dates: Date[]) {
+  const sorted = [...rows].sort((a, b) => a.date.getTime() - b.date.getTime())
   const map = new Map<string, Decimal>()
-  for (const row of rows) {
-    map.set(toDateKey(row.date), row.close as Decimal)
+  let index = 0
+  let lastClose: Decimal | null = null
+
+  for (const date of dates) {
+    const dateKey = toDateKey(date)
+    while (index < sorted.length && toDateKey(sorted[index].date) <= dateKey) {
+      lastClose = sorted[index].close as Decimal
+      index += 1
+    }
+    if (lastClose) {
+      map.set(dateKey, lastClose)
+    }
   }
+
   return map
 }
 
-function computePrimaryNavSeries(params: {
-  dates: Date[]
-  priceByDate: Map<string, Decimal>
-  portfolioKey: string
+function buildPricesByTicker(
+  rows: Array<{ symbol: string; date: Date; close: Decimal }>,
+  dates: Date[],
+  tickers: string[]
+) {
+  const grouped = new Map<string, Array<{ date: Date; close: Decimal }>>()
+  for (const row of rows) {
+    const existing = grouped.get(row.symbol) ?? []
+    existing.push({ date: row.date, close: row.close as Decimal })
+    grouped.set(row.symbol, existing)
+  }
+
+  const filled = new Map<string, Map<string, Decimal>>()
+  for (const ticker of tickers) {
+    const tickerRows = grouped.get(ticker) ?? []
+    filled.set(ticker, buildFilledPriceMap(tickerRows, dates))
+  }
+
+  return filled
+}
+
+function getLastPriceDateForTicker(
+  rows: Array<{ symbol: string; date: Date }>,
   ticker: string
+) {
+  let last: Date | null = null
+  for (const row of rows) {
+    if (row.symbol !== ticker) continue
+    if (!last || row.date > last) {
+      last = row.date
+    }
+  }
+  return last
+}
+
+function resolvePrimaryFromSignal(signal: string | null | undefined) {
+  const assets = signal ? parseAllocationAssets(signal) : null
+  const symbol = normalizeAssetSymbol(assets?.primaryAsset)
+  return {
+    symbol,
+    ticker: symbol ? getPrimaryTicker(symbol) : null
+  }
+}
+
+function buildPrimaryTimeline(params: {
+  dates: Date[]
+  signals: Array<{ publishedAt: Date; signal: string }>
+  fallbackSymbol: string | null
+  fallbackTicker: string | null
+  portfolioKey: string
+}) {
+  const timeline = new Map<string, { symbol: string; ticker: string }>()
+  const sortedSignals = [...params.signals].sort((a, b) => a.publishedAt.getTime() - b.publishedAt.getTime())
+  let cursor = 0
+  let currentSymbol = params.fallbackSymbol
+  let currentTicker = params.fallbackTicker
+
+  for (const date of params.dates) {
+    const dateKey = toDateKey(date)
+    while (cursor < sortedSignals.length && toDateKey(sortedSignals[cursor].publishedAt) <= dateKey) {
+      const resolved = resolvePrimaryFromSignal(sortedSignals[cursor].signal)
+      if (resolved.symbol && resolved.ticker) {
+        currentSymbol = resolved.symbol
+        currentTicker = resolved.ticker
+      } else {
+        logger.warn('Primary mapping missing for signal in timeline', {
+          portfolioKey: params.portfolioKey,
+          publishedAt: sortedSignals[cursor].publishedAt.toISOString()
+        })
+      }
+      cursor += 1
+    }
+    if (currentSymbol && currentTicker) {
+      timeline.set(dateKey, { symbol: currentSymbol, ticker: currentTicker })
+    }
+  }
+
+  return timeline
+}
+
+function computePrimaryTimelineNavSeries(params: {
+  dates: Date[]
+  primaryTimeline: Map<string, { symbol: string; ticker: string }>
+  pricesByTicker: Map<string, Map<string, Decimal>>
+  portfolioKey: string
 }) {
   const navSeries: Array<{ dateKey: string; nav: Decimal; dailyReturn: Decimal }> = []
   let nav = D(100)
   let initialized = false
-  let prevPrice: Decimal | null = null
-  let lastPrice: Decimal | null = null
   const missingDays: string[] = []
 
-  for (const date of params.dates) {
+  for (let index = 0; index < params.dates.length; index += 1) {
+    const date = params.dates[index]
     const dateKey = toDateKey(date)
-    const priceForDate = params.priceByDate.get(dateKey)
-    if (priceForDate) {
-      lastPrice = priceForDate
-    } else if (lastPrice) {
-      missingDays.push(dateKey)
-    }
-
-    const price = priceForDate ?? lastPrice
-    if (!price) {
+    const primary = params.primaryTimeline.get(dateKey)
+    if (!primary) {
       continue
     }
 
+    const priceMap = params.pricesByTicker.get(primary.ticker)
+    const prevDateKey = index > 0 ? toDateKey(params.dates[index - 1]) : null
+    const priceToday = priceMap?.get(dateKey)
+    const pricePrev = prevDateKey ? priceMap?.get(prevDateKey) : null
+
     if (!initialized) {
+      if (!priceToday) {
+        continue
+      }
       initialized = true
       nav = D(100)
       navSeries.push({ dateKey, nav, dailyReturn: D(0) })
-      prevPrice = price
       continue
     }
 
-    if (!prevPrice) {
-      prevPrice = price
+    if (!priceToday || !pricePrev) {
+      missingDays.push(dateKey)
       navSeries.push({ dateKey, nav, dailyReturn: D(0) })
       continue
     }
 
-    const dailyReturn = D(price).div(prevPrice).minus(1)
+    const dailyReturn = D(priceToday).div(pricePrev).minus(1)
     nav = nav.mul(D(1).add(dailyReturn))
     navSeries.push({ dateKey, nav, dailyReturn })
-    prevPrice = price
   }
 
   if (missingDays.length > 0) {
-    logger.warn('Missing daily closes for primary ticker; forward-filled', {
+    logger.warn('Missing daily closes for primary timeline; forward-filled', {
       portfolioKey: params.portfolioKey,
-      ticker: params.ticker,
       missingDays: missingDays.slice(0, 5),
       missingCount: missingDays.length
     })
@@ -482,7 +571,7 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
       const portfolioKey = snapshot.portfolioKey
       try {
         const signalWhere = buildSignalWhere(portfolioKey)
-        const [allocations, latestSignal] = await Promise.all([
+        const [allocations, latestSignal, earliestSignal] = await Promise.all([
           prisma.allocationSnapshot.findMany({
             where: { portfolioKey },
             orderBy: { asOfDate: 'asc' }
@@ -491,6 +580,12 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
             ? prisma.portfolioDailySignal.findFirst({
                 where: signalWhere,
                 orderBy: { publishedAt: 'desc' }
+              })
+            : Promise.resolve(null),
+          signalWhere
+            ? prisma.portfolioDailySignal.findFirst({
+                where: signalWhere,
+                orderBy: { publishedAt: 'asc' }
               })
             : Promise.resolve(null)
         ])
@@ -530,9 +625,9 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
           continue
         }
 
-        const baselineDate = allocations.length > 0
-          ? toUtcDate(allocations[0].asOfDate)
-          : (latestSignal ? toUtcDate(latestSignal.publishedAt) : null)
+        const baselineDate = earliestSignal
+          ? toUtcDate(earliestSignal.publishedAt)
+          : (allocations.length > 0 ? toUtcDate(allocations[0].asOfDate) : (latestSignal ? toUtcDate(latestSignal.publishedAt) : null))
 
         if (!baselineDate) {
           await markSnapshotError({
@@ -548,9 +643,8 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
         }
 
         const existingPayload = parsePayload(snapshot.payload)
-        const previousTicker = typeof existingPayload.primaryTicker === 'string' ? existingPayload.primaryTicker : null
         const previousMode = typeof existingPayload.primaryMode === 'string' ? existingPayload.primaryMode : null
-        const primaryChanged = previousTicker !== primaryTicker || previousMode !== 'primary-only'
+        const primaryChanged = previousMode !== 'primary-timeline'
 
         const recomputeFrom = options.forceStartDate
           ? toUtcDate(options.forceStartDate)
@@ -591,8 +685,56 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
           priceStartDate: toDateKey(priceStartDate)
         })
 
+        const dateRange = listDates(startDate, endDate)
+        const signalHistory = signalWhere
+          ? await prisma.portfolioDailySignal.findMany({
+              where: {
+                ...signalWhere,
+                publishedAt: {
+                  gte: baselineDate,
+                  lte: endDate
+                }
+              },
+              orderBy: { publishedAt: 'asc' },
+              select: { publishedAt: true, signal: true }
+            })
+          : []
+
+        const fallbackPrimary = resolvePrimaryFromSignal(latestSignal?.signal)
+        const fallbackSymbol = fallbackPrimary.symbol ?? primarySymbol
+        const fallbackTicker = fallbackPrimary.ticker ?? primaryTicker
+        const primaryTimeline = buildPrimaryTimeline({
+          dates: dateRange,
+          signals: signalHistory,
+          fallbackSymbol,
+          fallbackTicker,
+          portfolioKey
+        })
+        const primaryTickers = Array.from(new Set(
+          Array.from(primaryTimeline.values()).map((entry) => entry.ticker)
+        ))
+
+        logger.info('Primary timeline resolved', {
+          runId: context.runId,
+          portfolioKey,
+          primaryTickers,
+          signalCount: signalHistory.length
+        })
+
+        if (primaryTickers.length === 0) {
+          await markSnapshotError({
+            snapshot,
+            portfolioKey,
+            message: 'Primary timeline is empty',
+            primarySymbol,
+            primaryTicker,
+            primarySource
+          })
+          continue
+        }
+
         try {
-          await ingestPrices([primaryTicker], toDateKey(priceStartDate), toDateKey(endDate), {
+          await ingestPrices(primaryTickers, toDateKey(priceStartDate), toDateKey(endDate), {
             portfolioKey,
             runId: context.runId,
             trigger: context.trigger
@@ -619,7 +761,7 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
 
         const priceRows = await prisma.assetPriceDaily.findMany({
           where: {
-            symbol: primaryTicker,
+            symbol: { in: primaryTickers },
             date: {
               gte: priceStartDate,
               lte: endDate
@@ -640,13 +782,12 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
           continue
         }
 
-        const dateRange = listDates(startDate, endDate)
-        const priceByDate = buildPriceMap(priceRows)
-        const navSeries = computePrimaryNavSeries({
+        const pricesByTicker = buildPricesByTicker(priceRows, dateRange, primaryTickers)
+        const navSeries = computePrimaryTimelineNavSeries({
           dates: dateRange,
-          priceByDate,
-          portfolioKey,
-          ticker: primaryTicker
+          primaryTimeline,
+          pricesByTicker,
+          portfolioKey
         })
 
         if (navSeries.length === 0) {
@@ -691,14 +832,14 @@ export async function runPortfolioRoiJob(options: RoiJobOptions = {}) {
         })
 
         const metrics = computeMetrics(navSeries)
-        const lastPriceDate = priceRows[priceRows.length - 1]?.date ?? null
+        const lastPriceDate = getLastPriceDateForTicker(priceRows, primaryTicker)
         const payload = buildPayload(snapshot.payload, {
           primarySymbol,
           primaryTicker,
           primarySource,
           lastPriceDate: lastPriceDate ? toDateKey(lastPriceDate) : null,
           lastError: null,
-          primaryMode: 'primary-only'
+          primaryMode: 'primary-timeline'
         })
 
         await prisma.roiDashboardSnapshot.update({
