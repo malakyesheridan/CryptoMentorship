@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
+import { runPortfolioRoiJob } from '@/lib/jobs/portfolio-roi'
 import { logger } from '@/lib/logger'
 import { formatAllocationSignal, parseAllocationAssets, portfolioAssets } from '@/lib/portfolio-assets'
 import { deriveAllocations } from '@/lib/portfolio/deriveAllocations'
@@ -80,6 +81,23 @@ function triggerPortfolioRoiRecompute(request: NextRequest, portfolioKey: string
         error: error instanceof Error ? error.message : String(error)
       })
     })
+}
+
+function scheduleImmediatePortfolioRoiRecompute(portfolioKey: string, userId?: string) {
+  setTimeout(() => {
+    void runPortfolioRoiJob({
+      portfolioKey,
+      includeClean: true,
+      trigger: 'publish',
+      requestedBy: userId
+    }).catch((error) => {
+      logger.error(
+        'Immediate portfolio ROI recompute failed',
+        error instanceof Error ? error : new Error(String(error)),
+        { portfolioKey }
+      )
+    })
+  }, 0)
 }
 
 // GET /api/admin/portfolio-daily-signals - Get all daily updates
@@ -299,6 +317,7 @@ export async function POST(request: NextRequest) {
         })
 
         triggerPortfolioRoiRecompute(request, portfolioKey)
+        scheduleImmediatePortfolioRoiRecompute(portfolioKey, session.user.id)
       } catch (error) {
         logger.error('Failed to derive allocations for update', error instanceof Error ? error : new Error(String(error)), {
           signalId: signal.id,

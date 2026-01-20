@@ -30,7 +30,8 @@ export function RoiEquityChart({
   ethSeries,
   showBtcDefault,
   showEthDefault,
-  primaryByDate
+  primaryByDate,
+  primaryPriceByDate
 }: {
   modelSeries: PerformancePoint[]
   btcSeries: PerformancePoint[]
@@ -38,6 +39,7 @@ export function RoiEquityChart({
   showBtcDefault: boolean
   showEthDefault: boolean
   primaryByDate?: Record<string, string>
+  primaryPriceByDate?: Record<string, number>
 }) {
   const [range, setRange] = useState('1Y')
   const allowBtc = showBtcDefault && btcSeries.length > 0
@@ -60,14 +62,29 @@ export function RoiEquityChart({
     return Array.from(map.values()).sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime())
   }, [modelSeries, btcSeries, ethSeries])
 
-  const filteredSeries = useMemo(() => {
+  const enrichedSeries = useMemo(() => {
     if (mergedSeries.length === 0) return []
+    let prevModel: number | null = null
+    return mergedSeries.map((point) => {
+      const model = typeof point.model === 'number' ? point.model : null
+      const modelReturn = model !== null && prevModel !== null && prevModel !== 0
+        ? ((model / prevModel) - 1) * 100
+        : null
+      if (model !== null) {
+        prevModel = model
+      }
+      return { ...point, modelReturn }
+    })
+  }, [mergedSeries])
+
+  const filteredSeries = useMemo(() => {
+    if (enrichedSeries.length === 0) return []
     const option = RANGE_OPTIONS.find((item) => item.id === range)
-    if (!option || option.days === null) return mergedSeries
-    const lastDate = parseDate(mergedSeries[mergedSeries.length - 1].date)
+    if (!option || option.days === null) return enrichedSeries
+    const lastDate = parseDate(enrichedSeries[enrichedSeries.length - 1].date)
     const startDate = new Date(lastDate.getTime() - option.days * 24 * 60 * 60 * 1000)
-    return mergedSeries.filter((point) => parseDate(point.date).getTime() >= startDate.getTime())
-  }, [mergedSeries, range])
+    return enrichedSeries.filter((point) => parseDate(point.date).getTime() >= startDate.getTime())
+  }, [enrichedSeries, range])
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-US', {
@@ -76,10 +93,48 @@ export function RoiEquityChart({
       maximumFractionDigits: 0
     }).format(value)
 
+  const formatCurrencySigned = (value: number | null) => {
+    if (value === null || Number.isNaN(value)) return '--'
+    const sign = value >= 0 ? '+' : ''
+    return `${sign}${formatCurrency(Math.abs(value))}`
+  }
+
+  const formatPercent = (value: number | null) => {
+    if (value === null || Number.isNaN(value)) return '--'
+    const sign = value >= 0 ? '+' : ''
+    return `${sign}${value.toFixed(2)}%`
+  }
+
+  const formatPrice = (value: number | null) => {
+    if (value === null || Number.isNaN(value)) return '--'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4
+    }).format(value)
+  }
+
   const renderTooltip = (props: any) => {
     const { active, payload, label } = props ?? {}
     if (!active || !payload || payload.length === 0 || !label) return null
     const primary = primaryByDate?.[label as string] ?? null
+    const labelDate = parseDate(label as string)
+    const dateKey = Number.isNaN(labelDate.getTime()) ? null : labelDate.toISOString().slice(0, 10)
+    const prevDate = dateKey ? new Date(`${dateKey}T00:00:00.000Z`) : null
+    if (prevDate) prevDate.setUTCDate(prevDate.getUTCDate() - 1)
+    const prevDateKey = prevDate ? prevDate.toISOString().slice(0, 10) : null
+    const primaryPrice = dateKey ? (primaryPriceByDate?.[dateKey] ?? null) : null
+    const primaryPrevPrice = prevDateKey ? (primaryPriceByDate?.[prevDateKey] ?? null) : null
+    const primaryDelta = primaryPrice !== null && primaryPrevPrice !== null
+      ? primaryPrice - primaryPrevPrice
+      : null
+    const primaryDeltaPct = primaryPrice !== null && primaryPrevPrice !== null && primaryPrevPrice !== 0
+      ? ((primaryPrice / primaryPrevPrice) - 1) * 100
+      : null
+    const modelReturn = typeof payload?.[0]?.payload?.modelReturn === 'number'
+      ? payload[0].payload.modelReturn
+      : null
     const entries = payload as Array<{
       dataKey?: string
       name?: string
@@ -102,8 +157,27 @@ export function RoiEquityChart({
               </span>
             </div>
           ))}
+          {modelReturn !== null ? (
+            <div className="flex items-center justify-between gap-4 text-slate-500">
+              <span>Daily return</span>
+              <span className={modelReturn >= 0 ? 'text-green-600' : 'text-red-600'}>
+                {formatPercent(modelReturn)}
+              </span>
+            </div>
+          ) : null}
           {primary ? (
             <div className="pt-1 text-slate-500">Primary: {primary}</div>
+          ) : null}
+          {primaryPrice !== null ? (
+            <div className="text-slate-500">Primary close: {formatPrice(primaryPrice)}</div>
+          ) : null}
+          {primaryDelta !== null ? (
+            <div className="flex items-center justify-between gap-4 text-slate-500">
+              <span>Primary change</span>
+              <span className={primaryDelta >= 0 ? 'text-green-600' : 'text-red-600'}>
+                {formatCurrencySigned(primaryDelta)} ({formatPercent(primaryDeltaPct)})
+              </span>
+            </div>
           ) : null}
         </div>
       </div>

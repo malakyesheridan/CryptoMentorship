@@ -330,6 +330,35 @@ export async function GET(request: NextRequest) {
         })
       : []
     const primaryHistory = buildPrimaryHistory({ navRows, signals: signalHistory })
+    const primaryTickers = Array.from(
+      new Set(primaryHistory.map((entry) => entry.primaryTicker).filter((value): value is string => !!value))
+    )
+    const primaryPriceRows = navRows.length > 0 && primaryTickers.length > 0
+      ? await prisma.assetPriceDaily.findMany({
+          where: {
+            symbol: { in: primaryTickers },
+            date: {
+              gte: navRows[0].date,
+              lte: navRows[navRows.length - 1].date
+            }
+          },
+          select: { symbol: true, date: true, close: true }
+        })
+      : []
+    const primaryPriceMap = new Map<string, number>()
+    for (const row of primaryPriceRows) {
+      primaryPriceMap.set(`${row.symbol}|${toDateKey(row.date)}`, toNum(row.close))
+    }
+    const primaryPrices = primaryHistory.map((entry) => {
+      const ticker = entry.primaryTicker ?? null
+      const key = ticker ? `${ticker}|${entry.date}` : null
+      const close = key ? (primaryPriceMap.get(key) ?? null) : null
+      return {
+        date: entry.date,
+        ticker,
+        close
+      }
+    })
 
     const kpis = snapshot
       ? {
@@ -363,12 +392,20 @@ export async function GET(request: NextRequest) {
     const lastError = typeof payload.lastError === 'string' ? payload.lastError : null
 
     let status: 'ok' | 'updating' | 'stale' | 'error' = 'ok'
+    let statusReason: string | null = null
     if (needsRecompute) {
       status = 'updating'
+      statusReason = 'Recompute pending'
     } else if (!hasNav) {
       status = lastError ? 'error' : (awaitingData ? 'updating' : 'error')
+      statusReason = awaitingData ? 'Awaiting first NAV calculation' : null
     } else if (isStale) {
       status = 'stale'
+      if (signalAhead) {
+        statusReason = 'Update posted after last NAV date'
+      } else if (priceStale || missingPrices) {
+        statusReason = 'Price data lagging for primary ticker'
+      }
     }
 
     return NextResponse.json({
@@ -381,6 +418,8 @@ export async function GET(request: NextRequest) {
       lastPriceDate: lastPriceDateKey,
       primarySymbol,
       primaryTicker,
+      primaryPrices,
+      statusReason,
       primaryMove,
       lastError,
       primaryHistory,

@@ -19,6 +19,8 @@ type RoiResponse = {
   lastPriceDate: string | null
   primarySymbol: string | null
   primaryTicker: string | null
+  primaryPrices?: Array<{ date: string; ticker: string | null; close: number | null }>
+  statusReason?: string | null
   primaryMove?: {
     percent: number
     fromDate: string | null
@@ -150,6 +152,16 @@ export function PortfolioRoiPanel() {
     }
     return map
   }, [data])
+  const primaryPriceByDate = React.useMemo(() => {
+    if (!data?.primaryPrices) return {}
+    const map: Record<string, number> = {}
+    for (const entry of data.primaryPrices) {
+      if (entry.date && typeof entry.close === 'number') {
+        map[entry.date] = entry.close
+      }
+    }
+    return map
+  }, [data])
 
   React.useEffect(() => {
     if (!pollingEnabled) return
@@ -218,6 +230,15 @@ export function PortfolioRoiPanel() {
   const primaryMovePercent = data.primaryMove?.percent ?? null
   const primaryMoveFrom = data.primaryMove?.fromDate ?? null
   const primaryMoveTo = data.primaryMove?.toDate ?? null
+  const statusDetailParts = showStatusBadge
+    ? [
+        data.statusReason ?? null,
+        asOfDate ? `NAV as of ${formatDateKey(asOfDate)}` : null,
+        data.lastPriceDate ? `Prices through ${formatDateKey(data.lastPriceDate)}` : null,
+        data.lastSignalDate ? `Update posted ${formatDateKey(data.lastSignalDate)}` : null
+      ].filter((value): value is string => !!value)
+    : []
+  const statusDetail = statusDetailParts.length > 0 ? statusDetailParts.join(' | ') : null
 
   const tierButtons = availableTiers.length > 1 ? (
     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -249,6 +270,7 @@ export function PortfolioRoiPanel() {
           </span>
           <span className="text-xs text-slate-400">{allocationLabel}</span>
           {primaryLabel ? <span className="text-xs text-slate-400">{primaryLabel}</span> : null}
+          {statusDetail ? <span className="text-xs text-slate-400">{statusDetail}</span> : null}
         </div>
       ) : null}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -300,6 +322,7 @@ export function PortfolioRoiPanel() {
         showBtcDefault={false}
         showEthDefault={false}
         primaryByDate={primaryByDate}
+        primaryPriceByDate={primaryPriceByDate}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">

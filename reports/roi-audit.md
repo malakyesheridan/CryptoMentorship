@@ -618,6 +618,21 @@ Impact:
 - Path: `app/api/roi/route.ts`
 - UI card added: `src/components/roi-dashboard/PortfolioRoiPanel.tsx`
 
+## Tooltip depth (ROI dashboard)
+
+- Added daily return and primary close price on hover, plus a status detail line when NAV lags the last update.
+- Paths:
+  - `app/api/roi/route.ts` (primary price history + status reason)
+  - `src/components/roi-dashboard/PortfolioRoiPanel.tsx`
+  - `src/components/roi-dashboard/RoiEquityChart.tsx`
+
+## Immediate recompute on publish
+
+- Daily update publish/edit now schedules an immediate portfolio ROI recompute (non-blocking) via `setTimeout` to avoid delaying the publish response, so "My Portfolio" reflects new updates without waiting for cron.
+- Paths:
+  - `app/api/admin/portfolio-daily-signals/route.ts`
+  - `app/api/admin/portfolio-daily-signals/[id]/route.ts`
+
 ## DB Evidence Status
 
 Attempted to run `scripts/roi-audit.ts` (using a TS runtime shim due to `tsx` spawn restrictions in this environment), but Prisma failed to connect to Neon with:
