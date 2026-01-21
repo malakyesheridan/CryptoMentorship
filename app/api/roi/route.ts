@@ -6,6 +6,7 @@ import { toNum } from '@/lib/num/dec'
 import { parseAllocationAssets } from '@/lib/portfolio-assets'
 import { buildPortfolioKey, parsePortfolioKey } from '@/lib/portfolio/portfolio-key'
 import { getPrimaryTicker, normalizeAssetSymbol } from '@/lib/prices/tickers'
+import { runPortfolioRoiJob } from '@/lib/jobs/portfolio-roi'
 import { Prisma, RiskProfile } from '@prisma/client'
 
 const NAV_SERIES_TYPE = 'MODEL_NAV'
@@ -390,6 +391,7 @@ export async function GET(request: NextRequest) {
     const awaitingData = !!lastSignalValue || !!lastRebalance
     const payload = parseSnapshotPayload(snapshot?.payload)
     const lastError = typeof payload.lastError === 'string' ? payload.lastError : null
+    const lastKickAt = typeof payload.lastKickAt === 'string' ? payload.lastKickAt : null
 
     let status: 'ok' | 'updating' | 'stale' | 'error' = 'ok'
     let statusReason: string | null = null
@@ -405,6 +407,31 @@ export async function GET(request: NextRequest) {
         statusReason = 'Update posted after last NAV date'
       } else if (priceStale || missingPrices) {
         statusReason = 'Price data lagging for primary ticker'
+      }
+    }
+
+    const shouldKick = !!snapshot?.portfolioKey && (status === 'updating' || status === 'stale')
+    if (shouldKick) {
+      const now = new Date()
+      const lastKick = lastKickAt ? new Date(lastKickAt) : null
+      const kickStale = !lastKick || (now.getTime() - lastKick.getTime()) > 5 * 60 * 1000
+      if (kickStale && snapshot?.portfolioKey) {
+        void runPortfolioRoiJob({
+          portfolioKey: snapshot.portfolioKey,
+          includeClean: true,
+          trigger: 'roi-api'
+        }).catch(() => undefined)
+        await prisma.roiDashboardSnapshot.update({
+          where: {
+            scope_portfolioKey: {
+              scope: 'PORTFOLIO',
+              portfolioKey: snapshot.portfolioKey
+            }
+          },
+          data: {
+            payload: JSON.stringify({ ...payload, lastKickAt: now.toISOString() })
+          }
+        })
       }
     }
 

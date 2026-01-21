@@ -52,20 +52,18 @@ function triggerPortfolioRoiRecompute(request: NextRequest, portfolioKey: string
 }
 
 function scheduleImmediatePortfolioRoiRecompute(portfolioKey: string, userId?: string) {
-  setTimeout(() => {
-    void runPortfolioRoiJob({
-      portfolioKey,
-      includeClean: true,
-      trigger: 'publish',
-      requestedBy: userId
-    }).catch((error) => {
-      logger.error(
-        'Immediate portfolio ROI recompute failed',
-        error instanceof Error ? error : new Error(String(error)),
-        { portfolioKey }
-      )
-    })
-  }, 0)
+  void runPortfolioRoiJob({
+    portfolioKey,
+    includeClean: true,
+    trigger: 'publish',
+    requestedBy: userId
+  }).catch((error) => {
+    logger.error(
+      'Immediate portfolio ROI recompute failed',
+      error instanceof Error ? error : new Error(String(error)),
+      { portfolioKey }
+    )
+  })
 }
 
 // PUT /api/admin/portfolio-daily-signals/[id] - Update daily update

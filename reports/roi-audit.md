@@ -628,10 +628,15 @@ Impact:
 
 ## Immediate recompute on publish
 
-- Daily update publish/edit now schedules an immediate portfolio ROI recompute (non-blocking) via `setTimeout` to avoid delaying the publish response, so "My Portfolio" reflects new updates without waiting for cron.
+- Daily update publish/edit now schedules an immediate portfolio ROI recompute (non-blocking) by firing `runPortfolioRoiJob` directly (no await), so "My Portfolio" reflects new updates without waiting for cron.
 - Paths:
   - `app/api/admin/portfolio-daily-signals/route.ts`
   - `app/api/admin/portfolio-daily-signals/[id]/route.ts`
+
+## ROI API self-kick
+
+- `/api/roi` now triggers a throttled recompute when it detects `status=stale|updating` (kick every 5 minutes), ensuring dashboard views recover even if the publish trigger was missed.
+- Path: `app/api/roi/route.ts`
 
 ## DB Evidence Status
 
