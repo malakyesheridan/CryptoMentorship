@@ -333,6 +333,9 @@ export function PortfolioRoiPanel() {
           View My Portfolio
         </Link>
       </div>
+      <div className="text-xs text-slate-400">
+        Disclaimer: ROI dashboard is in development; figures may not be accurate.
+      </div>
     </div>
   )
 }
