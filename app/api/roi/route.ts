@@ -11,6 +11,7 @@ import { Prisma, RiskProfile } from '@prisma/client'
 
 const NAV_SERIES_TYPE = 'MODEL_NAV'
 const PRICE_STALE_DAYS = 2
+const ROI_DISPLAY_START_DATE = new Date(Date.UTC(2026, 0, 11))
 export const dynamic = 'force-dynamic'
 
 const RANGE_DAYS: Record<string, number | null> = {
@@ -295,11 +296,15 @@ export async function GET(request: NextRequest) {
           (latestDate?.getUTCDate() ?? new Date().getUTCDate()) - rangeDays
         ))
 
+    const effectiveStartDate = startDate
+      ? (startDate < ROI_DISPLAY_START_DATE ? ROI_DISPLAY_START_DATE : startDate)
+      : ROI_DISPLAY_START_DATE
+
     const navRows = await prisma.performanceSeries.findMany({
       where: {
         seriesType: NAV_SERIES_TYPE,
         portfolioKey,
-        ...(startDate ? { date: { gte: startDate } } : {})
+        ...(effectiveStartDate ? { date: { gte: effectiveStartDate } } : {})
       },
       orderBy: { date: 'asc' }
     })
