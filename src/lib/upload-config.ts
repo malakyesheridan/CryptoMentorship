@@ -19,12 +19,10 @@ export const PDF_MAX_SIZE_BYTES = 25 * 1024 * 1024 // 25MB
 export const IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
 export const UPLOAD_ALLOWED_MIME_TYPES = [
-  ...new Set([
-    ...VIDEO_UPLOAD_MIME_TYPES,
-    ...PDF_UPLOAD_MIME_TYPES,
-    ...IMAGE_UPLOAD_MIME_TYPES
-  ])
-]
+  ...VIDEO_UPLOAD_MIME_TYPES,
+  ...PDF_UPLOAD_MIME_TYPES,
+  ...IMAGE_UPLOAD_MIME_TYPES
+].filter((value, index, self) => self.indexOf(value) === index)
 
 export type UploadCategory = 'video' | 'pdf' | 'image'
 
