@@ -180,7 +180,7 @@ export function LessonPlayer({
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-8">
+              <Card className="sticky top-8" data-tour="lesson-sidebar">
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-4">
                     <Link href={`/learn/${track.slug}`}>
@@ -314,7 +314,7 @@ export function LessonPlayer({
               />
             )}
             
-            <Card className="sticky top-8">
+            <Card className="sticky top-8" data-tour="lesson-sidebar">
               <CardHeader>
                 <div className="flex items-center gap-2 mb-4">
                   <Link href={`/learn/${track.slug}`}>
@@ -413,7 +413,10 @@ export function LessonPlayer({
                 {/* Video */}
                 {lesson.videoUrl && (
                   <div className="mb-6">
-                    <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden">
+                    <div
+                      className="aspect-video bg-slate-900 rounded-lg overflow-hidden"
+                      data-tour="lesson-video"
+                    >
                       {lesson.videoUrl.includes('youtube.com') || lesson.videoUrl.includes('youtu.be') ? (
                         <iframe
                           src={lesson.videoUrl.replace('watch?v=', 'embed/')}
@@ -480,7 +483,8 @@ export function LessonPlayer({
                 {/* Completion Button */}
                 {canComplete && (
                   <div className="mb-8">
-                    <Button 
+                    <Button
+                      data-tour="lesson-complete"
                       onClick={handleComplete}
                       disabled={isCompleting}
                       size="lg" 
@@ -519,14 +523,14 @@ export function LessonPlayer({
                   <div>
                     {nextLesson ? (
                       <Link href={`/learn/${track.slug}/lesson/${nextLesson.slug}`}>
-                        <Button className="flex items-center gap-2">
+                        <Button className="flex items-center gap-2" data-tour="lesson-next">
                           Next Lesson
                           <ArrowRight className="h-4 w-4" />
                         </Button>
                       </Link>
                     ) : (
                       <Link href={`/learn/${track.slug}`}>
-                        <Button className="flex items-center gap-2">
+                        <Button className="flex items-center gap-2" data-tour="lesson-next">
                           <Award className="h-4 w-4" />
                           Complete Track
                         </Button>

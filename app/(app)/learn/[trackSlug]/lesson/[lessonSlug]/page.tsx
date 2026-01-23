@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { LessonPlayer } from '@/components/learning/LessonPlayer'
 import { ViewTracker } from '@/components/ViewTracker'
+import { LearningHubWizard } from '@/components/learning/LearningHubWizard'
 import { checkLessonAccess } from '@/lib/cohorts'
 import { normalizePdfResources } from '@/lib/learning/resources'
 
@@ -147,6 +148,7 @@ export default async function LessonPage({
 
   return (
     <>
+      <LearningHubWizard />
       <ViewTracker
         entityType="lesson"
         entityId={lesson.id}

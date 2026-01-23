@@ -36,6 +36,7 @@ import { SmartNotifications } from '@/components/learning/SmartNotifications'
 import { LearningAnalytics } from '@/components/learning/LearningAnalytics'
 import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
 import { LearningHubContent } from '@/components/learning/LearningHubContent'
+import { LearningHubWizard } from '@/components/learning/LearningHubWizard'
 import { getEnhancedMetrics } from '@/lib/analytics'
 import { unstable_cache } from 'next/cache'
 
@@ -381,6 +382,7 @@ export default async function LearningDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <LearningHubWizard />
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>

@@ -32,7 +32,10 @@ export function LearningHubTabs({ activeTab, onTabChange, stats }: LearningHubTa
   ]
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-2 mb-8 border border-slate-200">
+    <div
+      data-tour="learning-tabs"
+      className="bg-white rounded-2xl shadow-lg p-2 mb-8 border border-slate-200"
+    >
       <div className="flex gap-2 overflow-x-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon

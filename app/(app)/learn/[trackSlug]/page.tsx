@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { LearningHubWizard } from '@/components/learning/LearningHubWizard'
 import { 
   Play, 
   CheckCircle,
@@ -126,6 +127,7 @@ export default async function TrackPage({
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <LearningHubWizard />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -160,7 +162,7 @@ export default async function TrackPage({
 
           {/* Simple Progress and Action */}
           {enrollment && (
-            <div className="mb-6">
+            <div className="mb-6" data-tour="track-progress">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-600">
                   {completedLessons} of {totalLessons} lessons completed
@@ -181,7 +183,7 @@ export default async function TrackPage({
             {enrollment ? (
               nextLesson ? (
                 <Link href={`/learn/${track.slug}/lesson/${nextLesson.slug}`}>
-                  <Button size="lg">
+                  <Button size="lg" data-tour="track-continue">
                     <Play className="h-5 w-5 mr-2" />
                     Continue Learning
                   </Button>
@@ -189,7 +191,7 @@ export default async function TrackPage({
               ) : (
                 // Allow re-watching completed tracks - start from first lesson
                 <Link href={`/learn/${track.slug}/lesson/${track.lessons[0]?.slug}`}>
-                  <Button size="lg" variant="outline">
+                  <Button size="lg" variant="outline" data-tour="track-continue">
                     <Play className="h-5 w-5 mr-2" />
                     Watch Again
                   </Button>
@@ -200,7 +202,7 @@ export default async function TrackPage({
                 'use server'
                 await enrollInTrack({ trackId: track.id })
               }}>
-                <Button type="submit" size="lg">
+                <Button type="submit" size="lg" data-tour="track-continue">
                   <Play className="h-5 w-5 mr-2" />
                   Start Track
                 </Button>
@@ -236,7 +238,7 @@ export default async function TrackPage({
       )}
 
       {/* Lessons List - Prominent and Easy to Navigate */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200" data-tour="track-lessons">
           <div className="p-6 border-b border-slate-200">
             <h2 className="text-xl font-bold text-slate-900">Lessons</h2>
             <p className="text-sm text-slate-600 mt-1">Select a lesson to watch</p>

@@ -172,7 +172,10 @@ export function LearningHubContent({
 
       {/* Search (for Discover tab) */}
       {activeTab === 'discover' && (
-        <div className="bg-white rounded-2xl shadow-lg p-4 border border-slate-200">
+        <div
+          data-tour="learning-search"
+          className="bg-white rounded-2xl shadow-lg p-4 border border-slate-200"
+        >
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input

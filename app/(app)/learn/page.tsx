@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { LearningHubWizard } from '@/components/learning/LearningHubWizard'
 import { 
   BookOpen, 
   Clock, 
@@ -103,6 +104,7 @@ export default async function LearningPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <LearningHubWizard />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -169,8 +171,8 @@ export default async function LearningPage() {
         </div>
 
         {/* Tracks Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tracks.map((track) => {
+        <div data-tour="learn-track-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tracks.map((track, index) => {
             const progress = userProgress[track.id]
             
             // Calculate total duration
@@ -180,7 +182,11 @@ export default async function LearningPage() {
             const totalLessons = track.lessons.length
 
             return (
-              <Card key={track.id} className="group hover:shadow-lg transition-shadow">
+              <Card
+                key={track.id}
+                data-tour={index === 0 ? "learn-track-card" : undefined}
+                className="group hover:shadow-lg transition-shadow"
+              >
                 <CardHeader className="pb-4">
                   {track.coverUrl && (
                     <div className="aspect-video relative mb-4 rounded-lg overflow-hidden">
@@ -240,7 +246,10 @@ export default async function LearningPage() {
                   <div className="flex gap-2">
                     {progress ? (
                       <Link href={`/learn/${track.slug}`} className="flex-1">
-                        <Button className="w-full">
+                        <Button
+                          className="w-full"
+                          data-tour={index === 0 ? "learn-track-cta" : undefined}
+                        >
                           {progress.completedLessons === totalLessons ? (
                             <>
                               <Play className="h-4 w-4 mr-2" />
@@ -256,7 +265,10 @@ export default async function LearningPage() {
                       </Link>
                     ) : (
                       <Link href={`/learn/${track.slug}`} className="flex-1">
-                        <Button className="w-full">
+                        <Button
+                          className="w-full"
+                          data-tour={index === 0 ? "learn-track-cta" : undefined}
+                        >
                           <Play className="h-4 w-4 mr-2" />
                           Start Track
                         </Button>
