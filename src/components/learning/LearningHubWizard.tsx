@@ -152,6 +152,13 @@ export function LearningHubWizard() {
   const step = STEPS[state.stepIndex]
   const stepOnRoute = step ? matchesRoute(step.route, pathname) : false
 
+  const persistState = (nextState: WizardState) => {
+    setState(nextState)
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
+    }
+  }
+
   useEffect(() => {
     if (initRef.current) return
     initRef.current = true
@@ -216,7 +223,7 @@ export function LearningHubWizard() {
 
   useEffect(() => {
     if (state.stepIndex >= STEPS.length) {
-      setState({ active: false, completed: true, stepIndex: STEPS.length - 1 })
+      persistState({ active: false, completed: true, stepIndex: STEPS.length - 1 })
     }
   }, [state.stepIndex])
 
@@ -270,25 +277,25 @@ export function LearningHubWizard() {
   const hasActiveStep = state.active && step
 
   const handleStart = () => {
-    setState({ active: true, completed: false, stepIndex: 0 })
+    persistState({ active: true, completed: false, stepIndex: 0 })
   }
 
   const handleClose = () => {
-    setState({ ...state, active: false, completed: true })
+    persistState({ ...state, active: false, completed: true })
   }
 
   const handleSkip = () => {
-    setState({ ...state, active: false, completed: true })
+    persistState({ ...state, active: false, completed: true })
   }
 
   const handleNext = () => {
     const nextIndex = state.stepIndex + 1
     if (nextIndex >= STEPS.length) {
-      setState({ active: false, completed: true, stepIndex: STEPS.length - 1 })
+      persistState({ active: false, completed: true, stepIndex: STEPS.length - 1 })
       return
     }
     const nextStep = STEPS[nextIndex]
-    setState({ ...state, stepIndex: nextIndex })
+    persistState({ ...state, stepIndex: nextIndex })
     if (nextStep?.navigateTo) {
       router.push(nextStep.navigateTo)
     }
@@ -296,7 +303,7 @@ export function LearningHubWizard() {
 
   const handleBack = () => {
     const prevIndex = Math.max(0, state.stepIndex - 1)
-    setState({ ...state, stepIndex: prevIndex })
+    persistState({ ...state, stepIndex: prevIndex })
   }
 
   if (!hasActiveStep) {
@@ -329,7 +336,7 @@ export function LearningHubWizard() {
                 Go now
               </Button>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => setState({ ...state, active: false })}>
+              <Button size="sm" variant="outline" onClick={() => persistState({ ...state, active: false })}>
                 Pause tour
               </Button>
             )}
@@ -349,7 +356,7 @@ export function LearningHubWizard() {
     <div className="fixed inset-0 z-[140] pointer-events-none">
       {targetRect ? (
         <div
-          className="absolute rounded-xl border-2 border-yellow-400 shadow-[0_0_0_9999px_rgba(15,23,42,0.55)]"
+          className="absolute z-0 rounded-xl border-2 border-yellow-400 shadow-[0_0_0_9999px_rgba(15,23,42,0.55)]"
           style={{
             top: targetRect.top - 6,
             left: targetRect.left - 6,
@@ -358,13 +365,13 @@ export function LearningHubWizard() {
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-slate-950/60" />
+        <div className="absolute inset-0 z-0 bg-slate-950/60" />
       )}
 
       <div
         ref={calloutRef}
         className={cn(
-          "pointer-events-auto bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 w-80 max-w-[calc(100vw-32px)]"
+          "pointer-events-auto absolute z-10 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 w-80 max-w-[calc(100vw-32px)]"
         )}
         style={calloutStyle}
       >
