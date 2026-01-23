@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { FileText, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { PdfResource } from '@/lib/learning/resources'
+import { PDF_MAX_SIZE_BYTES, formatBytes } from '@/lib/upload-config'
 
 interface PdfAttachmentsFieldProps {
   label?: string
@@ -33,6 +34,12 @@ export function PdfAttachmentsField({
 
     if (file.type !== 'application/pdf') {
       toast.error('Please select a PDF file')
+      event.target.value = ''
+      return
+    }
+    
+    if (file.size > PDF_MAX_SIZE_BYTES) {
+      toast.error(`PDF too large. Maximum size is ${formatBytes(PDF_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
       event.target.value = ''
       return
     }

@@ -12,6 +12,9 @@ export type AuditAction =
   | 'enroll'
   | 'complete'
   | 'submit'
+  | 'upload_request'
+  | 'upload_complete'
+  | 'upload_error'
 
 export type AuditSubjectType = 
   | 'content' 
@@ -25,6 +28,7 @@ export type AuditSubjectType =
   | 'signal'
   | 'track'
   | 'lesson'
+  | 'learning_upload'
 
 export interface AuditMetadata {
   [key: string]: any

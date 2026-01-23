@@ -1,7 +1,10 @@
-/**
- * Vercel Blob Storage upload utility
- * Handles direct client-side uploads to Vercel Blob Storage
- */
+import { upload } from '@vercel/blob/client'
+import { sanitizeFilename } from '@/lib/file-validation'
+import {
+  UPLOAD_ALLOWED_MIME_TYPES,
+  formatBytes,
+  getMaxSizeForMime
+} from '@/lib/upload-config'
 
 export interface BlobUploadOptions {
   file: File
@@ -12,159 +15,116 @@ export interface BlobUploadOptions {
 export interface BlobUploadResult {
   success: boolean
   url?: string
+  path?: string
+  contentType?: string
+  size?: number
+  originalName?: string
+  requestId?: string
   error?: string
 }
 
+function createRequestId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+  return `upload_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+function getFriendlyUploadError(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message || 'Upload failed'
+    if (message.includes('401') || message.toLowerCase().includes('unauthorized')) {
+      return 'You must be signed in as an admin or editor to upload.'
+    }
+    if (message.includes('403') || message.toLowerCase().includes('forbidden')) {
+      return 'Your account does not have permission to upload.'
+    }
+    if (message.includes('BLOB_READ_WRITE_TOKEN')) {
+      return 'Upload storage is not configured. Please set BLOB_READ_WRITE_TOKEN in the environment.'
+    }
+    if (message.toLowerCase().includes('file too large')) {
+      return message
+    }
+    if (message.toLowerCase().includes('unsupported file type')) {
+      return message
+    }
+    return message
+  }
+  return 'Upload failed. Please try again.'
+}
+
 /**
- * Upload file directly to Vercel Blob Storage via API route
- * This is the recommended approach for Vercel serverless functions
+ * Upload file directly to Vercel Blob Storage using client uploads.
+ * This avoids Vercel serverless body size limits and supports large files.
  */
 export async function uploadToBlob({
   file,
   folder = 'uploads',
   onProgress
 }: BlobUploadOptions): Promise<BlobUploadResult> {
+  const requestId = createRequestId()
+
   try {
-    // Validate file size - 1GB for all files
-    const isVideoFile = file.type.startsWith('video/')
-    const maxFileSize = 1024 * 1024 * 1024 // 1GB for all files
-    const maxSizeGB = 1
-    if (file.size > maxFileSize) {
+    if (!file) {
+      return { success: false, error: 'No file provided', requestId }
+    }
+
+    if (!UPLOAD_ALLOWED_MIME_TYPES.includes(file.type)) {
       return {
         success: false,
-        error: `File too large. Maximum size is ${maxSizeGB}GB. Your file is ${(file.size / (1024 * 1024 * 1024)).toFixed(2)}GB`
+        error: 'Unsupported file type. Please upload a supported video, PDF, or image file.',
+        requestId
       }
     }
 
-    // For files larger than 4MB, we need to use chunked upload
-    // For smaller files, we can upload directly
-    const useChunkedUpload = file.size > 4 * 1024 * 1024
-
-    if (useChunkedUpload) {
-      return await uploadChunkedToBlob(file, folder, onProgress)
-    } else {
-      return await uploadDirectToBlob(file, folder, onProgress)
+    const maxSize = getMaxSizeForMime(file.type)
+    if (maxSize && file.size > maxSize) {
+      return {
+        success: false,
+        error: `File too large. Maximum size is ${formatBytes(maxSize)}. Your file is ${formatBytes(file.size)}.`,
+        requestId
+      }
     }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Upload failed'
-    }
-  }
-}
 
-/**
- * Direct upload for small files (< 4MB)
- */
-async function uploadDirectToBlob(
-  file: File,
-  folder: string,
-  onProgress?: (progress: number) => void
-): Promise<BlobUploadResult> {
-  try {
-    onProgress?.(10)
+    const safeFilename = sanitizeFilename(file.name || 'upload')
+    const timestamp = Date.now()
+    const blobPath = `${folder}/${timestamp}-${safeFilename}`
 
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('folder', folder)
-
-    const response = await fetch('/api/upload/blob', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
+    const result = await upload(blobPath, file, {
+      access: 'public',
+      contentType: file.type || 'application/octet-stream',
+      handleUploadUrl: '/api/upload/learning',
+      multipart: file.size > 10 * 1024 * 1024,
+      clientPayload: JSON.stringify({
+        requestId,
+        folder,
+        originalName: file.name,
+        contentType: file.type || 'application/octet-stream',
+        size: file.size
+      }),
+      onUploadProgress: (progress) => {
+        if (progress?.percentage !== undefined) {
+          onProgress?.(Math.round(progress.percentage))
+        }
+      }
     })
 
-    onProgress?.(90)
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-      return {
-        success: false,
-        error: error.error || `Upload failed: HTTP ${response.status}`
-      }
-    }
-
-    const result = await response.json()
     onProgress?.(100)
 
     return {
       success: true,
-      url: result.url
+      url: result.url,
+      path: result.pathname,
+      contentType: result.contentType,
+      size: file.size,
+      originalName: file.name,
+      requestId
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Upload failed'
-    }
-  }
-}
-
-/**
- * Chunked upload for large files (> 4MB)
- */
-async function uploadChunkedToBlob(
-  file: File,
-  folder: string,
-  onProgress?: (progress: number) => void
-): Promise<BlobUploadResult> {
-  const CHUNK_SIZE = 4 * 1024 * 1024 // 4MB chunks
-  const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
-  const uploadId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
-
-  try {
-    // Upload chunks
-    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-      const start = chunkIndex * CHUNK_SIZE
-      const end = Math.min(start + CHUNK_SIZE, file.size)
-      const chunk = file.slice(start, end)
-
-      const chunkFormData = new FormData()
-      chunkFormData.append('chunk', chunk)
-      chunkFormData.append('chunkIndex', chunkIndex.toString())
-      chunkFormData.append('totalChunks', totalChunks.toString())
-      chunkFormData.append('fileName', file.name)
-      chunkFormData.append('fileSize', file.size.toString())
-      chunkFormData.append('uploadId', uploadId)
-      chunkFormData.append('folder', folder)
-      chunkFormData.append('contentType', file.type || 'video/mp4')
-
-      const response = await fetch('/api/upload/blob-chunk', {
-        method: 'POST',
-        body: chunkFormData,
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-        return {
-          success: false,
-          error: error.error || `Chunk upload failed: HTTP ${response.status}`
-        }
-      }
-
-      const result = await response.json()
-
-      if (result.complete && result.url) {
-        onProgress?.(100)
-        return {
-          success: true,
-          url: result.url
-        }
-      }
-
-      // Update progress
-      const progress = Math.round(((chunkIndex + 1) / totalChunks) * 90) // Reserve 10% for final processing
-      onProgress?.(progress)
-    }
-
-    return {
-      success: false,
-      error: 'Upload completed but no final URL received'
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Chunked upload failed'
+      error: getFriendlyUploadError(error),
+      requestId
     }
   }
 }

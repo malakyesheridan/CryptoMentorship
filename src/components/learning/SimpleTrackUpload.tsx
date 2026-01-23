@@ -13,6 +13,7 @@ import { createTrack } from '@/lib/actions/learning'
 import { useRouter } from 'next/navigation'
 import { PdfAttachmentsField } from './PdfAttachmentsField'
 import type { PdfResource } from '@/lib/learning/resources'
+import { IMAGE_MAX_SIZE_BYTES, formatBytes } from '@/lib/upload-config'
 
 interface SimpleTrackUploadProps {
   onSuccess?: () => void
@@ -208,9 +209,8 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
                         return
                       }
                       // Validate file size (10MB limit)
-                      const maxFileSize = 10 * 1024 * 1024 // 10MB
-                      if (file.size > maxFileSize) {
-                        setErrorMessage(`Image too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+                      if (file.size > IMAGE_MAX_SIZE_BYTES) {
+                        setErrorMessage(`Image too large. Maximum size is ${formatBytes(IMAGE_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
                         setUploadStatus('error')
                         return
                       }

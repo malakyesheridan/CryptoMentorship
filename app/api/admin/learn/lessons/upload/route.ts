@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
+import { logger } from '@/lib/logger'
+import { nanoid } from 'nanoid'
 import { handleError } from '@/lib/errors'
 
 // Configure route for large file uploads
@@ -9,8 +11,11 @@ export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes for large uploads
 
 export async function POST(request: NextRequest) {
+  let uploadRequestId: string | null = null
+  let userId: string | null = null
   try {
     const user = await requireRole(['admin', 'editor'])
+    userId = user.id
     
     // Expect JSON with videoUrl (uploaded via blob storage)
     const body = await request.json()
@@ -23,12 +28,22 @@ export async function POST(request: NextRequest) {
     const pdfResources = Array.isArray(body.pdfResources)
       ? body.pdfResources.filter((item: any) => item?.title && item?.url)
       : []
+    uploadRequestId = body.uploadRequestId || `lesson_upload_${nanoid(8)}`
+    const uploadMeta = body.uploadMeta || null
 
     console.log('[Lesson Creation] Request received:', {
       title: title?.substring(0, 50),
       trackId,
       videoUrl: videoUrl ? 'present' : 'missing',
       userId: user.id
+    })
+    
+    logger.info('Lesson upload finalize requested', {
+      uploadRequestId,
+      trackId,
+      hasVideoUrl: !!videoUrl,
+      durationSeconds,
+      uploadMeta
     })
 
     if (!title || !title.trim()) {
@@ -120,6 +135,12 @@ export async function POST(request: NextRequest) {
       })
       
       console.log('[Lesson Creation] Lesson created successfully:', created.id)
+      logger.info('Lesson upload finalized', {
+        uploadRequestId,
+        lessonId: created.id,
+        trackId: created.trackId,
+        videoUrl: created.videoUrl
+      })
       
       // Audit log within transaction (non-blocking - won't fail transaction if audit fails)
       try {
@@ -151,6 +172,15 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
+    logger.error('Lesson upload finalize failed', error instanceof Error ? error : undefined, {
+      error: error instanceof Error ? error.message : String(error)
+    })
+    if (userId && uploadRequestId) {
+      logAudit(prisma, userId, 'upload_error', 'learning_upload', undefined, {
+        requestId: uploadRequestId,
+        error: error instanceof Error ? error.message : String(error)
+      }).catch(() => {})
+    }
     return handleError(error)
   }
 }

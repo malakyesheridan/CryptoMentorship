@@ -28,6 +28,7 @@ import { LessonVideoUpload } from './LessonVideoUpload'
 import { PdfAttachmentsField } from './PdfAttachmentsField'
 import type { PdfResource } from '@/lib/learning/resources'
 import { normalizePdfResources } from '@/lib/learning/resources'
+import { IMAGE_MAX_SIZE_BYTES, formatBytes } from '@/lib/upload-config'
 
 interface TrackEditModalProps {
   trackId: string
@@ -328,9 +329,8 @@ export function TrackEditModal({
                             return
                           }
                           // Validate file size (10MB limit)
-                          const maxFileSize = 10 * 1024 * 1024 // 10MB
-                          if (file.size > maxFileSize) {
-                            toast.error(`Image too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`)
+                          if (file.size > IMAGE_MAX_SIZE_BYTES) {
+                            toast.error(`Image too large. Maximum size is ${formatBytes(IMAGE_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
                             return
                           }
                           setFormData({ ...formData, coverImage: file })

@@ -10,6 +10,7 @@ import { CheckCircle, AlertCircle, Upload, Video } from 'lucide-react'
 import { toast } from 'sonner'
 import { PdfAttachmentsField } from './PdfAttachmentsField'
 import type { PdfResource } from '@/lib/learning/resources'
+import { VIDEO_MAX_SIZE_BYTES, VIDEO_UPLOAD_MIME_TYPES, formatBytes } from '@/lib/upload-config'
 
 interface LessonVideoUploadProps {
   trackId: string
@@ -34,16 +35,14 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     const file = event.target.files?.[0]
     if (file) {
       // Validate file size (1GB limit)
-      const maxFileSize = 1024 * 1024 * 1024 // 1GB
-      if (file.size > maxFileSize) {
-        setErrorMessage(`File too large. Maximum size is 1GB. Your file is ${(file.size / (1024 * 1024 * 1024)).toFixed(2)}GB`)
+      if (file.size > VIDEO_MAX_SIZE_BYTES) {
+        setErrorMessage(`File too large. Maximum size is ${formatBytes(VIDEO_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
         setUploadStatus('error')
         return
       }
       
       // Validate file type
-      const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
-      if (!allowedTypes.includes(file.type)) {
+      if (!VIDEO_UPLOAD_MIME_TYPES.includes(file.type)) {
         setErrorMessage('Invalid file type. Please upload an MP4, WebM, QuickTime, or AVI video file.')
         setUploadStatus('error')
         return
@@ -135,6 +134,13 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           videoUrl: uploadResult.url,
           duration: formData.duration,
           pdfResources: formData.pdfResources,
+          uploadRequestId: uploadResult.requestId,
+          uploadMeta: {
+            path: uploadResult.path,
+            contentType: uploadResult.contentType,
+            size: uploadResult.size,
+            originalName: uploadResult.originalName
+          }
         }),
       })
 
@@ -183,14 +189,6 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     } finally {
       setIsUploading(false)
     }
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
   }
 
   return (
@@ -256,7 +254,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
               </label>
               {formData.video && (
                 <div className="text-sm text-slate-600">
-                  {formatFileSize(formData.video.size)}
+                  {formatBytes(formData.video.size)}
                 </div>
               )}
             </div>

@@ -25,6 +25,9 @@ const envSchema = z.object({
     },
     z.string().email().optional()
   ),
+
+  // Vercel Blob Storage (optional - required for uploads)
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
   
   // Redis (optional)
   UPSTASH_REDIS_REST_URL: z.preprocess(
