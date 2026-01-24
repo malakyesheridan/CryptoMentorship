@@ -66,14 +66,16 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
 
   return (
     <div data-tour="learning-track-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {items.map((item) => {
+      {items.map((item, index) => {
         const isCourse = item.type === 'course'
         const isResource = item.type === 'resource'
         const href = item.url || (isCourse ? `/learn/${item.slug || item.id}` : `/content/${item.slug || item.id}`)
+        const isFirstCourse = isCourse && index === 0
         
         return (
           <Card 
             key={item.id} 
+            data-tour={isFirstCourse ? "learning-track-card" : undefined}
             className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 relative overflow-hidden"
           >
             {/* Cover Image */}
@@ -208,7 +210,10 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
 
               {/* Action Button */}
               <Link href={href} className="block" onClick={() => onItemClick?.(item)}>
-                <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
+                <Button
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                  data-tour={isFirstCourse ? "learning-track-cta" : undefined}
+                >
                   {isCourse && item.progressPct === 100 ? (
                     <>
                       <Play className="h-4 w-4 mr-2" />

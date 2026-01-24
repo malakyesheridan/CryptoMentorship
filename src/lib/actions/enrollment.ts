@@ -96,7 +96,7 @@ export async function enrollInTrack(data: z.infer<typeof EnrollTrackSchema>) {
       return { enrollment: created, notification: notif }
     })
 
-    revalidatePath('/learn')
+    revalidatePath('/learning')
     revalidatePath('/learning')
     revalidatePath(`/learn/${track.slug}`)
     
@@ -171,7 +171,7 @@ export async function completeLesson(data: z.infer<typeof CompleteLessonSchema>)
     // Update track progress
     await updateTrackProgress(session.user.id, lesson.trackId)
 
-    revalidatePath('/learn')
+    revalidatePath('/learning')
     revalidatePath('/learning')
     revalidatePath(`/learn/${lesson.track.slug}`)
     revalidatePath(`/learn/${lesson.track.slug}/lesson/${lesson.slug}`)

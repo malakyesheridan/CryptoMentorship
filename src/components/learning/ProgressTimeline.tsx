@@ -210,7 +210,7 @@ export function ProgressTimeline({
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Start Your Learning Journey</h3>
           <p className="text-slate-600 mb-4">Complete your first lesson to see your progress timeline</p>
           <Button asChild>
-            <Link href="/learn">Browse Courses</Link>
+            <Link href="/learning">Browse Courses</Link>
           </Button>
         </CardContent>
       </Card>

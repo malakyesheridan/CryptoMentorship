@@ -50,7 +50,7 @@ export function DashboardStats({
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${className}`}>
-      <Link href="/learn" className="group">
+      <Link href="/learning" className="group">
         <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu">
           <CardContent className="p-6 text-center">
             <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />

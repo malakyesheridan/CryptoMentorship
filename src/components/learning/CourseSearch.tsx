@@ -246,7 +246,7 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
       {!debouncedQuery && (
         <div className="text-center">
           <Button asChild variant="outline" size="lg">
-            <Link href="/learn">
+            <Link href="/learning">
               View All Courses
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>

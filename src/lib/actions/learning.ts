@@ -136,7 +136,7 @@ export async function completeLesson(input: unknown) {
   await checkAndBroadcastAchievements(user.id, lesson.track.id, trackProgress)
 
   // Revalidate paths to ensure UI updates
-  revalidatePath('/learn')
+  revalidatePath('/learning')
   revalidatePath('/learning')
   revalidatePath(`/learn/${lesson.track.slug}`)
   revalidatePath(`/learn/${lesson.track.slug}/lesson`)

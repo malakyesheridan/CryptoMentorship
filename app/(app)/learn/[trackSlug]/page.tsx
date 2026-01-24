@@ -107,7 +107,7 @@ export default async function TrackPage({
   const track = await getTrack(params.trackSlug)
   
   if (!track || !track.publishedAt) {
-    redirect('/learn')
+    redirect('/learning')
   }
 
   const [enrollment, userProgress] = await Promise.all([

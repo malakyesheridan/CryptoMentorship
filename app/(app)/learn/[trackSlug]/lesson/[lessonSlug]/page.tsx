@@ -100,7 +100,7 @@ export default async function LessonPage({
   ])
 
   if (!track || !lesson) {
-    redirect('/learn')
+    redirect('/learning')
   }
 
   const [progress, quizSubmission] = await Promise.all([

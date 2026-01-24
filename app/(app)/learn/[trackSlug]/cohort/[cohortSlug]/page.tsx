@@ -142,7 +142,7 @@ export default async function CohortDashboardPage({
   const cohort = await getCohort(params.trackSlug, params.cohortSlug)
   
   if (!cohort) {
-    redirect('/learn')
+    redirect('/learning')
   }
 
   const [enrollment, userProgress] = await Promise.all([

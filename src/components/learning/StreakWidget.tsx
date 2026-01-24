@@ -131,7 +131,7 @@ export function StreakWidget({
             </Button>
           ) : (
             <Button asChild className="flex-1 group-hover:shadow-lg transition-all duration-300">
-              <Link href="/learn">
+              <Link href="/learning">
                 <Play className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                 Start Learning
               </Link>

@@ -174,7 +174,7 @@ export async function enrollInCohort(data: z.infer<typeof EnrollCohortSchema>) {
       },
     })
 
-    revalidatePath('/learn')
+    revalidatePath('/learning')
     revalidatePath(`/learn/${cohort.track.slug}/cohort/${cohort.slug}`)
     
     return { success: true, enrollment }
@@ -217,7 +217,7 @@ export async function leaveCohort(cohortId: string) {
       },
     })
 
-    revalidatePath('/learn')
+    revalidatePath('/learning')
     revalidatePath(`/learn/${enrollment.cohort.track.slug}/cohort/${enrollment.cohort.slug}`)
     
     return { success: true }

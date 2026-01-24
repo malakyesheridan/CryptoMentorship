@@ -27,7 +27,7 @@ type WizardState = {
   stepIndex: number
 }
 
-const STORAGE_KEY = "learningHubWizard.v1"
+const STORAGE_KEY = "learningHubWizard.v2"
 
 const STEPS: WizardStep[] = [
   {
@@ -49,19 +49,17 @@ const STEPS: WizardStep[] = [
   {
     id: "learning-grid",
     title: "Pick a learning track",
-    body: "Open any track to see lessons, quizzes, and your progress.",
+    body: "These are your learning tracks. Each one is a full path.",
     route: "/learning",
     selector: "[data-tour=\"learning-track-grid\"]",
-    placement: "top",
-    navigateTo: "/learn",
-    routeLabel: "Learning Paths"
+    placement: "top"
   },
   {
-    id: "learn-grid",
-    title: "Learning Paths",
-    body: "Each card is a structured path. Open one to dive in.",
-    route: "/learn",
-    selector: "[data-tour=\"learn-track-grid\"]",
+    id: "learning-track-cta",
+    title: "Start a track",
+    body: "Open a track to view lessons, quizzes, and progress.",
+    route: "/learning",
+    selector: "[data-tour=\"learning-track-cta\"]",
     placement: "top"
   },
   {
@@ -72,7 +70,8 @@ const STEPS: WizardStep[] = [
     selector: "[data-tour=\"track-progress\"]",
     placement: "bottom",
     optional: true,
-    missingBody: "Progress appears after you start a track."
+    missingBody: "Progress appears after you start a track.",
+    routeLabel: "a learning track"
   },
   {
     id: "track-continue",
@@ -80,7 +79,8 @@ const STEPS: WizardStep[] = [
     body: "Jump straight to the next lesson anytime.",
     route: "/learn/*",
     selector: "[data-tour=\"track-continue\"]",
-    placement: "bottom"
+    placement: "bottom",
+    routeLabel: "a learning track"
   },
   {
     id: "lesson-sidebar",
@@ -88,7 +88,8 @@ const STEPS: WizardStep[] = [
     body: "Use the sidebar to move between lessons and see what's complete.",
     route: "/learn/*/lesson/*",
     selector: "[data-tour=\"lesson-sidebar\"]",
-    placement: "right"
+    placement: "right",
+    routeLabel: "a lesson"
   },
   {
     id: "lesson-video",
@@ -98,7 +99,8 @@ const STEPS: WizardStep[] = [
     selector: "[data-tour=\"lesson-video\"]",
     placement: "top",
     optional: true,
-    missingBody: "This lesson might be text-only or locked."
+    missingBody: "This lesson might be text-only or locked.",
+    routeLabel: "a lesson"
   },
   {
     id: "lesson-complete",
@@ -108,7 +110,8 @@ const STEPS: WizardStep[] = [
     selector: "[data-tour=\"lesson-complete\"]",
     placement: "top",
     optional: true,
-    missingBody: "This button appears after the lesson is ready to complete."
+    missingBody: "This button appears after the lesson is ready to complete.",
+    routeLabel: "a lesson"
   },
   {
     id: "lesson-next",
@@ -118,7 +121,8 @@ const STEPS: WizardStep[] = [
     selector: "[data-tour=\"lesson-next\"]",
     placement: "top",
     optional: true,
-    missingBody: "This appears once there is another lesson available."
+    missingBody: "This appears once there is another lesson available.",
+    routeLabel: "a lesson"
   }
 ]
 

@@ -67,7 +67,7 @@ export function EnhancedStats({
     <div className={cn('space-y-6', className)}>
       {/* Basic Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <Link href="/learn" className="group">
+        <Link href="/learning" className="group">
           <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full dark:bg-slate-800 dark:border-slate-700">
             <CardContent className="p-4 sm:p-6 text-center">
               <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-800 group-hover:scale-110 transition-all duration-300">

@@ -39,7 +39,7 @@ export default async function CertificatePage({
   const certificate = await getCertificate(params.code)
   
   if (!certificate) {
-    redirect('/learn')
+    redirect('/learning')
   }
 
   const { user, track } = certificate
@@ -49,7 +49,7 @@ export default async function CertificatePage({
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/learn">
+          <Link href="/learning">
             <div className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4">
               <BookOpen className="h-4 w-4" />
               Back to Learning

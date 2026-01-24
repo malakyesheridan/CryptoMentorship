@@ -145,7 +145,7 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
         <h3 className="text-lg font-semibold text-slate-900 mb-2">All Caught Up!</h3>
         <p className="text-slate-600 mb-4">You&apos;re started in all available courses. Great job!</p>
         <Button asChild>
-          <Link href="/learn">Browse All Courses</Link>
+          <Link href="/learning">Browse All Courses</Link>
         </Button>
       </div>
     )
@@ -245,7 +245,7 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
       
       <div className="text-center">
         <Button asChild variant="outline" className="group-hover:scale-105 transition-transform duration-300">
-          <Link href="/learn">
+          <Link href="/learning">
             View All Courses
             <ArrowRight className="h-4 w-4 ml-2" />
           </Link>

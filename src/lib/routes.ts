@@ -26,7 +26,7 @@ export const routes = {
     
     // Learning
     learn: {
-      list: () => '/learn',
+      list: () => '/learning',
       track: {
         detail: (trackSlug: string) => `/learn/${trackSlug}`,
         lesson: (trackSlug: string, lessonSlug: string) => `/learn/${trackSlug}/lesson/${lessonSlug}`,

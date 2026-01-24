@@ -74,7 +74,7 @@ export function SmartNotifications({
           href: nextLessonUrl
         } : {
           label: 'Browse Courses',
-          href: '/learn'
+          href: '/learning'
         },
         timestamp: now,
         read: false
@@ -92,7 +92,7 @@ export function SmartNotifications({
           href: nextLessonUrl
         } : {
           label: 'Browse Courses',
-          href: '/learn'
+          href: '/learning'
         },
         timestamp: now,
         read: false
@@ -110,7 +110,7 @@ export function SmartNotifications({
           href: nextLessonUrl
         } : {
           label: 'Browse Courses',
-          href: '/learn'
+          href: '/learning'
         },
         timestamp: now,
         read: false
@@ -131,7 +131,7 @@ export function SmartNotifications({
           href: nextLessonUrl
         } : {
           label: 'Browse Courses',
-          href: '/learn'
+          href: '/learning'
         },
         timestamp: now,
         read: false
@@ -188,7 +188,7 @@ export function SmartNotifications({
           href: nextLessonUrl
         } : {
           label: 'Browse Courses',
-          href: '/learn'
+          href: '/learning'
         },
         timestamp: now,
         read: false

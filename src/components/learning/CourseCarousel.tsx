@@ -50,7 +50,7 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
           
           <div className="space-y-3">
             <Button asChild size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-white group-hover:shadow-lg transition-all duration-300">
-              <Link href="/learn">
+              <Link href="/learning">
                 <BookOpen className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-300" />
                 Browse Learning Tracks
               </Link>
