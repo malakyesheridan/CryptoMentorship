@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/auth-server'
 import DailySignalManager from '@/components/signals/DailySignalManager'
+import { PortfolioWizard } from '@/components/portfolio/PortfolioWizard'
 import { unstable_cache } from 'next/cache'
 
 // Revalidate every 5 minutes (300 seconds) - portfolio data is historical, not real-time
@@ -117,12 +118,13 @@ export default async function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <PortfolioWizard />
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6" data-tour="portfolio-hero">
               <span className="text-white">My </span>
               <span className="text-yellow-400">Portfolio</span>
             </h1>
@@ -135,12 +137,12 @@ export default async function PortfolioPage() {
 
       <div className="container mx-auto px-4 py-12">
         {/* Daily Signal Manager (Upload + Display) */}
-        <div className="mb-8">
+        <div className="mb-8" data-tour="portfolio-updates">
           <DailySignalManager userTier={userTier} userRole={userRole} />
         </div>
 
         {/* Disclaimer */}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mt-12">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mt-12" data-tour="portfolio-disclaimer">
           <div className="flex items-start gap-4">
             <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
               <span className="text-white text-sm font-bold">!</span>

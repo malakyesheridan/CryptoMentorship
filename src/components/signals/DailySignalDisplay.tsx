@@ -165,7 +165,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
       <Card>
         <CardContent className="pt-6">
           {/* Calendar Date Picker - Above tier selector */}
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-4" data-tour="portfolio-date-picker">
             <CalendarDatePicker
               selectedDate={selectedDate}
               onDateChange={setSelectedDate}
@@ -222,7 +222,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     <Card>
       <CardContent className="pt-6">
         {/* Calendar Date Picker - Above tier selector */}
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-4" data-tour="portfolio-date-picker">
           <CalendarDatePicker
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
@@ -231,7 +231,10 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
 
         {/* Tab Navigation */}
         <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
+          <div
+            className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto"
+            data-tour="portfolio-tier-tabs"
+          >
             {tiers.map((tier) => {
               const signal = signalsByTier[tier]?.[0]
               const hasSignal = !!signal
@@ -265,7 +268,10 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
         {/* Category Tab Navigation (only for T2/Elite) */}
         {activeTier === 'T2' && (
           <div className="flex justify-center mb-6">
-            <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
+            <div
+              className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto"
+              data-tour="portfolio-category-tabs"
+            >
               {(['majors', 'memecoins'] as Category[]).map((category) => {
                 const hasSignal = !!t2SignalsByCategory[category]
                 const signal = t2SignalsByCategory[category]
@@ -299,7 +305,10 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
 
         {/* Active Tab Content */}
         {currentSignal && (
-          <div className={`${tierColors[currentSignal.tier]} border-2 shadow-lg rounded-lg p-6`}>
+          <div
+            className={`${tierColors[currentSignal.tier]} border-2 shadow-lg rounded-lg p-6`}
+            data-tour="portfolio-update-card"
+          >
             {!hasAccess ? (
               <div className="text-center py-12">
                 <Lock className="w-16 h-16 text-slate-400 mx-auto mb-4" />
@@ -341,7 +350,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
 
                 {/* Allocation Split */}
                 {allocationSplits.length > 0 ? (
-                  <div className="mb-4">
+                  <div className="mb-4" data-tour="portfolio-allocation">
                     <h4 className="font-bold text-slate-900 mb-2">Allocation Split:</h4>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <div className="space-y-3 text-slate-800">
@@ -359,7 +368,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                     </div>
                   </div>
                 ) : (
-                  <div className="mb-4">
+                  <div className="mb-4" data-tour="portfolio-allocation">
                     <h4 className="font-bold text-slate-900 mb-2">Update:</h4>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <div className="text-lg text-slate-800">
@@ -375,7 +384,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
 
                 {/* Executive Summary */}
                 {currentSignal.executiveSummary && (
-                  <div className="mb-4">
+                  <div className="mb-4" data-tour="portfolio-summary">
                     <h4 className="font-bold text-slate-900 mb-2">Executive Summary:</h4>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <p className="text-slate-700 whitespace-pre-wrap">
@@ -387,7 +396,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
 
                 {/* Associated Data */}
                 {currentSignal.associatedData && (
-                  <div>
+                  <div data-tour="portfolio-data">
                     <h4 className="font-bold text-slate-900 mb-2">Associated Data:</h4>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <p className="text-slate-700 whitespace-pre-wrap">
