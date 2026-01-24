@@ -16,7 +16,7 @@ import type { PdfResource } from '@/lib/learning/resources'
 import { IMAGE_MAX_SIZE_BYTES, formatBytes } from '@/lib/upload-config'
 
 interface SimpleTrackUploadProps {
-  onSuccess?: () => void
+  onSuccess?: (track: { id: string; title: string; slug: string }) => void
 }
 
 export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
@@ -107,7 +107,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
         // Call onSuccess callback if provided, otherwise reload
         if (onSuccess) {
           setTimeout(() => {
-            onSuccess()
+            onSuccess(result.track)
           }, 500)
         } else {
           setTimeout(() => {

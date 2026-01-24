@@ -121,8 +121,8 @@ export function TrackEditModal({
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     setIsLoading(true)
 
     try {
@@ -253,7 +253,7 @@ export function TrackEditModal({
           })}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
           {/* Basic Info Tab */}
           {activeTab === 'basic' && (
             <div className="space-y-6">
@@ -577,15 +577,16 @@ export function TrackEditModal({
                 Publish Now
               </Button>
               <Button
-                type="submit"
+                type="button"
                 disabled={isLoading}
+                onClick={() => handleSubmit()}
               >
                 <Save className="h-4 w-4 mr-2" />
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

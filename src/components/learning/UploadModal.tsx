@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { SimpleTrackUpload } from './SimpleTrackUpload'
 import { LessonVideoUpload } from './LessonVideoUpload'
-import { BookOpen, Upload, Plus } from 'lucide-react'
+import { BookOpen, Upload, Plus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface UploadModalProps {
@@ -27,26 +27,55 @@ export function UploadModal({
 }: UploadModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('new')
   const [selectedTrackId, setSelectedTrackId] = useState<string>('')
+  const [lastCreatedTrack, setLastCreatedTrack] = useState<{
+    id: string
+    title: string
+    slug: string
+  } | null>(null)
+  const [lastUploadedLessonTitle, setLastUploadedLessonTitle] = useState<string | null>(null)
 
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!open) {
       setSelectedTrackId('')
       setActiveTab('new')
+      setLastCreatedTrack(null)
+      setLastUploadedLessonTitle(null)
     }
   }, [open])
 
-  const handleTrackCreated = () => {
+  useEffect(() => {
+    if (!lastCreatedTrack) return
+    const timeout = setTimeout(() => {
+      setLastCreatedTrack(null)
+    }, 10000)
+    return () => clearTimeout(timeout)
+  }, [lastCreatedTrack])
+
+  useEffect(() => {
+    if (!lastUploadedLessonTitle) return
+    const timeout = setTimeout(() => {
+      setLastUploadedLessonTitle(null)
+    }, 10000)
+    return () => clearTimeout(timeout)
+  }, [lastUploadedLessonTitle])
+
+  const handleTrackCreated = (track: { id: string; title: string; slug: string }) => {
     onTrackCreated?.()
+    setLastCreatedTrack(track)
+    setSelectedTrackId(track.id)
     // Switch to existing tab after track is created so they can upload videos
     setActiveTab('existing')
     // The parent will refresh tracks list
   }
 
-  const handleVideoUploaded = () => {
+  const handleVideoUploaded = (lessonTitle?: string) => {
     onVideoUploaded?.()
+    if (lessonTitle) {
+      setLastUploadedLessonTitle(lessonTitle)
+    }
     // Don't close modal, just reset the form
-    setSelectedTrackId('')
+    setSelectedTrackId(selectedTrackId)
   }
 
   return (
@@ -61,6 +90,37 @@ export function UploadModal({
             Create a new track or upload videos to an existing track
           </DialogDescription>
         </DialogHeader>
+
+        {lastCreatedTrack && (
+          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start justify-between gap-4">
+            <span>
+              Track created: <span className="font-semibold">{lastCreatedTrack.title}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setLastCreatedTrack(null)}
+              className="text-green-700 hover:text-green-900"
+              aria-label="Dismiss track created confirmation"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+        {lastUploadedLessonTitle && (
+          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start justify-between gap-4">
+            <span>
+              Lesson uploaded: <span className="font-semibold">{lastUploadedLessonTitle}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setLastUploadedLessonTitle(null)}
+              className="text-green-700 hover:text-green-900"
+              aria-label="Dismiss lesson uploaded confirmation"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex border-b border-slate-200 mb-6">

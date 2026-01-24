@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { CheckCircle, AlertCircle, Upload, Video } from 'lucide-react'
+import { CheckCircle, AlertCircle, Upload, Video, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { PdfAttachmentsField } from './PdfAttachmentsField'
 import type { PdfResource } from '@/lib/learning/resources'
@@ -14,7 +14,7 @@ import { VIDEO_MAX_SIZE_BYTES, VIDEO_UPLOAD_MIME_TYPES, formatBytes } from '@/li
 
 interface LessonVideoUploadProps {
   trackId: string
-  onUploadSuccess?: () => void
+  onUploadSuccess?: (lessonTitle?: string) => void
 }
 
 export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploadProps) {
@@ -22,6 +22,17 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [lastUploadedTitle, setLastUploadedTitle] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (uploadStatus !== 'success') return
+    const timeout = setTimeout(() => {
+      setUploadStatus('idle')
+      setUploadProgress(0)
+      setLastUploadedTitle(null)
+    }, 10000)
+    return () => clearTimeout(timeout)
+  }, [uploadStatus])
 
   const [formData, setFormData] = useState({
     title: '',
@@ -101,6 +112,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     setUploadStatus('uploading')
     setErrorMessage('')
     setUploadProgress(0)
+    setLastUploadedTitle(null)
 
     try {
       // Upload video to Vercel Blob Storage first
@@ -156,6 +168,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
       if (result.success) {
         setUploadStatus('success')
         setUploadProgress(100)
+        setLastUploadedTitle(formData.title.trim())
         setFormData({
           title: '',
           description: '',
@@ -168,15 +181,11 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           // Use requestAnimationFrame to ensure this runs after React's render cycle
           requestAnimationFrame(() => {
             setTimeout(() => {
-              onUploadSuccess()
+              onUploadSuccess(formData.title.trim())
             }, 0)
           })
         }
         toast.success('Video lesson uploaded successfully!')
-        setTimeout(() => {
-          setUploadStatus('idle')
-          setUploadProgress(0)
-        }, 2000)
       } else {
         setUploadStatus('error')
         setErrorMessage(result.error || 'Failed to create lesson')
@@ -319,9 +328,25 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
 
         {/* Status Messages */}
         {uploadStatus === 'success' && (
-          <div className="mt-4 flex items-center space-x-2 text-green-600">
-            <CheckCircle className="w-5 h-5" />
-            <span>Lesson uploaded successfully!</span>
+          <div className="mt-4 flex items-center justify-between gap-3 text-green-600">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5" />
+              <span>
+                Lesson uploaded successfully{lastUploadedTitle ? `: ${lastUploadedTitle}` : '!'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setUploadStatus('idle')
+                setUploadProgress(0)
+                setLastUploadedTitle(null)
+              }}
+              className="text-green-700 hover:text-green-900"
+              aria-label="Dismiss lesson uploaded confirmation"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
 
