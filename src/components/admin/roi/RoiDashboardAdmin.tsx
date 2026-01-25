@@ -129,13 +129,13 @@ function PreviewPanel() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-xs text-slate-500">ROI Since Inception</p>
+                <p className="text-xs text-slate-500">ROI Since Tracking Started</p>
                 <p className={cn('text-lg font-semibold', preview.metrics.roiSinceInceptionPct >= 0 ? 'text-green-600' : 'text-red-600')}>
                   {formatPercent(preview.metrics.roiSinceInceptionPct)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">ROI Last 30 Days</p>
+                <p className="text-xs text-slate-500">ROI (last 30 days)</p>
                 <p className={cn('text-lg font-semibold', preview.metrics.roiLast30DaysPct >= 0 ? 'text-green-600' : 'text-red-600')}>
                   {formatPercent(preview.metrics.roiLast30DaysPct)}
                 </p>

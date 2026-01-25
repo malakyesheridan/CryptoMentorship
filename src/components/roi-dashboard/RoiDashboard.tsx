@@ -18,7 +18,7 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Model ROI Since Inception</p>
+            <p className="text-xs text-slate-500">ROI Since Tracking Started</p>
             <p className={metrics.roiSinceInceptionPct >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
               {formatPercent(metrics.roiSinceInceptionPct)}
             </p>
@@ -26,7 +26,7 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Model ROI Last 30 Days</p>
+            <p className="text-xs text-slate-500">ROI (last 30 days)</p>
             <p className={metrics.roiLast30DaysPct >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
               {formatPercent(metrics.roiLast30DaysPct)}
             </p>

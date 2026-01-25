@@ -63,7 +63,7 @@ function dateKeyToDate(dateKey: string | null) {
 
 function formatDateKey(dateKey: string | null) {
   const date = dateKeyToDate(dateKey)
-  return date ? format(date, 'dd-MM-yyyy') : '--'
+  return date ? format(date, 'dd MMM yyyy') : '--'
 }
 
 function shouldPollRoi(data: RoiResponse) {
@@ -103,6 +103,42 @@ function computeKpis(navSeries: Array<{ date: string; nav: number }>) {
   }
 
   return { roiInception, roi30d, maxDrawdown }
+}
+
+function getSeriesTrackingStats(navSeries: Array<{ date: string; nav: number }>) {
+  if (navSeries.length === 0) {
+    return { firstDateKey: null, lastDateKey: null, last30DayCount: 0 }
+  }
+
+  let firstDateKey: string | null = null
+  let lastDateKey: string | null = null
+  const validDates: string[] = []
+
+  for (const point of navSeries) {
+    const dateKey = point.date
+    if (!dateKey || !dateKeyToDate(dateKey)) continue
+    validDates.push(dateKey)
+    if (!firstDateKey || dateKey < firstDateKey) firstDateKey = dateKey
+    if (!lastDateKey || dateKey > lastDateKey) lastDateKey = dateKey
+  }
+
+  if (!lastDateKey) {
+    return { firstDateKey: null, lastDateKey: null, last30DayCount: 0 }
+  }
+
+  const lastDate = dateKeyToDate(lastDateKey)
+  if (!lastDate) {
+    return { firstDateKey, lastDateKey, last30DayCount: 0 }
+  }
+
+  const lookback = new Date(lastDate)
+  lookback.setUTCDate(lookback.getUTCDate() - 30)
+  const last30DayCount = validDates.reduce((count, dateKey) => {
+    const date = dateKeyToDate(dateKey)
+    return date && date >= lookback ? count + 1 : count
+  }, 0)
+
+  return { firstDateKey, lastDateKey, last30DayCount }
 }
 
 export function PortfolioRoiPanel() {
@@ -226,6 +262,14 @@ export function PortfolioRoiPanel() {
   const roi30d = data.kpis?.roi_30d ?? computed.roi30d
   const maxDrawdown = data.kpis?.max_drawdown ?? computed.maxDrawdown
   const asOfDate = data.asOfDate ?? data.kpis?.as_of_date ?? data.lastRebalance?.effective_date ?? null
+  const { firstDateKey, lastDateKey, last30DayCount } = getSeriesTrackingStats(data.navSeries)
+  const trackingStartLabel = firstDateKey ? formatDateKey(firstDateKey) : '--'
+  const trackingEndKey = asOfDate ?? lastDateKey
+  const trackingEndLabel = trackingEndKey ? formatDateKey(trackingEndKey) : '--'
+  const availableDays = Math.min(30, last30DayCount)
+  const roiLastLabel = availableDays > 0 && availableDays < 30
+    ? `ROI (last ${availableDays} days)`
+    : 'ROI (last 30 days)'
   const lastUpdateDate = data.lastSignalDate ?? data.lastRebalance?.effective_date ?? null
   const primaryMovePercent = data.primaryMove?.percent ?? null
   const primaryMoveFrom = data.primaryMove?.fromDate ?? null
@@ -273,18 +317,22 @@ export function PortfolioRoiPanel() {
           {statusDetail ? <span className="text-xs text-slate-400">{statusDetail}</span> : null}
         </div>
       ) : null}
+      <div className="text-xs text-slate-500">
+        Tracking range: {trackingStartLabel} {'\u2192'} {trackingEndLabel}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Model ROI Since Inception</p>
+            <p className="text-xs text-slate-500">ROI Since Tracking Started</p>
             <p className={roiInception !== null && roiInception >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
               {formatPercent(roiInception)}
             </p>
+            <p className="mt-1 text-[11px] text-slate-400">From {trackingStartLabel}</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Model ROI Last 30 Days</p>
+            <p className="text-xs text-slate-500">{roiLastLabel}</p>
             <p className={roi30d !== null && roi30d >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
               {formatPercent(roi30d)}
             </p>
@@ -294,6 +342,7 @@ export function PortfolioRoiPanel() {
           <CardContent className="p-5">
             <p className="text-xs text-slate-500">Max Drawdown</p>
             <p className="text-xl font-semibold text-red-600">{formatPercent(maxDrawdown)}</p>
+            <p className="mt-1 text-[11px] text-slate-400">Within tracked period</p>
           </CardContent>
         </Card>
         <Card className="card">
