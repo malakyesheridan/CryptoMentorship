@@ -5,6 +5,7 @@ import { Bell, Check, CheckCheck, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { formatDate } from '@/lib/dates'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -29,6 +30,11 @@ interface NotificationDropdownProps {
 export function NotificationDropdown({ className }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isAllModalOpen, setIsAllModalOpen] = useState(false)
+  const [allNotifications, setAllNotifications] = useState<Notification[]>([])
+  const [allHasNextPage, setAllHasNextPage] = useState(false)
+  const [allNextCursor, setAllNextCursor] = useState<string | null>(null)
+  const [isAllLoading, setIsAllLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { data: session } = useSession()
   
@@ -57,6 +63,36 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
 
   const unreadCount = unreadData?.count || 0
   const notifications = notificationsData?.notifications || []
+
+  const loadAllNotifications = async (cursor?: string | null, append = false) => {
+    setIsAllLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.set('limit', '30')
+      if (cursor) {
+        params.set('cursor', cursor)
+      }
+      const response = await fetch(`/api/notifications?${params.toString()}`)
+      if (!response.ok) {
+        throw new Error('Failed to load notifications')
+      }
+      const data = await response.json()
+      const items = data?.notifications || []
+      setAllNotifications((prev) => (append ? [...prev, ...items] : items))
+      setAllHasNextPage(Boolean(data?.pagination?.hasNextPage))
+      setAllNextCursor(data?.pagination?.nextCursor || null)
+    } catch (error) {
+      toast.error('Failed to load notifications')
+    } finally {
+      setIsAllLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isAllModalOpen) {
+      loadAllNotifications(null, false)
+    }
+  }, [isAllModalOpen])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -92,6 +128,11 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
         body: JSON.stringify({ ids: [notificationId] })
       })
       
+      setAllNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, readAt: notif.readAt || new Date().toISOString() } : notif
+        )
+      )
       mutateNotifications()
       mutateUnread()
     } catch (error) {
@@ -105,6 +146,9 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
         method: 'POST'
       })
       
+      setAllNotifications((prev) =>
+        prev.map((notif) => ({ ...notif, readAt: notif.readAt || new Date().toISOString() }))
+      )
       mutateNotifications()
       mutateUnread()
       toast.success('All notifications marked as read')
@@ -276,15 +320,128 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
             </div>
 
             <div className="p-4 border-t border-slate-200">
-              <Button variant="ghost" size="sm" asChild className="w-full">
-                <Link href="/notifications" onClick={() => setIsOpen(false)}>
-                  View all notifications
-                </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  setIsOpen(false)
+                  setIsAllModalOpen(true)
+                }}
+              >
+                View all notifications
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={isAllModalOpen} onOpenChange={setIsAllModalOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] md:w-full p-0">
+          <div className="border-b border-slate-200 px-6 py-5">
+            <DialogHeader className="mb-0">
+              <div className="flex items-center justify-between">
+                <DialogTitle>All Notifications</DialogTitle>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <Badge variant="destructive" className="text-xs">
+                      {unreadCount} unread
+                    </Badge>
+                  )}
+                  {unreadCount > 0 && (
+                    <Button variant="outline" size="sm" onClick={markAllAsRead}>
+                      <CheckCheck className="h-4 w-4 mr-2" />
+                      Mark all read
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <div className="p-6 overflow-y-auto max-h-[75vh]">
+            {allNotifications.length === 0 && !isAllLoading ? (
+              <div className="py-16 text-center">
+                <Bell className="h-14 w-14 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500 text-sm">No notifications yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {allNotifications.map((notification) => (
+                  <Card
+                    key={notification.id}
+                    className={`transition-colors ${!notification.readAt ? 'bg-blue-50/50 border-blue-200' : ''}`}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 mt-1">
+                          <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {notification.url ? (
+                            <Link
+                              href={notification.url}
+                              className="block group"
+                              onClick={() => {
+                                if (!notification.readAt) {
+                                  markAsRead(notification.id)
+                                }
+                                setIsAllModalOpen(false)
+                              }}
+                            >
+                              <h3 className="heading-2 text-lg group-hover:text-gold-600 transition-colors">
+                                {notification.title}
+                              </h3>
+                            </Link>
+                          ) : (
+                            <h3 className="heading-2 text-lg">{notification.title}</h3>
+                          )}
+                          {notification.body && <p className="subhead mt-2">{notification.body}</p>}
+                          <div className="flex items-center gap-3 mt-3">
+                            <Badge variant="outline" className="text-xs">
+                              {notification.type.replace('_', ' ')}
+                            </Badge>
+                            <span className="text-sm text-slate-500">
+                              {formatDate(notification.createdAt, 'MMM d, yyyy h:mm a')}
+                            </span>
+                            {!notification.readAt && (
+                              <Badge variant="destructive" className="text-xs">
+                                Unread
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {!notification.readAt && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => markAsRead(notification.id)}
+                            className="text-slate-600 hover:text-slate-800"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {allHasNextPage && (
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      variant="outline"
+                      disabled={isAllLoading}
+                      onClick={() => loadAllNotifications(allNextCursor, true)}
+                    >
+                      {isAllLoading ? 'Loading…' : 'Load more'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Admin Create Notification Modal */}
       {isAdmin && (

@@ -57,7 +57,7 @@ export function Sidebar() {
   }, [isAccountActive])
   
   // Add admin link if user is admin/editor
-  const allNavigation = isAdmin 
+  const allNavigation: NavigationItem[] = isAdmin 
     ? [...navigation, { name: 'Admin', href: '/admin', icon: Shield }]
     : navigation
 
