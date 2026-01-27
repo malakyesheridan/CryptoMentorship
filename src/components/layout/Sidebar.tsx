@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { 
   LayoutDashboard, 
@@ -11,24 +12,49 @@ import {
   MessageSquare, 
   User,
   GraduationCap,
-  Shield
+  Shield,
+  ChevronRight
 } from 'lucide-react'
 
-const navigation = [
+type NavigationItem = {
+  name: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  children?: Array<{ name: string; href: string }>
+}
+
+const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Crypto Compass', href: '/crypto-compass', icon: Play },
   { name: 'My Portfolio', href: '/portfolio', icon: TrendingUp },
   { name: 'Learning Hub', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
-  { name: 'Account', href: '/account', icon: User },
+  { 
+    name: 'Account', 
+    href: '/account', 
+    icon: User,
+    children: [
+      { name: 'Subscription', href: '/account/subscription' },
+      { name: 'Referrals', href: '/account/referrals' }
+    ]
+  },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const [accountOpen, setAccountOpen] = useState(false)
   
   // Check if user has admin or editor role
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
+  const isAccountActive = pathname === '/account' || pathname?.startsWith('/account/')
+  const isAccountOpen = isAccountActive || accountOpen
+
+  useEffect(() => {
+    if (isAccountActive) {
+      setAccountOpen(true)
+    }
+  }, [isAccountActive])
   
   // Add admin link if user is admin/editor
   const allNavigation = isAdmin 
@@ -46,6 +72,98 @@ export function Sidebar() {
       <nav className="flex-1 p-4 space-y-2">
         {allNavigation.map((item) => {
           const isActive = pathname === item.href || (item.href === '/admin' && pathname?.startsWith('/admin'))
+          const hasChildren = Boolean(item.children?.length)
+          const isAccount = item.href === '/account'
+
+          if (hasChildren && isAccount) {
+            return (
+              <div key={item.name} className="group relative">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={item.href}
+                    prefetch={true}
+                    className={cn(
+                      'flex flex-1 items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
+                      isAccountActive
+                        ? 'bg-gold-500 text-white shadow-lg'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    )}
+                  >
+                    <item.icon className="mr-3 h-5 w-5" />
+                    {item.name}
+                  </Link>
+                  <button
+                    type="button"
+                    aria-label="Toggle account submenu"
+                    className={cn(
+                      'md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors',
+                      isAccountOpen && 'text-slate-900'
+                    )}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      setAccountOpen((prev) => !prev)
+                    }}
+                  >
+                    <ChevronRight className={cn('h-4 w-4 transition-transform', isAccountOpen && 'rotate-90')} />
+                  </button>
+                </div>
+
+                {/* Mobile submenu */}
+                <div className={cn('md:hidden mt-2 ml-6 space-y-1', isAccountOpen ? 'block' : 'hidden')}>
+                  {item.children?.map((child) => {
+                    const isChildActive = pathname === child.href
+                    return (
+                      <Link
+                        key={child.name}
+                        href={child.href}
+                        prefetch={true}
+                        className={cn(
+                          'flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors',
+                          isChildActive
+                            ? 'bg-gold-100 text-slate-900'
+                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                        )}
+                      >
+                        {child.name}
+                      </Link>
+                    )
+                  })}
+                </div>
+
+                {/* Desktop hover submenu */}
+                <div
+                  className={cn(
+                    'hidden md:block md:absolute md:left-full md:top-1 md:min-w-[220px] md:rounded-xl md:border md:border-[color:var(--border-subtle)] md:bg-white/95 md:backdrop-blur md:px-3 md:py-2 md:shadow-xl md:opacity-0 md:translate-x-2 md:pointer-events-none md:transition-all',
+                    'md:group-hover:opacity-100 md:group-hover:translate-x-0 md:group-hover:pointer-events-auto',
+                    isAccountActive && 'md:opacity-100 md:translate-x-0 md:pointer-events-auto'
+                  )}
+                >
+                  <div className="space-y-1">
+                    {item.children?.map((child) => {
+                      const isChildActive = pathname === child.href
+                      return (
+                        <Link
+                          key={child.name}
+                          href={child.href}
+                          prefetch={true}
+                          className={cn(
+                            'flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors',
+                            isChildActive
+                              ? 'bg-gold-100 text-slate-900'
+                              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          )}
+                        >
+                          {child.name}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )
+          }
+
           return (
             <Link
               key={item.name}
