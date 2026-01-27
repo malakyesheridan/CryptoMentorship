@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 
 const createNotificationSchema = z.object({
   title: z.string().min(1).max(200),
@@ -54,9 +55,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No users found to send notification to' }, { status: 400 })
     }
 
-    // Create notifications for all target users
+    const preferences = await prisma.notificationPreference.findMany({
+      where: {
+        userId: { in: targetUserIds }
+      }
+    })
+    const preferenceMap = new Map(preferences.map((pref) => [pref.userId, pref]))
+    const eligibleUserIds = targetUserIds.filter((userId) => {
+      const prefs = resolveNotificationPreferences(preferenceMap.get(userId) ?? null)
+      return shouldSendInAppNotification(data.type, prefs)
+    })
+
+    if (eligibleUserIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        count: 0,
+        message: 'No users eligible based on notification preferences'
+      })
+    }
+
+    // Create notifications for eligible users
     const notifications = await prisma.notification.createMany({
-      data: targetUserIds.map(userId => ({
+      data: eligibleUserIds.map(userId => ({
         userId,
         type: data.type,
         title: data.title,

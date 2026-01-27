@@ -8,6 +8,7 @@ import { revalidatePath } from 'next/cache'
 import { nanoid } from 'nanoid'
 import { validateQuizQuestions, validateQuizAnswers, serializeQuizAnswers, type QuizAnswer } from '@/lib/schemas/learning'
 import { logAudit } from '@/lib/audit'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 
 // Enrollment schemas
 const EnrollTrackSchema = z.object({
@@ -72,16 +73,23 @@ export async function enrollInTrack(data: z.infer<typeof EnrollTrackSchema>) {
       })
 
       // Create notification within transaction
-      const notif = await tx.notification.create({
-        data: {
-          userId: session.user.id,
-          type: 'announcement',
-          title: 'Learning Started',
-          body: `You've started the track. Begin your learning journey!`,
-          url: `/learn/${track.slug}`,
-          channel: 'inapp',
-        },
+      const preferences = await tx.notificationPreference.findUnique({
+        where: { userId: session.user.id }
       })
+      const shouldNotify = shouldSendInAppNotification('announcement', resolveNotificationPreferences(preferences ?? null))
+
+      const notif = shouldNotify
+        ? await tx.notification.create({
+            data: {
+              userId: session.user.id,
+              type: 'announcement',
+              title: 'Learning Started',
+              body: `You've started the track. Begin your learning journey!`,
+              url: `/learn/${track.slug}`,
+              channel: 'inapp',
+            },
+          })
+        : null
 
       // Audit log within transaction
       await logAudit(
@@ -416,16 +424,22 @@ async function issueCertificate(userId: string, trackId: string) {
     })
 
     if (!existingNotification) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          type: 'announcement',
-          title: 'Track Completed!',
-          body: `Congratulations! You've completed the track and earned a certificate.`,
-          url: `/learn/${track.slug}/certificate`,
-          channel: 'inapp',
-        },
+      const preferences = await prisma.notificationPreference.findUnique({
+        where: { userId }
       })
+      const shouldNotify = shouldSendInAppNotification('announcement', resolveNotificationPreferences(preferences ?? null))
+      if (shouldNotify) {
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'announcement',
+            title: 'Track Completed!',
+            body: `Congratulations! You've completed the track and earned a certificate.`,
+            url: `/learn/${track.slug}/certificate`,
+            channel: 'inapp',
+          },
+        })
+      }
     }
 
     return certificate

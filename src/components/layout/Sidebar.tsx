@@ -109,8 +109,8 @@ export function Sidebar() {
                   </button>
                 </div>
 
-                {/* Mobile submenu */}
-                <div className={cn('md:hidden mt-2 ml-6 space-y-1', isAccountOpen ? 'block' : 'hidden')}>
+                {/* Inline submenu */}
+                <div className={cn('mt-2 ml-10 space-y-1', isAccountOpen ? 'block' : 'hidden')}>
                   {item.children?.map((child) => {
                     const isChildActive = pathname === child.href
                     return (
@@ -129,36 +129,6 @@ export function Sidebar() {
                       </Link>
                     )
                   })}
-                </div>
-
-                {/* Desktop hover submenu */}
-                <div
-                  className={cn(
-                    'hidden md:block md:absolute md:left-full md:top-1 md:min-w-[220px] md:rounded-xl md:border md:border-[color:var(--border-subtle)] md:bg-white/95 md:backdrop-blur md:px-3 md:py-2 md:shadow-xl md:opacity-0 md:translate-x-2 md:pointer-events-none md:transition-all',
-                    'md:group-hover:opacity-100 md:group-hover:translate-x-0 md:group-hover:pointer-events-auto',
-                    isAccountActive && 'md:opacity-100 md:translate-x-0 md:pointer-events-auto'
-                  )}
-                >
-                  <div className="space-y-1">
-                    {item.children?.map((child) => {
-                      const isChildActive = pathname === child.href
-                      return (
-                        <Link
-                          key={child.name}
-                          href={child.href}
-                          prefetch={true}
-                          className={cn(
-                            'flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors',
-                            isChildActive
-                              ? 'bg-gold-100 text-slate-900'
-                              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                          )}
-                        >
-                          {child.name}
-                        </Link>
-                      )
-                    })}
-                  </div>
                 </div>
               </div>
             )

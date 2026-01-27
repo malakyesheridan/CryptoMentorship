@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 
 // Cohort schemas
 const CreateCohortSchema = z.object({
@@ -162,17 +163,23 @@ export async function enrollInCohort(data: z.infer<typeof EnrollCohortSchema>) {
       },
     })
 
-    // Create notification
-    await prisma.notification.create({
-      data: {
-        userId: session.user.id,
-        type: 'announcement',
-        title: 'Cohort Joined',
-        body: `You've joined the ${cohort.title} cohort.`,
-        url: `/learn/cohorts/${cohort.slug}`,
-        channel: 'inapp',
-      },
+    // Create notification (respect preferences)
+    const preferences = await prisma.notificationPreference.findUnique({
+      where: { userId: session.user.id }
     })
+    const shouldNotify = shouldSendInAppNotification('announcement', resolveNotificationPreferences(preferences ?? null))
+    if (shouldNotify) {
+      await prisma.notification.create({
+        data: {
+          userId: session.user.id,
+          type: 'announcement',
+          title: 'Cohort Joined',
+          body: `You've joined the ${cohort.title} cohort.`,
+          url: `/learn/cohorts/${cohort.slug}`,
+          channel: 'inapp',
+        },
+      })
+    }
 
     revalidatePath('/learning')
     revalidatePath(`/learn/${cohort.track.slug}/cohort/${cohort.slug}`)

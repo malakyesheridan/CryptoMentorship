@@ -1,5 +1,6 @@
 import { prisma } from '../prisma'
 import { emit } from '../events'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 
 export async function sendEventReminders() {
   const now = new Date()
@@ -70,8 +71,8 @@ export async function sendEventReminders() {
     for (const rsvp of event.rsvps) {
       try {
         // Check if user has notifications enabled
-        const prefs = rsvp.user.notificationPreference
-        if (!prefs?.inApp) continue
+        const prefs = resolveNotificationPreferences(rsvp.user.notificationPreference ?? null)
+        if (!shouldSendInAppNotification('announcement', prefs)) continue
 
         // Check if we already sent a reminder for this event to this user
         const existingNotification = await prisma.notification.findFirst({
@@ -114,8 +115,8 @@ export async function sendEventReminders() {
     for (const rsvp of event.rsvps) {
       try {
         // Check if user has notifications enabled
-        const prefs = rsvp.user.notificationPreference
-        if (!prefs?.inApp) continue
+        const prefs = resolveNotificationPreferences(rsvp.user.notificationPreference ?? null)
+        if (!shouldSendInAppNotification('announcement', prefs)) continue
 
         // Check if we already sent a reminder for this event to this user
         const existingNotification = await prisma.notification.findFirst({

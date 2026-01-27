@@ -72,12 +72,25 @@ export function NotificationDropdown({ className }: NotificationDropdownProps) {
     toast.success('All notifications marked as read')
   }
 
+  const clearNotification = async (id: string) => {
+    const response = await fetch('/api/notifications', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [id] })
+    })
+    if (!response.ok) {
+      throw new Error('Failed to delete notification')
+    }
+    mutateUnread()
+  }
+
   return (
     <div className={className}>
       <NotificationCenter
         fetchNotifications={fetchNotifications}
         markRead={markRead}
         markAllRead={markAllRead}
+        clearNotification={clearNotification}
         badgeCount={unreadCount}
         headerActions={
           isAdmin ? (

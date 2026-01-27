@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     const now = new Date()
     const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000)
     
-    console.log(`🔔 Processing lesson releases between ${windowStart.toISOString()} and ${now.toISOString()}`)
+    console.log(`ðŸ”” Processing lesson releases between ${windowStart.toISOString()} and ${now.toISOString()}`)
     
     // Find lesson releases that are due
     const dueReleases = await prisma.lessonRelease.findMany({
@@ -51,6 +52,7 @@ export async function GET(request: NextRequest) {
                     id: true,
                     name: true,
                     email: true,
+                    notificationPreference: true,
                   },
                 },
               },
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
       },
     })
     
-    console.log(`📅 Found ${dueReleases.length} due releases`)
+    console.log(`ðŸ“… Found ${dueReleases.length} due releases`)
     
     if (dryRun) {
       return NextResponse.json({
@@ -83,7 +85,7 @@ export async function GET(request: NextRequest) {
       try {
         // Skip if lesson is not published
         if (!release.lesson.publishedAt) {
-          console.log(`⚠️ Skipping unpublished lesson: ${release.lesson.title}`)
+          console.log(`âš ï¸ Skipping unpublished lesson: ${release.lesson.title}`)
           continue
         }
         
@@ -100,10 +102,15 @@ export async function GET(request: NextRequest) {
             })
             
             if (existingNotification) {
-              console.log(`📧 Notification already exists for user ${enrollment.user.email}`)
+              console.log(`ðŸ“§ Notification already exists for user ${enrollment.user.email}`)
               continue
             }
-            
+
+            const prefs = resolveNotificationPreferences(enrollment.user.notificationPreference ?? null)
+            if (!shouldSendInAppNotification('announcement', prefs)) {
+              continue
+            }
+
             // Create notification
             await prisma.notification.create({
               data: {
@@ -115,21 +122,21 @@ export async function GET(request: NextRequest) {
                 channel: 'inapp',
               },
             })
-            
+
             notificationsCreated++
-            console.log(`📧 Created notification for ${enrollment.user.email}`)
+            console.log(`ðŸ“§ Created notification for ${enrollment.user.email}`)
           } catch (error) {
-            console.error(`❌ Error creating notification for user ${enrollment.user.email}:`, error)
+            console.error(`âŒ Error creating notification for user ${enrollment.user.email}:`, error)
             errors++
           }
         }
       } catch (error) {
-        console.error(`❌ Error processing release for lesson ${release.lesson.title}:`, error)
+        console.error(`âŒ Error processing release for lesson ${release.lesson.title}:`, error)
         errors++
       }
     }
     
-    console.log(`✅ Processed ${dueReleases.length} releases: ${notificationsCreated} notifications created, ${errors} errors`)
+    console.log(`âœ… Processed ${dueReleases.length} releases: ${notificationsCreated} notifications created, ${errors} errors`)
     
     return NextResponse.json({
       success: true,
@@ -141,7 +148,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('❌ Error in cohort releases cron:', error)
+    console.error('âŒ Error in cohort releases cron:', error)
     return NextResponse.json(
       { 
         success: false, 
@@ -166,7 +173,7 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    console.log(`⏰ Fast-forwarding ${fastForwardMinutes} minutes for testing`)
+    console.log(`â° Fast-forwarding ${fastForwardMinutes} minutes for testing`)
     
     // Simulate time advancement by adjusting the window
     const now = new Date()
@@ -208,6 +215,7 @@ export async function POST(request: NextRequest) {
                     id: true,
                     name: true,
                     email: true,
+                    notificationPreference: true,
                   },
                 },
               },
@@ -233,6 +241,11 @@ export async function POST(request: NextRequest) {
         })
         
         if (!existingNotification) {
+          const prefs = resolveNotificationPreferences(enrollment.user.notificationPreference ?? null)
+          if (!shouldSendInAppNotification('announcement', prefs)) {
+            continue
+          }
+
           await prisma.notification.create({
             data: {
               userId: enrollment.userId,
@@ -257,7 +270,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('❌ Error in fast-forward cron:', error)
+    console.error('âŒ Error in fast-forward cron:', error)
     return NextResponse.json(
       { 
         success: false, 
@@ -268,3 +281,6 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+
+

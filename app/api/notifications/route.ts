@@ -101,3 +101,36 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// DELETE /api/notifications - Delete specific notifications
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { ids } = z.object({ ids: z.array(z.string()) }).parse(body)
+
+    if (ids.length === 0) {
+      return NextResponse.json({ success: true })
+    }
+
+    await prisma.notification.deleteMany({
+      where: {
+        id: { in: ids },
+        userId: session.user.id,
+        channel: 'inapp'
+      }
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid request data', details: error.issues }, { status: 400 })
+    }
+    console.error('Error deleting notifications:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

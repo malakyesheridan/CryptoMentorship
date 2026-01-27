@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 
 export type AppEvent =
   | { type: 'research_published'; contentId: string }
@@ -42,7 +43,7 @@ async function handleContentPublished(type: 'research_published' | 'signal_publi
   // Get the content to determine minTier and author
   const content = await prisma.content.findUnique({
     where: { id: contentId },
-    select: { minTier: true, publishedAt: true }
+    select: { minTier: true, publishedAt: true, slug: true }
   })
 
   if (!content) return
@@ -50,20 +51,12 @@ async function handleContentPublished(type: 'research_published' | 'signal_publi
   // Get eligible users based on minTier
   const eligibleUsers = await getEligibleUsersForContent(content.minTier)
   
-  // Get notification preferences for these users
-  const preferences = await prisma.notificationPreference.findMany({
-    where: {
-      userId: { in: eligibleUsers.map(u => u.id) },
-      inApp: true,
-      ...(type === 'research_published' ? { onResearch: true } : { onSignal: true })
-    }
-  })
-
-  const preferenceMap = new Map(preferences.map(p => [p.userId, p]))
-
   // Create notifications for eligible users
   const notifications = eligibleUsers
-    .filter(user => preferenceMap.has(user.id))
+    .filter(user => {
+      const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
+      return shouldSendInAppNotification(type, prefs)
+    })
     .map(user => ({
       userId: user.id,
       type,
@@ -71,7 +64,7 @@ async function handleContentPublished(type: 'research_published' | 'signal_publi
       entityId: contentId,
       title: type === 'research_published' ? 'New Research Published' : 'New Signal Published',
       body: `A new ${type === 'research_published' ? 'research' : 'signal'} has been published`,
-      url: `/content/${contentId}`,
+      url: `/content/${content.slug}`,
       channel: 'inapp' as const,
     }))
 
@@ -83,28 +76,22 @@ async function handleContentPublished(type: 'research_published' | 'signal_publi
 }
 
 async function handleEpisodePublished(episodeId: string) {
+  const episode = await prisma.episode.findUnique({
+    where: { id: episodeId },
+    select: { slug: true }
+  })
+
+  if (!episode) return
+
   // Get eligible users (episodes don't have minTier restrictions for now)
-  const eligibleUsers = await prisma.user.findMany({
-    where: {
-      role: { in: ['member', 'editor', 'admin'] }
-    },
-    select: { id: true }
-  })
-
-  // Get notification preferences
-  const preferences = await prisma.notificationPreference.findMany({
-    where: {
-      userId: { in: eligibleUsers.map(u => u.id) },
-      inApp: true,
-      onEpisode: true
-    }
-  })
-
-  const preferenceMap = new Map(preferences.map(p => [p.userId, p]))
+  const eligibleUsers = await getEligibleActiveUsers()
 
   // Create notifications
   const notifications = eligibleUsers
-    .filter(user => preferenceMap.has(user.id))
+    .filter(user => {
+      const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
+      return shouldSendInAppNotification('episode_published', prefs)
+    })
     .map(user => ({
       userId: user.id,
       type: 'episode_published' as const,
@@ -112,7 +99,7 @@ async function handleEpisodePublished(episodeId: string) {
       entityId: episodeId,
       title: 'New Crypto Compass Episode',
       body: 'A new Crypto Compass episode has been published',
-      url: `/crypto-compass/${episodeId}`,
+      url: `/crypto-compass/${episode.slug}`,
       channel: 'inapp' as const,
     }))
 
@@ -126,12 +113,9 @@ async function handleEpisodePublished(episodeId: string) {
 async function handleMention(messageId: string, mentionedUserIds: string[]) {
   if (mentionedUserIds.length === 0) return
 
-  // Get notification preferences for mentioned users
   const preferences = await prisma.notificationPreference.findMany({
     where: {
-      userId: { in: mentionedUserIds },
-      inApp: true,
-      onMention: true
+      userId: { in: mentionedUserIds }
     }
   })
 
@@ -139,7 +123,10 @@ async function handleMention(messageId: string, mentionedUserIds: string[]) {
 
   // Create notifications
   const notifications = mentionedUserIds
-    .filter(userId => preferenceMap.has(userId))
+    .filter(userId => {
+      const prefs = resolveNotificationPreferences(preferenceMap.get(userId) ?? null)
+      return shouldSendInAppNotification('mention', prefs)
+    })
     .map(userId => ({
       userId,
       type: 'mention' as const,
@@ -164,7 +151,8 @@ async function handleReply(messageId: string, parentAuthorId: string) {
     where: { userId: parentAuthorId }
   })
 
-  if (!preference?.inApp || !preference.onReply) return
+  const resolved = resolveNotificationPreferences(preference ?? null)
+  if (!shouldSendInAppNotification('reply', resolved)) return
 
   // Create notification
   await prisma.notification.create({
@@ -183,26 +171,14 @@ async function handleReply(messageId: string, parentAuthorId: string) {
 
 async function handleAnnouncement(title: string, body?: string, url?: string) {
   // Get all members, editors, and admins
-  const eligibleUsers = await prisma.user.findMany({
-    where: {
-      role: { in: ['member', 'editor', 'admin'] }
-    },
-    select: { id: true }
-  })
-
-  // Get notification preferences
-  const preferences = await prisma.notificationPreference.findMany({
-    where: {
-      userId: { in: eligibleUsers.map(u => u.id) },
-      inApp: true
-    }
-  })
-
-  const preferenceMap = new Map(preferences.map(p => [p.userId, p]))
+  const eligibleUsers = await getEligibleActiveUsers()
 
   // Create notifications
   const notifications = eligibleUsers
-    .filter(user => preferenceMap.has(user.id))
+    .filter(user => {
+      const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
+      return shouldSendInAppNotification('announcement', prefs)
+    })
     .map(user => ({
       userId: user.id,
       type: 'announcement' as const,
@@ -220,13 +196,28 @@ async function handleAnnouncement(title: string, body?: string, url?: string) {
 }
 
 async function getEligibleUsersForContent(minTier: string | null) {
+  const now = new Date()
   if (!minTier) {
     // No tier restriction - all members can see
     return await prisma.user.findMany({
       where: {
-        role: { in: ['member', 'editor', 'admin'] }
+        role: { in: ['member', 'editor', 'admin'] },
+        memberships: {
+          some: {
+            OR: [
+              {
+                status: 'active',
+                OR: [{ currentPeriodEnd: null }, { currentPeriodEnd: { gte: now } }]
+              },
+              {
+                status: 'trial',
+                currentPeriodEnd: { gte: now }
+              }
+            ]
+          }
+        }
       },
-      select: { id: true }
+      select: { id: true, notificationPreference: true }
     })
   }
 
@@ -237,11 +228,20 @@ async function getEligibleUsersForContent(minTier: string | null) {
       memberships: {
         some: {
           tier: { gte: minTier },
-          status: 'active'
+          OR: [
+            {
+              status: 'active',
+              OR: [{ currentPeriodEnd: null }, { currentPeriodEnd: { gte: now } }]
+            },
+            {
+              status: 'trial',
+              currentPeriodEnd: { gte: now }
+            }
+          ]
         }
       }
     },
-    select: { id: true }
+    select: { id: true, notificationPreference: true }
   })
 }
 
@@ -268,7 +268,8 @@ async function handleQuestionAnswered(questionId: string, questionAuthorId: stri
     select: { onReply: true, inApp: true }
   })
 
-  if (!preferences?.onReply || !preferences?.inApp) return
+  const resolved = resolveNotificationPreferences(preferences ?? null)
+  if (!shouldSendInAppNotification('question_answered', resolved)) return
 
   // Check for duplicate notifications within 10 minutes
   const recentNotification = await prisma.notification.findFirst({
@@ -296,5 +297,29 @@ async function handleQuestionAnswered(questionId: string, questionAuthorId: stri
       url: `/events/${question.event.slug}`,
       channel: 'inapp'
     }
+  })
+}
+
+async function getEligibleActiveUsers() {
+  const now = new Date()
+  return await prisma.user.findMany({
+    where: {
+      role: { in: ['member', 'editor', 'admin'] },
+      memberships: {
+        some: {
+          OR: [
+            {
+              status: 'active',
+              OR: [{ currentPeriodEnd: null }, { currentPeriodEnd: { gte: now } }]
+            },
+            {
+              status: 'trial',
+              currentPeriodEnd: { gte: now }
+            }
+          ]
+        }
+      }
+    },
+    select: { id: true, notificationPreference: true }
   })
 }

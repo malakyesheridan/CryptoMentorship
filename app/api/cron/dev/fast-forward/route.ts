@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,7 @@ export async function GET(request: NextRequest) {
                     id: true,
                     name: true,
                     email: true,
+                    notificationPreference: true,
                   },
                 },
               },
@@ -75,6 +77,11 @@ export async function GET(request: NextRequest) {
         })
         
         if (!existingNotification) {
+          const prefs = resolveNotificationPreferences(enrollment.user.notificationPreference ?? null)
+          if (!shouldSendInAppNotification('announcement', prefs)) {
+            continue
+          }
+
           await prisma.notification.create({
             data: {
               userId: enrollment.userId,
