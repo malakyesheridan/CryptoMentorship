@@ -1,7 +1,5 @@
 import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import { PerformanceKPIs } from '@/components/signals/PerformanceKPIs'
 import { EquityChart } from '@/components/signals/EquityChart'
 import { DrawdownChart } from '@/components/signals/DrawdownChart'
@@ -152,11 +150,7 @@ export default async function PerformancePage({
 }: {
   searchParams: { scope?: string }
 }) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
+  await requireActiveSubscription()
 
   const scope = searchParams.scope || 'ALL'
   const performanceData = await getPerformanceData(scope)

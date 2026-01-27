@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
         create: {
           userId: user.id,
           tier: 'T2', // Default tier for trials, will be updated by webhook if different
-          status: 'trial',
+          // Do not grant access until Stripe confirms subscription via webhook
+          status: 'inactive',
           stripeCustomerId: customer.id,
         },
       })

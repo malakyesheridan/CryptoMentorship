@@ -1,20 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { requireActiveSubscription } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  const session = await requireActiveSubscription('api')
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { ok: false, code: 'UNAUTH', message: 'Authentication required' },
-        { status: 401 }
-      )
-    }
 
     // Get all channels
     const channels = await prisma.channel.findMany({
@@ -24,7 +16,7 @@ export async function GET() {
 
     // Get last read times for user
     const reads = await prisma.channelRead.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.id },
       select: { channelId: true, lastReadAt: true }
     })
 
@@ -38,7 +30,7 @@ export async function GET() {
         const count = await prisma.message.count({
           where: {
             channelId: channel.id,
-            userId: { not: session.user.id }, // Don't count own messages
+            userId: { not: session.id }, // Don't count own messages
             ...(lastReadAt ? { createdAt: { gt: lastReadAt } } : {}),
           }
         })

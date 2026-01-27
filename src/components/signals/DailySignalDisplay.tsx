@@ -45,10 +45,7 @@ const tierColors: Record<Tier, string> = {
 }
 
 // Check if user can access a tier
-function canAccessTier(userTier: string | null, signalTier: Tier, isActive: boolean, userRole?: string): boolean {
-  // Admins can access everything
-  if (userRole === 'admin') return true
-  
+function canAccessTier(userTier: string | null, signalTier: Tier, isActive: boolean): boolean {
   if (!userTier || !isActive) return false
   
   const tierHierarchy: Tier[] = ['T1', 'T2']
@@ -197,7 +194,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   }
   
   const currentSignal = getCurrentSignal()
-  const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive, userRole) : false
+  const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive) : false
   const showAllocations = currentSignal?.category !== 'memecoins'
   const allocationAssets = currentSignal && showAllocations
     ? currentSignal.primaryAsset &&
@@ -238,7 +235,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
             {tiers.map((tier) => {
               const signal = signalsByTier[tier]?.[0]
               const hasSignal = !!signal
-              const canAccess = hasSignal ? canAccessTier(effectiveUserTier, tier, isActive, userRole) : false
+              const canAccess = hasSignal ? canAccessTier(effectiveUserTier, tier, isActive) : false
               const isLocked = hasSignal && !canAccess
               
               return (
@@ -275,7 +272,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
               {(['majors', 'memecoins'] as Category[]).map((category) => {
                 const hasSignal = !!t2SignalsByCategory[category]
                 const signal = t2SignalsByCategory[category]
-                const canAccess = signal ? canAccessTier(effectiveUserTier, 'T2', isActive, userRole) : false
+                const canAccess = signal ? canAccessTier(effectiveUserTier, 'T2', isActive) : false
                 const isLocked = hasSignal && !canAccess
                 
                 return (

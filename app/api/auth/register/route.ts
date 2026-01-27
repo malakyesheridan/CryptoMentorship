@@ -7,6 +7,9 @@ import { logger } from '@/lib/logger'
 import { handleError } from '@/lib/errors'
 import { linkReferralToUser } from '@/lib/referrals'
 import { referralConfig } from '@/lib/env'
+import { randomBytes } from 'crypto'
+import { sendVerificationEmail } from '@/lib/email'
+import { env } from '@/lib/env'
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -52,6 +55,10 @@ export async function POST(req: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
+    const verificationToken = randomBytes(32).toString('hex')
+    const verificationExpires = new Date()
+    verificationExpires.setHours(verificationExpires.getHours() + 24)
+
     // Create user, and optionally attach a trial membership
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -61,6 +68,14 @@ export async function POST(req: NextRequest) {
           passwordHash,
           role: shouldCreateTrial ? 'guest' : 'member',
           emailVerified: null, // Require email verification
+        },
+      })
+
+      await tx.verificationToken.create({
+        data: {
+          identifier: email,
+          token: verificationToken,
+          expires: verificationExpires,
         },
       })
 
@@ -113,6 +128,23 @@ export async function POST(req: NextRequest) {
       isTrial: shouldCreateTrial,
       trialEndDate: trialEndDate?.toISOString() || null,
     })
+
+    try {
+      const baseUrl = env.NEXTAUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:5001'
+      const verifyUrl = `${baseUrl}/verify-email?token=${verificationToken}`
+      await sendVerificationEmail({
+        to: email,
+        verifyUrl,
+        userName: name || null,
+      })
+      logger.info('Verification email sent', { userId: user.id, email })
+    } catch (emailError) {
+      logger.error(
+        'Failed to send verification email (non-blocking)',
+        emailError instanceof Error ? emailError : new Error(String(emailError)),
+        { userId: user.id, email }
+      )
+    }
 
     return NextResponse.json({
       success: true,

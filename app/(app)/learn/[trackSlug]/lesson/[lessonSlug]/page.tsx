@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { LessonPlayer } from '@/components/learning/LessonPlayer'
 import { ViewTracker } from '@/components/ViewTracker'
@@ -88,11 +87,7 @@ export default async function LessonPage({
 }: {
   params: { trackSlug: string; lessonSlug: string }
 }) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
+  const user = await requireActiveSubscription()
 
   const [track, lesson] = await Promise.all([
     getTrack(params.trackSlug),
@@ -104,20 +99,20 @@ export default async function LessonPage({
   }
 
   const [progress, quizSubmission] = await Promise.all([
-    getUserProgress(session.user.id, lesson.id),
-    getUserQuizSubmission(session.user.id, lesson.id),
+    getUserProgress(user.id, lesson.id),
+    getUserQuizSubmission(user.id, lesson.id),
   ])
 
   // Ensure user is enrolled in track (auto-enroll if not already enrolled)
   await prisma.enrollment.upsert({
     where: {
       userId_trackId: {
-        userId: session.user.id,
+        userId: user.id,
         trackId: track.id,
       },
     },
     create: {
-      userId: session.user.id,
+      userId: user.id,
       trackId: track.id,
       startedAt: new Date(),
     },
@@ -125,13 +120,13 @@ export default async function LessonPage({
   })
 
   // Check lesson access
-  const accessInfo = await checkLessonAccess(session.user.id, lesson.id, track.id)
+  const accessInfo = await checkLessonAccess(user.id, lesson.id, track.id)
 
   // Get user progress for all lessons
   const userProgress: Record<string, boolean> = {}
   const progresses = await prisma.lessonProgress.findMany({
     where: {
-      userId: session.user.id,
+      userId: user.id,
       lesson: {
         trackId: track.id,
       },
@@ -152,7 +147,7 @@ export default async function LessonPage({
       <ViewTracker
         entityType="lesson"
         entityId={lesson.id}
-        disabled={!session.user?.id}
+        disabled={!user.id}
       />
       <LessonPlayer
         track={track}

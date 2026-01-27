@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getEpisodeById } from '@/lib/content'
-import { getSession } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import { formatContentDate } from '@/lib/content'
 import { formatDate } from '@/lib/dates'
 import { renderMDX } from '@/lib/mdx'
@@ -24,15 +24,14 @@ interface EpisodePageProps {
 }
 
 export default async function EpisodePage({ params }: EpisodePageProps) {
+  const user = await requireActiveSubscription()
   const episode = await getEpisodeById(params.slug)
   
   if (!episode) {
     notFound()
   }
 
-  const session = await getSession()
-  const userRole = session?.user?.role || 'guest'
-  const userTier = session?.user?.membershipTier || null
+  const userRole = user?.role || 'guest'
   
   // All episodes are accessible to everyone
   const canView = true
@@ -50,9 +49,9 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
   
   // Process MDX content
   const mdx = episode.body ? await renderMDX(episode.slug, episode.body) : null
-  const existingBookmark = session?.user?.id
+  const existingBookmark = user?.id
     ? await prisma.bookmark.findFirst({
-        where: { userId: session.user.id, episodeId: episode.id },
+        where: { userId: user.id, episodeId: episode.id },
         select: { id: true },
       })
     : null
@@ -60,7 +59,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
   return (
     <div className="container-main section-padding">
       {/* Track view event */}
-      <ViewTracker entityType="episode" entityId={episode.id} disabled={!session?.user?.id} />
+      <ViewTracker entityType="episode" entityId={episode.id} disabled={!user?.id} />
       
       {/* Breadcrumbs */}
       <nav className="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-8">

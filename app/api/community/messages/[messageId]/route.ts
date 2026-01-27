@@ -1,25 +1,17 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { requireActiveSubscription } from '@/lib/access'
 
 // DELETE /api/community/messages/[messageId] - Delete message (admin only)
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ messageId: string }> }
 ) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { ok: false, code: 'UNAUTH', message: 'Sign in required' },
-      { status: 401 },
-    )
-  }
+  const session = await requireActiveSubscription('api')
 
   // Check if user has admin privileges
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: session.id },
     select: { role: true },
   })
 

@@ -1,24 +1,19 @@
 import { prisma } from '@/lib/prisma'
 import { stripe, isStripeConfigured } from '@/lib/stripe'
 import { logger } from '@/lib/logger'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-server'
+import { redirect } from 'next/navigation'
+import { NextResponse } from 'next/server'
+
+type AccessMode = 'page' | 'api'
 
 /**
  * Check if user has an active subscription
  * Validates membership status, subscription period, and Stripe subscription status
- * Admins bypass subscription requirements
  */
 export async function hasActiveSubscription(userId: string): Promise<boolean> {
   try {
-    // Check if user is admin - admins bypass subscription requirements
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    })
-    
-    if (user?.role === 'admin') {
-      return true
-    }
-    
     const membership = await prisma.membership.findFirst({
       where: { userId },
     })
@@ -30,6 +25,11 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
     // Check membership status - allow both 'active' and 'trial' status
     // Trial memberships are active subscriptions with expiration dates
     if (membership.status !== 'active' && membership.status !== 'trial') {
+      return false
+    }
+
+    // Trials must have an end date; treat missing end as inactive
+    if (membership.status === 'trial' && !membership.currentPeriodEnd) {
       return false
     }
     
@@ -80,20 +80,9 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
 /**
  * Check if user can access a specific tier
  * Validates both subscription status and tier level
- * Admins bypass tier requirements
  */
 export async function canAccessTier(userId: string, requiredTier: string): Promise<boolean> {
   try {
-    // Check if user is admin - admins bypass tier requirements
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    })
-    
-    if (user?.role === 'admin') {
-      return true
-    }
-    
     // Check if subscription is active first
     const isActive = await hasActiveSubscription(userId)
     if (!isActive) {
@@ -172,5 +161,46 @@ export async function getUserMembership(userId: string) {
     )
     return null
   }
+}
+
+export async function requireAuth(mode: AccessMode = 'page') {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user?.id) {
+    if (mode === 'api') {
+      throw NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) as any
+    }
+    redirect('/login')
+  }
+
+  return session.user
+}
+
+export async function requireActiveSubscription(mode: AccessMode = 'page') {
+  const user = await requireAuth(mode)
+  const isActive = await hasActiveSubscription(user.id)
+
+  if (!isActive) {
+    if (mode === 'api') {
+      throw NextResponse.json({ error: 'Subscription required' }, { status: 403 }) as any
+    }
+    redirect('/subscribe?required=true')
+  }
+
+  return user
+}
+
+export async function requireTier(requiredTier: string, mode: AccessMode = 'page') {
+  const user = await requireActiveSubscription(mode)
+  const canAccess = await canAccessTier(user.id, requiredTier)
+
+  if (!canAccess) {
+    if (mode === 'api') {
+      throw NextResponse.json({ error: 'Forbidden' }, { status: 403 }) as any
+    }
+    redirect('/subscribe?required=true')
+  }
+
+  return user
 }
 

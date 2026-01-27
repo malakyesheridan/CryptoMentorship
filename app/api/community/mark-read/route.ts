@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { requireActiveSubscription } from '@/lib/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,15 +10,8 @@ const markReadBody = z.object({
 })
 
 export async function POST(req: Request) {
+  const session = await requireActiveSubscription('api')
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { ok: false, code: 'UNAUTH', message: 'Authentication required' },
-        { status: 401 }
-      )
-    }
 
     const body = await req.json().catch(() => ({}))
     const parsed = markReadBody.safeParse(body)
@@ -50,7 +42,7 @@ export async function POST(req: Request) {
     await prisma.channelRead.upsert({
       where: {
         userId_channelId: {
-          userId: session.user.id,
+          userId: session.id,
           channelId: channelId
         }
       },
@@ -58,7 +50,7 @@ export async function POST(req: Request) {
         lastReadAt: new Date()
       },
       create: {
-        userId: session.user.id,
+        userId: session.id,
         channelId: channelId,
         lastReadAt: new Date()
       }

@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -98,11 +97,7 @@ export default async function TrackPage({
 }: {
   params: { trackSlug: string }
 }) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
+  const user = await requireActiveSubscription()
 
   const track = await getTrack(params.trackSlug)
   
@@ -111,8 +106,8 @@ export default async function TrackPage({
   }
 
   const [enrollment, userProgress] = await Promise.all([
-    getUserEnrollment(session.user.id, track.id),
-    getUserProgress(session.user.id, track.id),
+    getUserEnrollment(user.id, track.id),
+    getUserProgress(user.id, track.id),
   ])
 
   // Calculate stats

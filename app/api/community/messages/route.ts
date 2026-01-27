@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { broadcastMessage } from '@/lib/community/sse'
 import { sanitizeHtml } from '@/lib/sanitize'
+import { requireActiveSubscription } from '@/lib/access'
 
 // Revalidate GET requests every 10 seconds - messages are real-time but we want some caching
 // Note: POST requests are not cached (they're write operations)
@@ -20,6 +19,7 @@ const postBody = z.object({
 })
 
 export async function GET(req: Request) {
+  await requireActiveSubscription('api')
   try {
     const url = new URL(req.url)
     const parsed = getQuery.safeParse({
@@ -100,14 +100,7 @@ export async function POST(req: Request) {
   const { channelId, body: text } = parsed.data
 
   // ✅ Require authentication first (before any DB queries)
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user?.id) {
-    return NextResponse.json(
-      { ok: false, code: 'UNAUTH', message: 'Authentication required' },
-      { status: 401 },
-    )
-  }
+  const session = await requireActiveSubscription('api')
 
   // Sanitize HTML first (before DB operations)
   const sanitizedBody = sanitizeHtml(text)
@@ -116,7 +109,7 @@ export async function POST(req: Request) {
   const saved = await prisma.message.create({
     data: {
       channelId,
-      userId: session.user.id,
+      userId: session.id,
       body: sanitizedBody,
     },
     select: {
@@ -136,9 +129,9 @@ export async function POST(req: Request) {
     body: saved.body,
     createdAt: saved.createdAt.toISOString(),
     author: {
-      id: session.user.id,
-      name: session.user.name ?? 'Anonymous',
-      image: session.user.image ?? null,
+      id: session.id,
+      name: session.name ?? 'Anonymous',
+      image: (session as any).image ?? null,
     },
   }
 
@@ -150,7 +143,7 @@ export async function POST(req: Request) {
       broadcastMessage(channelId, {
         message: item,
         channelId,
-        userId: session.user.id,
+        userId: session.id,
       })
     })
   } else {
@@ -159,7 +152,7 @@ export async function POST(req: Request) {
       broadcastMessage(channelId, {
         message: item,
         channelId,
-        userId: session.user.id,
+        userId: session.id,
       })
     }, 0)
   }

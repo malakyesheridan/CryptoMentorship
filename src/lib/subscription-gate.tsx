@@ -24,13 +24,6 @@ export function SubscriptionGate({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // Admins bypass subscription requirements
-      if (session.user.role === 'admin') {
-        setHasAccess(true)
-        setChecking(false)
-        return
-      }
-
       try {
         const res = await fetch('/api/me/subscription-status')
         const data = await res.json()

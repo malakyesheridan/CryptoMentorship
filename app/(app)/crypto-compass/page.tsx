@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import { Play } from 'lucide-react'
 import AdminCryptoCompassUploadWrapper from '@/components/AdminCryptoCompassUploadWrapper'
 import { CryptoCompassContent } from '@/components/cryptocompass/CryptoCompassContent'
@@ -13,6 +13,7 @@ export default async function CryptoCompassPage({
 }: { 
   searchParams: { cursor?: string; limit?: string; category?: string; search?: string } 
 }) {
+  const user = await requireActiveSubscription()
   try {
     const limit = parseInt(searchParams.limit || '20')
     const cursor = searchParams.cursor
@@ -63,9 +64,8 @@ export default async function CryptoCompassPage({
     
     const nextCursor = hasNextPage ? episodes[episodes.length - 1]?.slug : null
 
-    const session = await getSession()
-    const userRole = session?.user?.role || 'guest'
-    const userTier = (session?.user as any)?.membershipTier || null
+    const userRole = user.role || 'guest'
+    const userTier = (user as any)?.membershipTier || null
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">

@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireActiveSubscription } from '@/lib/access'
 
 // Make dynamic to allow immediate updates after reordering
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export async function GET() {
+  await requireActiveSubscription('api')
   try {
     // ✅ Return all channels - ordered by order field, then name
     const channels = await prisma.channel.findMany({

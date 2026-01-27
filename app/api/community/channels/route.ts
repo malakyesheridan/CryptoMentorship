@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { requireActiveSubscription } from '@/lib/access'
 
 const postBody = z.object({
   name: z.string().trim().min(1, 'Channel name is required').max(100, 'Channel name must be 100 characters or less'),
@@ -13,6 +12,7 @@ const postBody = z.object({
 })
 
 export async function GET() {
+  await requireActiveSubscription('api')
   try {
     // ✅ Return all channels - ordered by order field, then name
     const rows = await prisma.channel.findMany({
@@ -48,18 +48,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user || !(session.user as any).id) {
-    return NextResponse.json(
-      { ok: false, code: 'UNAUTH', message: 'Sign in required' },
-      { status: 401 },
-    )
-  }
+  const userSession = await requireActiveSubscription('api')
 
   // Check if user has admin privileges
   const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id },
+    where: { id: userSession.id },
     select: { role: true },
   })
 
@@ -187,18 +180,11 @@ const updateBody = z.object({
 
 // PUT /api/community/channels/[channelId] - Update channel (admin only)
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user || !(session.user as any).id) {
-    return NextResponse.json(
-      { ok: false, code: 'UNAUTH', message: 'Sign in required' },
-      { status: 401 },
-    )
-  }
+  const userSession = await requireActiveSubscription('api')
 
   // Check if user has admin privileges
   const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id },
+    where: { id: userSession.id },
     select: { role: true },
   })
 
@@ -327,18 +313,11 @@ export async function PUT(req: Request) {
 
 // DELETE /api/community/channels/[channelId] - Delete channel (admin only)
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user || !(session.user as any).id) {
-    return NextResponse.json(
-      { ok: false, code: 'UNAUTH', message: 'Sign in required' },
-      { status: 401 },
-    )
-  }
+  const userSession = await requireActiveSubscription('api')
 
   // Check if user has admin privileges
   const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id },
+    where: { id: userSession.id },
     select: { role: true },
   })
 

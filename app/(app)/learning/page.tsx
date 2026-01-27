@@ -1,7 +1,5 @@
 import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,7 +35,6 @@ import { LearningAnalytics } from '@/components/learning/LearningAnalytics'
 import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
 import { LearningHubContent } from '@/components/learning/LearningHubContent'
 import { LearningHubWizard } from '@/components/learning/LearningHubWizard'
-import { getEnhancedMetrics } from '@/lib/analytics'
 import { unstable_cache } from 'next/cache'
 
 // Revalidate every 30 seconds for faster updates (especially for admin edits)
@@ -317,21 +314,17 @@ async function getEnhancedProgressMetrics(userId: string) {
 }
 
 export default async function LearningDashboardPage() {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
+  const user = await requireActiveSubscription()
 
   try {
     // Fetch data with individual error handling to prevent one failure from breaking the page
     const results = await Promise.allSettled([
-      getUserEnrollments(session.user.id),
-      getUserProgress(session.user.id),
-      getUserCertificates(session.user.id),
-      getLearningActivity(session.user.id),
-      getAllCourses(session.user.id),
-      getEnhancedProgressMetrics(session.user.id),
+      getUserEnrollments(user.id),
+      getUserProgress(user.id),
+      getUserCertificates(user.id),
+      getLearningActivity(user.id),
+      getAllCourses(user.id),
+      getEnhancedProgressMetrics(user.id),
       getResources(),
     ])
     
@@ -412,7 +405,7 @@ export default async function LearningDashboardPage() {
 
       <div className="container mx-auto px-4 py-12">
         {/* Admin Quick Actions Widget */}
-        {['admin', 'editor'].includes(session.user.role || '') && (
+        {['admin', 'editor'].includes(user.role || '') && (
           <div className="mb-8">
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
               <div className="flex items-center justify-between">
@@ -450,9 +443,9 @@ export default async function LearningDashboardPage() {
           enhancedMetrics={enhancedMetrics}
           resources={resources}
           streak={streak}
-          userId={session.user.id}
-          userRole={session.user.role || 'guest'}
-          userTier={(session.user as any)?.membershipTier || null}
+          userId={user.id}
+          userRole={user.role || 'guest'}
+          userTier={(user as any)?.membershipTier || null}
         />
       </div>
     </div>

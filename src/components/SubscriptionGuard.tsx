@@ -39,11 +39,6 @@ export function SubscriptionGuard({ children, userRole }: SubscriptionGuardProps
     }
   }, [data, error, router])
   
-  // Admins bypass subscription requirements
-  if (userRole === 'admin' || session?.user?.role === 'admin') {
-    return <>{children}</>
-  }
-  
   // Show children while checking (optimistic rendering)
   return <>{children}</>
 }

@@ -30,16 +30,33 @@ export default async function middleware(req: NextRequest) {
   
   // Apply rate limiting for API routes
   if (pathname.startsWith('/api/')) {
-    const rateLimitResponse = rateLimit(100, 60000)(req) // 100 requests per minute
+    let rateLimitResponse: NextResponse | null = null
+    if (pathname.startsWith('/api/auth/register')) {
+      rateLimitResponse = rateLimit(5, 60000, 'api-auth-register')(req) // 5/min
+    } else if (pathname.startsWith('/api/auth/reset-password/request')) {
+      rateLimitResponse = rateLimit(5, 60000, 'api-auth-reset')(req) // 5/min
+    } else if (pathname.startsWith('/api/auth/')) {
+      rateLimitResponse = rateLimit(60, 60000, 'api-auth')(req) // 60/min
+    } else if (pathname.startsWith('/api/stripe/checkout')) {
+      rateLimitResponse = rateLimit(10, 60000, 'api-stripe-checkout')(req) // 10/min
+    } else {
+      rateLimitResponse = rateLimit(100, 60000, 'api-general')(req) // 100/min
+    }
     if (rateLimitResponse) {
       return rateLimitResponse
     }
     
-    // Apply CSRF protection for API routes
-    const csrfResponse = csrfProtection(req)
-    if (csrfResponse) {
-      return csrfResponse
+    // Apply CSRF protection for API routes (skip webhook + cron)
+    const skipCsrf = pathname.startsWith('/api/stripe/webhook') || pathname.startsWith('/api/cron/')
+    if (!skipCsrf) {
+      const csrfResponse = csrfProtection(req)
+      if (csrfResponse) {
+        return csrfResponse
+      }
     }
+
+    // Let API routes handle auth and response semantics
+    return response
   }
   
   // Allow public routes without authentication
@@ -157,6 +174,6 @@ export default async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }

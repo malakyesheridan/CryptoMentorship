@@ -1,9 +1,7 @@
-import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
+import { requireAuth, hasActiveSubscription, canAccessTier } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Calendar, User, Tag, Edit } from 'lucide-react'
@@ -17,9 +15,20 @@ import { BookmarkButton } from '@/components/BookmarkButton'
 // Revalidate every 5 minutes - content is published, not real-time
 export const revalidate = 300
 
-async function getContent(slug: string) {
-  const content = await prisma.content.findUnique({
+async function getContentMeta(slug: string) {
+  return prisma.content.findUnique({
     where: { slug },
+    select: {
+      id: true,
+      locked: true,
+      minTier: true,
+    },
+  })
+}
+
+async function getContentById(id: string) {
+  return prisma.content.findUnique({
+    where: { id },
     select: {
       id: true,
       slug: true,
@@ -35,8 +44,6 @@ async function getContent(slug: string) {
       createdAt: true,
     },
   })
-
-  return content
 }
 
 export default async function ContentPage({
@@ -44,25 +51,25 @@ export default async function ContentPage({
 }: {
   params: { slug: string }
 }) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
+  const user = await requireAuth()
 
-  const content = await getContent(params.slug)
-  
-  if (!content) {
+  const contentMeta = await getContentMeta(params.slug)
+  if (!contentMeta) {
     redirect('/not-found')
   }
 
-  // Check access
-  const tierLevels = { guest: 0, member: 1, editor: 2, admin: 3 }
-  const userTierLevel = tierLevels[session.user.role as keyof typeof tierLevels] || 0
-  const requiredTierLevel = tierLevels[content.minTier as keyof typeof tierLevels] || 0
+  if (contentMeta.locked || contentMeta.minTier) {
+    const hasAccess = contentMeta.minTier
+      ? await canAccessTier(user.id, contentMeta.minTier)
+      : await hasActiveSubscription(user.id)
+    if (!hasAccess) {
+      redirect('/subscribe?required=true')
+    }
+  }
 
-  if (content.locked && userTierLevel < requiredTierLevel) {
-    redirect('/dashboard')
+  const content = await getContentById(contentMeta.id)
+  if (!content) {
+    redirect('/not-found')
   }
 
   const tags = JSON.parse(content.tags || '[]')
@@ -72,7 +79,7 @@ export default async function ContentPage({
 
   const existingBookmark = await prisma.bookmark.findFirst({
     where: {
-      userId: session.user.id,
+      userId: user.id,
       contentId: content.id,
     },
     select: { id: true },
@@ -81,7 +88,7 @@ export default async function ContentPage({
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <ViewTracker entityType="content" entityId={content.id} disabled={!session.user?.id} />
+        <ViewTracker entityType="content" entityId={content.id} disabled={!user.id} />
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -96,7 +103,7 @@ export default async function ContentPage({
                 {content.kind}
               </Badge>
             </div>
-            {['admin', 'editor'].includes(session.user.role || '') && (
+            {['admin', 'editor'].includes(user.role || '') && (
               <Link href={`/admin/content/${content.id}/edit`}>
                 <Button variant="outline" size="sm" className="flex items-center gap-2">
                   <Edit className="h-4 w-4" />

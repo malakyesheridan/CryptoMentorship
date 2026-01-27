@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
 import { logger } from '@/lib/logger'
 import { env } from '@/lib/env'
+import { sendVerificationEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,33 +35,37 @@ export async function POST(req: NextRequest) {
     const expires = new Date()
     expires.setHours(expires.getHours() + 24) // 24 hour expiry
     
-    // Store token
-    await prisma.verificationToken.upsert({
+    // Remove any existing active tokens for this user
+    await prisma.verificationToken.deleteMany({
       where: {
-        identifier_token: {
-          identifier: dbUser.email,
-          token: token,
-        },
+        identifier: dbUser.email,
+        expires: { gte: new Date() },
       },
-      update: {
-        token: token,
-        expires: expires,
-      },
-      create: {
+    })
+
+    // Store token
+    await prisma.verificationToken.create({
+      data: {
         identifier: dbUser.email,
         token: token,
         expires: expires,
       },
     })
-    
-    // TODO: Send verification email
-    // For now, just log it (in development)
-    if (env.NODE_ENV === 'development') {
-      logger.info('Verification token generated', {
-        email: dbUser.email,
-        token, // Only log in development
-        verifyUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:5001'}/verify-email?token=${token}`,
+
+    const baseUrl = env.NEXTAUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:5001'
+    const verifyUrl = `${baseUrl}/verify-email?token=${token}`
+
+    try {
+      await sendVerificationEmail({
+        to: dbUser.email,
+        verifyUrl,
       })
+    } catch (emailError) {
+      logger.error(
+        'Failed to send verification email (non-blocking)',
+        emailError instanceof Error ? emailError : new Error(String(emailError)),
+        { userId: user.id, email: dbUser.email }
+      )
     }
     
     logger.info('Verification email requested', { userId: user.id })

@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 // Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
-export function rateLimit(limit: number = 10, windowMs: number = 60000) {
+export function rateLimit(limit: number = 10, windowMs: number = 60000, scope: string = 'global') {
   return (req: NextRequest) => {
     const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown'
+    const key = `${scope}:${ip}`
     const now = Date.now()
     const windowStart = now - windowMs
 
@@ -17,7 +18,7 @@ export function rateLimit(limit: number = 10, windowMs: number = 60000) {
     }
 
     // Get or create rate limit entry
-    const entry = rateLimitStore.get(ip) || { count: 0, resetTime: now + windowMs }
+    const entry = rateLimitStore.get(key) || { count: 0, resetTime: now + windowMs }
     
     if (entry.resetTime < now) {
       entry.count = 0
@@ -38,7 +39,7 @@ export function rateLimit(limit: number = 10, windowMs: number = 60000) {
       )
     }
 
-    rateLimitStore.set(ip, entry)
+    rateLimitStore.set(key, entry)
     return null
   }
 }

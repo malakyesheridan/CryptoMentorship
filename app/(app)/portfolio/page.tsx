@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import DailySignalManager from '@/components/signals/DailySignalManager'
 import { PortfolioWizard } from '@/components/portfolio/PortfolioWizard'
 import { unstable_cache } from 'next/cache'
@@ -111,10 +111,11 @@ async function getPerformanceData() {
 }
 
 export default async function PortfolioPage() {
+  const user = await requireActiveSubscription()
+
   try {
-    const session = await getSession()
-    const userRole = session?.user?.role || 'guest'
-    const userTier = (session?.user as any)?.membershipTier || null
+    const userRole = user.role || 'guest'
+    const userTier = (user as any)?.membershipTier || null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">

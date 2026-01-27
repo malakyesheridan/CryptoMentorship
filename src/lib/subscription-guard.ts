@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
-import { hasActiveSubscription } from './access'
+import { requireActiveSubscription } from './access'
 
 /**
  * Server-side subscription guard
@@ -16,18 +14,6 @@ import { hasActiveSubscription } from './access'
  * ```
  */
 export async function requireSubscription() {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
-  
-  const hasSubscription = await hasActiveSubscription(session.user.id)
-  
-  if (!hasSubscription) {
-    redirect('/subscribe?required=true')
-  }
-  
-  return session.user
+  return requireActiveSubscription('page')
 }
 

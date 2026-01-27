@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { requireActiveSubscription } from '@/lib/access'
 
 export const revalidate = 60 // Cache for 1 minute
 
 // GET /api/portfolio-daily-signals - Get all daily updates (with user tier for access control)
 export async function GET(request: NextRequest) {
+  const user = await requireActiveSubscription('api')
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
-    // Get user's tier
+    // Get user's tier (active subscription already enforced)
     const membership = await prisma.membership.findFirst({
-      where: { userId: session.user.id },
-      select: { tier: true, status: true }
+      where: { userId: user.id },
+      select: { tier: true, status: true, currentPeriodEnd: true }
     })
 
     const userTier = membership?.tier || null
-    // Trial accounts should be treated as active for update access
-    const isActive = (membership?.status === 'active' || membership?.status === 'trial') || session.user.role === 'admin'
+    const isActive = true
 
     // Check if a date filter is provided
     const { searchParams } = new URL(request.url)

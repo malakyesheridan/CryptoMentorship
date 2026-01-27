@@ -24,16 +24,7 @@ async function getSubscriptionStatusCached(userId: string): Promise<boolean> {
 export async function GET(req: NextRequest) {
   try {
     const user = await requireUser()
-    
-    // Admins bypass subscription requirements
-    if (user.role === 'admin') {
-      return NextResponse.json({
-        hasActiveSubscription: true,
-        userId: user.id,
-        isAdmin: true,
-      })
-    }
-    
+
     const isActive = await getSubscriptionStatusCached(user.id)
     
     return NextResponse.json({

@@ -202,13 +202,6 @@ export default function LoginPage() {
       
       // If session is available, proceed with redirect logic
       if (sessionAvailable && session?.user?.id) {
-        // Admins bypass subscription requirements - redirect directly
-        if (session.user.role === 'admin') {
-          console.log('✅ Admin user, redirecting to dashboard')
-          window.location.href = finalCallbackUrl
-          return
-        }
-        
         // For non-admins, check subscription status
         try {
           const subscriptionRes = await fetch('/api/me/subscription-status', {

@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
-import { getSession } from '@/lib/auth-server'
-import { redirect } from 'next/navigation'
+import { requireActiveSubscription } from '@/lib/access'
 import { TradeTable } from '@/components/signals'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -72,11 +71,7 @@ async function getClosedTrades() {
 // Old mock data structure removed - real data fetching implemented above
 
 export default async function ClosedTradesPage() {
-  const session = await getSession()
-  
-  if (!session?.user) {
-    redirect('/login')
-  }
+  await requireActiveSubscription()
 
   const closedTrades = await getClosedTrades()
 

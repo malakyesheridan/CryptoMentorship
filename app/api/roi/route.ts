@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
+import { requireActiveSubscription } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { toNum } from '@/lib/num/dec'
 import { parseAllocationAssets } from '@/lib/portfolio-assets'
@@ -44,9 +43,13 @@ function parseTierFromPortfolioKey(portfolioKey: string): 'T1' | 'T2' | null {
 async function getUserTier(userId: string) {
   const membership = await prisma.membership.findFirst({
     where: { userId },
-    select: { tier: true, status: true }
+    select: { tier: true, status: true, currentPeriodEnd: true }
   })
-  const isActive = (membership?.status === 'active' || membership?.status === 'trial')
+  const now = new Date()
+  const isActive = !!membership
+    && (membership.status === 'active' || membership.status === 'trial')
+    && (membership.status !== 'trial' || membership.currentPeriodEnd)
+    && (!membership.currentPeriodEnd || membership.currentPeriodEnd >= now)
   return { tier: membership?.tier ?? null, isActive }
 }
 
@@ -155,8 +158,7 @@ function buildPrimaryHistory(params: {
   return history
 }
 
-function canAccessPortfolioKey(userTier: string | null, portfolioKey: string, isActive: boolean, userRole?: string) {
-  if (userRole === 'admin') return true
+function canAccessPortfolioKey(userTier: string | null, portfolioKey: string, isActive: boolean) {
   if (!userTier || !isActive) return false
   const portfolioTier = parseTierFromPortfolioKey(portfolioKey)
   if (!portfolioTier) return false
@@ -200,14 +202,10 @@ function computeKpisFromNav(navSeries: Array<{ date: string; nav: number }>) {
 }
 
 export async function GET(request: NextRequest) {
+  const user = await requireActiveSubscription('api')
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { tier: userTier, isActive } = await getUserTier(session.user.id)
-    const effectiveTier = session.user.role === 'admin' ? 'T2' : userTier
+    const { tier: userTier, isActive } = await getUserTier(user.id)
+    const effectiveTier = userTier
     const { searchParams } = new URL(request.url)
     const rangeParam = searchParams.get('range')?.toLowerCase() ?? '1y'
     const requestedKey = searchParams.get('portfolioKey')
@@ -215,7 +213,7 @@ export async function GET(request: NextRequest) {
     const requestedTier = requestedTierRaw === 'T1' || requestedTierRaw === 'T2' ? requestedTierRaw : null
     const portfolioKey = (requestedKey ?? (await getDefaultPortfolioKey(effectiveTier, requestedTier))).toLowerCase()
 
-    if (!canAccessPortfolioKey(effectiveTier, portfolioKey, isActive, session.user.role)) {
+    if (!canAccessPortfolioKey(effectiveTier, portfolioKey, isActive)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

@@ -1,15 +1,9 @@
 import { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
-import { prisma } from '@/lib/prisma'
 import { addConnection, removeConnection } from '@/lib/community/sse'
+import { requireActiveSubscription } from '@/lib/access'
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user?.id) {
-    return new Response('Unauthorized', { status: 401 })
-  }
+  const session = await requireActiveSubscription('api')
 
   const url = new URL(req.url)
   const channelId = url.searchParams.get('channelId')
@@ -29,7 +23,7 @@ export async function GET(req: NextRequest) {
       const data = JSON.stringify({
         type: 'connected',
         channelId,
-        userId: session.user.id,
+        userId: session.id,
         timestamp: new Date().toISOString()
       })
       

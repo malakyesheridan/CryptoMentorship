@@ -217,3 +217,93 @@ If you didn't request a password reset, you can safely ignore this email. Your p
   })
 }
 
+/**
+ * Send an email verification email
+ */
+export async function sendVerificationEmail({
+  to,
+  verifyUrl,
+  userName,
+}: {
+  to: string
+  verifyUrl: string
+  userName?: string | null
+}): Promise<void> {
+  const greeting = userName ? `Hi ${userName},` : 'Hi there,'
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verify Your Email</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%); padding: 40px 20px; border-radius: 8px; margin-bottom: 20px;">
+          <h1 style="color: #d4af37; margin: 0 0 10px 0; font-size: 28px;">Verify Your Email</h1>
+        </div>
+
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <p style="margin: 0 0 20px 0; font-size: 16px;">
+            ${greeting}
+          </p>
+
+          <p style="margin: 0 0 20px 0; font-size: 16px;">
+            Please confirm your email address to complete your account setup.
+          </p>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verifyUrl}" 
+               style="display: inline-block; background: #d4af37; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+              Verify Email
+            </a>
+          </div>
+
+          <p style="margin: 20px 0 0 0; font-size: 14px; color: #64748b;">
+            Or copy and paste this link into your browser:
+          </p>
+          <p style="margin: 5px 0 20px 0; font-size: 12px; color: #94a3b8; word-break: break-all;">
+            ${verifyUrl}
+          </p>
+
+          <p style="margin: 30px 0 0 0; font-size: 14px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            <strong>This link will expire in 24 hours.</strong>
+          </p>
+
+          <p style="margin: 20px 0 0 0; font-size: 14px; color: #64748b;">
+            If you didn't create this account, you can safely ignore this email.
+          </p>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #94a3b8;">
+          <p style="margin: 0;">© ${new Date().getFullYear()} Stewart & Co Portal. All rights reserved.</p>
+        </div>
+      </body>
+    </html>
+  `
+
+  const text = `
+Verify Your Email
+
+${greeting}
+
+Please confirm your email address to complete your account setup:
+
+${verifyUrl}
+
+This link will expire in 24 hours.
+
+If you didn't create this account, you can safely ignore this email.
+
+© ${new Date().getFullYear()} Stewart & Co Portal. All rights reserved.
+  `.trim()
+
+  await sendEmail({
+    to,
+    subject: 'Verify Your Email - Stewart & Co Portal',
+    html,
+    text,
+  })
+}
+
