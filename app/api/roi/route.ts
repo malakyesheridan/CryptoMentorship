@@ -48,7 +48,7 @@ async function getUserTier(userId: string) {
   const now = new Date()
   const isActive = !!membership
     && (membership.status === 'active' || membership.status === 'trial')
-    && (membership.status !== 'trial' || membership.currentPeriodEnd)
+    && (membership.status !== 'trial' || !!membership.currentPeriodEnd)
     && (!membership.currentPeriodEnd || membership.currentPeriodEnd >= now)
   return { tier: membership?.tier ?? null, isActive }
 }
