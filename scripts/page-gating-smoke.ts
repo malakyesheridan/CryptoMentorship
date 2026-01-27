@@ -74,9 +74,9 @@ async function runWithCookie(cookie: string | null, fn: () => Promise<any>) {
     RequestCookiesAdapter: { seal: (cookies: any) => any }
   }
 
-  const cookieHeader = cookie ? { cookie } : {}
-  const headers = HeadersAdapter.seal(new Headers(cookieHeader))
-  const cookies = RequestCookiesAdapter.seal(new RequestCookies(new Headers(cookieHeader)))
+  const headerInit: HeadersInit | undefined = cookie ? [['cookie', cookie]] : undefined
+  const headers = HeadersAdapter.seal(new Headers(headerInit))
+  const cookies = RequestCookiesAdapter.seal(new RequestCookies(new Headers(headerInit)))
   const store = {
     headers,
     cookies,
