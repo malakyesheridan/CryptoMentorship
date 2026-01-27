@@ -5,7 +5,7 @@ import { validatePassword } from '@/lib/password-validation'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
 import { handleError } from '@/lib/errors'
-import { linkReferralToUser } from '@/lib/referrals'
+import { linkReferralToUser, getReferralCookieName } from '@/lib/referrals'
 import { referralConfig } from '@/lib/env'
 import { randomBytes } from 'crypto'
 import { sendVerificationEmail } from '@/lib/email'
@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { email, password, name, referralCode, trial } = registerSchema.parse(body)
+    const referralCookie = req.cookies.get(getReferralCookieName())?.value || null
+    const effectiveReferralCode = referralCode || referralCookie
     const shouldCreateTrial = Boolean(trial)
     const trialDurationDays = 30
     const trialEndDate = shouldCreateTrial ? new Date() : null
@@ -92,20 +94,20 @@ export async function POST(req: NextRequest) {
       }
 
       // Link referral if code provided (defensive: errors don't block registration)
-      if (referralCode && referralConfig.enabled) {
+      if (effectiveReferralCode && referralConfig.enabled) {
         try {
-          const referralResult = await linkReferralToUser(referralCode, newUser.id, tx)
+          const referralResult = await linkReferralToUser(effectiveReferralCode, newUser.id, tx)
           if (referralResult.success) {
             logger.info('Referral linked during registration', {
               userId: newUser.id,
-              referralCode,
+              referralCode: effectiveReferralCode,
               referralId: referralResult.referralId,
             })
           } else {
             // Log but don't fail registration
             logger.warn('Referral linking failed during registration (non-blocking)', {
               userId: newUser.id,
-              referralCode,
+              referralCode: effectiveReferralCode,
               error: referralResult.error,
             })
           }
@@ -114,7 +116,7 @@ export async function POST(req: NextRequest) {
           logger.warn('Referral linking error during registration (non-blocking)', {
             error: error instanceof Error ? error.message : String(error),
             userId: newUser.id,
-            referralCode,
+            referralCode: effectiveReferralCode,
           })
         }
       }
@@ -146,7 +148,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Account created successfully. Please check your email to verify your account.',
       user: {
@@ -155,6 +157,10 @@ export async function POST(req: NextRequest) {
         name: user.name,
       },
     })
+    if (effectiveReferralCode) {
+      response.cookies.set(getReferralCookieName(), '', { path: '/', maxAge: 0 })
+    }
+    return response
   } catch (error) {
     logger.error(
       'Registration error',

@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma'
 import { env } from '@/lib/env'
 import { logger } from '@/lib/logger'
 import { verifyPassword } from '@/lib/password'
+import { cookies } from 'next/headers'
+import { getReferralCookieName, linkReferralToUser } from '@/lib/referrals'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma), // Used for OAuth providers only
@@ -443,6 +445,36 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
+  },
+  events: {
+    async createUser({ user }) {
+      try {
+        const cookieStore = await cookies()
+        const referralCode = cookieStore.get(getReferralCookieName())?.value
+        if (!referralCode || !user?.id) return
+
+        const result = await linkReferralToUser(referralCode, user.id)
+        if (result.success) {
+          logger.info('Referral linked during OAuth signup', {
+            userId: user.id,
+            referralCode,
+            referralId: result.referralId,
+          })
+        } else {
+          logger.warn('Referral linking failed during OAuth signup', {
+            userId: user.id,
+            referralCode,
+            error: result.error,
+          })
+        }
+      } catch (error) {
+        logger.error(
+          'Referral linking error during OAuth signup',
+          error instanceof Error ? error : new Error(String(error)),
+          { userId: user?.id }
+        )
+      }
+    }
   },
   secret: env.NEXTAUTH_SECRET,
   debug: env.NODE_ENV === 'development',

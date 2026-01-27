@@ -27,6 +27,9 @@ function RegisterForm() {
     const refCode = searchParams.get('ref')
     if (refCode) {
       setFormData((prev) => ({ ...prev, referralCode: refCode }))
+      const expiryDays = 30
+      const expires = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toUTCString()
+      document.cookie = `referral_code=${refCode}; Path=/; Expires=${expires}; SameSite=Lax`
     }
     const trialParam = searchParams.get('trial')
     setIsTrial(trialParam === 'true' || trialParam === '1')
