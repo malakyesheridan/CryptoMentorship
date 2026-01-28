@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireUser } from '@/lib/auth-server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-server'
 import { stripe, getPriceId, isStripeConfigured } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -22,7 +23,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const user = await requireUser()
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    const user = session.user
     const body = await req.json()
     const { tier, interval, successUrl, cancelUrl } = checkoutSchema.parse(body)
     
@@ -53,7 +61,7 @@ export async function POST(req: NextRequest) {
       }
       
       const customer = await stripe.customers.create({
-        email: user.email!,
+        email: user.email || undefined,
         name: user.name || undefined,
         metadata: {
           userId: user.id,
@@ -121,6 +129,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.issues },
         { status: 400 }
+      )
+    }
+
+    const stripeError = error as { type?: string; message?: string; statusCode?: number }
+    if (stripeError?.type && stripeError?.message) {
+      return NextResponse.json(
+        { error: stripeError.message },
+        { status: stripeError.statusCode || 400 }
       )
     }
     
