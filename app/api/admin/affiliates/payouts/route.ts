@@ -3,13 +3,21 @@ import { prisma } from '@/lib/prisma'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { handleError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
+import { AffiliatePayoutBatchStatus } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
     await requireRoleAPI(['admin'])
 
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status')
+    const statusParam = searchParams.get('status')
+    const status = statusParam && (Object.values(AffiliatePayoutBatchStatus) as string[]).includes(statusParam)
+      ? (statusParam as AffiliatePayoutBatchStatus)
+      : null
+
+    if (statusParam && !status) {
+      return NextResponse.json({ error: 'Invalid status filter' }, { status: 400 })
+    }
 
     const payouts = await prisma.affiliatePayoutBatch.findMany({
       where: status ? { status } : undefined,

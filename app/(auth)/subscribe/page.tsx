@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { getStripe } from '@/lib/stripe'
 import { Button } from '@/components/ui/button'
-import { Check, Loader2, AlertCircle, Star, TrendingUp, Crown } from 'lucide-react'
+import { Check, Loader2, AlertCircle, Crown } from 'lucide-react'
 
 interface PriceData {
   amount: number
@@ -13,29 +13,14 @@ interface PriceData {
 }
 
 interface Prices {
-  T1: Record<string, PriceData>
   T2: Record<string, PriceData>
 }
 
 const PLANS = [
   {
-    tier: 'T1',
-    name: 'Growth',
-    description: 'Advanced Management',
-    icon: TrendingUp,
-    features: [
-      'Majors Rotation Investment System',
-      'Weekly Market Valuation',
-      'Private Community Access',
-      'Tutorials and Lessons',
-      'Advanced Portfolio Construction',
-      'Bear Market Strategies',
-    ],
-  },
-  {
     tier: 'T2',
-    name: 'Elite',
-    description: 'VIP Access',
+    name: 'Founders',
+    description: 'Elite access at the founders rate',
     icon: Crown,
     features: [
       'All Tier 1 Features',
@@ -48,20 +33,12 @@ const PLANS = [
   },
 ]
 
-const INTERVALS = [
-  { key: 'month' as const, label: 'Monthly', savings: null },
-  { key: '3month' as const, label: '3 Months', savings: 4 },
-  { key: '6month' as const, label: '6 Months', savings: 11 },
-  { key: 'year' as const, label: '1 Year', savings: 17 },
-]
-
 function SubscribePageContent() {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [interval, setInterval] = useState<'month' | '3month' | '6month' | 'year'>('month')
+  const [interval] = useState<'month'>('month')
   const [prices, setPrices] = useState<Prices | null>(null)
   const [loadingPrices, setLoadingPrices] = useState(true)
-  const router = useRouter()
   const searchParams = useSearchParams()
   const isRequired = searchParams.get('required') === 'true'
   const isNewUser = searchParams.get('newuser') === 'true'
@@ -209,58 +186,22 @@ function SubscribePageContent() {
 
       {/* Pricing Section */}
       <section className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8 lg:py-12 not-prose">
-        {/* Billing Toggle */}
-        <div className="mx-auto w-full max-w-3xl">
-          <div className="flex justify-center">
-            <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg gap-1.5">
-              {INTERVALS.map((intervalOption) => (
-                <button
-                  key={intervalOption.key}
-                  onClick={() => setInterval(intervalOption.key)}
-                  className={`relative px-6 py-3 rounded-lg transition-all duration-200 text-sm font-medium ${
-                    interval === intervalOption.key
-                      ? 'bg-yellow-500 text-slate-900 shadow-md'
-                      : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    <span>{intervalOption.label}</span>
-                    {intervalOption.savings && (
-                      <span className={`text-xs mt-0.5 ${
-                        interval === intervalOption.key ? 'text-slate-700' : 'text-slate-500'
-                      }`}>
-                        Save up to {intervalOption.savings}%
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* Plans Grid */}
-        <div className="relative mt-8 lg:mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 items-stretch max-w-5xl mx-auto">
+        <div className="relative mt-8 lg:mt-10 grid grid-cols-1 gap-6 lg:gap-10 items-stretch max-w-3xl mx-auto">
           {PLANS.map((plan) => {
             const Icon = plan.icon
             const priceData = getPrice(plan.tier)
-            const isPopular = plan.tier === 'T2'
             
             return (
               <div
                 key={plan.tier}
-                className={`h-full flex flex-col rounded-2xl border shadow-sm bg-gradient-to-b from-yellow-50/50 to-white backdrop-blur-sm relative ${
-                  isPopular ? 'border-2 border-yellow-400' : 'border-yellow-300'
-                }`}
+                className="h-full flex flex-col rounded-2xl border-2 border-yellow-400 shadow-sm bg-gradient-to-b from-yellow-50/50 to-white backdrop-blur-sm relative"
               >
-                {/* Most Popular Badge */}
-                {isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <span className="rounded-full border px-3 py-1 text-xs font-semibold bg-yellow-400 border-yellow-500 text-slate-900 shadow-sm">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                  <span className="rounded-full border px-3 py-1 text-xs font-semibold bg-yellow-400 border-yellow-500 text-slate-900 shadow-sm">
+                    Founders Tier
+                  </span>
+                </div>
                 <div className="p-6 lg:p-8 grow">
                   {/* Icon */}
                   <div className="flex justify-center mb-6">
@@ -286,12 +227,10 @@ function SubscribePageContent() {
                         <div className="text-4xl font-bold text-yellow-600 mb-1">
                           {priceData.formatted}
                         </div>
-                        <div className="text-sm text-slate-500">
-                          / {interval === 'month' ? 'month' : interval === '3month' ? '3 months' : interval === '6month' ? '6 months' : 'year'}
-                        </div>
+                        <div className="text-sm text-slate-500">/ month</div>
                       </div>
                     ) : (
-                      <div className="text-slate-400 text-sm">Price unavailable</div>
+                      <div className="text-slate-400 text-sm">$300 / month</div>
                     )}
                   </div>
 
@@ -313,12 +252,8 @@ function SubscribePageContent() {
                   <Button
                     onClick={() => handleSubscribe(plan.tier)}
                     disabled={loading === plan.tier || !priceData}
-                    className={`w-full rounded-xl ${
-                      isPopular
-                        ? 'bg-slate-900 hover:bg-slate-800 text-white'
-                        : 'bg-white border-2 border-yellow-400 text-slate-900 hover:bg-yellow-50'
-                    }`}
-                    variant={isPopular ? 'default' : 'outline'}
+                    className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white"
+                    variant="default"
                   >
                     {loading === plan.tier ? (
                       <>
@@ -337,7 +272,7 @@ function SubscribePageContent() {
 
         {/* Footer Disclaimer */}
         <p className="mt-8 text-center text-sm text-neutral-600">
-          All tiers include our full community access. Upgrade or downgrade anytime. Prices in AUD. Plans auto-renew, cancel anytime.
+          Founders pricing applies to this subscription only. Plans auto-renew monthly and can be canceled anytime.
         </p>
       </section>
     </div>

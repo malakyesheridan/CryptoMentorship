@@ -84,7 +84,7 @@ export function getPriceId(tier: string, interval: 'month' | '3month' | '6month'
       'year': 'price_1SY8FoDJPZctYjdr1UIZ0CCS',   // Growth: 1year
     },
     'T2': {
-      'month': 'price_1SY8LDDJPZctYjdrT4O6cPG2',   // Elite: month
+      'month': 'price_1SuXk2DJPZctYjdrTXSH3JXB',   // Elite (Founders): month
       '3month': 'price_1SY8LiDJPZctYjdrBqXTPU7W',  // Elite: 3mo
       '6month': 'price_1SY8MDDJPZctYjdrZseyMyhC',  // Elite: 6mo
       'year': 'price_1SY8McDJPZctYjdrR1oSbHeW',    // Elite: 1year
@@ -116,7 +116,8 @@ export function getTierFromPriceId(priceId: string): string | null {
   ]
   
   const elitePriceIds = [
-    'price_1SY8LDDJPZctYjdrT4O6cPG2',  // Elite: month
+    'price_1SuXk2DJPZctYjdrTXSH3JXB',  // Elite (Founders): month
+    'price_1SY8LDDJPZctYjdrT4O6cPG2',  // Elite: month (legacy)
     'price_1SY8LiDJPZctYjdrBqXTPU7W',  // Elite: 3mo
     'price_1SY8MDDJPZctYjdrZseyMyhC',  // Elite: 6mo
     'price_1SY8McDJPZctYjdrR1oSbHeW',  // Elite: 1year
