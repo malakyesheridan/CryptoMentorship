@@ -204,6 +204,7 @@ export const routes = {
       publish: () => '/api/cron/publish',
       cohortReleases: () => '/api/cron/cohort-releases',
       portfolioRoi: () => '/api/cron/portfolio-roi',
+      affiliatePayables: () => '/api/cron/affiliate-payables',
       fastForward: () => '/api/cron/dev/fast-forward'
     }
   }

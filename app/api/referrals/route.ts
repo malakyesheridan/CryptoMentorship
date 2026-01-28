@@ -45,18 +45,18 @@ export async function GET(req: NextRequest) {
     // Get referral stats
     const [totalReferrals, completedReferrals, pendingReferrals] = await Promise.all([
       prisma.referral.count({
-        where: { referrerId: userId },
+        where: { referrerId: userId, referredUserId: { not: null } },
       }),
       prisma.referral.count({
         where: {
           referrerId: userId,
-          status: 'completed',
+          status: { in: ['SIGNED_UP', 'TRIAL', 'QUALIFIED', 'PAYABLE', 'PAID'] },
         },
       }),
       prisma.referral.count({
         where: {
           referrerId: userId,
-          status: 'pending',
+          status: 'PENDING',
         },
       }),
     ])
@@ -85,13 +85,14 @@ export async function GET(req: NextRequest) {
 
     // Get recent referrals with enhanced user details
     const recentReferrals = await prisma.referral.findMany({
-      where: { referrerId: userId },
+      where: { referrerId: userId, referredUserId: { not: null } },
       take: 10,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         status: true,
         completedAt: true,
+        signedUpAt: true,
         createdAt: true,
         referredUser: {
           select: {
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest) {
         referredUserImage: r.referredUser?.image || null,
         referredUserCreatedAt: r.referredUser?.createdAt?.toISOString() || null,
         status: r.status,
-        completedAt: r.completedAt?.toISOString() || null,
+        completedAt: (r.signedUpAt || r.completedAt)?.toISOString() || null,
         createdAt: r.createdAt.toISOString(),
       })),
     })

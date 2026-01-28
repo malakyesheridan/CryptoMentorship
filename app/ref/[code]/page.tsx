@@ -37,6 +37,12 @@ export default async function RefPage({ params }: RefPageProps) {
       sameSite: 'lax',
       httpOnly: false, // Allow client-side access for registration form
     })
+    cookieStore.set('referral_clicked_at', new Date().toISOString(), {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: 'lax',
+      httpOnly: false,
+    })
 
     logger.info('Referral link accessed', {
       code,

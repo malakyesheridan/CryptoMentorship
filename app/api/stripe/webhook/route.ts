@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { env } from '@/lib/env'
 import { logger } from '@/lib/logger'
 import { createCommissionIfReferred } from '@/lib/referrals'
+import { markReferralQualifiedFromPayment, markReferralTrial, voidReferralIfInHold } from '@/lib/affiliate'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -188,17 +189,33 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     throw new Error(`Membership not found for customer ${customerId}`)
   }
   
-  await prisma.membership.update({
+  const membershipStatus = subscription.status === 'trialing'
+    ? 'trial'
+    : subscription.status === 'active'
+    ? 'active'
+    : 'inactive'
+
+  const updatedMembership = await prisma.membership.update({
     where: { id: membership.id },
     data: {
       stripeSubscriptionId: subscription.id,
       stripePriceId: subscription.items.data[0]?.price.id || null,
-      status: subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : 'inactive',
+      status: membershipStatus,
       currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
       currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     },
   })
+
+  if (membershipStatus === 'trial') {
+    const trialStart = subscription.trial_start ? new Date(subscription.trial_start * 1000) : new Date()
+    const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000) : null
+    await markReferralTrial({
+      userId: updatedMembership.userId,
+      trialStartedAt: trialStart,
+      trialEndsAt: trialEnd
+    })
+  }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -218,6 +235,12 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       status: 'inactive',
       cancelAtPeriodEnd: false,
     },
+  })
+
+  await voidReferralIfInHold({
+    userId: membership.userId,
+    occurredAt: new Date(),
+    reason: 'subscription_deleted'
   })
 }
 
@@ -310,6 +333,14 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       }
     )
   }
+
+  await markReferralQualifiedFromPayment({
+    userId: membership.userId,
+    paidAt: new Date(),
+    planPriceCents: invoice.amount_paid,
+    currency: invoice.currency || 'usd',
+    isInitial
+  })
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -341,5 +372,6 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Update membership status (grace period - keep active for now)
   // Could implement grace period logic here
   // For now, we'll let Stripe handle retries and only mark inactive after subscription is canceled
+
 }
 

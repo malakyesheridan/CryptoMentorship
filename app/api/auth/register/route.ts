@@ -16,14 +16,33 @@ const registerSchema = z.object({
   password: z.string().min(12, 'Password must be at least 12 characters'),
   name: z.string().min(2).max(100).optional(),
   referralCode: z.string().optional(), // Optional referral code
+  referralSource: z.string().optional(),
+  utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  utmTerm: z.string().optional(),
+  utmContent: z.string().optional(),
   trial: z.boolean().optional(),
 })
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { email, password, name, referralCode, trial } = registerSchema.parse(body)
+    const {
+      email,
+      password,
+      name,
+      referralCode,
+      referralSource,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
+      trial
+    } = registerSchema.parse(body)
     const referralCookie = req.cookies.get(getReferralCookieName())?.value || null
+    const referralClickedAt = req.cookies.get('referral_clicked_at')?.value || null
     const effectiveReferralCode = referralCode || referralCookie
     const shouldCreateTrial = Boolean(trial)
     const trialDurationDays = 30
@@ -96,7 +115,27 @@ export async function POST(req: NextRequest) {
       // Link referral if code provided (defensive: errors don't block registration)
       if (effectiveReferralCode && referralConfig.enabled) {
         try {
-          const referralResult = await linkReferralToUser(effectiveReferralCode, newUser.id, tx)
+          const clickedAt = referralClickedAt ? new Date(referralClickedAt) : null
+          const signedUpAt = new Date()
+          const referralResult = await linkReferralToUser(
+            effectiveReferralCode,
+            newUser.id,
+            tx,
+            {
+              referredEmail: email,
+              referredName: name || null,
+              signedUpAt,
+              clickedAt: Number.isNaN(clickedAt?.getTime()) ? null : clickedAt,
+              source: referralSource || null,
+              utmSource: utmSource || null,
+              utmMedium: utmMedium || null,
+              utmCampaign: utmCampaign || null,
+              utmTerm: utmTerm || null,
+              utmContent: utmContent || null,
+              trialStartedAt: shouldCreateTrial ? signedUpAt : null,
+              trialEndsAt: shouldCreateTrial ? trialEndDate : null,
+            }
+          )
           if (referralResult.success) {
             logger.info('Referral linked during registration', {
               userId: newUser.id,
@@ -159,6 +198,7 @@ export async function POST(req: NextRequest) {
     })
     if (effectiveReferralCode) {
       response.cookies.set(getReferralCookieName(), '', { path: '/', maxAge: 0 })
+      response.cookies.set('referral_clicked_at', '', { path: '/', maxAge: 0 })
     }
     return response
   } catch (error) {

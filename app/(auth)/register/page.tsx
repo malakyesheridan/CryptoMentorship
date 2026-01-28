@@ -19,6 +19,14 @@ function RegisterForm() {
     name: '',
     referralCode: '',
   })
+  const [referralMeta, setReferralMeta] = useState({
+    source: '',
+    utmSource: '',
+    utmMedium: '',
+    utmCampaign: '',
+    utmTerm: '',
+    utmContent: '',
+  })
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -30,7 +38,17 @@ function RegisterForm() {
       const expiryDays = 30
       const expires = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toUTCString()
       document.cookie = `referral_code=${refCode}; Path=/; Expires=${expires}; SameSite=Lax`
+      document.cookie = `referral_clicked_at=${new Date().toISOString()}; Path=/; Expires=${expires}; SameSite=Lax`
     }
+    const source = searchParams.get('source') || searchParams.get('utm_source') || ''
+    setReferralMeta({
+      source,
+      utmSource: searchParams.get('utm_source') || '',
+      utmMedium: searchParams.get('utm_medium') || '',
+      utmCampaign: searchParams.get('utm_campaign') || '',
+      utmTerm: searchParams.get('utm_term') || '',
+      utmContent: searchParams.get('utm_content') || '',
+    })
     const trialParam = searchParams.get('trial')
     setIsTrial(trialParam === 'true' || trialParam === '1')
     const callback = searchParams.get('callbackUrl')
@@ -57,6 +75,14 @@ function RegisterForm() {
       if (formData.referralCode) {
         registerData.referralCode = formData.referralCode
       }
+      if (referralMeta.source) {
+        registerData.referralSource = referralMeta.source
+      }
+      if (referralMeta.utmSource) registerData.utmSource = referralMeta.utmSource
+      if (referralMeta.utmMedium) registerData.utmMedium = referralMeta.utmMedium
+      if (referralMeta.utmCampaign) registerData.utmCampaign = referralMeta.utmCampaign
+      if (referralMeta.utmTerm) registerData.utmTerm = referralMeta.utmTerm
+      if (referralMeta.utmContent) registerData.utmContent = referralMeta.utmContent
       if (isTrial) {
         registerData.trial = true
       }

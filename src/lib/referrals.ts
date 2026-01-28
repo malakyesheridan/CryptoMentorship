@@ -65,7 +65,7 @@ export async function getOrGenerateReferralSlug(userId: string): Promise<string>
  * Get or create a referral code for a user
  * Uses the user's referral slug (custom or generated)
  * Returns existing master template code if one exists, otherwise creates a new one
- * The master template (status: 'pending', referredUserId: null) can be reused for multiple referrals
+ * The master template (status: 'PENDING', referredUserId: null) can be reused for multiple referrals
  */
 export async function getOrCreateReferralCode(userId: string): Promise<string> {
   if (!referralConfig.enabled) {
@@ -80,7 +80,7 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
   const masterReferral = await prisma.referral.findFirst({
     where: {
       referrerId: userId,
-      status: 'pending',
+      status: 'PENDING',
       referredUserId: null, // Master template hasn't been used
       referralCode: referralSlug, // Use slug as the code
     },
@@ -100,8 +100,9 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
     data: {
       referrerId: userId,
       referralCode: referralSlug, // Use slug as the code
+      slugUsed: referralSlug,
       expiresAt,
-      status: 'pending',
+      status: 'PENDING',
       referredUserId: null, // Master template
     },
   })
@@ -118,7 +119,7 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
 export async function validateReferralCode(code: string): Promise<{
   valid: boolean
   error?: string
-  referral?: { id: string; referrerId: string; status: string }
+  referral?: { id: string; referrerId: string; status: string; referralCode: string }
 }> {
   if (!referralConfig.enabled) {
     return { valid: false, error: 'Referral system is disabled' }
@@ -167,7 +168,7 @@ export async function validateReferralCode(code: string): Promise<{
     where: {
       referrerId: referrerId,
       referralCode: referralCode,
-      status: 'pending',
+      status: 'PENDING',
       referredUserId: null, // Master template
     },
     orderBy: { createdAt: 'asc' },
@@ -194,8 +195,9 @@ export async function validateReferralCode(code: string): Promise<{
           data: {
             referrerId: referrerId,
             referralCode: referralCode,
+            slugUsed: referralCode,
             expiresAt,
-            status: 'pending',
+            status: 'PENDING',
             referredUserId: null,
           },
         })
@@ -205,7 +207,7 @@ export async function validateReferralCode(code: string): Promise<{
     }
 
     // Check if cancelled
-    if (referral.status === 'cancelled') {
+    if (referral.status === 'VOID') {
       return { valid: false, error: 'Referral code has been cancelled' }
     }
 
@@ -221,7 +223,8 @@ export async function validateReferralCode(code: string): Promise<{
       referral: {
         id: referral.id,
         referrerId: referral.referrerId,
-        status: 'pending', // Treat as valid for reuse
+        status: 'PENDING', // Treat as valid for reuse
+        referralCode: referral.referralCode,
       },
     }
   }
@@ -233,7 +236,7 @@ export async function validateReferralCode(code: string): Promise<{
   }
 
   // Check if cancelled
-  if (referral.status === 'cancelled') {
+  if (referral.status === 'VOID') {
     return { valid: false, error: 'Referral code has been cancelled' }
   }
 
@@ -243,8 +246,24 @@ export async function validateReferralCode(code: string): Promise<{
       id: referral.id,
       referrerId: referral.referrerId,
       status: referral.status,
+      referralCode: referral.referralCode,
     },
   }
+}
+
+type ReferralAttribution = {
+  referredEmail?: string | null
+  referredName?: string | null
+  signedUpAt?: Date | null
+  clickedAt?: Date | null
+  source?: string | null
+  utmSource?: string | null
+  utmMedium?: string | null
+  utmCampaign?: string | null
+  utmTerm?: string | null
+  utmContent?: string | null
+  trialStartedAt?: Date | null
+  trialEndsAt?: Date | null
 }
 
 /**
@@ -254,7 +273,8 @@ export async function validateReferralCode(code: string): Promise<{
 export async function linkReferralToUser(
   referralCode: string,
   userId: string,
-  tx?: Prisma.TransactionClient
+  tx?: Prisma.TransactionClient,
+  attribution?: ReferralAttribution
 ): Promise<{ success: boolean; referralId?: string; error?: string }> {
   if (!referralConfig.enabled) {
     return { success: false, error: 'Referral system is disabled' }
@@ -288,13 +308,30 @@ export async function linkReferralToUser(
     // Create a NEW referral record (don't update the existing one)
     // This allows the same code to be reused for multiple people
     // The master template stays as 'pending' for future use
+    const signedUpAt = attribution?.signedUpAt ?? new Date()
+    const trialStartedAt = attribution?.trialStartedAt ?? null
+    const status = trialStartedAt ? 'TRIAL' : 'SIGNED_UP'
+
     const newReferral = await prismaClient.referral.create({
       data: {
         referrerId: referral.referrerId, // Same referrer
         referralCode: referralCode, // Same code
+        slugUsed: referral.referralCode || referralCode,
         referredUserId: userId, // New user being referred
-        status: 'completed',
-        completedAt: new Date(),
+        status,
+        signedUpAt,
+        completedAt: signedUpAt,
+        referredEmail: attribution?.referredEmail ?? undefined,
+        referredName: attribution?.referredName ?? undefined,
+        clickedAt: attribution?.clickedAt ?? undefined,
+        source: attribution?.source ?? undefined,
+        utmSource: attribution?.utmSource ?? undefined,
+        utmMedium: attribution?.utmMedium ?? undefined,
+        utmCampaign: attribution?.utmCampaign ?? undefined,
+        utmTerm: attribution?.utmTerm ?? undefined,
+        utmContent: attribution?.utmContent ?? undefined,
+        trialStartedAt: trialStartedAt ?? undefined,
+        trialEndsAt: attribution?.trialEndsAt ?? undefined,
         // Don't copy expiration - new records are already completed
         expiresAt: null,
       },
@@ -376,7 +413,7 @@ export async function createCommissionIfReferred(
       include: { referrer: true },
     })
 
-    if (!referral || referral.status !== 'completed') {
+    if (!referral || referral.status === 'PENDING' || referral.status === 'VOID') {
       // User wasn't referred, or referral not completed - this is fine, no commission
       return { success: false, error: 'User was not referred' }
     }

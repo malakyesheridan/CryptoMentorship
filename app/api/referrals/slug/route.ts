@@ -119,7 +119,7 @@ export async function PUT(req: NextRequest) {
     const existingReferral = await prisma.referral.findFirst({
       where: {
         referrerId: session.user.id,
-        status: 'pending',
+        status: 'PENDING',
         referredUserId: null,
       },
       orderBy: { createdAt: 'asc' },
@@ -129,7 +129,7 @@ export async function PUT(req: NextRequest) {
       // Update existing referral code to new slug
       await prisma.referral.update({
         where: { id: existingReferral.id },
-        data: { referralCode: lowerSlug },
+        data: { referralCode: lowerSlug, slugUsed: lowerSlug },
       })
     } else {
       // Create new master template
@@ -141,8 +141,9 @@ export async function PUT(req: NextRequest) {
         data: {
           referrerId: session.user.id,
           referralCode: lowerSlug,
+          slugUsed: lowerSlug,
           expiresAt,
-          status: 'pending',
+          status: 'PENDING',
           referredUserId: null,
         },
       })

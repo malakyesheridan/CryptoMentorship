@@ -17,6 +17,28 @@ enum RiskProfile {
   CONSERVATIVE
 }
 
+enum ReferralStatus {
+  PENDING
+  SIGNED_UP
+  TRIAL
+  QUALIFIED
+  PAYABLE
+  PAID
+  VOID
+}
+
+enum CommissionType {
+  FIXED
+  PERCENT
+}
+
+enum AffiliatePayoutBatchStatus {
+  DRAFT
+  READY
+  PAID
+  CANCELLED
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -99,6 +121,9 @@ model User {
   payments               Payment[]
   referralsAsReferrer    Referral[]              @relation("Referrer")
   referralsAsReferred    Referral?               @relation("Referred")
+  referralsPaid          Referral[]              @relation("AffiliateReferralPaidBy")
+  affiliatePayoutBatches AffiliatePayoutBatch[]  @relation("AffiliatePayoutReferrer")
+  affiliatePayoutsPaid   AffiliatePayoutBatch[]  @relation("AffiliatePayoutPaidBy")
   commissions            Commission[]
   dashboardSettingsUpdated DashboardSetting[]
   allocationSnapshotsUpdated AllocationSnapshot[]
@@ -1023,21 +1048,71 @@ model Referral {
   referrerId     String // User who created the referral link
   referredUserId String?   @unique // User who signed up via the link (null until signup) - unique so user can only be referred once
   referralCode   String    // Reusable code - same code can be used by multiple people
-  status         String    @default("pending") // pending | completed | expired | cancelled
+  status         ReferralStatus @default(PENDING)
+  referredEmail  String?
+  referredName   String?
+  slugUsed       String?
+  source         String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  utmTerm        String?
+  utmContent     String?
+  clickedAt      DateTime?
+  signedUpAt     DateTime?
+  trialStartedAt DateTime?
+  trialEndsAt    DateTime?
+  firstPaidAt    DateTime?
+  qualifiedAt    DateTime?
+  commissionType CommissionType?
+  commissionValue Decimal?
+  commissionAmountCents Int?
+  currency       String    @default("usd")
+  holdDays       Int?
+  payableAt      DateTime?
+  paidAt         DateTime?
+  paidByUserId   String?
+  payoutBatchId  String?
   expiresAt      DateTime? // Optional expiration date
   createdAt      DateTime  @default(now())
   completedAt    DateTime? // When the referred user completed signup
   metadata       String? // JSON string for additional data (IP address, user agent, etc.)
 
-  referrer     User         @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referredUser User?        @relation("Referred", fields: [referredUserId], references: [id], onDelete: SetNull)
-  commissions  Commission[]
+  referrer      User         @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser  User?        @relation("Referred", fields: [referredUserId], references: [id], onDelete: SetNull)
+  paidByUser    User?        @relation("AffiliateReferralPaidBy", fields: [paidByUserId], references: [id], onDelete: SetNull)
+  payoutBatch   AffiliatePayoutBatch? @relation(fields: [payoutBatchId], references: [id], onDelete: SetNull)
+  commissions   Commission[]
 
   @@index([referrerId])
   @@index([referralCode])
   @@index([status])
   @@index([referrerId, status])
+  @@index([payableAt])
+  @@index([payoutBatchId])
   @@index([createdAt])
+}
+
+model AffiliatePayoutBatch {
+  id              String     @id @default(cuid())
+  referrerId      String
+  status          AffiliatePayoutBatchStatus @default(DRAFT)
+  totalAmountCents Int
+  currency        String     @default("usd")
+  dueAt           DateTime?
+  paidAt          DateTime?
+  paidByUserId    String?
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  referrer   User     @relation("AffiliatePayoutReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  paidByUser User?    @relation("AffiliatePayoutPaidBy", fields: [paidByUserId], references: [id], onDelete: SetNull)
+  referrals  Referral[]
+
+  @@index([referrerId])
+  @@index([status])
+  @@index([dueAt])
 }
 
 model Commission {

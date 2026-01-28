@@ -3,17 +3,20 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { 
+import {
   LayoutDashboard,
   Users,
   Settings,
-  BarChart3
+  BarChart3,
+  DollarSign
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'ROI Dashboard', href: '/admin/roi', icon: BarChart3 },
   { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Affiliates', href: '/admin/affiliates', icon: Users },
+  { name: 'Payouts', href: '/admin/affiliates/payouts', icon: DollarSign },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 

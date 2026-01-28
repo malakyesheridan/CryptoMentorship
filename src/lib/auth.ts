@@ -451,9 +451,16 @@ export const authOptions: NextAuthOptions = {
       try {
         const cookieStore = await cookies()
         const referralCode = cookieStore.get(getReferralCookieName())?.value
+        const referralClickedAt = cookieStore.get('referral_clicked_at')?.value
         if (!referralCode || !user?.id) return
 
-        const result = await linkReferralToUser(referralCode, user.id)
+        const clickedAt = referralClickedAt ? new Date(referralClickedAt) : null
+        const result = await linkReferralToUser(referralCode, user.id, undefined, {
+          referredEmail: user.email || null,
+          referredName: user.name || null,
+          signedUpAt: new Date(),
+          clickedAt: Number.isNaN(clickedAt?.getTime()) ? null : clickedAt,
+        })
         if (result.success) {
           logger.info('Referral linked during OAuth signup', {
             userId: user.id,

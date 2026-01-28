@@ -71,6 +71,7 @@ const envSchema = z.object({
   REFERRAL_COMMISSION_RATE: z.string().optional(), // Default: 0.15 (15%)
   REFERRAL_COOKIE_EXPIRY_DAYS: z.string().optional(), // Default: 30
   REFERRAL_CODE_EXPIRY_DAYS: z.string().optional(), // Optional expiration
+  REFERRAL_HOLD_DAYS: z.string().optional(), // Default: 30
   NEXT_PUBLIC_APP_URL: z.string().url().optional(), // Base URL for affiliate links
 })
 
@@ -185,6 +186,7 @@ export const referralConfig = {
   codeExpiryDays: process.env.REFERRAL_CODE_EXPIRY_DAYS 
     ? parseInt(process.env.REFERRAL_CODE_EXPIRY_DAYS, 10) 
     : null,
+  holdDays: parseInt(process.env.REFERRAL_HOLD_DAYS || '30', 10),
   appUrl: getAppUrl(),
 }
 
