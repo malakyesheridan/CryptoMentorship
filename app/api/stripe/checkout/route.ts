@@ -14,6 +14,7 @@ const checkoutSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  const requestContext: { userId?: string; tier?: string; interval?: string } = {}
   try {
     // Check if Stripe is configured
     if (!isStripeConfigured()) {
@@ -23,16 +24,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    const authSession = await getServerSession(authOptions)
+    if (!authSession?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
-    const user = session.user
+    requestContext.userId = authSession.user.id
+    const user = authSession.user
     const body = await req.json()
     const { tier, interval, successUrl, cancelUrl } = checkoutSchema.parse(body)
+    requestContext.tier = tier
+    requestContext.interval = interval
     
     // Get price ID
     const priceId = getPriceId(tier, interval)
@@ -89,7 +93,7 @@ export async function POST(req: NextRequest) {
       throw new Error('Stripe client not initialized')
     }
     
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -110,19 +114,20 @@ export async function POST(req: NextRequest) {
     
     logger.info('Checkout session created', {
       userId: user.id,
-      sessionId: session.id,
+      sessionId: checkoutSession.id,
       tier,
       interval,
     })
     
     return NextResponse.json({
-      sessionId: session.id,
-      url: session.url,
+      sessionId: checkoutSession.id,
+      url: checkoutSession.url,
     })
   } catch (error) {
     logger.error(
       'Checkout session creation error',
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
+      requestContext
     )
     
     if (error instanceof z.ZodError) {
@@ -140,8 +145,9 @@ export async function POST(req: NextRequest) {
       )
     }
     
+    const isDebug = process.env.NODE_ENV !== 'production' || process.env.STRIPE_DEBUG === 'true'
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: isDebug && error instanceof Error ? error.message : 'Failed to create checkout session' },
       { status: 500 }
     )
   }
