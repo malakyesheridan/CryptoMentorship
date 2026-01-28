@@ -70,9 +70,9 @@ function generateUpdateSection(signal: DailySignal): string {
           const splitRows = splits
             .map(
               (split) => `
-                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 12px;">
-                  <span style="font-weight: 700; color: #1e293b;">${split.label}</span>
-                  <span style="color: #334155;">
+                <div class="allocation-row" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 12px;">
+                  <span class="allocation-label" style="font-weight: 700; color: #1e293b;">${split.label}</span>
+                  <span class="allocation-value" style="color: #334155; text-align: right;">
                     ${split.allocations.map((allocation) => `${allocation.percent}% ${allocation.asset}`).join(' / ')}
                   </span>
                 </div>`
@@ -120,9 +120,7 @@ function generateUpdateSection(signal: DailySignal): string {
       <div style="margin-bottom: 24px;">
         <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Executive Summary:</h4>
         <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
-          <p style="color: #334155; margin: 0; white-space: pre-wrap; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word; font-size: 16px;">
-            ${escapeHtml(signal.executiveSummary)}
-          </p>
+          <p style="color: #334155; margin: 0; white-space: pre-wrap; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word; font-size: 16px;">${escapeHtml(signal.executiveSummary).trim()}</p>
         </div>
       </div>
       ` : ''}
@@ -132,9 +130,7 @@ function generateUpdateSection(signal: DailySignal): string {
       <div>
         <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Associated Data:</h4>
         <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
-          <p style="color: #334155; margin: 0; white-space: pre-wrap; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word; font-size: 16px;">
-            ${escapeHtml(signal.associatedData)}
-          </p>
+          <p style="color: #334155; margin: 0; white-space: pre-wrap; line-height: 1.8; word-wrap: break-word; overflow-wrap: break-word; font-size: 16px;">${escapeHtml(signal.associatedData).trim()}</p>
         </div>
       </div>
       ` : ''}
@@ -197,6 +193,17 @@ export async function sendDailySignalEmail({
             }
             .text-box {
               padding: 16px 14px !important;
+            }
+            .allocation-row {
+              flex-direction: column !important;
+              align-items: flex-start !important;
+            }
+            .allocation-label {
+              margin-bottom: 4px !important;
+            }
+            .allocation-value {
+              text-align: left !important;
+              width: 100% !important;
             }
             h1 {
               font-size: 24px !important;
