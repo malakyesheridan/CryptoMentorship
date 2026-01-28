@@ -78,6 +78,7 @@ function SubscribePageContent() {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           tier,
           interval,
@@ -86,6 +87,12 @@ function SubscribePageContent() {
         }),
       })
       
+      if (res.status === 401) {
+        const callbackUrl = encodeURIComponent(`${window.location.pathname}${window.location.search}`)
+        window.location.href = `/login?callbackUrl=${callbackUrl}`
+        return
+      }
+
       const data = await res.json()
       
       if (!res.ok) {
