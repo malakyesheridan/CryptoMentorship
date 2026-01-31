@@ -24,59 +24,31 @@
 
 - Trial start hook: `src/lib/membership/trial.ts` (`onTrialStarted`)
   - Guards on `status === 'trial'` and `currentPeriodEnd` in the future
-  - Enqueues welcome email via outbox (idempotent)
+  - Sends welcome email directly (non-blocking)
   - Emits a future marketing event (`emitEvent`) for Klaviyo
-- Email outbox: `src/lib/email-outbox.ts` (kept as a standalone file because `src/lib/email.ts` already exists)
-  - `enqueueEmail` inserts into `EmailOutbox` with unique `idempotencyKey`
-  - `processEmailOutboxBatch` claims queued jobs, sends, writes `EmailLog`
 - Email template: `src/lib/templates/welcome.ts`
 - Event emitter: `src/lib/events/index.ts` (in-app events are now in `src/lib/events/notifications.ts`)
-- Cron worker: `app/api/cron/email-outbox/route.ts`
-  - Runs via Vercel cron every 10 minutes (see `vercel.json`)
 
 ## Idempotency
-- Outbox row key: `idempotencyKey = welcome:<userId>`
-- Unique constraint prevents duplicates across retries and multi-trigger calls.
-
-## Cron schedule
-- `vercel.json` -> `/api/cron/email-outbox` every 10 minutes
-- Auth: same pattern as trial-expiry (Vercel cron header or `?secret=`)
+- Direct send mode does not provide database-level idempotency. (This mirrors the previous verify-email behavior.)
 
 ## Events provider
 - `EVENTS_PROVIDER=noop|klaviyo` (default: `noop`)
-
-## Manual processing
-- Hit: `/api/cron/email-outbox?secret=<VERCEL_CRON_SECRET>`
 
 ## Verification steps
 
 ### DB checks
 ```sql
--- Latest welcome email job
-SELECT id, userId, toEmail, type, status, attempts, scheduledFor, sentAt, idempotencyKey
-FROM "EmailOutbox"
-WHERE type IN ('WELCOME', 'WELCOME_TRIAL')
+-- Recent users
+SELECT id, email, name, createdAt
+FROM "User"
 ORDER BY createdAt DESC
-LIMIT 10;
-
--- Idempotency check
-SELECT idempotencyKey, COUNT(*)
-FROM "EmailOutbox"
-WHERE type IN ('WELCOME', 'WELCOME_TRIAL')
-GROUP BY idempotencyKey
-HAVING COUNT(*) > 1;
-
--- Sent log
-SELECT id, userId, toEmail, type, sentAt
-FROM "EmailLog"
-WHERE type IN ('WELCOME', 'WELCOME_TRIAL')
-ORDER BY sentAt DESC
 LIMIT 10;
 ```
 
 ### Smoke
 - Run: `node scripts/welcome-email-smoke.ts`
-- Expected: single outbox row, then sent status + log entry
+- Expected: direct SMTP send (same path as verification email)
 
 ## Notes
 - Existing daily update email system remains unchanged (still uses `sendDailySignalEmail`).

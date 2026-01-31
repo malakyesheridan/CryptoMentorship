@@ -7,9 +7,8 @@ import { logger } from '@/lib/logger'
 import { handleError } from '@/lib/errors'
 import { linkReferralToUser, getReferralCookieName } from '@/lib/referrals'
 import { referralConfig } from '@/lib/env'
-import { enqueueEmail } from '@/lib/email-outbox'
-import { EmailType } from '@prisma/client'
 import { onTrialStarted } from '@/lib/membership/trial'
+import { sendWelcomeEmail } from '@/lib/email'
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -84,7 +83,7 @@ export async function POST(req: NextRequest) {
           name: name || null,
           passwordHash,
           role: 'member',
-          emailVerified: null, // Require email verification
+          emailVerified: new Date(), // Email verification not required
         },
       })
 
@@ -181,33 +180,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (!shouldCreateTrial) {
-      try {
-        let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-        if (baseUrl && !baseUrl.startsWith('http')) {
-          baseUrl = `https://${baseUrl}`
-        }
-        const normalizedBaseUrl = baseUrl.replace(/\/$/, '')
-        const primaryCTAUrl = `${normalizedBaseUrl}/dashboard`
-        const supportUrl = `${normalizedBaseUrl}/account`
-
-        await enqueueEmail({
-          type: EmailType.WELCOME,
-          toEmail: email,
-          userId: user.id,
-          idempotencyKey: `welcome:${user.id}`,
-          payload: {
-            firstName: name || null,
-            primaryCTAUrl,
-            supportUrl,
-          },
-        })
-      } catch (emailError) {
+      void sendWelcomeEmail({
+        to: email,
+        userName: name || null,
+      }).catch((emailError) => {
         logger.error(
-          'Failed to enqueue welcome email',
+          'Failed to send welcome email',
           emailError instanceof Error ? emailError : new Error(String(emailError)),
           { userId: user.id, email }
         )
-      }
+      })
     }
 
     const response = NextResponse.json({

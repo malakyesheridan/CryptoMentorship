@@ -159,13 +159,9 @@ async function sendOutboxEmail(entry: { type: EmailType; toEmail: string; payloa
     case EmailType.WELCOME: {
       const payload = entry.payload as unknown as {
         firstName?: string | null
-        primaryCTAUrl: string
-        supportUrl?: string
       }
       const message = buildWelcomeEmail({
         firstName: payload.firstName,
-        primaryCTAUrl: payload.primaryCTAUrl,
-        supportUrl: payload.supportUrl,
       })
       await sendEmail({
         to: entry.toEmail,
@@ -179,20 +175,14 @@ async function sendOutboxEmail(entry: { type: EmailType; toEmail: string; payloa
       const payload = entry.payload as unknown as {
         firstName?: string | null
         trialEndDate?: string | Date
-        primaryCTAUrl: string
-        supportUrl?: string
       }
       const message = payload.trialEndDate
         ? buildWelcomeTrialEmail({
             firstName: payload.firstName,
             trialEndDate: payload.trialEndDate,
-            primaryCTAUrl: payload.primaryCTAUrl,
-            supportUrl: payload.supportUrl,
           })
         : buildWelcomeEmail({
             firstName: payload.firstName,
-            primaryCTAUrl: payload.primaryCTAUrl,
-            supportUrl: payload.supportUrl,
           })
       await sendEmail({
         to: entry.toEmail,

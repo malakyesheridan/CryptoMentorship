@@ -1,16 +1,15 @@
-﻿import { formatDate } from '@/lib/dates'
+import { formatDate } from '@/lib/dates'
 
 export type WelcomeTrialTemplateInput = {
   firstName?: string | null
-  trialEndDate: string | Date
-  primaryCTAUrl: string
-  supportUrl?: string
+  trialEndDate?: string | Date | null
 }
 
 export function buildWelcomeTrialEmail(input: WelcomeTrialTemplateInput) {
   const name = input.firstName?.trim() ? input.firstName.trim() : 'there'
-  const trialEnd = formatDate(input.trialEndDate, 'MMM d, yyyy')
-  const supportUrl = input.supportUrl || input.primaryCTAUrl
+  const trialLine = input.trialEndDate
+    ? `Your trial access is active through ${formatDate(input.trialEndDate, 'MMM d, yyyy')}.`
+    : 'Your trial access is active.'
 
   const subject = 'Welcome to Stewart & Co'
 
@@ -26,23 +25,22 @@ export function buildWelcomeTrialEmail(input: WelcomeTrialTemplateInput) {
         <div style="max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <div style="background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);">
             <h1 style="margin: 0 0 12px 0; font-size: 26px; color: #111827;">Welcome, ${name}.</h1>
-            <p style="margin: 0 0 18px 0; font-size: 16px; color: #334155;">You are officially in. Your trial access is active through ${trialEnd}.</p>
+            <p style="margin: 0 0 12px 0; font-size: 16px; color: #334155;">Thanks for joining Stewart &amp; Co. ${trialLine}</p>
 
-            <p style="margin: 0 0 18px 0; font-size: 16px; color: #334155;">Start here to get value today:</p>
-
-            <div style="text-align: center; margin-bottom: 24px;">
-              <a href="${input.primaryCTAUrl}" style="display: inline-block; background: #d4af37; color: #111827; padding: 14px 26px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">View the daily updates</a>
-            </div>
-
-            <p style="margin: 0 0 16px 0; font-size: 15px; color: #475569;">You will receive a daily update email with new portfolio signals. You can always find the latest updates in your dashboard.</p>
+            <p style="margin: 0 0 12px 0; font-size: 15px; color: #475569;"><strong>What you can expect:</strong></p>
+            <ul style="margin: 0 0 18px 0; padding-left: 20px; color: #475569; font-size: 15px; line-height: 1.7;">
+              <li>Daily portfolio updates delivered by email</li>
+              <li>Learning hub tracks and videos to level up your skills</li>
+              <li>Community chat for live discussion and support</li>
+              <li>Crypto Compass research and breakdowns</li>
+            </ul>
 
             <p style="margin: 0; font-size: 14px; color: #64748b;">
-              Need help? Reply to this email or visit our support page:<br />
-              <a href="${supportUrl}" style="color: #2563eb; text-decoration: none;">${supportUrl}</a>
+              Need help? Reply to this email and we will take care of you.
             </p>
           </div>
 
-          <p style="margin: 18px 0 0; text-align: center; font-size: 12px; color: #94a3b8;">(c) ${new Date().getFullYear()} Stewart & Co.</p>
+          <p style="margin: 18px 0 0; text-align: center; font-size: 12px; color: #94a3b8;">(c) ${new Date().getFullYear()} Stewart &amp; Co.</p>
         </div>
       </body>
     </html>
@@ -51,13 +49,15 @@ export function buildWelcomeTrialEmail(input: WelcomeTrialTemplateInput) {
   const text = `
 Welcome, ${name}.
 
-You are officially in. Your trial access is active through ${trialEnd}.
+Thanks for joining Stewart & Co. ${trialLine}
 
-Start here: ${input.primaryCTAUrl}
+What you can expect:
+- Daily portfolio updates delivered by email
+- Learning hub tracks and videos to level up your skills
+- Community chat for live discussion and support
+- Crypto Compass research and breakdowns
 
-You will receive a daily update email with new portfolio signals. You can always find the latest updates in your dashboard.
-
-Need help? ${supportUrl}
+Need help? Reply to this email and we will take care of you.
 
 (c) ${new Date().getFullYear()} Stewart & Co.
   `.trim()

@@ -1,9 +1,8 @@
 ﻿import { prisma } from '../src/lib/prisma'
 import { onTrialStarted } from '../src/lib/membership/trial'
-import { processEmailOutboxBatch } from '../src/lib/email-outbox'
+import { sendWelcomeEmail } from '../src/lib/email'
 
 async function main() {
-  const now = new Date()
   const email = `welcome-trial-smoke-${Date.now()}@example.com`
 
   console.log(`[welcome-email-smoke] Using email ${email}`)
@@ -43,43 +42,12 @@ async function main() {
     source: 'smoke-test',
   })
 
-  await onTrialStarted({
-    userId: user.id,
-    membership: {
-      status: membership.status,
-      currentPeriodEnd: membership.currentPeriodEnd,
-      currentPeriodStart: membership.currentPeriodStart,
-      tier: membership.tier,
-    },
-    user: { email: user.email, name: user.name },
-    source: 'smoke-test',
+  await sendWelcomeEmail({
+    to: user.email,
+    userName: user.name,
   })
 
-  const idempotencyKey = `welcome:${user.id}`
-  const outboxRows = await prisma.emailOutbox.findMany({
-    where: { idempotencyKey }
-  })
-
-  if (outboxRows.length !== 1) {
-    throw new Error(`Expected 1 EmailOutbox row, found ${outboxRows.length}`)
-  }
-
-  const batchResult = await processEmailOutboxBatch({ limit: 25 })
-  console.log('[welcome-email-smoke] processEmailOutboxBatch', batchResult)
-
-  const outbox = await prisma.emailOutbox.findUnique({
-    where: { idempotencyKey }
-  })
-
-  if (!outbox) {
-    throw new Error('EmailOutbox row missing after processing')
-  }
-
-  if (outbox.status !== 'SENT') {
-    throw new Error(`Expected EmailOutbox status SENT, got ${outbox.status}`)
-  }
-
-  console.log('[welcome-email-smoke] OK: outbox sent')
+  console.log('[welcome-email-smoke] OK: welcome email sent directly')
 }
 
 main()

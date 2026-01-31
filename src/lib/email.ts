@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer'
 import { env } from './env'
 import { logger } from './logger'
+import { buildWelcomeEmail } from './templates/welcome'
 
 /**
  * Create a nodemailer transporter based on EMAIL_SERVER configuration
@@ -125,6 +126,25 @@ export async function sendEmail({
     }
     throw error
   }
+}
+
+/**
+ * Send a welcome email
+ */
+export async function sendWelcomeEmail({
+  to,
+  userName,
+}: {
+  to: string
+  userName?: string | null
+}): Promise<void> {
+  const message = buildWelcomeEmail({ firstName: userName || null })
+  await sendEmail({
+    to,
+    subject: message.subject,
+    html: message.html,
+    text: message.text,
+  })
 }
 
 /**

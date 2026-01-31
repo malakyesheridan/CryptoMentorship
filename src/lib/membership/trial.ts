@@ -1,7 +1,6 @@
 ﻿import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { enqueueEmail } from '@/lib/email-outbox'
-import { EmailType } from '@prisma/client'
+import { sendWelcomeEmail } from '@/lib/email'
 import { emitEvent } from '@/lib/events'
 
 export type TrialMembershipSnapshot = {
@@ -16,19 +15,6 @@ type OnTrialStartedInput = {
   membership: TrialMembershipSnapshot
   user?: { email?: string | null; name?: string | null }
   source?: string
-}
-
-function resolveBaseUrl(): string {
-  let baseUrl = process.env.NEXT_PUBLIC_APP_URL
-    || process.env.NEXTAUTH_URL
-    || process.env.VERCEL_URL
-    || 'http://localhost:3000'
-
-  if (baseUrl && !baseUrl.startsWith('http')) {
-    baseUrl = `https://${baseUrl}`
-  }
-
-  return baseUrl.replace(/\/$/, '')
 }
 
 export async function onTrialStarted(input: OnTrialStartedInput) {
@@ -57,21 +43,15 @@ export async function onTrialStarted(input: OnTrialStartedInput) {
     return { queued: false, reason: 'missing-email' as const }
   }
 
-  const baseUrl = resolveBaseUrl()
-  const primaryCTAUrl = `${baseUrl}/portfolio`
-  const supportUrl = `${baseUrl}/account`
-  const idempotencyKey = `welcome:${userId}`
-
-  const enqueueResult = await enqueueEmail({
-    type: EmailType.WELCOME,
-    toEmail: user.email,
-    userId,
-    idempotencyKey,
-    payload: {
-      firstName: user.name || null,
-      primaryCTAUrl,
-      supportUrl,
-    }
+  void sendWelcomeEmail({
+    to: user.email,
+    userName: user.name,
+  }).catch((error) => {
+    logger.error(
+      'Failed to send welcome email (trial)',
+      error instanceof Error ? error : new Error(String(error)),
+      { userId, userEmail: user.email }
+    )
   })
 
   await emitEvent('Trial Started', {
@@ -83,6 +63,6 @@ export async function onTrialStarted(input: OnTrialStartedInput) {
     email: user.email,
   })
 
-  return enqueueResult
+  return { queued: true as const }
 }
 
