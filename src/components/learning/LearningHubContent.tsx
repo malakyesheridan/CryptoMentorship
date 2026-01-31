@@ -98,33 +98,32 @@ export function LearningHubContent({
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   
 
-  // Transform data for content grid
-  const courseItems = useMemo(() => transformEnrollmentsToContent(enrollments), [enrollments])
-  
-  // For admins, also include all published tracks (not just enrolled ones)
-  const allTracksForAdmin = useMemo(() => {
-    if (userRole !== 'admin' && userRole !== 'editor') return courseItems
-    // Combine enrolled tracks with all published tracks
-    const enrolledIds = new Set(courseItems.map(c => c.id))
-    const additionalTracks = allCourses
-      .filter((c: any) => !enrolledIds.has(c.id))
-      .map((c: any) => ({
-        id: c.id,
-        slug: c.slug,
-        title: c.title,
-        description: c.description,
-        coverUrl: c.coverUrl,
+  // Build a unified track list for all users (enrolled + available)
+  const allTracks = useMemo(() => {
+    const enrollmentMap = new Map(enrollments.map((e: any) => [e.trackId, e]))
+    return allCourses.map((course: any) => {
+      const enrollment = enrollmentMap.get(course.id)
+      const totalLessons = enrollment?.track?.lessons?.length || 0
+      const totalDuration = enrollment?.track?.lessons?.reduce((sum: number, lesson: any) => sum + (lesson.durationMin || 0), 0) || 0
+      return {
+        id: course.id,
+        slug: course.slug,
+        title: course.title,
+        description: course.description,
+        coverUrl: course.coverUrl,
         type: 'course' as const,
         locked: false,
-        progressPct: 0,
-        publishedAt: c.publishedAt,
-      }))
-    return [...courseItems, ...additionalTracks]
-  }, [courseItems, allCourses, userRole])
+        progressPct: enrollment ? enrollment.progressPct : undefined,
+        publishedAt: course.publishedAt,
+        durationMin: enrollment ? totalDuration : undefined,
+        totalLessons: enrollment ? totalLessons : undefined,
+      }
+    })
+  }, [allCourses, enrollments])
 
   // Filter content based on search
   const filteredTracks = useMemo(() => {
-    let filtered = allTracksForAdmin
+    let filtered = allTracks
     
     // Apply search query
     if (searchQuery) {
@@ -136,11 +135,11 @@ export function LearningHubContent({
     }
     
     return filtered
-  }, [allTracksForAdmin, searchQuery])
+  }, [allTracks, searchQuery])
 
   // Stats for tabs
   const tabStats = {
-    courses: allTracksForAdmin.length,
+    courses: allTracks.length,
     resources: 0
   }
 

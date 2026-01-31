@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { requireActiveSubscription } from '@/lib/access'
+import { requireAuth } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -97,7 +97,7 @@ export default async function TrackPage({
 }: {
   params: { trackSlug: string }
 }) {
-  const user = await requireActiveSubscription()
+  const user = await requireAuth()
 
   const track = await getTrack(params.trackSlug)
   

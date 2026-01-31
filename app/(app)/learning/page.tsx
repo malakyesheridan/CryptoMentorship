@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { requireActiveSubscription } from '@/lib/access'
+import { requireAuth } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -314,7 +314,7 @@ async function getEnhancedProgressMetrics(userId: string) {
 }
 
 export default async function LearningDashboardPage() {
-  const user = await requireActiveSubscription()
+  const user = await requireAuth()
 
   try {
     // Fetch data with individual error handling to prevent one failure from breaking the page

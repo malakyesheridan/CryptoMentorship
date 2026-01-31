@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { requireActiveSubscription } from '@/lib/access'
+import { requireAuth } from '@/lib/access'
 import { prisma } from '@/lib/prisma'
 import { LessonPlayer } from '@/components/learning/LessonPlayer'
 import { ViewTracker } from '@/components/ViewTracker'
@@ -87,7 +87,7 @@ export default async function LessonPage({
 }: {
   params: { trackSlug: string; lessonSlug: string }
 }) {
-  const user = await requireActiveSubscription()
+  const user = await requireAuth()
 
   const [track, lesson] = await Promise.all([
     getTrack(params.trackSlug),
