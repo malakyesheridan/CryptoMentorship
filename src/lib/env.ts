@@ -61,6 +61,7 @@ const envSchema = z.object({
   // Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
+  EVENTS_PROVIDER: z.enum(['noop', 'klaviyo']).optional(),
   
   // Public vars
   NEXT_PUBLIC_GOOGLE_ENABLED: z.string().optional(),

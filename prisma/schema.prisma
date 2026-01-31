@@ -39,6 +39,17 @@ enum AffiliatePayoutBatchStatus {
   CANCELLED
 }
 
+enum EmailOutboxStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+}
+
+enum EmailType {
+  WELCOME_TRIAL
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -125,6 +136,8 @@ model User {
   affiliatePayoutBatches AffiliatePayoutBatch[]  @relation("AffiliatePayoutReferrer")
   affiliatePayoutsPaid   AffiliatePayoutBatch[]  @relation("AffiliatePayoutPaidBy")
   commissions            Commission[]
+  emailOutbox            EmailOutbox[]
+  emailLogs              EmailLog[]
   dashboardSettingsUpdated DashboardSetting[]
   allocationSnapshotsUpdated AllocationSnapshot[]
   changeLogEventsCreated ChangeLogEvent[]
@@ -684,6 +697,42 @@ model PerfSnapshot {
 
   @@index([scope, hash])
   @@index([createdAt])
+}
+
+model EmailOutbox {
+  id             String           @id @default(cuid())
+  userId         String?
+  toEmail        String
+  type           EmailType
+  payload        Json
+  status         EmailOutboxStatus @default(QUEUED)
+  attempts       Int              @default(0)
+  lastError      String?
+  scheduledFor   DateTime         @default(now())
+  sentAt         DateTime?
+  idempotencyKey String           @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, scheduledFor])
+  @@index([userId])
+}
+
+model EmailLog {
+  id                String   @id @default(cuid())
+  userId            String?
+  toEmail           String
+  type              EmailType
+  providerMessageId String?
+  sentAt            DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
 }
 
 model DashboardSetting {

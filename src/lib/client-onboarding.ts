@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth-server'
+import { onTrialStarted } from '@/lib/membership/trial'
+import { logger } from '@/lib/logger'
 
 export interface OnboardingData {
   clientName: string
@@ -159,13 +161,39 @@ export async function inviteUserToClient(clientId: string, email: string, role: 
   })
 
   // Create membership
-  await prisma.membership.create({
+  const trialStart = new Date()
+  const trialEnd = new Date(trialStart)
+  trialEnd.setDate(trialEnd.getDate() + 30)
+
+  const membership = await prisma.membership.create({
     data: {
       userId: newUser.id,
       tier: 'T2', // All trial accounts get T2 (Elite) access
       status: 'trial',
+      currentPeriodStart: trialStart,
+      currentPeriodEnd: trialEnd,
     }
   })
+
+  try {
+    await onTrialStarted({
+      userId: newUser.id,
+      membership: {
+        status: membership.status,
+        currentPeriodStart: membership.currentPeriodStart,
+        currentPeriodEnd: membership.currentPeriodEnd,
+        tier: membership.tier,
+      },
+      user: { email: newUser.email, name: newUser.name },
+      source: 'client-invite',
+    })
+  } catch (error) {
+    logger.error(
+      'Failed to enqueue trial welcome email for invited user',
+      error instanceof Error ? error : new Error(String(error)),
+      { userId: newUser.id, userEmail: newUser.email }
+    )
+  }
 
   return { user: newUser, isNewUser: true }
 }

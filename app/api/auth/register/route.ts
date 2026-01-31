@@ -10,6 +10,7 @@ import { referralConfig } from '@/lib/env'
 import { randomBytes } from 'crypto'
 import { sendVerificationEmail } from '@/lib/email'
 import { env } from '@/lib/env'
+import { onTrialStarted } from '@/lib/membership/trial'
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -169,6 +170,28 @@ export async function POST(req: NextRequest) {
       isTrial: shouldCreateTrial,
       trialEndDate: trialEndDate?.toISOString() || null,
     })
+
+    if (shouldCreateTrial && trialEndDate) {
+      try {
+        await onTrialStarted({
+          userId: user.id,
+          membership: {
+            status: 'trial',
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: trialEndDate,
+            tier: 'T2',
+          },
+          user: { email: user.email, name: user.name },
+          source: 'register-trial',
+        })
+      } catch (emailError) {
+        logger.error(
+          'Failed to enqueue trial welcome email',
+          emailError instanceof Error ? emailError : new Error(String(emailError)),
+          { userId: user.id, email }
+        )
+      }
+    }
 
     try {
       const baseUrl = env.NEXTAUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:5001'

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/password'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
-import { sendTrialNotificationEmail } from '@/lib/email-templates'
+import { onTrialStarted } from '@/lib/membership/trial'
 
 const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -108,31 +108,22 @@ export async function POST(req: NextRequest) {
       createdByEmail: admin.email,
     })
     
-    // Send trial notification email (don't fail if email fails)
+    // Enqueue trial welcome email (non-blocking, idempotent)
     try {
-      let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-      if (baseUrl && !baseUrl.startsWith('http')) {
-        baseUrl = `https://${baseUrl}`
-      }
-      const loginUrl = `${baseUrl}/login`
-      
-      await sendTrialNotificationEmail({
-        to: user.email,
-        userName: user.name,
-        tier: tier as 'T1' | 'T2',
-        trialEndDate,
-        isExtension: false, // New user, so not an extension
-        loginUrl,
-      })
-      
-      logger.info('Trial notification email sent', {
+      await onTrialStarted({
         userId: user.id,
-        userEmail: user.email,
+        membership: {
+          status: membership.status,
+          currentPeriodEnd: membership.currentPeriodEnd,
+          currentPeriodStart: membership.currentPeriodStart,
+          tier: membership.tier,
+        },
+        user: { email: user.email, name: user.name },
+        source: 'admin-user-create',
       })
     } catch (emailError) {
-      // Log error but don't fail the user creation
       logger.error(
-        'Failed to send trial notification email',
+        'Failed to enqueue trial welcome email',
         emailError instanceof Error ? emailError : new Error(String(emailError)),
         { userId: user.id, userEmail: user.email }
       )

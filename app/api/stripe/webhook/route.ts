@@ -5,6 +5,7 @@ import { env } from '@/lib/env'
 import { logger } from '@/lib/logger'
 import { createCommissionIfReferred } from '@/lib/referrals'
 import { markReferralQualifiedFromPayment, markReferralTrial, voidReferralIfInHold } from '@/lib/affiliate'
+import { onTrialStarted } from '@/lib/membership/trial'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -215,6 +216,27 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       trialStartedAt: trialStart,
       trialEndsAt: trialEnd
     })
+
+    if (trialEnd) {
+      try {
+        await onTrialStarted({
+          userId: updatedMembership.userId,
+          membership: {
+            status: updatedMembership.status,
+            currentPeriodStart: updatedMembership.currentPeriodStart,
+            currentPeriodEnd: updatedMembership.currentPeriodEnd,
+            tier: updatedMembership.tier,
+          },
+          source: 'stripe-trial',
+        })
+      } catch (error) {
+        logger.error(
+          'Failed to enqueue trial welcome email from Stripe trial',
+          error instanceof Error ? error : new Error(String(error)),
+          { userId: updatedMembership.userId }
+        )
+      }
+    }
   }
 }
 

@@ -8,6 +8,7 @@ declare namespace NodeJS {
     EMAIL_FROM?: string
     VERCEL_CRON_SECRET?: string
     NEXT_PUBLIC_APP_URL?: string
+    EVENTS_PROVIDER?: string
   }
 }
 
