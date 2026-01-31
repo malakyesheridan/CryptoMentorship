@@ -93,6 +93,7 @@ export default function CommunityPage() {
   const { channels, isLoading: channelsLoading, error: channelsError, refresh: refreshChannels } = useChannels()
   const { unreadCounts, mutate: refreshUnreadCounts } = useUnreadCounts()
   const [activeChannelId, setActiveChannelId] = useState<string | null>(channels[0]?.id ?? null)
+  const [mobileView, setMobileView] = useState<'channels' | 'chat'>('chat')
   const [replyTo, setReplyTo] = useState<{ author: string; body: string } | null>(null)
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
 
@@ -360,8 +361,26 @@ export default function CommunityPage() {
       <div className="container mx-auto px-4 py-12">
 
         {/* Chat Interface */}
-        <div className="flex flex-col md:flex-row h-[calc(100vh-240px)] min-h-[520px] md:h-[700px] bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
-          <aside className="w-full md:w-80 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto flex-shrink-0 max-h-[35vh] md:max-h-none">
+        <div className="flex flex-col md:flex-row min-h-[520px] md:h-[700px] bg-white rounded-2xl shadow-lg md:overflow-hidden border border-slate-200">
+          {/* Mobile toggle */}
+          <div className="md:hidden border-b border-slate-200 bg-white">
+            <div className="flex">
+              <button
+                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'channels' ? 'text-slate-900 border-b-2 border-yellow-500' : 'text-slate-500'}`}
+                onClick={() => setMobileView('channels')}
+              >
+                Channels
+              </button>
+              <button
+                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'chat' ? 'text-slate-900 border-b-2 border-yellow-500' : 'text-slate-500'}`}
+                onClick={() => setMobileView('chat')}
+              >
+                Chat
+              </button>
+            </div>
+          </div>
+
+          <aside className={`w-full md:w-80 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto flex-shrink-0 md:max-h-none ${mobileView === 'channels' ? 'block' : 'hidden md:block'}`}>
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h3 className="text-base md:text-lg font-semibold text-slate-900">Channels</h3>
               <div className="flex items-center gap-2">
@@ -421,6 +440,7 @@ export default function CommunityPage() {
                       onClick={() => {
                         setActiveChannelId(channel.id)
                         setReplyTo(null) // Clear reply when switching channels
+                        setMobileView('chat')
                       }}
                       className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative ${
                         activeChannelId === channel.id
@@ -457,7 +477,7 @@ export default function CommunityPage() {
             </div>
           </aside>
 
-          <section className="flex-1 flex flex-col min-h-0">
+          <section className={`flex-1 flex flex-col min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
             <div className="border-b border-slate-200 p-4 md:p-6 bg-white">
               <div className="flex items-center justify-between">
                 <div>
