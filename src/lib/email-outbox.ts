@@ -34,6 +34,23 @@ export async function enqueueEmail(input: EnqueueEmailInput): Promise<EnqueueEma
       }
     })
 
+    logger.info('Email enqueued', {
+      emailOutboxId: record.id,
+      type: input.type,
+      userId: input.userId,
+      toEmail: input.toEmail,
+    })
+
+    // Fire-and-forget processing to avoid relying solely on cron
+    queueMicrotask(() => {
+      processEmailOutboxBatch({ limit: 5 }).catch((error) => {
+        logger.error(
+          'Email outbox eager processing failed',
+          error instanceof Error ? error : new Error(String(error))
+        )
+      })
+    })
+
     return { queued: true, id: record.id }
   } catch (error: any) {
     if (error?.code === 'P2002') {
