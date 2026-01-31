@@ -38,12 +38,8 @@ export async function onTrialStarted(input: OnTrialStartedInput) {
     return { queued: false, reason: 'not-trial' as const }
   }
 
-  if (!membership.currentPeriodEnd) {
-    return { queued: false, reason: 'missing-trial-end' as const }
-  }
-
   const now = new Date()
-  if (membership.currentPeriodEnd <= now) {
+  if (membership.currentPeriodEnd && membership.currentPeriodEnd <= now) {
     return { queued: false, reason: 'trial-expired' as const }
   }
 
@@ -64,23 +60,22 @@ export async function onTrialStarted(input: OnTrialStartedInput) {
   const baseUrl = resolveBaseUrl()
   const primaryCTAUrl = `${baseUrl}/portfolio`
   const supportUrl = `${baseUrl}/account`
-  const idempotencyKey = `welcome_trial:${userId}`
+  const idempotencyKey = `welcome:${userId}`
 
   const enqueueResult = await enqueueEmail({
-    type: EmailType.WELCOME_TRIAL,
+    type: EmailType.WELCOME,
     toEmail: user.email,
     userId,
     idempotencyKey,
     payload: {
       firstName: user.name || null,
-      trialEndDate: membership.currentPeriodEnd.toISOString(),
       primaryCTAUrl,
       supportUrl,
     }
   })
 
   await emitEvent('Trial Started', {
-    trialEnd: membership.currentPeriodEnd.toISOString(),
+    trialEnd: membership.currentPeriodEnd ? membership.currentPeriodEnd.toISOString() : null,
     tier: membership.tier || null,
     source: input.source || null,
   }, {
