@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "EmailOutboxStatus" AS ENUM ('QUEUED', 'SENDING', 'SENT', 'FAILED');
 
 -- CreateEnum

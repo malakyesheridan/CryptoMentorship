@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
           email,
           name: name || null,
           passwordHash,
-          role: 'guest', // Start as guest - role should be 'member' only for paying users
+          role: 'member', // Trial users should be members
           emailVerified: new Date(), // Auto-verify for admin-created accounts
         },
       })

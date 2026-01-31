@@ -217,6 +217,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       trialEndsAt: trialEnd
     })
 
+    await prisma.user.updateMany({
+      where: { id: updatedMembership.userId, role: 'guest' },
+      data: { role: 'member' }
+    })
+
     if (trialEnd) {
       try {
         await onTrialStarted({

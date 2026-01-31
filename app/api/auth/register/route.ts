@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
           email,
           name: name || null,
           passwordHash,
-          role: shouldCreateTrial ? 'guest' : 'member',
+          role: 'member',
           emailVerified: null, // Require email verification
         },
       })

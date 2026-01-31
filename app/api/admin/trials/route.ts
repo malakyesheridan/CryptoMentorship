@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Verify user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, role: true },
     })
     
     if (!user) {
@@ -81,6 +81,13 @@ export async function POST(req: NextRequest) {
         currentPeriodEnd: trialEndDate,
       },
     })
+
+    if (user.role === 'guest') {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { role: 'member' },
+      })
+    }
     
     const isExtension = !!(existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > new Date())
     

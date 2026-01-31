@@ -12,7 +12,7 @@ export function buildWelcomeTrialEmail(input: WelcomeTrialTemplateInput) {
   const trialEnd = formatDate(input.trialEndDate, 'MMM d, yyyy')
   const supportUrl = input.supportUrl || input.primaryCTAUrl
 
-  const subject = 'Welcome to Stewart & Co - Your Trial Has Started'
+  const subject = 'Welcome to Stewart & Co'
 
   const html = `
     <!DOCTYPE html>
@@ -26,13 +26,9 @@ export function buildWelcomeTrialEmail(input: WelcomeTrialTemplateInput) {
         <div style="max-width: 600px; margin: 0 auto; padding: 32px 20px;">
           <div style="background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);">
             <h1 style="margin: 0 0 12px 0; font-size: 26px; color: #111827;">Welcome, ${name}.</h1>
-            <p style="margin: 0 0 20px 0; font-size: 16px; color: #334155;">Your free trial is now active. We are glad you're here.</p>
+            <p style="margin: 0 0 18px 0; font-size: 16px; color: #334155;">You are officially in. Your trial access is active through ${trialEnd}.</p>
 
-            <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
-              <p style="margin: 0; font-size: 15px; color: #7c2d12;"><strong>Trial ends on:</strong> ${trialEnd}</p>
-            </div>
-
-            <p style="margin: 0 0 24px 0; font-size: 16px; color: #334155;">Start here to get value today:</p>
+            <p style="margin: 0 0 18px 0; font-size: 16px; color: #334155;">Start here to get value today:</p>
 
             <div style="text-align: center; margin-bottom: 24px;">
               <a href="${input.primaryCTAUrl}" style="display: inline-block; background: #d4af37; color: #111827; padding: 14px 26px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">View the daily updates</a>
@@ -55,7 +51,7 @@ export function buildWelcomeTrialEmail(input: WelcomeTrialTemplateInput) {
   const text = `
 Welcome, ${name}.
 
-Your free trial is now active. Trial ends on ${trialEnd}.
+You are officially in. Your trial access is active through ${trialEnd}.
 
 Start here: ${input.primaryCTAUrl}
 
