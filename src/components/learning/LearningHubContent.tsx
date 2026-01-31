@@ -286,7 +286,7 @@ export function LearningHubContent({
         <UploadModal
           open={uploadModalOpen}
           onOpenChange={setUploadModalOpen}
-          tracks={allTracksForAdmin.map(t => ({ id: t.id, title: t.title }))}
+          tracks={allTracks.map(t => ({ id: t.id, title: t.title }))}
           onTrackCreated={() => {
             // Close modal and refresh tracks list
             setUploadModalOpen(false)
