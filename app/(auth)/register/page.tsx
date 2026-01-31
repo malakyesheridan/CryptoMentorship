@@ -185,13 +185,14 @@ function RegisterForm() {
                 color: '#1e293b',
                 marginBottom: '0.5rem'
               }}>
-                Name (Optional)
+                Name *
               </label>
               <input
                 type="text"
                 placeholder="Your name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
                 disabled={isLoading}
                 style={{
                   width: '100%',
@@ -281,7 +282,7 @@ function RegisterForm() {
 
             <button
               type="submit"
-              disabled={isLoading || !formData.email || !formData.password}
+              disabled={isLoading || !formData.name || !formData.email || !formData.password}
               style={{
                 width: '100%',
                 height: '3rem',
