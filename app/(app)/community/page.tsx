@@ -360,8 +360,8 @@ export default function CommunityPage() {
       <div className="container mx-auto px-4 py-12">
 
         {/* Chat Interface */}
-        <div className="flex flex-col md:flex-row h-[600px] md:h-[700px] bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
-          <aside className="w-full md:w-80 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto flex-shrink-0">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-240px)] min-h-[520px] md:h-[700px] bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
+          <aside className="w-full md:w-80 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto flex-shrink-0 max-h-[35vh] md:max-h-none">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h3 className="text-base md:text-lg font-semibold text-slate-900">Channels</h3>
               <div className="flex items-center gap-2">

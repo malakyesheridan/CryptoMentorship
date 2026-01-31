@@ -381,9 +381,9 @@ export default async function LearningDashboardPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
+            <h1 className="text-4xl sm:text-6xl lg:text-8xl font-bold mb-6 leading-tight">
               <span className="text-white">Learning</span>
-              <span className="text-yellow-400 ml-4">Hub</span>
+              <span className="text-yellow-400 block sm:inline sm:ml-4">Hub</span>
             </h1>
             <p className="text-xl text-slate-300 mb-8">
               Your central hub for learning tracks, resources, and progress
