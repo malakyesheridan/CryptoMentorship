@@ -55,7 +55,7 @@ async function main() {
     source: 'smoke-test',
   })
 
-  const idempotencyKey = `welcome_trial:${user.id}`
+  const idempotencyKey = `welcome:${user.id}`
   const outboxRows = await prisma.emailOutbox.findMany({
     where: { idempotencyKey }
   })

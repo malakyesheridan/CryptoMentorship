@@ -16,14 +16,13 @@ const envSchema = z.object({
   // Email (optional - allow empty strings and display name format)
   EMAIL_SERVER: z.string().optional(),
   EMAIL_FROM: z.preprocess(
-    (val) => {
-      if (!val || val === '') return undefined
-      const strVal = String(val)
-      // Handle format like "Display Name <email@example.com>"
-      const emailMatch = strVal.match(/<([^>]+)>/) || strVal.match(/^([^\s<]+@[^\s>]+)$/)
-      return emailMatch ? emailMatch[1] : strVal
-    },
-    z.string().email().optional()
+    (val) => (val === '' ? undefined : val),
+    z.string().optional().refine((value) => {
+      if (!value) return true
+      const match = value.match(/<([^>]+)>/)
+      const email = match ? match[1] : value
+      return z.string().email().safeParse(email).success
+    }, { message: 'EMAIL_FROM must be a valid email or "Name <email>"' })
   ),
 
   // Vercel Blob Storage (optional - required for uploads)

@@ -5,6 +5,35 @@ import { buildWelcomeTrialEmail } from '@/lib/templates/welcome-trial'
 import { buildWelcomeEmail } from '@/lib/templates/welcome'
 import { Prisma, EmailOutboxStatus, EmailType } from '@prisma/client'
 
+function resolveCronUrl(): string | null {
+  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || ''
+  if (!baseUrl) return null
+  if (!baseUrl.startsWith('http')) {
+    baseUrl = `https://${baseUrl}`
+  }
+  const url = new URL('/api/cron/email-outbox', baseUrl.replace(/\/$/, ''))
+  const secret = process.env.VERCEL_CRON_SECRET
+  if (secret) {
+    url.searchParams.set('secret', secret)
+  }
+  return url.toString()
+}
+
+function triggerOutboxProcessing() {
+  const cronUrl = resolveCronUrl()
+  if (!cronUrl) return
+  fetch(cronUrl, {
+    method: 'POST',
+    keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+  }).catch((error) => {
+    logger.error(
+      'Failed to trigger email outbox processing',
+      error instanceof Error ? error : new Error(String(error))
+    )
+  })
+}
+
 export type EnqueueEmailInput = {
   type: EmailType
   toEmail: string
@@ -20,45 +49,89 @@ export type EnqueueEmailResult = {
   reason?: 'duplicate' | 'error'
 }
 
+function isMissingEmailTypeEnum(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const message = (error as { message?: string }).message
+  if (!message || typeof message !== 'string') return false
+  return message.includes('invalid input value for enum') && message.includes('EmailType')
+}
+
+async function createOutboxRecord(input: EnqueueEmailInput, typeOverride?: EmailType) {
+  return prisma.emailOutbox.create({
+    data: {
+      userId: input.userId ?? null,
+      toEmail: input.toEmail,
+      type: typeOverride ?? input.type,
+      payload: input.payload,
+      scheduledFor: input.scheduledFor ?? new Date(),
+      idempotencyKey: input.idempotencyKey,
+      status: EmailOutboxStatus.QUEUED,
+    }
+  })
+}
+
+function finalizeEnqueue(record: { id: string }, input: EnqueueEmailInput, actualType: EmailType = input.type) {
+  logger.info('Email enqueued', {
+    emailOutboxId: record.id,
+    type: actualType,
+    userId: input.userId,
+    toEmail: input.toEmail,
+  })
+
+  // Fire-and-forget processing to avoid relying solely on cron
+  queueMicrotask(() => {
+    processEmailOutboxBatch({ limit: 5 }).catch((error) => {
+      logger.error(
+        'Email outbox eager processing failed',
+        error instanceof Error ? error : new Error(String(error))
+      )
+    })
+  })
+
+  triggerOutboxProcessing()
+
+  return { queued: true as const, id: record.id }
+}
+
 export async function enqueueEmail(input: EnqueueEmailInput): Promise<EnqueueEmailResult> {
   try {
-    const record = await prisma.emailOutbox.create({
-      data: {
-        userId: input.userId ?? null,
-        toEmail: input.toEmail,
-        type: input.type,
-        payload: input.payload,
-        scheduledFor: input.scheduledFor ?? new Date(),
-        idempotencyKey: input.idempotencyKey,
-        status: EmailOutboxStatus.QUEUED,
-      }
-    })
-
-    logger.info('Email enqueued', {
-      emailOutboxId: record.id,
-      type: input.type,
-      userId: input.userId,
-      toEmail: input.toEmail,
-    })
-
-    // Fire-and-forget processing to avoid relying solely on cron
-    queueMicrotask(() => {
-      processEmailOutboxBatch({ limit: 5 }).catch((error) => {
-        logger.error(
-          'Email outbox eager processing failed',
-          error instanceof Error ? error : new Error(String(error))
-        )
-      })
-    })
-
-    return { queued: true, id: record.id }
+    const record = await createOutboxRecord(input)
+    return finalizeEnqueue(record, input, input.type)
   } catch (error: any) {
+    if (isMissingEmailTypeEnum(error) && input.type === EmailType.WELCOME) {
+      try {
+        const record = await createOutboxRecord(input, EmailType.WELCOME_TRIAL)
+        logger.warn('Email type WELCOME not available - falling back to WELCOME_TRIAL', {
+          emailOutboxId: record.id,
+          userId: input.userId,
+          toEmail: input.toEmail,
+        })
+        return finalizeEnqueue(record, input, EmailType.WELCOME_TRIAL)
+      } catch (fallbackError) {
+        logger.error(
+          'Failed to enqueue email after fallback to WELCOME_TRIAL',
+          fallbackError instanceof Error ? fallbackError : new Error(String(fallbackError)),
+          { type: input.type, userId: input.userId, idempotencyKey: input.idempotencyKey }
+        )
+        return { queued: false, reason: 'error' }
+      }
+    }
     if (error?.code === 'P2002') {
       logger.info('Email enqueue skipped (idempotent duplicate)', {
         idempotencyKey: input.idempotencyKey,
         type: input.type,
         userId: input.userId,
       })
+      // Still attempt processing in case an earlier queued row never got picked up
+      queueMicrotask(() => {
+        processEmailOutboxBatch({ limit: 5 }).catch((error) => {
+          logger.error(
+            'Email outbox eager processing failed (duplicate)',
+            error instanceof Error ? error : new Error(String(error))
+          )
+        })
+      })
+      triggerOutboxProcessing()
       return { queued: false, reason: 'duplicate' }
     }
     logger.error(
@@ -105,16 +178,22 @@ async function sendOutboxEmail(entry: { type: EmailType; toEmail: string; payloa
     case EmailType.WELCOME_TRIAL: {
       const payload = entry.payload as unknown as {
         firstName?: string | null
-        trialEndDate: string
+        trialEndDate?: string | Date
         primaryCTAUrl: string
         supportUrl?: string
       }
-      const message = buildWelcomeTrialEmail({
-        firstName: payload.firstName,
-        trialEndDate: payload.trialEndDate,
-        primaryCTAUrl: payload.primaryCTAUrl,
-        supportUrl: payload.supportUrl,
-      })
+      const message = payload.trialEndDate
+        ? buildWelcomeTrialEmail({
+            firstName: payload.firstName,
+            trialEndDate: payload.trialEndDate,
+            primaryCTAUrl: payload.primaryCTAUrl,
+            supportUrl: payload.supportUrl,
+          })
+        : buildWelcomeEmail({
+            firstName: payload.firstName,
+            primaryCTAUrl: payload.primaryCTAUrl,
+            supportUrl: payload.supportUrl,
+          })
       await sendEmail({
         to: entry.toEmail,
         subject: message.subject,

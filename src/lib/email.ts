@@ -99,7 +99,7 @@ export async function sendEmail({
       text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML tags for text version
     })
 
-    logger.info('Email sent successfully', { to, subject })
+    logger.info('Email sent successfully', { to, subject, from })
   } catch (error) {
     // Enhanced error logging for SMTP authentication issues
     const errorMessage = error instanceof Error ? error.message : String(error)
