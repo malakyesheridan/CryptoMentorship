@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { getStripe } from '@/lib/stripe'
 import { Button } from '@/components/ui/button'
 import { Check, Loader2, AlertCircle, Crown } from 'lucide-react'
@@ -40,6 +41,7 @@ function SubscribePageContent() {
   const [prices, setPrices] = useState<Prices | null>(null)
   const [loadingPrices, setLoadingPrices] = useState(true)
   const searchParams = useSearchParams()
+  const { data: session, status: sessionStatus } = useSession()
   const isRequired = searchParams.get('required') === 'true'
   const isNewUser = searchParams.get('newuser') === 'true'
 
@@ -73,6 +75,15 @@ function SubscribePageContent() {
       // Ensure we're in the browser before accessing window
       if (typeof window === 'undefined') {
         throw new Error('This action requires a browser environment')
+      }
+
+      if (sessionStatus !== 'authenticated' || !session?.user?.id) {
+        const params = new URLSearchParams()
+        params.set('tier', tier)
+        params.set('interval', interval)
+        params.set('callbackUrl', `/subscribe?newuser=true&tier=${encodeURIComponent(tier)}&interval=${encodeURIComponent(interval)}`)
+        window.location.href = `/register?${params.toString()}`
+        return
       }
 
       const res = await fetch('/api/stripe/checkout', {

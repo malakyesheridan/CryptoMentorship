@@ -32,7 +32,18 @@ export async function POST(req: NextRequest) {
       )
     }
     requestContext.userId = authSession.user.id
-    const user = authSession.user
+    const sessionUser = authSession.user
+    const dbUser = await prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: { id: true, email: true, name: true },
+    })
+    if (!dbUser) {
+      return NextResponse.json(
+        { error: 'Account not found. Please sign in again.' },
+        { status: 401 }
+      )
+    }
+    const user = dbUser
     const body = await req.json()
     const { tier, interval, successUrl, cancelUrl } = checkoutSchema.parse(body)
     requestContext.tier = tier

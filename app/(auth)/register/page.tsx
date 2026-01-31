@@ -13,6 +13,8 @@ function RegisterForm() {
   const [success, setSuccess] = useState(false)
   const [isTrial, setIsTrial] = useState(false)
   const [callbackUrl, setCallbackUrl] = useState('/dashboard')
+  const [selectedTier, setSelectedTier] = useState<string | null>(null)
+  const [selectedInterval, setSelectedInterval] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -51,6 +53,10 @@ function RegisterForm() {
     })
     const trialParam = searchParams.get('trial')
     setIsTrial(trialParam === 'true' || trialParam === '1')
+    const tierParam = searchParams.get('tier')
+    const intervalParam = searchParams.get('interval')
+    setSelectedTier(tierParam)
+    setSelectedInterval(intervalParam)
     const callback = searchParams.get('callbackUrl')
     if (callback && callback.startsWith('/') && !callback.startsWith('/login') && !callback.startsWith('/register')) {
       setCallbackUrl(callback)
@@ -116,7 +122,14 @@ function RegisterForm() {
             // Wait a moment for session to be established
             await new Promise(resolve => setTimeout(resolve, 500))
             // Redirect to subscribe page smoothly
-            window.location.href = isTrial ? callbackUrl : '/subscribe?newuser=true'
+            if (isTrial) {
+              window.location.href = callbackUrl
+            } else {
+              const params = new URLSearchParams({ newuser: 'true' })
+              if (selectedTier) params.set('tier', selectedTier)
+              if (selectedInterval) params.set('interval', selectedInterval)
+              window.location.href = `/subscribe?${params.toString()}`
+            }
           } else {
             // If auto-login fails, redirect to login page
             router.push(isTrial ? '/login?registered=trial' : '/login?registered=true')
