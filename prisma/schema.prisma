@@ -47,6 +47,7 @@ enum EmailOutboxStatus {
 }
 
 enum EmailType {
+  WELCOME
   WELCOME_TRIAL
 }
 

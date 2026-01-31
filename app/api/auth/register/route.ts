@@ -7,9 +7,8 @@ import { logger } from '@/lib/logger'
 import { handleError } from '@/lib/errors'
 import { linkReferralToUser, getReferralCookieName } from '@/lib/referrals'
 import { referralConfig } from '@/lib/env'
-import { randomBytes } from 'crypto'
-import { sendVerificationEmail } from '@/lib/email'
-import { env } from '@/lib/env'
+import { enqueueEmail } from '@/lib/email-outbox'
+import { EmailType } from '@prisma/client'
 import { onTrialStarted } from '@/lib/membership/trial'
 
 const registerSchema = z.object({
@@ -77,10 +76,6 @@ export async function POST(req: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password)
 
-    const verificationToken = randomBytes(32).toString('hex')
-    const verificationExpires = new Date()
-    verificationExpires.setHours(verificationExpires.getHours() + 24)
-
     // Create user, and optionally attach a trial membership
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -90,14 +85,6 @@ export async function POST(req: NextRequest) {
           passwordHash,
           role: 'member',
           emailVerified: null, // Require email verification
-        },
-      })
-
-      await tx.verificationToken.create({
-        data: {
-          identifier: email,
-          token: verificationToken,
-          expires: verificationExpires,
         },
       })
 
@@ -193,26 +180,39 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    try {
-      const baseUrl = env.NEXTAUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:5001'
-      const verifyUrl = `${baseUrl}/verify-email?token=${verificationToken}`
-      await sendVerificationEmail({
-        to: email,
-        verifyUrl,
-        userName: name || null,
-      })
-      logger.info('Verification email sent', { userId: user.id, email })
-    } catch (emailError) {
-      logger.error(
-        'Failed to send verification email (non-blocking)',
-        emailError instanceof Error ? emailError : new Error(String(emailError)),
-        { userId: user.id, email }
-      )
+    if (!shouldCreateTrial) {
+      try {
+        let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+        if (baseUrl && !baseUrl.startsWith('http')) {
+          baseUrl = `https://${baseUrl}`
+        }
+        const normalizedBaseUrl = baseUrl.replace(/\/$/, '')
+        const primaryCTAUrl = `${normalizedBaseUrl}/dashboard`
+        const supportUrl = `${normalizedBaseUrl}/account`
+
+        await enqueueEmail({
+          type: EmailType.WELCOME,
+          toEmail: email,
+          userId: user.id,
+          idempotencyKey: `welcome:${user.id}`,
+          payload: {
+            firstName: name || null,
+            primaryCTAUrl,
+            supportUrl,
+          },
+        })
+      } catch (emailError) {
+        logger.error(
+          'Failed to enqueue welcome email',
+          emailError instanceof Error ? emailError : new Error(String(emailError)),
+          { userId: user.id, email }
+        )
+      }
     }
 
     const response = NextResponse.json({
       success: true,
-      message: 'Account created successfully. Please check your email to verify your account.',
+      message: 'Account created successfully.',
       user: {
         id: user.id,
         email: user.email,

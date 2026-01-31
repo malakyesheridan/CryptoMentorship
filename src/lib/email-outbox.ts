@@ -2,6 +2,7 @@
 import { logger } from '@/lib/logger'
 import { sendEmail } from '@/lib/email'
 import { buildWelcomeTrialEmail } from '@/lib/templates/welcome-trial'
+import { buildWelcomeEmail } from '@/lib/templates/welcome'
 import { Prisma, EmailOutboxStatus, EmailType } from '@prisma/client'
 
 export type EnqueueEmailInput = {
@@ -65,6 +66,25 @@ function computeNextScheduledFor(attempts: number): Date {
 
 async function sendOutboxEmail(entry: { type: EmailType; toEmail: string; payload: Prisma.JsonObject }) {
   switch (entry.type) {
+    case EmailType.WELCOME: {
+      const payload = entry.payload as unknown as {
+        firstName?: string | null
+        primaryCTAUrl: string
+        supportUrl?: string
+      }
+      const message = buildWelcomeEmail({
+        firstName: payload.firstName,
+        primaryCTAUrl: payload.primaryCTAUrl,
+        supportUrl: payload.supportUrl,
+      })
+      await sendEmail({
+        to: entry.toEmail,
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+      })
+      return
+    }
     case EmailType.WELCOME_TRIAL: {
       const payload = entry.payload as unknown as {
         firstName?: string | null
