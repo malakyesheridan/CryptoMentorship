@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireUser } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { computeRiskProfile } from '@/lib/riskOnboarding/score'
+import { Prisma } from '@prisma/client'
 import {
   RISK_ONBOARDING_WIZARD_KEY,
   RISK_ONBOARDING_VERSION,
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
 
   const result = computeRiskProfile(answers as any)
   const now = new Date()
+  const answersJson = (answers ?? {}) as Prisma.InputJsonValue
 
   await prisma.$transaction(async (tx) => {
     if (onboarding) {
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           wizardKey,
-          answers: answers || {},
+          answers: answersJson,
           status: 'COMPLETED',
           startedAt: now,
           completedAt: now,

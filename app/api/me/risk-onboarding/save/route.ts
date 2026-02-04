@@ -3,10 +3,11 @@ import { z } from 'zod'
 import { requireUser } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { RISK_ONBOARDING_WIZARD_KEY } from '@/lib/riskOnboarding/questions'
+import { Prisma } from '@prisma/client'
 
 const saveSchema = z.object({
   wizardKey: z.string().optional(),
-  partialAnswers: z.record(z.any()),
+  partialAnswers: z.record(z.string(), z.unknown()),
   stepId: z.string().optional(),
 })
 
@@ -56,12 +57,13 @@ export async function POST(request: NextRequest) {
     existing?.answers as Record<string, unknown> | null,
     parsed.data.partialAnswers
   )
+  const mergedAnswersJson = mergedAnswers as Prisma.InputJsonValue
 
   const updated = existing
     ? await prisma.userOnboardingResponse.update({
         where: { id: existing.id },
         data: {
-          answers: mergedAnswers,
+          answers: mergedAnswersJson,
           status: 'IN_PROGRESS',
           startedAt: existing.startedAt || now,
           completedAt: null,
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           wizardKey,
-          answers: mergedAnswers,
+          answers: mergedAnswersJson,
           status: 'IN_PROGRESS',
           startedAt: now,
           updatedAt: now,

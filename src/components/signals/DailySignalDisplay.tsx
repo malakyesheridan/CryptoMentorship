@@ -145,6 +145,75 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     }
   }, [data?.signals, activeTier, signalsByTier])
 
+  const signals = data?.signals || []
+  const isActive = data?.isActive || false
+  const effectiveUserTier = data?.userTier || userTier
+  const tiers: Tier[] = ['T1', 'T2']
+  
+  // Get current signal based on active tier and category
+  const getCurrentSignal = (): DailySignal | null => {
+    if (!activeTier) return null
+    if (activeTier === 'T2') {
+      return t2SignalsByCategory[activeCategory]
+    }
+    return signalsByTier[activeTier]?.[0] || null
+  }
+  
+  const currentSignal = getCurrentSignal()
+  const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive) : false
+  const currentSignalId = currentSignal?.id
+  const currentSignalCategory = currentSignal?.category
+  const currentSignalPrimary = currentSignal?.primaryAsset
+  const currentSignalSecondary = currentSignal?.secondaryAsset
+  const currentSignalTertiary = currentSignal?.tertiaryAsset
+  const currentSignalText = currentSignal?.signal ?? ''
+  const allocationSplits = useMemo(() => {
+    if (!currentSignalId || currentSignalCategory === 'memecoins') return []
+    const allocationAssets = currentSignalPrimary &&
+      currentSignalSecondary &&
+      currentSignalTertiary
+      ? {
+          primaryAsset: currentSignalPrimary as PortfolioAsset,
+          secondaryAsset: currentSignalSecondary as PortfolioAsset,
+          tertiaryAsset: currentSignalTertiary as PortfolioAsset,
+        }
+      : parseAllocationAssets(currentSignalText)
+
+    if (!allocationAssets) return []
+
+    return buildAllocationSplits(
+      allocationAssets.primaryAsset,
+      allocationAssets.secondaryAsset,
+      allocationAssets.tertiaryAsset
+    )
+  }, [
+    currentSignalId,
+    currentSignalCategory,
+    currentSignalPrimary,
+    currentSignalSecondary,
+    currentSignalTertiary,
+    currentSignalText
+  ])
+
+  useEffect(() => {
+    hasSetAllocationRef.current = false
+    setActiveAllocationProfile(null)
+  }, [currentSignal?.id])
+
+  useEffect(() => {
+    if (hasSetAllocationRef.current) return
+    if (!allocationSplits.length) return
+    const preferredProfile = riskProfileData?.effectiveProfile || riskProfileData?.recommendedProfile
+    if (preferredProfile) {
+      setActiveAllocationProfile(preferredProfile)
+      hasSetAllocationRef.current = true
+      return
+    }
+    const fallbackProfile = allocationLabelToProfile[allocationSplits[0].label]
+    setActiveAllocationProfile(fallbackProfile)
+    hasSetAllocationRef.current = true
+  }, [allocationSplits, riskProfileData?.effectiveProfile, riskProfileData?.recommendedProfile])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -165,10 +234,6 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
       </Card>
     )
   }
-
-  const signals = data?.signals || []
-  const isActive = data?.isActive || false
-  const effectiveUserTier = data?.userTier || userTier
 
   if (signals.length === 0) {
     return (
@@ -194,58 +259,6 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
       </Card>
     )
   }
-
-  const tiers: Tier[] = ['T1', 'T2']
-  
-  // Get current signal based on active tier and category
-  const getCurrentSignal = (): DailySignal | null => {
-    if (!activeTier) return null
-    if (activeTier === 'T2') {
-      return t2SignalsByCategory[activeCategory]
-    }
-    return signalsByTier[activeTier]?.[0] || null
-  }
-  
-  const currentSignal = getCurrentSignal()
-  const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive) : false
-  const showAllocations = currentSignal?.category !== 'memecoins'
-  const allocationAssets = currentSignal && showAllocations
-    ? currentSignal.primaryAsset &&
-      currentSignal.secondaryAsset &&
-      currentSignal.tertiaryAsset
-      ? {
-          primaryAsset: currentSignal.primaryAsset as PortfolioAsset,
-          secondaryAsset: currentSignal.secondaryAsset as PortfolioAsset,
-          tertiaryAsset: currentSignal.tertiaryAsset as PortfolioAsset,
-        }
-      : parseAllocationAssets(currentSignal.signal)
-    : null
-  const allocationSplits = allocationAssets
-    ? buildAllocationSplits(
-        allocationAssets.primaryAsset,
-        allocationAssets.secondaryAsset,
-        allocationAssets.tertiaryAsset
-      )
-    : []
-
-  useEffect(() => {
-    hasSetAllocationRef.current = false
-    setActiveAllocationProfile(null)
-  }, [currentSignal?.id])
-
-  useEffect(() => {
-    if (hasSetAllocationRef.current) return
-    if (!allocationSplits.length) return
-    const preferredProfile = riskProfileData?.effectiveProfile || riskProfileData?.recommendedProfile
-    if (preferredProfile) {
-      setActiveAllocationProfile(preferredProfile)
-      hasSetAllocationRef.current = true
-      return
-    }
-    const fallbackProfile = allocationLabelToProfile[allocationSplits[0].label]
-    setActiveAllocationProfile(fallbackProfile)
-    hasSetAllocationRef.current = true
-  }, [allocationSplits, riskProfileData?.effectiveProfile, riskProfileData?.recommendedProfile])
 
   return (
     <Card>

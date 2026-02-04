@@ -96,27 +96,6 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
     }
   }, [open, data, steps])
 
-  useEffect(() => {
-    if (!open) return
-    if (!initRef.current) return
-    if (mode === 'result') return
-    if (data?.status === 'completed' && !isDirty) return
-
-    if (saveTimeoutRef.current) {
-      window.clearTimeout(saveTimeoutRef.current)
-    }
-
-    saveTimeoutRef.current = window.setTimeout(() => {
-      void saveAnswers(answers)
-    }, 700)
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        window.clearTimeout(saveTimeoutRef.current)
-      }
-    }
-  }, [answers, open, saveAnswers, data?.status, isDirty, mode])
-
   const saveAnswers = useCallback(
     async (partial: RiskOnboardingAnswers) => {
       if (!open) return
@@ -138,6 +117,27 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
     },
     [open, currentStep?.id]
   )
+
+  useEffect(() => {
+    if (!open) return
+    if (!initRef.current) return
+    if (mode === 'result') return
+    if (data?.status === 'completed' && !isDirty) return
+
+    if (saveTimeoutRef.current) {
+      window.clearTimeout(saveTimeoutRef.current)
+    }
+
+    saveTimeoutRef.current = window.setTimeout(() => {
+      void saveAnswers(answers)
+    }, 700)
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        window.clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [answers, open, saveAnswers, data?.status, isDirty, mode])
 
   const updateAnswer = (key: keyof RiskOnboardingAnswers, value: any) => {
     setAnswers((prev) => ({ ...prev, [key]: value }))
