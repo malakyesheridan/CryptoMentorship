@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer'
 import { env } from './env'
 import { logger } from './logger'
 import { buildWelcomeEmail } from './templates/welcome'
+import { buildSignupAlertEmail, SignupAlertDetails } from './templates/signup-alert'
 
 /**
  * Create a nodemailer transporter based on EMAIL_SERVER configuration
@@ -139,6 +140,25 @@ export async function sendWelcomeEmail({
   userName?: string | null
 }): Promise<void> {
   const message = buildWelcomeEmail({ firstName: userName || null })
+  await sendEmail({
+    to,
+    subject: message.subject,
+    html: message.html,
+    text: message.text,
+  })
+}
+
+/**
+ * Send an admin alert email when a new user signs up
+ */
+export async function sendSignupAlertEmail({
+  details,
+  to = 'coen@stewartandco.org',
+}: {
+  details: SignupAlertDetails
+  to?: string
+}): Promise<void> {
+  const message = buildSignupAlertEmail(details)
   await sendEmail({
     to,
     subject: message.subject,

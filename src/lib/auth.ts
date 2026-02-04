@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger'
 import { verifyPassword } from '@/lib/password'
 import { cookies } from 'next/headers'
 import { getReferralCookieName, linkReferralToUser } from '@/lib/referrals'
+import { sendSignupAlertEmail } from '@/lib/email'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma), // Used for OAuth providers only
@@ -448,37 +449,106 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async createUser({ user }) {
-      try {
-        const cookieStore = await cookies()
-        const referralCode = cookieStore.get(getReferralCookieName())?.value
-        const referralClickedAt = cookieStore.get('referral_clicked_at')?.value
-        if (!referralCode || !user?.id) return
+      const cookieStore = await cookies()
+      const referralCode = cookieStore.get(getReferralCookieName())?.value
+      const referralClickedAt = cookieStore.get('referral_clicked_at')?.value
 
-        const clickedAt = referralClickedAt ? new Date(referralClickedAt) : null
-        const result = await linkReferralToUser(referralCode, user.id, undefined, {
-          referredEmail: user.email || null,
-          referredName: user.name || null,
-          signedUpAt: new Date(),
-          clickedAt: Number.isNaN(clickedAt?.getTime()) ? null : clickedAt,
-        })
-        if (result.success) {
-          logger.info('Referral linked during OAuth signup', {
-            userId: user.id,
-            referralCode,
-            referralId: result.referralId,
+      if (referralCode && user?.id) {
+        try {
+          const clickedAt = referralClickedAt ? new Date(referralClickedAt) : null
+          const result = await linkReferralToUser(referralCode, user.id, undefined, {
+            referredEmail: user.email || null,
+            referredName: user.name || null,
+            signedUpAt: new Date(),
+            clickedAt: Number.isNaN(clickedAt?.getTime()) ? null : clickedAt,
           })
-        } else {
-          logger.warn('Referral linking failed during OAuth signup', {
-            userId: user.id,
-            referralCode,
-            error: result.error,
-          })
+          if (result.success) {
+            logger.info('Referral linked during OAuth signup', {
+              userId: user.id,
+              referralCode,
+              referralId: result.referralId,
+            })
+          } else {
+            logger.warn('Referral linking failed during OAuth signup', {
+              userId: user.id,
+              referralCode,
+              error: result.error,
+            })
+          }
+        } catch (error) {
+          logger.error(
+            'Referral linking error during OAuth signup',
+            error instanceof Error ? error : new Error(String(error)),
+            { userId: user?.id }
+          )
         }
+      }
+
+      if (!user?.id || !user.email) return
+
+      try {
+        const [freshUser, membership, account] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              createdAt: true,
+            },
+          }),
+          prisma.membership.findUnique({
+            where: { userId: user.id },
+            select: {
+              tier: true,
+              status: true,
+              currentPeriodEnd: true,
+            },
+          }),
+          prisma.account.findFirst({
+            where: { userId: user.id },
+            select: { provider: true },
+          }),
+        ])
+
+        const provider = account?.provider || null
+        const source = provider === 'email' ? 'email-link' : provider ? 'oauth' : 'nextauth'
+        const trial = membership?.status === 'trial'
+
+        void sendSignupAlertEmail({
+          details: {
+            name: freshUser?.name ?? user.name,
+            email: freshUser?.email ?? user.email,
+            userId: user.id,
+            role: freshUser?.role ?? null,
+            createdAt: freshUser?.createdAt ?? new Date(),
+            source,
+            provider,
+            trial,
+            trialEndsAt: membership?.currentPeriodEnd ?? null,
+            membershipStatus: membership?.status ?? null,
+            membershipTier: membership?.tier ?? null,
+            referralCode: referralCode || null,
+            referralSource: null,
+            utmSource: null,
+            utmMedium: null,
+            utmCampaign: null,
+            utmTerm: null,
+            utmContent: null,
+          },
+        }).catch((emailError) => {
+          logger.error(
+            'Failed to send signup alert email',
+            emailError instanceof Error ? emailError : new Error(String(emailError)),
+            { userId: user.id, email: user.email }
+          )
+        })
       } catch (error) {
         logger.error(
-          'Referral linking error during OAuth signup',
+          'Signup alert prep failed',
           error instanceof Error ? error : new Error(String(error)),
-          { userId: user?.id }
+          { userId: user.id, email: user.email }
         )
       }
     }

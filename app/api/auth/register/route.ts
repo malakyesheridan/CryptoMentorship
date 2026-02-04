@@ -8,7 +8,7 @@ import { handleError } from '@/lib/errors'
 import { linkReferralToUser, getReferralCookieName } from '@/lib/referrals'
 import { referralConfig } from '@/lib/env'
 import { onTrialStarted } from '@/lib/membership/trial'
-import { sendWelcomeEmail } from '@/lib/email'
+import { sendSignupAlertEmail, sendWelcomeEmail } from '@/lib/email'
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -191,6 +191,35 @@ export async function POST(req: NextRequest) {
         )
       })
     }
+
+    void sendSignupAlertEmail({
+      details: {
+        name: user.name,
+        email: user.email,
+        userId: user.id,
+        role: user.role,
+        createdAt: user.createdAt,
+        source: shouldCreateTrial ? 'register-trial' : 'register',
+        provider: 'credentials',
+        trial: shouldCreateTrial,
+        trialEndsAt: trialEndDate,
+        membershipStatus: shouldCreateTrial ? 'trial' : null,
+        membershipTier: shouldCreateTrial ? 'T2' : null,
+        referralCode: effectiveReferralCode || null,
+        referralSource: referralSource || null,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        utmTerm: utmTerm || null,
+        utmContent: utmContent || null,
+      },
+    }).catch((emailError) => {
+      logger.error(
+        'Failed to send signup alert email',
+        emailError instanceof Error ? emailError : new Error(String(emailError)),
+        { userId: user.id, email }
+      )
+    })
 
     const response = NextResponse.json({
       success: true,
