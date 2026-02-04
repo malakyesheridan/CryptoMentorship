@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
+import { AdminBackLink } from '@/components/admin/AdminBackLink'
 
 type ReferralRow = {
   id: string
@@ -81,6 +82,8 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
 
   return (
     <div className="space-y-8">
+      <AdminBackLink href="/admin/affiliates" label="Back to Affiliates" />
+
       <Card className="card">
         <CardHeader>
           <CardTitle>Affiliate Detail</CardTitle>

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ContentForm } from '@/components/admin/ContentForm'
+import { AdminBackLink } from '@/components/admin/AdminBackLink'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 
@@ -46,6 +47,8 @@ export default async function EditContentPage({
 
   return (
     <div className="space-y-8">
+      <AdminBackLink href="/admin" label="Back to Dashboard" />
+
       {/* Header */}
       <div>
         <h1 className="heading-two-tone text-3xl mb-2">

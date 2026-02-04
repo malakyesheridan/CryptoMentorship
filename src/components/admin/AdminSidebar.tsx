@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
@@ -9,11 +10,18 @@ import {
   Settings,
   BarChart3,
   DollarSign,
-  Shield
+  Shield,
+  Megaphone,
+  Calendar,
+  BookOpen,
+  ArrowLeft,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Announcements', href: '/admin/announce', icon: Megaphone },
+  { name: 'Events', href: '/admin/events', icon: Calendar },
+  { name: 'Learning', href: '/admin/learn/tracks', icon: BookOpen },
   { name: 'ROI Dashboard', href: '/admin/roi', icon: BarChart3 },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Risk Profiles', href: '/admin/risk-profiles', icon: Shield },
@@ -24,6 +32,17 @@ const navigation = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const activeHref = useMemo(() => {
+    if (!pathname) return ''
+    const match = navigation
+      .filter((item) =>
+        pathname === item.href ||
+        (item.href !== '/admin' && pathname.startsWith(`${item.href}/`))
+      )
+      .sort((a, b) => b.href.length - a.href.length)[0]
+
+    return match?.href ?? ''
+  }, [pathname])
 
   return (
     <div className="fixed inset-y-0 left-0 w-64 bg-white/90 backdrop-blur border-r border-[color:var(--border-subtle)] shadow-lg">
@@ -41,11 +60,12 @@ export function AdminSidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = activeHref === item.href
             return (
               <Link
                 key={item.name}
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
@@ -62,14 +82,16 @@ export function AdminSidebar() {
 
         {/* Footer */}
         <div className="p-4 border-t border-[color:var(--border-subtle)]">
-          <Link 
-            href="/dashboard" 
+          <Link
+            href="/dashboard"
             className="flex items-center space-x-2 text-sm text-slate-500 hover:text-slate-700"
           >
-            ← Back to Portal
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Portal</span>
           </Link>
         </div>
       </div>
     </div>
   )
 }
+

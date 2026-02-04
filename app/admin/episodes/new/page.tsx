@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EpisodeForm } from '@/components/admin/EpisodeForm'
+import { AdminBackLink } from '@/components/admin/AdminBackLink'
 
 export default function NewEpisodePage() {
   return (
     <div className="space-y-8">
+      <AdminBackLink href="/admin" label="Back to Dashboard" />
+
       {/* Header */}
       <div>
         <h1 className="heading-two-tone text-3xl mb-2">
