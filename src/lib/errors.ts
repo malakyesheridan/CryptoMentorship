@@ -24,6 +24,14 @@ export interface ApiError {
   statusCode: number
 }
 
+export function isDynamicServerUsageError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error)
+  const digest = error && typeof error === 'object' && 'digest' in error
+    ? (error as any).digest
+    : null
+  return digest === 'DYNAMIC_SERVER_USAGE' || message.includes('Dynamic server usage:')
+}
+
 /**
  * Convert Prisma errors to API errors with appropriate status codes
  */
@@ -137,12 +145,13 @@ export function errorResponse(error: ApiError, logError = true): NextResponse {
  * Handle errors and return appropriate NextResponse
  */
 export function handleError(error: unknown, logError = true): NextResponse {
+  const shouldLog = logError && !isDynamicServerUsageError(error)
   if (error instanceof Prisma.PrismaClientKnownRequestError ||
       error instanceof Prisma.PrismaClientValidationError ||
       error instanceof Prisma.PrismaClientInitializationError ||
       error instanceof Prisma.PrismaClientRustPanicError) {
     const apiError = handlePrismaError(error)
-    return errorResponse(apiError, logError)
+    return errorResponse(apiError, shouldLog)
   }
 
   // Handle Zod validation errors
@@ -152,7 +161,7 @@ export function handleError(error: unknown, logError = true): NextResponse {
       message: 'Validation failed',
       details: error,
       statusCode: 400,
-    }, logError)
+    }, shouldLog)
   }
 
   // Generic error
@@ -162,7 +171,7 @@ export function handleError(error: unknown, logError = true): NextResponse {
     statusCode: 500,
   }
 
-  return errorResponse(apiError, logError)
+  return errorResponse(apiError, shouldLog)
 }
 
 /**

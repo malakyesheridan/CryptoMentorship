@@ -52,11 +52,14 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
                       <div className="flex-shrink-0">
                         <div className="relative group/image">
                           {episode.coverUrl ? (
-                            <img
-                              src={episode.coverUrl}
-                              alt={episode.title}
-                              className="w-24 h-24 object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
-                            />
+                            <>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={episode.coverUrl}
+                                alt={episode.title}
+                                className="w-24 h-24 object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </>
                           ) : (
                             <div className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl">
                               <Play className="w-8 h-8 text-white opacity-80" />

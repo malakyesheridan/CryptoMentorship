@@ -159,6 +159,7 @@ export default function NewTrackPage() {
                     />
                     {formData.coverUrl && (
                       <div className="mt-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={formData.coverUrl}
                           alt="Cover preview"

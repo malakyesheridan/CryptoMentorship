@@ -1,3 +1,5 @@
+import { isDynamicServerUsageError } from '@/lib/errors'
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 class Logger {
@@ -62,6 +64,7 @@ class Logger {
 
   error(message: string, error?: Error, context?: Record<string, unknown>) {
     if (!this.shouldLog('error')) return
+    if (error && isDynamicServerUsageError(error)) return
     const data = this.isDevelopment ? context : this.maskPII(context)
     const errorInfo = error 
       ? { message: error.message, stack: this.isDevelopment ? error.stack : '[REDACTED]' }

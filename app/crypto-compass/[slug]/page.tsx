@@ -150,6 +150,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
         {/* Cover Image */}
         {!episode.videoUrl && coverUrl && (
           <div className="mb-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={coverUrl}
               alt={episode.title}

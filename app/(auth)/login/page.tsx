@@ -250,6 +250,7 @@ export default function LoginPage() {
           <div className="bg-[#FFFDF7] rounded-2xl p-8 lg:p-10 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
             {/* Header */}
             <div className="mb-8 flex flex-col items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="https://i.imgur.com/h7es4Rn.png"
                 alt="STEWART & CO"

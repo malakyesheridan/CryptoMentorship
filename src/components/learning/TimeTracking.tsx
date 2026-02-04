@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -53,7 +53,7 @@ export function TimeTracking({ lessonId, userId, className = '' }: TimeTrackingP
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Fetch time tracking data
-  const fetchTimeTracking = async () => {
+  const fetchTimeTracking = useCallback(async () => {
     try {
       const data = await getLessonTimeTracking(userId, lessonId)
       setTimeTracking(data)
@@ -67,11 +67,11 @@ export function TimeTracking({ lessonId, userId, className = '' }: TimeTrackingP
     } catch (error) {
       console.error('Error fetching time tracking:', error)
     }
-  }
+  }, [lessonId, userId])
 
   useEffect(() => {
     fetchTimeTracking()
-  }, [lessonId, userId])
+  }, [fetchTimeTracking])
 
   // Start tracking
   const handleStartTracking = async () => {

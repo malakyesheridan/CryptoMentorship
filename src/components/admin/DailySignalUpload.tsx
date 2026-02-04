@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -43,7 +43,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
   const isMemecoins = category === 'memecoins'
   const idPrefix = formIdPrefix ?? `${tier}-${category ?? 'default'}`
 
-  const parseAssetsFromSignal = (signal: string): PortfolioAsset[] => {
+  const parseAssetsFromSignal = useCallback((signal: string): PortfolioAsset[] => {
     if (!signal) return []
     try {
       const parsed = JSON.parse(signal) as {
@@ -76,9 +76,9 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
       .filter(({ index }) => index >= 0)
       .sort((a, b) => a.index - b.index)
       .map(({ asset }) => asset)
-  }
+  }, [])
 
-  const getAssetDefaults = (signal?: DailySignalUploadProps['existingSignal']) => {
+  const getAssetDefaults = useCallback((signal?: DailySignalUploadProps['existingSignal']) => {
     if (!signal) {
       return { primaryAsset: '', secondaryAsset: '', tertiaryAsset: '' }
     }
@@ -89,9 +89,9 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
       secondaryAsset: signal.secondaryAsset || parsedAssets[1] || '',
       tertiaryAsset: signal.tertiaryAsset || parsedAssets[2] || '',
     }
-  }
+  }, [parseAssetsFromSignal])
 
-  const getSignalTextDefault = (signal?: DailySignalUploadProps['existingSignal']) => {
+  const getSignalTextDefault = useCallback((signal?: DailySignalUploadProps['existingSignal']) => {
     if (!signal) {
       return ''
     }
@@ -114,7 +114,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
     }
 
     return signal.signal
-  }
+  }, [])
 
   const [formData, setFormData] = useState({
     ...getAssetDefaults(existingSignal),
@@ -157,7 +157,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
       setIsEditing(false)
       setShowPreview(false)
     }
-  }, [existingSignal])
+  }, [existingSignal, getAssetDefaults, getSignalTextDefault])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -12,17 +12,7 @@ function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  useEffect(() => {
-    const tokenParam = searchParams.get('token')
-    if (tokenParam) {
-      setToken(tokenParam)
-      handleVerification(tokenParam)
-    } else {
-      setError('Invalid verification link. No token provided.')
-    }
-  }, [searchParams])
-
-  const handleVerification = async (verificationToken: string) => {
+  const handleVerification = useCallback(async (verificationToken: string) => {
     setIsLoading(true)
     setError(null)
 
@@ -50,7 +40,17 @@ function VerifyEmailContent() {
       setError('An unexpected error occurred')
       setIsLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    const tokenParam = searchParams.get('token')
+    if (tokenParam) {
+      setToken(tokenParam)
+      handleVerification(tokenParam)
+    } else {
+      setError('Invalid verification link. No token provided.')
+    }
+  }, [searchParams, handleVerification])
 
   if (success) {
     return (

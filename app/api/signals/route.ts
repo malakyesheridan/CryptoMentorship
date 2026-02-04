@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { isDynamicServerUsageError } from '@/lib/errors'
 
 // Cache for 60 seconds - signals update periodically
 export const revalidate = 60
@@ -85,7 +86,9 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching signals:', error)
+    if (!isDynamicServerUsageError(error)) {
+      console.error('Error fetching signals:', error)
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

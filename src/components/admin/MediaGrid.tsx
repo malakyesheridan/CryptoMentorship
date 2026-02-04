@@ -143,11 +143,14 @@ export function MediaGrid({ media }: MediaGridProps) {
                 {/* Preview */}
                 <div className="aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
                   {isImage ? (
-                    <img
-                      src={item.url}
-                      alt={item.alt || item.filename}
-                      className="w-full h-full object-cover"
-                    />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.url}
+                        alt={item.alt || item.filename}
+                        className="w-full h-full object-cover"
+                      />
+                    </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <FileIcon className="w-12 h-12 text-[var(--text-muted)]" />

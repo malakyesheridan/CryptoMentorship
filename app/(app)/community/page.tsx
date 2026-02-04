@@ -274,7 +274,7 @@ export default function CommunityPage() {
         throw error
       }
     },
-    [activeChannelId, mutate, replyTo, handleNewMessage],
+    [activeChannelId, mutate, replyTo, handleNewMessage, session?.user?.id, session?.user?.image, session?.user?.name],
   )
 
   const handleReply = useCallback((message: ChatMessage) => {

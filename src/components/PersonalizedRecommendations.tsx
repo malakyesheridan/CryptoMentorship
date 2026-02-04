@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -57,7 +57,7 @@ export function PersonalizedRecommendations({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     if (!session?.user?.id) return
 
     try {
@@ -81,11 +81,11 @@ export function PersonalizedRecommendations({
     } finally {
       setLoading(false)
     }
-  }
+  }, [session?.user?.id, type, limit])
 
   useEffect(() => {
     fetchRecommendations()
-  }, [session?.user?.id, type, limit])
+  }, [fetchRecommendations])
 
   const getRecommendationIcon = (rec: Recommendation) => {
     switch (rec.type) {

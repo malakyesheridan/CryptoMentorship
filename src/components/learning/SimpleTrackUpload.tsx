@@ -226,6 +226,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
               </label>
               {coverImagePreview && (
                 <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={coverImagePreview}
                     alt="Cover preview"

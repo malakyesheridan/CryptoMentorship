@@ -102,12 +102,14 @@ export default function MessageInput({
 
   // Cleanup typing timeouts on unmount
   useEffect(() => {
+    const typingTimeout = typingTimeoutRef.current
+    const typingDebounce = typingDebounceRef.current
     return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
+      if (typingTimeout) {
+        clearTimeout(typingTimeout)
       }
-      if (typingDebounceRef.current) {
-        clearTimeout(typingDebounceRef.current)
+      if (typingDebounce) {
+        clearTimeout(typingDebounce)
       }
     }
   }, [])

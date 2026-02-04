@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { isDynamicServerUsageError } from '@/lib/errors'
 
 export async function GET(req: NextRequest) {
   try {
@@ -123,7 +124,9 @@ export async function GET(req: NextRequest) {
       } : null,
     })
   } catch (error) {
-    console.error('Error fetching track progress:', error)
+    if (!isDynamicServerUsageError(error)) {
+      console.error('Error fetching track progress:', error)
+    }
     return NextResponse.json(
       { error: 'Failed to fetch track progress' },
       { status: 500 }

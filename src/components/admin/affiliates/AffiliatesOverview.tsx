@@ -1,11 +1,15 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Users, DollarSign, CheckCircle, Clock, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { format } from 'date-fns'
 
 type AffiliateRow = {
   referrer: {
@@ -39,28 +43,123 @@ type ReferralRow = {
   }
 }
 
+type UserOption = {
+  id: string
+  name: string | null
+  email: string
+  createdAt: string
+  referralSlug: string | null
+  role: string
+}
+
 export function AffiliatesOverview() {
   const [affiliates, setAffiliates] = useState<AffiliateRow[]>([])
   const [allReferrals, setAllReferrals] = useState<ReferralRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [memberQuery, setMemberQuery] = useState('')
+  const [memberResults, setMemberResults] = useState<UserOption[]>([])
+  const [selectedMember, setSelectedMember] = useState<UserOption | null>(null)
+  const [isSearchingMembers, setIsSearchingMembers] = useState(false)
+  const [referrerQuery, setReferrerQuery] = useState('')
+  const [referrerResults, setReferrerResults] = useState<UserOption[]>([])
+  const [selectedReferrer, setSelectedReferrer] = useState<UserOption | null>(null)
+  const [isSearchingReferrers, setIsSearchingReferrers] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const load = useCallback(async (showLoader = true) => {
+    if (showLoader) setIsLoading(true)
+    try {
+      const [affiliatesRes, referralsRes] = await Promise.all([
+        fetch('/api/admin/affiliates'),
+        fetch('/api/admin/affiliates/referrals')
+      ])
+      const affiliatesData = await affiliatesRes.json()
+      const referralsData = await referralsRes.json()
+      setAffiliates(affiliatesData.affiliates || [])
+      setAllReferrals(referralsData.referrals || [])
+    } finally {
+      if (showLoader) setIsLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [affiliatesRes, referralsRes] = await Promise.all([
-          fetch('/api/admin/affiliates'),
-          fetch('/api/admin/affiliates/referrals')
-        ])
-        const affiliatesData = await affiliatesRes.json()
-        const referralsData = await referralsRes.json()
-        setAffiliates(affiliatesData.affiliates || [])
-        setAllReferrals(referralsData.referrals || [])
-      } finally {
-        setIsLoading(false)
-      }
+    load(true)
+  }, [load])
+
+  useEffect(() => {
+    if (selectedMember) {
+      return
     }
-    load()
-  }, [])
+    if (memberQuery.trim().length < 2) {
+      setMemberResults([])
+      return
+    }
+
+    const controller = new AbortController()
+    const handle = setTimeout(async () => {
+      setIsSearchingMembers(true)
+      try {
+        const res = await fetch(`/api/admin/affiliates/users?q=${encodeURIComponent(memberQuery)}`, {
+          signal: controller.signal
+        })
+        const data = await res.json()
+        setMemberResults(data.users || [])
+      } catch {
+        if (!controller.signal.aborted) {
+          setMemberResults([])
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsSearchingMembers(false)
+      }
+    }, 250)
+
+    return () => {
+      controller.abort()
+      clearTimeout(handle)
+    }
+  }, [memberQuery, selectedMember])
+
+  useEffect(() => {
+    if (selectedReferrer) {
+      return
+    }
+    if (referrerQuery.trim().length < 2) {
+      setReferrerResults([])
+      return
+    }
+
+    const controller = new AbortController()
+    const handle = setTimeout(async () => {
+      setIsSearchingReferrers(true)
+      try {
+        const exclude = selectedMember?.id ? `&exclude=${selectedMember.id}` : ''
+        const res = await fetch(
+          `/api/admin/affiliates/users?q=${encodeURIComponent(referrerQuery)}${exclude}`,
+          { signal: controller.signal }
+        )
+        const data = await res.json()
+        setReferrerResults(data.users || [])
+      } catch {
+        if (!controller.signal.aborted) {
+          setReferrerResults([])
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsSearchingReferrers(false)
+      }
+    }, 250)
+
+    return () => {
+      controller.abort()
+      clearTimeout(handle)
+    }
+  }, [referrerQuery, selectedMember?.id, selectedReferrer])
+
+  useEffect(() => {
+    if (selectedMember && selectedReferrer && selectedMember.id === selectedReferrer.id) {
+      setSelectedReferrer(null)
+      setReferrerQuery('')
+    }
+  }, [selectedMember, selectedReferrer])
 
   const totals = useMemo(() => {
     return affiliates.reduce(
@@ -74,6 +173,46 @@ export function AffiliatesOverview() {
     )
   }, [affiliates])
 
+  const referralDateLabel = selectedMember
+    ? format(new Date(selectedMember.createdAt), 'MMM d, yyyy')
+    : ''
+
+  const handleCreateReferral = async () => {
+    if (!selectedMember || !selectedReferrer) return
+    if (selectedMember.id === selectedReferrer.id) {
+      toast.error('Member and referrer must be different users')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const res = await fetch('/api/admin/affiliates/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          referredUserId: selectedMember.id,
+          referrerId: selectedReferrer.id
+        })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create referral')
+      }
+      toast.success('Referral linked successfully')
+      setSelectedMember(null)
+      setSelectedReferrer(null)
+      setMemberQuery('')
+      setReferrerQuery('')
+      setMemberResults([])
+      setReferrerResults([])
+      await load(false)
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to create referral')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -84,6 +223,133 @@ export function AffiliatesOverview() {
 
   return (
     <div className="space-y-8">
+      <Card className="card">
+        <CardHeader>
+          <CardTitle>Manual Referral Link</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="member-search">Member</Label>
+              <Input
+                id="member-search"
+                value={memberQuery}
+                onChange={(event) => {
+                  setMemberQuery(event.target.value)
+                  setSelectedMember(null)
+                }}
+                placeholder="Search by name or email"
+              />
+              {selectedMember && (
+                <p className="text-xs text-slate-500">
+                  Selected: {selectedMember.name || selectedMember.email}
+                </p>
+              )}
+              {memberQuery.trim().length >= 2 && memberResults.length > 0 && (
+                <div className="border border-[color:var(--border-subtle)] rounded-md bg-white shadow-sm max-h-56 overflow-auto">
+                  {memberResults.map((user) => (
+                    <button
+                      key={user.id}
+                      type="button"
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                      onClick={() => {
+                        setSelectedMember(user)
+                        setMemberQuery(user.name || user.email)
+                        setMemberResults([])
+                      }}
+                    >
+                      <div className="text-sm font-medium text-slate-800">
+                        {user.name || user.email}
+                      </div>
+                      <div className="text-xs text-slate-500">{user.email}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {memberQuery.trim().length >= 2 && memberResults.length === 0 && !isSearchingMembers && (
+                <p className="text-xs text-slate-500">No users found.</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="referrer-search">Referrer</Label>
+              <Input
+                id="referrer-search"
+                value={referrerQuery}
+                onChange={(event) => {
+                  setReferrerQuery(event.target.value)
+                  setSelectedReferrer(null)
+                }}
+                placeholder="Search by name or email"
+              />
+              {selectedReferrer && (
+                <p className="text-xs text-slate-500">
+                  Selected: {selectedReferrer.name || selectedReferrer.email}
+                </p>
+              )}
+              {referrerQuery.trim().length >= 2 && referrerResults.length > 0 && (
+                <div className="border border-[color:var(--border-subtle)] rounded-md bg-white shadow-sm max-h-56 overflow-auto">
+                  {referrerResults.map((user) => (
+                    <button
+                      key={user.id}
+                      type="button"
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                      onClick={() => {
+                        setSelectedReferrer(user)
+                        setReferrerQuery(user.name || user.email)
+                        setReferrerResults([])
+                      }}
+                    >
+                      <div className="text-sm font-medium text-slate-800">
+                        {user.name || user.email}
+                      </div>
+                      <div className="text-xs text-slate-500">{user.email}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {referrerQuery.trim().length >= 2 && referrerResults.length === 0 && !isSearchingReferrers && (
+                <p className="text-xs text-slate-500">No users found.</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Referral Date</Label>
+              <Input readOnly value={referralDateLabel} placeholder="Select a member" />
+              <p className="text-xs text-slate-500">
+                Uses the member&apos;s sign-up date.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedMember(null)
+                setSelectedReferrer(null)
+                setMemberQuery('')
+                setReferrerQuery('')
+                setMemberResults([])
+                setReferrerResults([])
+              }}
+            >
+              Clear
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleCreateReferral}
+              disabled={!selectedMember || !selectedReferrer || isSubmitting}
+            >
+              {isSubmitting ? 'Linking...' : 'Link Referral'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

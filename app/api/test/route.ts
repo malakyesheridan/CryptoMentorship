@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    console.log('Test API route called')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Test API route called')
+    }
     return NextResponse.json({ ok: true, message: 'Test API working' })
   } catch (error) {
     console.error('Test API error:', error)

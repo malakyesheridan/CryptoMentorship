@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ComponentType } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -337,7 +337,7 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize])
 
-  const loadSeries = async () => {
+  const loadSeries = useCallback(async () => {
     setLoading(true)
     try {
       const data = await json<SeriesResponse>(
@@ -350,11 +350,11 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
     } finally {
       setLoading(false)
     }
-  }
+  }, [seriesType, page, pageSize])
 
   useEffect(() => {
     loadSeries()
-  }, [seriesType, page])
+  }, [loadSeries])
 
   const resetForm = () => {
     setForm({ date: '', value: '' })

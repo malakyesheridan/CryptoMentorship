@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { isDynamicServerUsageError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 import { z } from 'zod'
@@ -111,7 +112,9 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching signals:', error)
+    if (!isDynamicServerUsageError(error)) {
+      console.error('Error fetching signals:', error)
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

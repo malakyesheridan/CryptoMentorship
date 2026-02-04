@@ -186,7 +186,7 @@ export function PortfolioWizard() {
       window.removeEventListener("scroll", handleScroll, true)
       window.removeEventListener("resize", updateTarget)
     }
-  }, [state.active, step?.id, isPortfolioHome])
+  }, [state.active, step, isPortfolioHome])
 
   useLayoutEffect(() => {
     if (!calloutRef.current) return

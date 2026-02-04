@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, Settings } from 'lucide-react'
 
 interface VideoPlayerProps {
@@ -43,7 +43,7 @@ export default function VideoPlayer({
   }
 
   // Handle play/pause - Load video source on first play
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (videoRef.current) {
       // Load video source when user first attempts to play
       if (!shouldLoadVideo) {
@@ -65,7 +65,7 @@ export default function VideoPlayer({
         videoRef.current.play()
       }
     }
-  }
+  }, [isPlaying, shouldLoadVideo, src])
 
   // Handle seek
   const handleSeek = (value: number) => {
@@ -273,7 +273,7 @@ export default function VideoPlayer({
         document.removeEventListener('keydown', handleKeyDown)
       }
     }
-  }, [isPlaying])
+  }, [togglePlay])
 
   // Hide controls after inactivity
   useEffect(() => {

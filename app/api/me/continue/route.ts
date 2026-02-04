@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { isDynamicServerUsageError } from '@/lib/errors'
 
 // Cache for 30 seconds - continue reading updates frequently
 export const revalidate = 30
@@ -99,7 +100,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(continueItems)
   } catch (error) {
-    console.error('Error fetching continue reading:', error)
+    if (!isDynamicServerUsageError(error)) {
+      console.error('Error fetching continue reading:', error)
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

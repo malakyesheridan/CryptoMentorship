@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,11 +36,7 @@ export default function VideoSelector({
   const [isLoading, setIsLoading] = useState(true)
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
 
-  useEffect(() => {
-    fetchVideos()
-  }, [])
-
-  const fetchVideos = async () => {
+  const fetchVideos = useCallback(async () => {
     try {
       const response = await fetch('/api/videos')
       const data = await response.json()
@@ -61,7 +57,11 @@ export default function VideoSelector({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [selectedVideoId])
+
+  useEffect(() => {
+    fetchVideos()
+  }, [fetchVideos])
 
   const handleVideoSelect = (video: Video) => {
     setSelectedVideo(video)

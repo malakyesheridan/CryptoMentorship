@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -71,13 +71,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
   const [error, setError] = useState<string | null>(null)
   const [showTrialModal, setShowTrialModal] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && userId) {
-      fetchUserProfile()
-    }
-  }, [isOpen, userId])
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -93,7 +87,13 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetchUserProfile()
+    }
+  }, [isOpen, userId, fetchUserProfile])
 
   if (!isOpen) return null
 

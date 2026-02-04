@@ -215,7 +215,7 @@ export function LearningHubWizard() {
       window.removeEventListener("scroll", handleScroll, true)
       window.removeEventListener("resize", updateTarget)
     }
-  }, [state.active, step?.id, stepOnRoute])
+  }, [state.active, step, stepOnRoute])
 
   useLayoutEffect(() => {
     if (!calloutRef.current) return

@@ -154,6 +154,7 @@ function SubscribePageContent() {
       {/* Logo */}
       <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12">
         <div className="flex justify-center mb-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://i.imgur.com/h7es4Rn.png"
             alt="STEWART & CO"

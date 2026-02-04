@@ -202,11 +202,14 @@ export function CryptoCompassContent({
                     {/* Episode Image */}
                   <div className="lg:w-80 lg:h-48 h-64 relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
                       {getCoverUrl(episode.coverUrl) ? (
-                        <img
-                          src={getCoverUrl(episode.coverUrl) as string}
-                          alt={episode.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={getCoverUrl(episode.coverUrl) as string}
+                            alt={episode.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600">
                           <Play className="w-16 h-16 text-white opacity-80" />
