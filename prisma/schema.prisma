@@ -51,6 +51,12 @@ enum EmailType {
   WELCOME_TRIAL
 }
 
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -97,6 +103,8 @@ model User {
   preferences         String?
   clientId            String? // Multi-tenant support
   referralSlug        String?  @unique // Custom referral slug (e.g., "example")
+  defaultRiskProfile  RiskProfile?
+  selectedRiskProfile RiskProfile?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -143,6 +151,8 @@ model User {
   allocationSnapshotsUpdated AllocationSnapshot[]
   changeLogEventsCreated ChangeLogEvent[]
   roiDashboardSnapshotsUpdated RoiDashboardSnapshot[]
+  onboardingResponses      UserOnboardingResponse[]
+  riskProfileSnapshot      UserRiskProfile?
 
   @@index([email])
   @@index([role])
@@ -734,6 +744,45 @@ model EmailLog {
 
   @@index([userId])
   @@index([type])
+}
+
+model UserOnboardingResponse {
+  id          String           @id @default(uuid())
+  userId      String
+  wizardKey   String           @default("RISK_ONBOARDING_V1")
+  answers     Json
+  status      OnboardingStatus @default(NOT_STARTED)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wizardKey])
+  @@index([status])
+  @@index([userId])
+  @@map("user_onboarding_responses")
+}
+
+model UserRiskProfile {
+  userId               String     @id
+  recommendedProfile   RiskProfile
+  score                Int
+  drivers              Json
+  version              Int        @default(1)
+  completedAt          DateTime
+  overriddenByAdmin    Boolean    @default(false)
+  adminOverrideProfile RiskProfile?
+  adminOverrideReason  String?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([recommendedProfile])
+  @@index([completedAt])
+  @@map("user_risk_profile")
 }
 
 model DashboardSetting {

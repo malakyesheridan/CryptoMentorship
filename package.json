@@ -34,6 +34,7 @@
     "test": "playwright test",
     "test:e2e": "playwright test",
     "test:ui": "playwright test --ui",
+    "test:risk-profile": "tsx tests/risk-profile-score.test.ts",
     "typecheck": "tsc --noEmit",
     "audit:routes": "tsx scripts/auditRoutes.ts",
     "check:links": "npx ts-node scripts/checkLinks.ts",

@@ -107,6 +107,12 @@ export const routes = {
     // Media
     media: {
       list: () => '/admin/media'
+    },
+
+    // Risk profiles
+    riskProfiles: {
+      list: () => '/admin/risk-profiles',
+      detail: (userId: string) => `/admin/risk-profiles/${userId}`
     }
   },
   
@@ -167,6 +173,12 @@ export const routes = {
         changeLog: () => '/api/admin/roi/change-log',
         preview: () => '/api/admin/roi/preview'
       },
+
+      riskProfiles: {
+        list: () => '/api/admin/risk-profiles',
+        detail: (userId: string) => `/api/admin/risk-profiles/${userId}`,
+        override: (userId: string) => `/api/admin/risk-profiles/${userId}/override`
+      },
       
       content: () => '/api/admin/content',
       episodes: () => '/api/admin/episodes',
@@ -178,7 +190,11 @@ export const routes = {
       bookmarks: () => '/api/me/bookmarks',
       continue: () => '/api/me/continue',
       interests: () => '/api/me/interests',
-      notificationPreferences: () => '/api/me/notification-preferences'
+      notificationPreferences: () => '/api/me/notification-preferences',
+      riskProfile: () => '/api/me/risk-profile',
+      riskOnboardingSave: () => '/api/me/risk-onboarding/save',
+      riskOnboardingComplete: () => '/api/me/risk-onboarding/complete',
+      riskProfileSetDefault: () => '/api/me/risk-profile/set-default'
     },
     
     // Notifications

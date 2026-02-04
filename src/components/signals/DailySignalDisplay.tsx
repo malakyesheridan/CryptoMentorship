@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,11 +9,14 @@ import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { CalendarDatePicker } from './CalendarDatePicker'
 import { buildAllocationSplits, parseAllocationAssets, type PortfolioAsset } from '@/lib/portfolio-assets'
+import { useRiskProfile } from '@/hooks/useRiskProfile'
+import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 
 interface DailySignal {
   id: string
   tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins' | null
+  riskProfile?: 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE' | null
   signal: string
   primaryAsset?: string | null
   secondaryAsset?: string | null
@@ -33,6 +36,7 @@ interface DailySignalDisplayProps {
 }
 
 type Tier = 'T1' | 'T2'
+type RiskProfile = 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE'
 
 const tierLabels: Record<Tier, string> = {
   T1: 'Growth',
@@ -42,6 +46,12 @@ const tierLabels: Record<Tier, string> = {
 const tierColors: Record<Tier, string> = {
   T1: 'bg-purple-50 border-purple-200',
   T2: 'bg-yellow-50 border-yellow-200',
+}
+
+const allocationLabelToProfile: Record<'Aggressive' | 'Semi Aggressive' | 'Conservative', RiskProfile> = {
+  Aggressive: 'AGGRESSIVE',
+  'Semi Aggressive': 'SEMI',
+  Conservative: 'CONSERVATIVE',
 }
 
 // Check if user can access a tier
@@ -67,6 +77,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   const [activeTier, setActiveTier] = useState<Tier | null>(null)
   const [activeCategory, setActiveCategory] = useState<Category>('majors')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [activeAllocationProfile, setActiveAllocationProfile] = useState<RiskProfile | null>(null)
+  const hasSetAllocationRef = useRef(false)
+  const { data: riskProfileData } = useRiskProfile()
 
   // Build API URL with date parameter if selected
   const apiUrl = selectedDate
@@ -215,6 +228,25 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
       )
     : []
 
+  useEffect(() => {
+    hasSetAllocationRef.current = false
+    setActiveAllocationProfile(null)
+  }, [currentSignal?.id])
+
+  useEffect(() => {
+    if (hasSetAllocationRef.current) return
+    if (!allocationSplits.length) return
+    const preferredProfile = riskProfileData?.effectiveProfile || riskProfileData?.recommendedProfile
+    if (preferredProfile) {
+      setActiveAllocationProfile(preferredProfile)
+      hasSetAllocationRef.current = true
+      return
+    }
+    const fallbackProfile = allocationLabelToProfile[allocationSplits[0].label]
+    setActiveAllocationProfile(fallbackProfile)
+    hasSetAllocationRef.current = true
+  }, [allocationSplits, riskProfileData?.effectiveProfile, riskProfileData?.recommendedProfile])
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -348,20 +380,58 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                 {/* Allocation Split */}
                 {allocationSplits.length > 0 ? (
                   <div className="mb-4" data-tour="portfolio-allocation">
-                    <h4 className="font-bold text-slate-900 mb-2">Allocation Split:</h4>
-                    <div className="bg-white rounded-lg p-4 border border-slate-200">
-                      <div className="space-y-3 text-slate-800">
-                        {allocationSplits.map((split) => (
-                          <div key={split.label} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                            <span className="font-semibold text-slate-900">{split.label}</span>
-                            <span className="text-slate-700">
-                              {split.allocations
-                                .map((allocation) => `${allocation.percent}% ${allocation.asset}`)
-                                .join(' / ')}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-slate-900">Allocation Split</h4>
+                      {riskProfileData?.recommendedProfile && (
+                        <span className="text-xs text-slate-500">
+                          Recommended: {formatRiskProfileLabel(riskProfileData.recommendedProfile)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      {allocationSplits.map((split) => {
+                        const profile = allocationLabelToProfile[split.label]
+                        const displayLabel = formatRiskProfileLabel(profile)
+                        const isActive = activeAllocationProfile
+                          ? activeAllocationProfile === profile
+                          : allocationSplits[0]?.label === split.label
+                        const isRecommended = riskProfileData?.recommendedProfile === profile
+
+                        return (
+                          <button
+                            key={split.label}
+                            type="button"
+                            onClick={() => setActiveAllocationProfile(profile)}
+                            className={cn(
+                              'w-full text-left rounded-2xl border p-4 transition-all',
+                              isActive
+                                ? 'border-yellow-400 bg-yellow-50 shadow-sm'
+                                : 'border-slate-200 bg-white hover:border-slate-300'
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-semibold text-slate-900">{displayLabel}</span>
+                                {isRecommended && (
+                                  <span className="text-[10px] uppercase tracking-wide bg-yellow-200 text-yellow-900 px-2 py-1 rounded-full">
+                                    Recommended for you
+                                  </span>
+                                )}
+                              </div>
+                              {isActive && (
+                                <span className="text-xs text-slate-500">Selected</span>
+                              )}
+                            </div>
+                            {isActive && (
+                              <div className="mt-3 text-sm text-slate-700">
+                                {split.allocations
+                                  .map((allocation) => `${allocation.percent}% ${allocation.asset}`)
+                                  .join(' / ')}
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 ) : (
