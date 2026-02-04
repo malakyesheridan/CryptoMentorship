@@ -8,21 +8,15 @@ import {
   LayoutDashboard,
   Users,
   Settings,
-  BarChart3,
   DollarSign,
   Shield,
-  Megaphone,
-  Calendar,
   BookOpen,
   ArrowLeft,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Announcements', href: '/admin/announce', icon: Megaphone },
-  { name: 'Events', href: '/admin/events', icon: Calendar },
   { name: 'Learning', href: '/admin/learn/tracks', icon: BookOpen },
-  { name: 'ROI Dashboard', href: '/admin/roi', icon: BarChart3 },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Risk Profiles', href: '/admin/risk-profiles', icon: Shield },
   { name: 'Affiliates', href: '/admin/affiliates', icon: Users },
