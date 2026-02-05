@@ -151,6 +151,7 @@ model User {
   allocationSnapshotsUpdated AllocationSnapshot[]
   changeLogEventsCreated ChangeLogEvent[]
   roiDashboardSnapshotsUpdated RoiDashboardSnapshot[]
+  riskOnboardingConfigsUpdated RiskOnboardingConfig[]
   onboardingResponses      UserOnboardingResponse[]
   riskProfileSnapshot      UserRiskProfile?
 
