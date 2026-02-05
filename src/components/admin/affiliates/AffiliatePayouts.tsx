@@ -86,6 +86,12 @@ export function AffiliatePayouts() {
   const [manualReminder, setManualReminder] = useState<boolean>(true)
   const [manualNotes, setManualNotes] = useState<string>('')
   const [isSubmittingManual, setIsSubmittingManual] = useState(false)
+  const [editingManualId, setEditingManualId] = useState<string | null>(null)
+  const [editAmount, setEditAmount] = useState('')
+  const [editDate, setEditDate] = useState('')
+  const [editFrequency, setEditFrequency] = useState('')
+  const [editReminder, setEditReminder] = useState(true)
+  const [editNotes, setEditNotes] = useState('')
 
   const loadAffiliates = async () => {
     const res = await fetch('/api/admin/affiliates')
@@ -204,7 +210,7 @@ export function AffiliatePayouts() {
         body: JSON.stringify({
           referrerId: manualReferrerId,
           amountCents,
-          currency: 'usd',
+          currency: 'aud',
           scheduledFor: new Date(manualDate).toISOString(),
           frequency: manualFrequency || null,
           reminderEnabled: manualReminder,
@@ -226,6 +232,73 @@ export function AffiliatePayouts() {
     } finally {
       setIsSubmittingManual(false)
     }
+  }
+
+  const startEditManual = (payout: ManualPayout) => {
+    setEditingManualId(payout.id)
+    setEditAmount((payout.amountCents / 100).toFixed(2))
+    setEditDate(payout.scheduledFor.slice(0, 10))
+    setEditFrequency(payout.frequency || '')
+    setEditReminder(payout.reminderEnabled)
+    setEditNotes(payout.notes || '')
+  }
+
+  const cancelEditManual = () => {
+    setEditingManualId(null)
+    setEditAmount('')
+    setEditDate('')
+    setEditFrequency('')
+    setEditReminder(true)
+    setEditNotes('')
+  }
+
+  const saveEditManual = async (payoutId: string) => {
+    const amountCents = Math.round(Number(editAmount) * 100)
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      toast.error('Enter a valid amount')
+      return
+    }
+    if (!editDate) {
+      toast.error('Select a date')
+      return
+    }
+
+    const res = await fetch(`/api/admin/affiliates/manual-payouts/${payoutId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amountCents,
+        currency: 'aud',
+        scheduledFor: new Date(editDate).toISOString(),
+        frequency: editFrequency || null,
+        reminderEnabled: editReminder,
+        notes: editNotes || null,
+      }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error || 'Failed to update payout')
+      return
+    }
+
+    toast.success('Manual payout updated')
+    cancelEditManual()
+    await loadManualPayouts()
+  }
+
+  const deleteManual = async (payoutId: string) => {
+    if (!window.confirm('Delete this scheduled payout?')) return
+    const res = await fetch(`/api/admin/affiliates/manual-payouts/${payoutId}`, {
+      method: 'DELETE',
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error || 'Failed to delete payout')
+      return
+    }
+    toast.success('Manual payout deleted')
+    await loadManualPayouts()
   }
 
   if (isLoading) {
@@ -356,7 +429,7 @@ export function AffiliatePayouts() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-slate-600">Amount (USD)</label>
+              <label className="text-sm text-slate-600">Amount (AUD)</label>
               <Input
                 type="number"
                 min="0"
@@ -422,6 +495,7 @@ export function AffiliatePayouts() {
                   <th className="py-2 px-3">Frequency</th>
                   <th className="py-2 px-3">Reminder</th>
                   <th className="py-2 px-3">Notes</th>
+                  <th className="py-2 px-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -431,23 +505,93 @@ export function AffiliatePayouts() {
                       {payout.referrer.name || payout.referrer.email || '--'}
                     </td>
                     <td className="py-2 px-3">
-                      ${(payout.amountCents / 100).toFixed(2)} {payout.currency.toUpperCase()}
+                      {editingManualId === payout.id ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={editAmount}
+                          onChange={(event) => setEditAmount(event.target.value)}
+                        />
+                      ) : (
+                        `$${(payout.amountCents / 100).toFixed(2)} AUD`
+                      )}
                     </td>
                     <td className="py-2 px-3">
-                      {format(new Date(payout.scheduledFor), 'MMM d, yyyy')}
+                      {editingManualId === payout.id ? (
+                        <Input
+                          type="date"
+                          value={editDate}
+                          onChange={(event) => setEditDate(event.target.value)}
+                        />
+                      ) : (
+                        format(new Date(payout.scheduledFor), 'MMM d, yyyy')
+                      )}
                     </td>
-                    <td className="py-2 px-3">{payout.frequency || 'One-time'}</td>
                     <td className="py-2 px-3">
-                      {payout.reminderEnabled ? 'On' : 'Off'}
+                      {editingManualId === payout.id ? (
+                        <select
+                          className="w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-sm"
+                          value={editFrequency}
+                          onChange={(event) => setEditFrequency(event.target.value)}
+                        >
+                          <option value="">One-time</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="quarterly">Quarterly</option>
+                        </select>
+                      ) : (
+                        payout.frequency || 'One-time'
+                      )}
+                    </td>
+                    <td className="py-2 px-3">
+                      {editingManualId === payout.id ? (
+                        <input
+                          type="checkbox"
+                          checked={editReminder}
+                          onChange={(event) => setEditReminder(event.target.checked)}
+                        />
+                      ) : (
+                        payout.reminderEnabled ? 'On' : 'Off'
+                      )}
                     </td>
                     <td className="py-2 px-3 text-slate-600">
-                      {payout.notes || '--'}
+                      {editingManualId === payout.id ? (
+                        <Textarea
+                          value={editNotes}
+                          onChange={(event) => setEditNotes(event.target.value)}
+                          rows={2}
+                        />
+                      ) : (
+                        payout.notes || '--'
+                      )}
+                    </td>
+                    <td className="py-2 px-3 space-x-2">
+                      {editingManualId === payout.id ? (
+                        <>
+                          <Button size="sm" onClick={() => saveEditManual(payout.id)}>
+                            Save
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={cancelEditManual}>
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => startEditManual(payout)}>
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => deleteManual(payout.id)}>
+                            Delete
+                          </Button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
                 {manualPayouts.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-6 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="py-6 text-center text-sm text-slate-500">
                       No manual payouts scheduled.
                     </td>
                   </tr>
