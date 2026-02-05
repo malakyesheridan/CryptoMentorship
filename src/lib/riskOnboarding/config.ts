@@ -110,7 +110,7 @@ export const DEFAULT_RISK_ONBOARDING_CONFIG: RiskOnboardingScoringConfig = {
         lt_1k: 0,
         '1k_10k': 0,
         '10k_50k': 0,
-        50k_plus: 0,
+        '50k_plus': 0,
       },
       need_within_12m: {
         yes: 0,
