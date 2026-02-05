@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -50,6 +52,24 @@ type PayoutBatch = {
   }
 }
 
+type ManualPayout = {
+  id: string
+  referrer: {
+    id: string
+    name: string | null
+    email: string | null
+  }
+  amountCents: number
+  currency: string
+  scheduledFor: string
+  frequency: string | null
+  reminderEnabled: boolean
+  nextRunAt: string | null
+  lastSentAt: string | null
+  notes: string | null
+  createdAt: string
+}
+
 export function AffiliatePayouts() {
   const [affiliates, setAffiliates] = useState<AffiliateRow[]>([])
   const [payouts, setPayouts] = useState<PayoutBatch[]>([])
@@ -58,6 +78,14 @@ export function AffiliatePayouts() {
   const [payableReferrals, setPayableReferrals] = useState<Record<string, ReferralRow[]>>({})
   const [selectedReferralIds, setSelectedReferralIds] = useState<Record<string, Set<string>>>({})
   const [statusFilter, setStatusFilter] = useState<string>('READY')
+  const [manualPayouts, setManualPayouts] = useState<ManualPayout[]>([])
+  const [manualReferrerId, setManualReferrerId] = useState<string>('')
+  const [manualAmount, setManualAmount] = useState<string>('')
+  const [manualDate, setManualDate] = useState<string>('')
+  const [manualFrequency, setManualFrequency] = useState<string>('')
+  const [manualReminder, setManualReminder] = useState<boolean>(true)
+  const [manualNotes, setManualNotes] = useState<string>('')
+  const [isSubmittingManual, setIsSubmittingManual] = useState(false)
 
   const loadAffiliates = async () => {
     const res = await fetch('/api/admin/affiliates')
@@ -72,10 +100,16 @@ export function AffiliatePayouts() {
     setPayouts(data.payouts || [])
   }
 
+  const loadManualPayouts = async () => {
+    const res = await fetch('/api/admin/affiliates/manual-payouts')
+    const data = await res.json()
+    setManualPayouts(data.payouts || [])
+  }
+
   useEffect(() => {
     const load = async () => {
       try {
-        await Promise.all([loadAffiliates(), loadPayouts(statusFilter)])
+        await Promise.all([loadAffiliates(), loadPayouts(statusFilter), loadManualPayouts()])
       } finally {
         setIsLoading(false)
       }
@@ -148,6 +182,50 @@ export function AffiliatePayouts() {
     }
     toast.success('Payout batch marked paid')
     await loadPayouts(statusFilter)
+  }
+
+  const submitManualPayout = async () => {
+    if (!manualReferrerId || !manualAmount || !manualDate) {
+      toast.error('Referrer, amount, and date are required')
+      return
+    }
+
+    const amountCents = Math.round(Number(manualAmount) * 100)
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      toast.error('Enter a valid amount')
+      return
+    }
+
+    setIsSubmittingManual(true)
+    try {
+      const res = await fetch('/api/admin/affiliates/manual-payouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          referrerId: manualReferrerId,
+          amountCents,
+          currency: 'usd',
+          scheduledFor: new Date(manualDate).toISOString(),
+          frequency: manualFrequency || null,
+          reminderEnabled: manualReminder,
+          notes: manualNotes || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to create manual payout')
+        return
+      }
+      toast.success('Manual payout scheduled')
+      setManualAmount('')
+      setManualDate('')
+      setManualFrequency('')
+      setManualReminder(true)
+      setManualNotes('')
+      await loadManualPayouts()
+    } finally {
+      setIsSubmittingManual(false)
+    }
   }
 
   if (isLoading) {
@@ -253,6 +331,130 @@ export function AffiliatePayouts() {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="card">
+        <CardHeader>
+          <CardTitle>Manual Payouts & Reminders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm text-slate-600">Affiliate</label>
+              <select
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={manualReferrerId}
+                onChange={(event) => setManualReferrerId(event.target.value)}
+              >
+                <option value="">Select an affiliate</option>
+                {affiliates.map((row) => (
+                  <option key={row.referrer.id} value={row.referrer.id}>
+                    {row.referrer.name || row.referrer.email || row.referrer.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-slate-600">Amount (USD)</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={manualAmount}
+                onChange={(event) => setManualAmount(event.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-slate-600">Date</label>
+              <Input
+                type="date"
+                value={manualDate}
+                onChange={(event) => setManualDate(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-slate-600">Frequency (optional)</label>
+              <select
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                value={manualFrequency}
+                onChange={(event) => setManualFrequency(event.target.value)}
+              >
+                <option value="">One-time</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+              </select>
+            </div>
+            <div className="space-y-2 flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={manualReminder}
+                onChange={(event) => setManualReminder(event.target.checked)}
+              />
+              <span className="text-sm text-slate-600">Enable reminder</span>
+            </div>
+            <div className="space-y-2 lg:col-span-3">
+              <label className="text-sm text-slate-600">Notes</label>
+              <Textarea
+                value={manualNotes}
+                onChange={(event) => setManualNotes(event.target.value)}
+                rows={2}
+                placeholder="Optional notes or payout reference"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button onClick={submitManualPayout} disabled={isSubmittingManual}>
+              {isSubmittingManual ? 'Saving...' : 'Schedule payout'}
+            </Button>
+          </div>
+
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[color:var(--border-subtle)] text-left text-slate-600">
+                  <th className="py-2 px-3">Affiliate</th>
+                  <th className="py-2 px-3">Amount</th>
+                  <th className="py-2 px-3">Scheduled</th>
+                  <th className="py-2 px-3">Frequency</th>
+                  <th className="py-2 px-3">Reminder</th>
+                  <th className="py-2 px-3">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {manualPayouts.map((payout) => (
+                  <tr key={payout.id} className="border-b border-[color:var(--border-subtle)]">
+                    <td className="py-2 px-3">
+                      {payout.referrer.name || payout.referrer.email || '--'}
+                    </td>
+                    <td className="py-2 px-3">
+                      ${(payout.amountCents / 100).toFixed(2)} {payout.currency.toUpperCase()}
+                    </td>
+                    <td className="py-2 px-3">
+                      {format(new Date(payout.scheduledFor), 'MMM d, yyyy')}
+                    </td>
+                    <td className="py-2 px-3">{payout.frequency || 'One-time'}</td>
+                    <td className="py-2 px-3">
+                      {payout.reminderEnabled ? 'On' : 'Off'}
+                    </td>
+                    <td className="py-2 px-3 text-slate-600">
+                      {payout.notes || '--'}
+                    </td>
+                  </tr>
+                ))}
+                {manualPayouts.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-6 text-center text-sm text-slate-500">
+                      No manual payouts scheduled.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 

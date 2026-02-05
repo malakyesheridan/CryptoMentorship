@@ -144,6 +144,7 @@ model User {
   referralsPaid          Referral[]              @relation("AffiliateReferralPaidBy")
   affiliatePayoutBatches AffiliatePayoutBatch[]  @relation("AffiliatePayoutReferrer")
   affiliatePayoutsPaid   AffiliatePayoutBatch[]  @relation("AffiliatePayoutPaidBy")
+  affiliateManualPayouts AffiliateManualPayout[]
   commissions            Commission[]
   emailOutbox            EmailOutbox[]
   emailLogs              EmailLog[]
@@ -1227,6 +1228,27 @@ model AffiliatePayoutBatch {
   @@index([referrerId])
   @@index([status])
   @@index([dueAt])
+}
+
+model AffiliateManualPayout {
+  id              String   @id @default(cuid())
+  referrerId      String
+  amountCents     Int
+  currency        String   @default("usd")
+  scheduledFor    DateTime
+  frequency       String? // e.g., "weekly" | "monthly" | "quarterly"
+  reminderEnabled Boolean  @default(true)
+  nextRunAt       DateTime?
+  lastSentAt      DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  referrer User @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([scheduledFor])
+  @@index([nextRunAt])
 }
 
 model Commission {
