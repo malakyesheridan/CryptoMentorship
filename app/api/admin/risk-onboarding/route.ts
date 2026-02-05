@@ -173,7 +173,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid configuration', details: errors }, { status: 400 })
   }
 
-  const saved = await saveRiskOnboardingConfig(parsed.data, user.id)
+  const saved = await saveRiskOnboardingConfig(
+    {
+      ...parsed.data,
+      questions: normalizedQuestions,
+    },
+    user.id
+  )
   const savedConfig = saved.config as RiskOnboardingScoringConfig
 
   return NextResponse.json({
