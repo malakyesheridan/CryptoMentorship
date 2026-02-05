@@ -153,9 +153,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid payload', details: parsed.error.flatten() }, { status: 400 })
   }
 
+  const normalizedQuestions = parsed.data.questions.map((question) => ({
+    ...question,
+    description: question.description ?? undefined,
+  }))
+
   const config: RiskOnboardingScoringConfig = {
     ...DEFAULT_RISK_ONBOARDING_CONFIG,
     ...parsed.data,
+    questions: normalizedQuestions,
     version: DEFAULT_RISK_ONBOARDING_CONFIG.version,
   }
 
