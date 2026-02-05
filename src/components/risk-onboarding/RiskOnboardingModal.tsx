@@ -36,7 +36,8 @@ function hasAnswerForStep(step: { id: string; type?: string; statements?: Array<
   if (step.type === 'likert-group') {
     const statements = answers.risk_statements || {}
     const ids = step.statements?.length ? step.statements.map((statement) => statement.id) : RISK_STATEMENT_IDS
-    return ids.every((id) => Boolean(statements[id]))
+    const statementMap = statements as Record<string, LikertOption | undefined>
+    return ids.every((id) => Boolean(statementMap[id]))
   }
   return Boolean((answers as Record<string, unknown>)[step.id])
 }
