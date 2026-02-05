@@ -1,4 +1,10 @@
-﻿import { LikertOption } from './questions'
+import { LikertOption } from './questions'
+import {
+  DEFAULT_RISK_ONBOARDING_CONFIG,
+  computeMaxScore,
+  getProfileForScore,
+  type RiskOnboardingScoringConfig,
+} from './config'
 
 export type RiskProfile = 'CONSERVATIVE' | 'SEMI' | 'AGGRESSIVE'
 
@@ -29,64 +35,16 @@ export type ComputeRiskProfileResult = {
   cappedByRule?: string | null
 }
 
-const LIKERT_POINTS: Record<LikertOption, number> = {
-  strongly_agree: 10,
-  agree: 7,
-  neutral: 5,
-  disagree: 2,
-  strongly_disagree: 0,
-}
-
-const PREFER_STABILITY_POINTS: Record<LikertOption, number> = {
-  strongly_agree: 0,
-  agree: 2,
-  neutral: 5,
-  disagree: 7,
-  strongly_disagree: 10,
-}
-
-const DRAW_DOWN_POINTS: Record<NonNullable<RiskOnboardingAnswers['drawdown_reaction']>, number> = {
-  sell_most: 0,
-  sell_some: 10,
-  hold: 20,
-  buy_more: 30,
-}
-
-const TIME_HORIZON_POINTS: Record<NonNullable<RiskOnboardingAnswers['time_horizon']>, number> = {
-  lt_6m: 0,
-  m6_12: 5,
-  y1_3: 10,
-  y3_plus: 15,
-}
-
-const ACTIVITY_POINTS: Record<NonNullable<RiskOnboardingAnswers['activity_level']>, number> = {
-  passive_buy_hold: 4,
-  moderate_monthly: 3,
-  active_weekly: 2,
-}
-
-const CONFIDENCE_POINTS: Record<NonNullable<RiskOnboardingAnswers['confidence_level']>, number> = {
-  beginner: 1,
-  intermediate: 3,
-  advanced: 5,
-}
-
-const OWN_CRYPTO_POINTS: Record<NonNullable<RiskOnboardingAnswers['own_crypto']>, number> = {
-  no: 1,
-  yes: 5,
-}
-
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
-function baseProfileFromScore(score: number): RiskProfile {
-  if (score <= 39) return 'CONSERVATIVE'
-  if (score <= 69) return 'SEMI'
-  return 'AGGRESSIVE'
-}
-
-function buildDrivers(answers: RiskOnboardingAnswers, cappedReasons: string[], score: number): string[] {
+function buildDrivers(
+  answers: RiskOnboardingAnswers,
+  cappedReasons: string[],
+  score: number,
+  config: RiskOnboardingScoringConfig
+): string[] {
   const drivers: string[] = []
 
   if (cappedReasons.includes('need_within_12m')) {
@@ -132,9 +90,10 @@ function buildDrivers(answers: RiskOnboardingAnswers, cappedReasons: string[], s
   }
 
   if (drivers.length < 2) {
-    if (score <= 39) {
+    const profile = getProfileForScore(score, config)
+    if (profile === 'CONSERVATIVE') {
       drivers.push('Overall responses indicate lower risk tolerance')
-    } else if (score <= 69) {
+    } else if (profile === 'SEMI') {
       drivers.push('Overall responses indicate balanced risk tolerance')
     } else {
       drivers.push('Overall responses indicate higher risk tolerance')
@@ -144,25 +103,37 @@ function buildDrivers(answers: RiskOnboardingAnswers, cappedReasons: string[], s
   return drivers.slice(0, 3)
 }
 
-export function computeRiskProfile(answers: RiskOnboardingAnswers): ComputeRiskProfileResult {
-  const drawdownScore = answers.drawdown_reaction ? DRAW_DOWN_POINTS[answers.drawdown_reaction] : 0
+export function computeRiskProfile(
+  answers: RiskOnboardingAnswers,
+  config: RiskOnboardingScoringConfig = DEFAULT_RISK_ONBOARDING_CONFIG
+): ComputeRiskProfileResult {
+  const rawScore = config.questions.reduce((total, question) => {
+    if (question.type === 'single') {
+      const answer = (answers as Record<string, string | undefined>)[question.id]
+      const optionScore = answer
+        ? config.scoring.options[question.id]?.[answer] ?? 0
+        : 0
+      return total + optionScore
+    }
 
-  const riskStatements = answers.risk_statements || {}
-  const riskStatementScore =
-    (riskStatements.understand_volatility ? LIKERT_POINTS[riskStatements.understand_volatility] : 0) +
-    (riskStatements.accept_loss ? LIKERT_POINTS[riskStatements.accept_loss] : 0) +
-    (riskStatements.hold_through_downturns ? LIKERT_POINTS[riskStatements.hold_through_downturns] : 0) +
-    (riskStatements.prefer_stability ? PREFER_STABILITY_POINTS[riskStatements.prefer_stability] : 0)
+    if (question.type === 'likert-group') {
+      const statementScores = question.statements?.reduce((sum, statement) => {
+        const answer = answers.risk_statements?.[statement.id as keyof RiskOnboardingAnswers['risk_statements']]
+        if (!answer) return sum
+        const mapping = config.scoring.likertStatements[statement.id] || {}
+        return sum + (mapping[answer as LikertOption] ?? 0)
+      }, 0) ?? 0
+      return total + statementScores
+    }
 
-  const timeHorizonScore = answers.time_horizon ? TIME_HORIZON_POINTS[answers.time_horizon] : 0
-  const activityScore = answers.activity_level ? ACTIVITY_POINTS[answers.activity_level] : 0
-  const confidenceScore = answers.confidence_level ? CONFIDENCE_POINTS[answers.confidence_level] : 0
-  const ownCryptoScore = answers.own_crypto ? OWN_CRYPTO_POINTS[answers.own_crypto] : 0
+    return total
+  }, 0)
 
-  const rawScore = drawdownScore + riskStatementScore + timeHorizonScore + activityScore + confidenceScore + ownCryptoScore
-  const score = clamp(rawScore, 0, 100)
+  const maxScore = computeMaxScore(config)
+  const normalizedScore = maxScore > 0 ? Math.round((rawScore / maxScore) * 100) : 0
+  const score = clamp(normalizedScore, 0, 100)
 
-  let recommendedProfile = baseProfileFromScore(score)
+  let recommendedProfile = getProfileForScore(score, config)
   const cappedReasons: string[] = []
 
   if (answers.drawdown_reaction === 'sell_most') {
@@ -184,7 +155,7 @@ export function computeRiskProfile(answers: RiskOnboardingAnswers): ComputeRiskP
     cappedReasons.push('hold_through_downturns')
   }
 
-  const drivers = buildDrivers(answers, cappedReasons, score)
+  const drivers = buildDrivers(answers, cappedReasons, score, config)
 
   return {
     score,

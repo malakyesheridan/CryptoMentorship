@@ -112,7 +112,8 @@ export const routes = {
     // Risk profiles
     riskProfiles: {
       list: () => '/admin/risk-profiles',
-      detail: (userId: string) => `/admin/risk-profiles/${userId}`
+      detail: (userId: string) => `/admin/risk-profiles/${userId}`,
+      settings: () => '/admin/risk-profiles/settings'
     }
   },
   
@@ -179,6 +180,10 @@ export const routes = {
         detail: (userId: string) => `/api/admin/risk-profiles/${userId}`,
         override: (userId: string) => `/api/admin/risk-profiles/${userId}/override`
       },
+
+      riskOnboarding: {
+        config: () => '/api/admin/risk-onboarding'
+      },
       
       content: () => '/api/admin/content',
       episodes: () => '/api/admin/episodes',
@@ -192,6 +197,7 @@ export const routes = {
       interests: () => '/api/me/interests',
       notificationPreferences: () => '/api/me/notification-preferences',
       riskProfile: () => '/api/me/risk-profile',
+      riskOnboardingConfig: () => '/api/me/risk-onboarding/config',
       riskOnboardingSave: () => '/api/me/risk-onboarding/save',
       riskOnboardingComplete: () => '/api/me/risk-onboarding/complete',
       riskProfileSetDefault: () => '/api/me/risk-profile/set-default'

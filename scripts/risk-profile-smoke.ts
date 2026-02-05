@@ -1,6 +1,7 @@
-﻿import { prisma } from '../src/lib/prisma'
+import { prisma } from '../src/lib/prisma'
 import { computeRiskProfile, RiskOnboardingAnswers } from '../src/lib/riskOnboarding/score'
-import { RISK_ONBOARDING_WIZARD_KEY, RISK_ONBOARDING_VERSION } from '../src/lib/riskOnboarding/questions'
+import { getRiskOnboardingConfig } from '../src/lib/riskOnboarding/config-store'
+import { RISK_ONBOARDING_WIZARD_KEY } from '../src/lib/riskOnboarding/questions'
 
 async function run() {
   const user = await prisma.user.findFirst({
@@ -29,7 +30,8 @@ async function run() {
     need_within_12m: 'no',
   }
 
-  const result = computeRiskProfile(answers)
+  const config = await getRiskOnboardingConfig()
+  const result = computeRiskProfile(answers, config)
 
   await prisma.userOnboardingResponse.upsert({
     where: {
@@ -62,7 +64,7 @@ async function run() {
       recommendedProfile: result.recommendedProfile,
       score: result.score,
       drivers: result.drivers,
-      version: RISK_ONBOARDING_VERSION,
+      version: config.version,
       completedAt: new Date(),
       updatedAt: new Date(),
     },
@@ -70,7 +72,7 @@ async function run() {
       recommendedProfile: result.recommendedProfile,
       score: result.score,
       drivers: result.drivers,
-      version: RISK_ONBOARDING_VERSION,
+      version: config.version,
       completedAt: new Date(),
       updatedAt: new Date(),
     },
@@ -81,7 +83,7 @@ async function run() {
   const sellMost = computeRiskProfile({
     ...answers,
     drawdown_reaction: 'sell_most',
-  })
+  }, config)
   if (sellMost.recommendedProfile !== 'CONSERVATIVE') {
     throw new Error('sell_most cap failed')
   }
@@ -89,7 +91,7 @@ async function run() {
   const needFunds = computeRiskProfile({
     ...answers,
     need_within_12m: 'yes',
-  })
+  }, config)
   if (needFunds.recommendedProfile !== 'CONSERVATIVE') {
     throw new Error('need_within_12m cap failed')
   }

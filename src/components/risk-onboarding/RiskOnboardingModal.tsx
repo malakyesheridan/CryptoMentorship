@@ -8,13 +8,13 @@ import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import {
-  RISK_ONBOARDING_QUESTIONS,
   RISK_ONBOARDING_WIZARD_KEY,
   RISK_STATEMENT_IDS,
   type LikertOption,
 } from '@/lib/riskOnboarding/questions'
 import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 import { useRiskProfile } from '@/hooks/useRiskProfile'
+import { useRiskOnboardingConfig } from '@/hooks/useRiskOnboardingConfig'
 import type { RiskOnboardingAnswers } from '@/lib/riskOnboarding/score'
 
 const LIKERT_OPTIONS: Array<{ id: LikertOption; label: string }> = [
@@ -32,17 +32,19 @@ type RiskOnboardingModalProps = {
 
 type RiskStatements = NonNullable<RiskOnboardingAnswers['risk_statements']>
 
-function hasAnswerForStep(stepId: string, answers: RiskOnboardingAnswers) {
-  if (stepId === 'risk_statements') {
+function hasAnswerForStep(step: { id: string; type?: string; statements?: Array<{ id: string }> }, answers: RiskOnboardingAnswers) {
+  if (step.type === 'likert-group') {
     const statements = answers.risk_statements || {}
-    return RISK_STATEMENT_IDS.every((id) => Boolean(statements[id]))
+    const ids = step.statements?.length ? step.statements.map((statement) => statement.id) : RISK_STATEMENT_IDS
+    return ids.every((id) => Boolean(statements[id]))
   }
-  return Boolean((answers as Record<string, unknown>)[stepId])
+  return Boolean((answers as Record<string, unknown>)[step.id])
 }
 
 export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalProps) {
   const router = useRouter()
   const { data, mutate } = useRiskProfile({ includeAnswers: true, includeFreeText: true })
+  const { data: configData, isLoading: configLoading } = useRiskOnboardingConfig()
   const [answers, setAnswers] = useState<RiskOnboardingAnswers>({})
   const [stepIndex, setStepIndex] = useState(0)
   const [mode, setMode] = useState<'questions' | 'result'>('questions')
@@ -58,7 +60,7 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
   const initRef = useRef(false)
   const saveTimeoutRef = useRef<number | null>(null)
 
-  const steps = useMemo(() => RISK_ONBOARDING_QUESTIONS, [])
+  const steps = useMemo(() => configData?.questions || [], [configData?.questions])
   const currentStep = steps[stepIndex]
   const totalSteps = steps.length
 
@@ -81,7 +83,7 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
     if (data?.answers && typeof data.answers === 'object') {
       setAnswers(data.answers as RiskOnboardingAnswers)
 
-      const firstIncomplete = steps.findIndex((step) => !hasAnswerForStep(step.id, data.answers as RiskOnboardingAnswers))
+      const firstIncomplete = steps.findIndex((step) => !hasAnswerForStep(step, data.answers as RiskOnboardingAnswers))
       if (firstIncomplete >= 0) {
         setStepIndex(firstIncomplete)
       }
@@ -158,12 +160,12 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
   const handleNext = async () => {
     setError(null)
 
-    if (currentStep?.optional && !hasAnswerForStep(currentStep.id, answers)) {
+    if (currentStep?.optional && !hasAnswerForStep(currentStep, answers)) {
       setStepIndex((prev) => Math.min(prev + 1, totalSteps - 1))
       return
     }
 
-    if (currentStep && !hasAnswerForStep(currentStep.id, answers)) {
+    if (currentStep && !hasAnswerForStep(currentStep, answers)) {
       setError('Please answer the question to continue.')
       return
     }
@@ -227,7 +229,9 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
 
   const progressValue = mode === 'result'
     ? 100
-    : Math.round(((stepIndex + 1) / totalSteps) * 100)
+    : totalSteps
+      ? Math.round(((stepIndex + 1) / totalSteps) * 100)
+      : 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -250,7 +254,11 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
             </div>
           </div>
 
-          {mode === 'result' && result ? (
+          {configLoading || !configData ? (
+            <div className="flex flex-1 items-center justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-slate-900" />
+            </div>
+          ) : mode === 'result' && result ? (
             <div className="space-y-6">
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                 <p className="text-sm text-emerald-700">Recommended profile</p>
@@ -266,6 +274,21 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
                     <li key={driver}>- {driver}</li>
                   ))}
                 </ul>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-slate-800">Score ranges</h4>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {configData.scoreRanges.map((range) => (
+                    <div key={range.profile} className="rounded-xl border border-slate-200 p-3">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">{range.label}</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {range.min}–{range.max}
+                      </p>
+                      <p className="text-xs text-slate-600 mt-1">{range.description}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500">{configData.scoreMeaning}</p>
               </div>
               <div className="flex flex-col gap-3">
                 <Button onClick={handleSetDefault}>Set my default to this profile</Button>
@@ -381,7 +404,7 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
                     Back
                   </Button>
                   <div className="flex items-center gap-2">
-                    {currentStep?.optional && !hasAnswerForStep(currentStep.id, answers) && (
+                    {currentStep?.optional && !hasAnswerForStep(currentStep, answers) && (
                       <Button variant="outline" onClick={() => setStepIndex((prev) => Math.min(prev + 1, totalSteps - 1))}>
                         Skip
                       </Button>

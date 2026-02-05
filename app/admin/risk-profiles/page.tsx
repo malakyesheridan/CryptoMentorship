@@ -1,6 +1,7 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/dates'
 import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 import { RISK_ONBOARDING_WIZARD_KEY } from '@/lib/riskOnboarding/questions'
@@ -47,11 +48,16 @@ export default async function RiskProfilesPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="heading-hero text-3xl sm:text-4xl mb-2">
-          <span>Risk</span> <span className="gold">Profiles</span>
-        </h1>
-        <p className="subhead">Review onboarding responses and recommendations</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="heading-hero text-3xl sm:text-4xl mb-2">
+            <span>Risk</span> <span className="gold">Profiles</span>
+          </h1>
+          <p className="subhead">Review onboarding responses and recommendations</p>
+        </div>
+        <Button asChild variant="outline">
+          <Link href="/admin/risk-profiles/settings">Edit scoring & questions</Link>
+        </Button>
       </div>
 
       <Card className="card">

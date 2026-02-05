@@ -29,6 +29,8 @@
 - New tables:
   - `user_onboarding_responses` (model: `UserOnboardingResponse`): versioned raw answers + status + timestamps.
   - `user_risk_profile` (model: `UserRiskProfile`): current snapshot with score, recommendation, drivers, override info.
+- New config:
+  - `RiskOnboardingConfig`: stores editable questions, scoring map, score ranges, and meaning.
 - New fields on `User`:
   - `defaultRiskProfile` and `selectedRiskProfile` (optional, `RiskProfile` enum).
 - Enum: `OnboardingStatus` (`NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`).
@@ -46,24 +48,23 @@ Source: `src/lib/riskOnboarding/questions.ts`
 - Q9 need within 12m: `need_within_12m` (yes, no)
 
 ### Scoring logic
-Source: `src/lib/riskOnboarding/score.ts`
-- Weights (0..100 total):
-  - drawdown_reaction: 0..30
-  - risk_statements: 4 * 10 = 0..40 (prefer_stability is inverse)
-  - time_horizon: 0..15
-  - activity_level: 0..5
-  - confidence_level: 0..5
-  - own_crypto: 0..5
-- Base thresholds:
-  - 0..39 = CONSERVATIVE
-  - 40..69 = SEMI
-  - 70..100 = AGGRESSIVE
-- Caps:
+Sources:
+- Default config: `src/lib/riskOnboarding/config.ts`
+- Computation: `src/lib/riskOnboarding/score.ts`
+- Admin editor: `app/admin/risk-profiles/settings/page.tsx`
+
+Notes:
+- Each question’s scoring lives in the editable config (options + Likert points).
+- Raw scores are normalized to 0–100 based on the max possible points.
+- Default score ranges:
+  - Conservative: 0–49
+  - Semi-aggressive: 50–79
+  - Aggressive: 80–100
+- Caps still apply:
   - sell_most -> CONSERVATIVE
   - need_within_12m yes -> CONSERVATIVE
   - hold_through_downturns disagree/strongly_disagree -> cap max SEMI
 - Drivers: 2-3 strings based on time horizon, drawdown reaction, risk statements, and caps.
-- Note: `RiskProfile.SEMI` is displayed as "Semi-aggressive" in UI.
 
 ### API routes
 - User:
@@ -71,10 +72,14 @@ Source: `src/lib/riskOnboarding/score.ts`
   - `POST /api/me/risk-onboarding/save`
   - `POST /api/me/risk-onboarding/complete`
   - `POST /api/me/risk-profile/set-default`
+- User config:
+  - `GET /api/me/risk-onboarding/config` (questions + score ranges + meaning)
 - Admin:
   - `GET /api/admin/risk-profiles`
   - `GET /api/admin/risk-profiles/[userId]`
   - `POST /api/admin/risk-profiles/[userId]/override`
+  - `GET /api/admin/risk-onboarding`
+  - `POST /api/admin/risk-onboarding`
 
 ### UI behavior
 - Modal wizard: `src/components/risk-onboarding/RiskOnboardingModal.tsx`
@@ -92,6 +97,7 @@ Source: `src/lib/riskOnboarding/score.ts`
 ### Admin UI
 - List: `app/admin/risk-profiles/page.tsx`
 - Detail: `app/admin/risk-profiles/[userId]/page.tsx` + override form.
+- Settings: `app/admin/risk-profiles/settings/page.tsx` (edit questions + scoring + ranges).
 
 ### Verification
 1) Apply Prisma migration and generate client.
@@ -100,4 +106,5 @@ Source: `src/lib/riskOnboarding/score.ts`
 4) Visit `/portfolio` and complete the wizard.
 5) Verify highlight + header on `/portfolio`.
 6) Verify admin list and detail pages.
+7) Adjust scoring/ranges in `/admin/risk-profiles/settings` and confirm new scores on completion.
 

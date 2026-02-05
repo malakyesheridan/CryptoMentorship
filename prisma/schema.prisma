@@ -785,6 +785,20 @@ model UserRiskProfile {
   @@map("user_risk_profile")
 }
 
+model RiskOnboardingConfig {
+  id              String   @id @default("risk_onboarding_config")
+  wizardKey       String   @default("RISK_ONBOARDING_V1")
+  version         Int      @default(1)
+  config          Json
+  updatedByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  updatedByUser User? @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([updatedAt])
+}
+
 model DashboardSetting {
   id                String   @id @default("dashboard_settings")
   inceptionDate     DateTime

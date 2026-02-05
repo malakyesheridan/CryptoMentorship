@@ -1,12 +1,12 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { computeRiskProfile } from '@/lib/riskOnboarding/score'
+import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
 import { Prisma } from '@prisma/client'
 import {
   RISK_ONBOARDING_WIZARD_KEY,
-  RISK_ONBOARDING_VERSION,
   RISK_STATEMENT_IDS,
 } from '@/lib/riskOnboarding/questions'
 
@@ -14,32 +14,34 @@ const completeSchema = z.object({
   wizardKey: z.string().optional(),
 })
 
-function findMissingAnswers(answers: Record<string, unknown> | null) {
+function findMissingAnswers(
+  answers: Record<string, unknown> | null,
+  questions: Array<{ id: string; optional?: boolean; type: string; statements?: Array<{ id: string }> }>
+) {
   const missing: string[] = []
   if (!answers) return ['answers']
 
-  const requiredFields = [
-    'goal',
-    'time_horizon',
-    'drawdown_reaction',
-    'activity_level',
-    'own_crypto',
-    'confidence_level',
-    'need_within_12m',
-  ]
-
-  for (const field of requiredFields) {
-    if (!answers[field]) missing.push(field)
-  }
-
-  const riskStatements = answers.risk_statements as Record<string, unknown> | undefined
-  if (!riskStatements) {
-    missing.push('risk_statements')
-  } else {
-    for (const statementId of RISK_STATEMENT_IDS) {
-      if (!riskStatements[statementId]) {
-        missing.push(`risk_statements.${statementId}`)
+  for (const question of questions) {
+    if (question.optional) continue
+    if (question.type === 'likert-group') {
+      const riskStatements = answers.risk_statements as Record<string, unknown> | undefined
+      if (!riskStatements) {
+        missing.push('risk_statements')
+        continue
       }
+      const statements = question.statements?.length
+        ? question.statements.map((statement) => statement.id)
+        : RISK_STATEMENT_IDS
+      for (const statementId of statements) {
+        if (!riskStatements[statementId]) {
+          missing.push(`risk_statements.${statementId}`)
+        }
+      }
+      continue
+    }
+
+    if (!answers[question.id]) {
+      missing.push(question.id)
     }
   }
 
@@ -67,7 +69,8 @@ export async function POST(request: NextRequest) {
   })
 
   const answers = onboarding?.answers as Record<string, unknown> | null
-  const missing = findMissingAnswers(answers)
+  const config = await getRiskOnboardingConfig()
+  const missing = findMissingAnswers(answers, config.questions)
 
   if (missing.length > 0) {
     return NextResponse.json(
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const result = computeRiskProfile(answers as any)
+  const result = computeRiskProfile(answers as any, config)
   const now = new Date()
   const answersJson = (answers ?? {}) as Prisma.InputJsonValue
 
@@ -111,7 +114,7 @@ export async function POST(request: NextRequest) {
         recommendedProfile: result.recommendedProfile,
         score: result.score,
         drivers: result.drivers,
-        version: RISK_ONBOARDING_VERSION,
+        version: config.version,
         completedAt: now,
         updatedAt: now,
       },
@@ -119,7 +122,7 @@ export async function POST(request: NextRequest) {
         recommendedProfile: result.recommendedProfile,
         score: result.score,
         drivers: result.drivers,
-        version: RISK_ONBOARDING_VERSION,
+        version: config.version,
         completedAt: now,
         updatedAt: now,
       },

@@ -1,4 +1,4 @@
-﻿import assert from 'node:assert/strict'
+import assert from 'node:assert/strict'
 import { computeRiskProfile, RiskOnboardingAnswers } from '../src/lib/riskOnboarding/score'
 
 const baseAnswers: RiskOnboardingAnswers = {
@@ -19,7 +19,7 @@ const baseAnswers: RiskOnboardingAnswers = {
 
 const aggressive = computeRiskProfile(baseAnswers)
 assert.equal(aggressive.recommendedProfile, 'AGGRESSIVE')
-assert.ok(aggressive.score >= 70)
+assert.ok(aggressive.score >= 80)
 
 const sellMost = computeRiskProfile({
   ...baseAnswers,
