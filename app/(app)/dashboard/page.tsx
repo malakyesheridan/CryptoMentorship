@@ -1,6 +1,5 @@
 import { requireActiveSubscription } from '@/lib/access'
 import TradingViewWrapper from '@/components/signals/TradingViewWrapper'
-import { PortfolioRoiPanel } from '@/components/roi-dashboard/PortfolioRoiPanel'
 
 // Revalidate every 5 minutes - dashboard is mostly static
 export const revalidate = 300
@@ -27,17 +26,6 @@ export default async function DashboardPage() {
     </div>
 
     <div className="container mx-auto px-4 py-12">
-      {/* ROI Dashboard */}
-      <div className="mb-12">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-slate-900">ROI Dashboard</h2>
-          <p className="text-slate-600 mt-2">
-            Snapshot of model performance, benchmarks, and allocation updates.
-          </p>
-        </div>
-        <PortfolioRoiPanel />
-      </div>
-
       {/* TradingView Chart */}
       <div className="mb-12">
         <TradingViewWrapper />
