@@ -3,6 +3,7 @@ import { env } from './env'
 import { logger } from './logger'
 import { buildWelcomeEmail } from './templates/welcome'
 import { buildSignupAlertEmail, SignupAlertDetails } from './templates/signup-alert'
+import { buildTrialReminderDigestEmail, TrialReminderDigestEntry } from './templates/trial-7days-digest'
 
 /**
  * Create a nodemailer transporter based on EMAIL_SERVER configuration
@@ -164,6 +165,31 @@ export async function sendSignupAlertEmail({
     subject: message.subject,
     html: message.html,
     text: message.text,
+  })
+}
+
+/**
+ * Send a digest email listing trials with 7 days remaining
+ */
+export async function sendTrialReminderDigestEmail({
+  entries,
+  totalCount,
+  runDate,
+  appUrl,
+  to = env.COEN_ALERT_EMAIL || 'coen@stewartandco.org'
+}: {
+  entries: TrialReminderDigestEntry[]
+  totalCount: number
+  runDate: string
+  appUrl: string
+  to?: string
+}): Promise<void> {
+  const message = buildTrialReminderDigestEmail({ entries, totalCount, runDate, appUrl })
+  await sendEmail({
+    to,
+    subject: message.subject,
+    html: message.html,
+    text: message.text
   })
 }
 

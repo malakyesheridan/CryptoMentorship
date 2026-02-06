@@ -24,6 +24,10 @@ const envSchema = z.object({
       return z.string().email().safeParse(email).success
     }, { message: 'EMAIL_FROM must be a valid email or "Name <email>"' })
   ),
+  COEN_ALERT_EMAIL: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().email().optional()
+  ),
 
   // Vercel Blob Storage (optional - required for uploads)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),

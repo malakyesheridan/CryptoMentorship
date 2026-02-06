@@ -245,10 +245,26 @@ model Membership {
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   payments Payment[]
+  trialReminderLogs TrialReminderLog[]
 
   @@unique([userId])
   @@index([stripeCustomerId])
   @@index([stripeSubscriptionId])
+}
+
+model TrialReminderLog {
+  id           String   @id @default(uuid())
+  membershipId String
+  reminderType String
+  periodEnd    DateTime
+  sentAt       DateTime @default(now())
+  digestId     String?
+
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@unique([reminderType, membershipId, periodEnd])
+  @@index([membershipId])
+  @@index([periodEnd])
 }
 
 model Payment {
