@@ -19,7 +19,13 @@ type RoiResponse = {
   lastPriceDate: string | null
   primarySymbol: string | null
   primaryTicker: string | null
-  primaryPrices?: Array<{ date: string; ticker: string | null; close: number | null }>
+  primaryPrices?: Array<{
+    date: string
+    ticker: string | null
+    close: number | null
+    change: number | null
+    changePct: number | null
+  }>
   statusReason?: string | null
   primaryMove?: {
     percent: number
@@ -198,6 +204,19 @@ export function PortfolioRoiPanel() {
     }
     return map
   }, [data])
+  const primaryChangeByDate = React.useMemo(() => {
+    if (!data?.primaryPrices) return {}
+    const map: Record<string, { change: number | null; changePct: number | null }> = {}
+    for (const entry of data.primaryPrices) {
+      if (entry.date) {
+        map[entry.date] = {
+          change: typeof entry.change === 'number' ? entry.change : null,
+          changePct: typeof entry.changePct === 'number' ? entry.changePct : null
+        }
+      }
+    }
+    return map
+  }, [data])
 
   React.useEffect(() => {
     if (!pollingEnabled) return
@@ -372,6 +391,7 @@ export function PortfolioRoiPanel() {
         showEthDefault={false}
         primaryByDate={primaryByDate}
         primaryPriceByDate={primaryPriceByDate}
+        primaryChangeByDate={primaryChangeByDate}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">

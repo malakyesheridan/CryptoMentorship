@@ -31,7 +31,8 @@ export function RoiEquityChart({
   showBtcDefault,
   showEthDefault,
   primaryByDate,
-  primaryPriceByDate
+  primaryPriceByDate,
+  primaryChangeByDate
 }: {
   modelSeries: PerformancePoint[]
   btcSeries: PerformancePoint[]
@@ -40,6 +41,7 @@ export function RoiEquityChart({
   showEthDefault: boolean
   primaryByDate?: Record<string, string>
   primaryPriceByDate?: Record<string, number>
+  primaryChangeByDate?: Record<string, { change: number | null; changePct: number | null }>
 }) {
   const [range, setRange] = useState('1Y')
   const allowBtc = showBtcDefault && btcSeries.length > 0
@@ -121,17 +123,9 @@ export function RoiEquityChart({
     const primary = primaryByDate?.[label as string] ?? null
     const labelDate = parseDate(label as string)
     const dateKey = Number.isNaN(labelDate.getTime()) ? null : labelDate.toISOString().slice(0, 10)
-    const prevDate = dateKey ? new Date(`${dateKey}T00:00:00.000Z`) : null
-    if (prevDate) prevDate.setUTCDate(prevDate.getUTCDate() - 1)
-    const prevDateKey = prevDate ? prevDate.toISOString().slice(0, 10) : null
     const primaryPrice = dateKey ? (primaryPriceByDate?.[dateKey] ?? null) : null
-    const primaryPrevPrice = prevDateKey ? (primaryPriceByDate?.[prevDateKey] ?? null) : null
-    const primaryDelta = primaryPrice !== null && primaryPrevPrice !== null
-      ? primaryPrice - primaryPrevPrice
-      : null
-    const primaryDeltaPct = primaryPrice !== null && primaryPrevPrice !== null && primaryPrevPrice !== 0
-      ? ((primaryPrice / primaryPrevPrice) - 1) * 100
-      : null
+    const primaryChange = dateKey ? (primaryChangeByDate?.[dateKey]?.change ?? null) : null
+    const primaryChangePct = dateKey ? (primaryChangeByDate?.[dateKey]?.changePct ?? null) : null
     const modelReturn = typeof payload?.[0]?.payload?.modelReturn === 'number'
       ? payload[0].payload.modelReturn
       : null
@@ -171,11 +165,11 @@ export function RoiEquityChart({
           {primaryPrice !== null ? (
             <div className="text-slate-500">Primary close: {formatPrice(primaryPrice)}</div>
           ) : null}
-          {primaryDelta !== null ? (
+          {primaryChange !== null ? (
             <div className="flex items-center justify-between gap-4 text-slate-500">
               <span>Primary change</span>
-              <span className={primaryDelta >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {formatCurrencySigned(primaryDelta)} ({formatPercent(primaryDeltaPct)})
+              <span className={primaryChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                {formatCurrencySigned(primaryChange)} ({formatPercent(primaryChangePct)})
               </span>
             </div>
           ) : null}

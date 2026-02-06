@@ -33,6 +33,13 @@ function dateKeyToDate(dateKey: string | null) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+function addDaysToDateKey(dateKey: string, days: number) {
+  const date = dateKeyToDate(dateKey)
+  if (!date) return null
+  date.setUTCDate(date.getUTCDate() + days)
+  return toDateKey(date)
+}
+
 function parseTierFromPortfolioKey(portfolioKey: string): 'T1' | 'T2' | null {
   const tier = portfolioKey.split('_')[0]?.toLowerCase()
   if (tier === 't1') return 'T1'
@@ -350,17 +357,34 @@ export async function GET(request: NextRequest) {
         })
       : []
     const primaryPriceMap = new Map<string, number>()
+    const primaryPriceByTicker = new Map<string, Map<string, number>>()
     for (const row of primaryPriceRows) {
-      primaryPriceMap.set(`${row.symbol}|${toDateKey(row.date)}`, toNum(row.close))
+      const dateKey = toDateKey(row.date)
+      const close = toNum(row.close)
+      primaryPriceMap.set(`${row.symbol}|${dateKey}`, close)
+      const existing = primaryPriceByTicker.get(row.symbol) ?? new Map<string, number>()
+      existing.set(dateKey, close)
+      primaryPriceByTicker.set(row.symbol, existing)
     }
     const primaryPrices = primaryHistory.map((entry) => {
       const ticker = entry.primaryTicker ?? null
-      const key = ticker ? `${ticker}|${entry.date}` : null
+      const dateKey = entry.date
+      const key = ticker ? `${ticker}|${dateKey}` : null
       const close = key ? (primaryPriceMap.get(key) ?? null) : null
+      const prevDateKey = ticker ? addDaysToDateKey(dateKey, -1) : null
+      const prevClose = ticker && prevDateKey
+        ? (primaryPriceByTicker.get(ticker)?.get(prevDateKey) ?? null)
+        : null
+      const change = close !== null && prevClose !== null ? close - prevClose : null
+      const changePct = close !== null && prevClose !== null && prevClose !== 0
+        ? ((close / prevClose) - 1) * 100
+        : null
       return {
-        date: entry.date,
+        date: dateKey,
         ticker,
-        close
+        close,
+        change,
+        changePct
       }
     })
 
