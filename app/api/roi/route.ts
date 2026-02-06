@@ -265,28 +265,27 @@ export async function GET(request: NextRequest) {
       : null
 
     const lastPriceDate = lastPriceRow?.date ?? null
-    const signalPriceRow = primaryTicker && lastSignalDateKey
+    const latestPriceValue = lastPriceRow?.close !== null && lastPriceRow?.close !== undefined
+      ? toNum(lastPriceRow.close)
+      : null
+    const previousPriceRow = primaryTicker && lastPriceRow?.date
       ? await prisma.assetPriceDaily.findFirst({
           where: {
             symbol: primaryTicker,
             date: {
-              lte: new Date(`${lastSignalDateKey}T00:00:00.000Z`)
+              lt: lastPriceRow.date
             }
           },
           orderBy: { date: 'desc' }
         })
       : null
-
-    const latestPriceValue = lastPriceRow?.close !== null && lastPriceRow?.close !== undefined
-      ? toNum(lastPriceRow.close)
+    const previousPriceValue = previousPriceRow?.close !== null && previousPriceRow?.close !== undefined
+      ? toNum(previousPriceRow.close)
       : null
-    const signalPriceValue = signalPriceRow?.close !== null && signalPriceRow?.close !== undefined
-      ? toNum(signalPriceRow.close)
-      : null
-    const primaryMove = latestPriceValue !== null && signalPriceValue !== null
+    const primaryMove = latestPriceValue !== null && previousPriceValue !== null && previousPriceValue !== 0
       ? {
-          percent: ((latestPriceValue / signalPriceValue) - 1) * 100,
-          fromDate: signalPriceRow ? toDateKey(signalPriceRow.date) : null,
+          percent: ((latestPriceValue / previousPriceValue) - 1) * 100,
+          fromDate: previousPriceRow ? toDateKey(previousPriceRow.date) : null,
           toDate: lastPriceRow ? toDateKey(lastPriceRow.date) : null
         }
       : null
