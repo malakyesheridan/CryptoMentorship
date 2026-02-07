@@ -43,6 +43,16 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  // Klaviyo (optional)
+  KLAVIYO_PRIVATE_API_KEY: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().optional()
+  ),
+  KLAVIYO_ENABLED: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().optional()
+  ),
   
   // Stripe Price IDs (optional - create in Stripe Dashboard)
   // Foundation (T1)

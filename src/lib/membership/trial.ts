@@ -1,7 +1,8 @@
-﻿import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { sendWelcomeEmail } from '@/lib/email'
 import { emitEvent } from '@/lib/events'
+import { sendTrialStartedToKlaviyo } from '@/lib/klaviyo/events'
 
 export type TrialMembershipSnapshot = {
   status: string
@@ -54,6 +55,15 @@ export async function onTrialStarted(input: OnTrialStartedInput) {
     )
   })
 
+  void sendTrialStartedToKlaviyo(
+    {
+      id: userId,
+      email: user.email,
+      name: user.name,
+    },
+    membership
+  )
+
   await emitEvent('Trial Started', {
     trialEnd: membership.currentPeriodEnd ? membership.currentPeriodEnd.toISOString() : null,
     tier: membership.tier || null,
@@ -65,4 +75,9 @@ export async function onTrialStarted(input: OnTrialStartedInput) {
 
   return { queued: true as const }
 }
+
+
+
+
+
 
