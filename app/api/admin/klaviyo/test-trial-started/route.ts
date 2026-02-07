@@ -45,6 +45,13 @@ export async function POST(req: NextRequest) {
       membership || fallbackMembership
     )
 
+    if (!result.ok && result.error === 'klaviyo-disabled') {
+      return NextResponse.json({
+        ok: false,
+        error: 'klaviyo-disabled',
+      })
+    }
+
     if (!result.ok) {
       return NextResponse.json({
         ok: false,
@@ -52,7 +59,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, klaviyo: { profile: result.profile, event: result.event } })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

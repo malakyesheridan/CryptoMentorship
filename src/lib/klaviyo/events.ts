@@ -43,13 +43,13 @@ export async function sendTrialStartedToKlaviyo(
   const { firstName, lastName } = splitName(user.name)
 
   try {
-    await upsertKlaviyoProfile({
+    const profile = await upsertKlaviyoProfile({
       email,
       firstName,
       lastName,
     })
 
-    await trackKlaviyoEvent({
+    const event = await trackKlaviyoEvent({
       email,
       eventName: 'Trial Started',
       properties: {
@@ -63,8 +63,22 @@ export async function sendTrialStartedToKlaviyo(
       },
     })
 
-    logger.info('Klaviyo trial event sent', { userId: user.id, email })
-    return { ok: true }
+    if (profile.ok && event.ok) {
+      logger.info('Klaviyo trial event sent', { userId: user.id, email })
+    } else {
+      logger.warn('Klaviyo trial event returned non-2xx', {
+        userId: user.id,
+        email,
+        profileStatus: profile.status,
+        eventStatus: event.status,
+      })
+    }
+
+    return {
+      ok: true,
+      profile,
+      event,
+    }
   } catch (error) {
     logger.error(
       'Failed to send Klaviyo trial event',
