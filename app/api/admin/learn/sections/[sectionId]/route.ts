@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { withDbRetry } from '@/lib/db/retry'
+import { toPrismaRouteErrorResponse } from '@/lib/db/errors'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/admin/learn/sections/[sectionId] - Get section details
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { sectionId: string } }
 ) {
   try {
@@ -16,15 +18,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const section = await prisma.trackSection.findUnique({
-      where: { id: params.sectionId },
-      include: {
-        lessons: {
-          select: { id: true, title: true },
-          orderBy: { order: 'asc' }
-        }
-      }
-    })
+    const section = await withDbRetry(
+      () =>
+        prisma.trackSection.findUnique({
+          where: { id: params.sectionId },
+          include: {
+            lessons: {
+              select: { id: true, title: true },
+              orderBy: { order: 'asc' }
+            }
+          }
+        }),
+      { mode: 'read', operationName: 'admin_learning_section_get' }
+    )
 
     if (!section) {
       return NextResponse.json({ error: 'Section not found' }, { status: 404 })
@@ -32,8 +38,7 @@ export async function GET(
 
     return NextResponse.json(section)
   } catch (error) {
-    console.error('Error fetching section:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return toPrismaRouteErrorResponse(error, 'Failed to fetch section.')
   }
 }
 

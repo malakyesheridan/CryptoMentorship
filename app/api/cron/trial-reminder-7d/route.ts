@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     || (!!cronSecret && providedSecret === cronSecret)
     || (!isProduction && !cronSecret)
 
-  logger.info('Trial reminder cron invoked', {
+  logger.debug('Trial reminder cron invoked', {
     isVercelCron,
     isProduction,
     cronAuthConfigured: !!cronSecret,
@@ -27,9 +27,10 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       )
     }
-    logger.warn('Trial reminder cron unauthorized', {
+    logger.info('Trial reminder cron unauthorized (noise)', {
       isVercelCron,
-      cronAuthConfigured: !!cronSecret
+      cronAuthConfigured: !!cronSecret,
+      noise: true,
     })
     return NextResponse.json(
       { error: 'Unauthorized: Invalid cron secret' },

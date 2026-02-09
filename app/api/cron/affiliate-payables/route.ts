@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     || (!!cronSecret && providedSecret === cronSecret)
     || (!isProduction && !cronSecret)
 
-  logger.info('Affiliate payable cron invoked', {
+  logger.debug('Affiliate payable cron invoked', {
     isVercelCron,
     cronAuthConfigured: !!cronSecret
   })
@@ -21,8 +21,9 @@ export async function GET(request: NextRequest) {
     if (isProduction && !cronSecret) {
       logger.error('Affiliate payable cron secret missing in production')
     }
-    logger.warn('Affiliate payable cron unauthorized', {
-      cronAuthConfigured: !!cronSecret
+    logger.info('Affiliate payable cron unauthorized (noise)', {
+      cronAuthConfigured: !!cronSecret,
+      noise: true,
     })
     return NextResponse.json(
       { error: 'Unauthorized: Invalid cron secret' },

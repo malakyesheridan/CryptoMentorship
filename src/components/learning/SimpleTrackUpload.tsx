@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,8 +9,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, AlertCircle, Upload, BookOpen, Shield } from 'lucide-react'
 import { toast } from 'sonner'
-import { createTrack } from '@/lib/actions/learning'
-import { useRouter } from 'next/navigation'
+import { nanoid } from 'nanoid'
+import { DbHealthBanner } from '@/components/admin/learning/DbHealthBanner'
 import { PdfAttachmentsField } from './PdfAttachmentsField'
 import type { PdfResource } from '@/lib/learning/resources'
 import { IMAGE_MAX_SIZE_BYTES, formatBytes } from '@/lib/upload-config'
@@ -19,11 +19,28 @@ interface SimpleTrackUploadProps {
   onSuccess?: (track: { id: string; title: string; slug: string }) => void
 }
 
+type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error'
+
+function normalizeSlug(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+function createRequestId() {
+  return `track_upload_${nanoid(10)}`
+}
+
 export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
-  const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle')
+  const [slugSuggestion, setSlugSuggestion] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -33,6 +50,49 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
   })
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
   const [coverUploadProgress, setCoverUploadProgress] = useState(0)
+  const generatedSlug = useMemo(() => normalizeSlug(formData.title), [formData.title])
+
+  useEffect(() => {
+    if (!generatedSlug) {
+      setSlugStatus('idle')
+      setSlugSuggestion(null)
+      return
+    }
+
+    const controller = new AbortController()
+    const timeout = setTimeout(async () => {
+      try {
+        setSlugStatus('checking')
+        const response = await fetch(
+          `/api/admin/learning-tracks/slug-available?slug=${encodeURIComponent(generatedSlug)}`,
+          { cache: 'no-store', signal: controller.signal }
+        )
+        const payload = await response.json().catch(() => null)
+        if (!response.ok) {
+          setSlugStatus('error')
+          setSlugSuggestion(null)
+          return
+        }
+        if (payload?.available) {
+          setSlugStatus('available')
+          setSlugSuggestion(null)
+          return
+        }
+        setSlugStatus('taken')
+        setSlugSuggestion(typeof payload?.suggestion === 'string' ? payload.suggestion : null)
+      } catch {
+        if (!controller.signal.aborted) {
+          setSlugStatus('error')
+          setSlugSuggestion(null)
+        }
+      }
+    }, 350)
+
+    return () => {
+      controller.abort()
+      clearTimeout(timeout)
+    }
+  }, [generatedSlug])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,23 +135,63 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
         coverUrl = uploadResult.url
       }
 
-      // Generate slug from title
-      const slug = formData.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim()
+      const healthResponse = await fetch('/api/health/db', { method: 'GET', cache: 'no-store' })
+      const healthPayload = await healthResponse.json().catch(() => null)
+      if (!healthResponse.ok || !healthPayload?.ok) {
+        setUploadStatus('error')
+        setErrorMessage(
+          typeof healthPayload?.message === 'string'
+            ? healthPayload.message
+            : 'Database temporarily unreachable. Try again in 30 seconds.'
+        )
+        setIsUploading(false)
+        return
+      }
 
-      const result = await createTrack({
-        title: formData.title.trim(),
-        slug: slug,
-        summary: formData.summary.trim() || '',
-        coverUrl: coverUrl,
-        pdfResources: formData.pdfResources,
-        minTier: 'member',
-        publishedAt: new Date().toISOString(),
+      const slug = slugSuggestion && slugStatus === 'taken' ? slugSuggestion : generatedSlug
+      if (!slug) {
+        setUploadStatus('error')
+        setErrorMessage('Unable to generate a valid slug from track title.')
+        setIsUploading(false)
+        return
+      }
+
+      const response = await fetch('/api/admin/learning-tracks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title.trim(),
+          slug,
+          summary: formData.summary.trim() || '',
+          coverUrl: coverUrl,
+          pdfResources: formData.pdfResources,
+          minTier: 'member',
+          publishedAt: new Date().toISOString(),
+          requestId: createRequestId(),
+        }),
       })
+
+      const result = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        if (response.status === 409 && result?.error === 'slug_taken') {
+          const suggestion = typeof result?.suggestion === 'string' ? result.suggestion : null
+          if (suggestion) {
+            setSlugSuggestion(suggestion)
+            setSlugStatus('taken')
+            setUploadStatus('error')
+            setErrorMessage(`Track slug already exists. Suggested slug: ${suggestion}`)
+            setIsUploading(false)
+            return
+          }
+        }
+        setUploadStatus('error')
+        setErrorMessage(result?.message || result?.error || 'Failed to create track')
+        setIsUploading(false)
+        return
+      }
 
       if (result.success) {
         setUploadStatus('success')
@@ -144,6 +244,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
         </div>
       </CardHeader>
       <CardContent>
+        <DbHealthBanner />
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
           <div className="space-y-2">
@@ -162,6 +263,18 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
               required
               disabled={isUploading}
             />
+            {generatedSlug && (
+              <div className="text-xs">
+                {slugStatus === 'available' && <span className="text-green-700">Slug available: {generatedSlug}</span>}
+                {slugStatus === 'checking' && <span className="text-slate-500">Checking slug...</span>}
+                {slugStatus === 'taken' && (
+                  <span className="text-red-700">
+                    Slug taken. Suggested: {slugSuggestion || `${generatedSlug}-2`}
+                  </span>
+                )}
+                {slugStatus === 'error' && <span className="text-slate-500">Could not validate slug right now.</span>}
+              </div>
+            )}
           </div>
 
           {/* Summary */}
@@ -274,7 +387,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
           <Button
             type="submit"
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-6 text-base"
-            disabled={isUploading || !formData.title}
+            disabled={isUploading || !formData.title || slugStatus === 'checking'}
           >
             {isUploading ? (
               <>

@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
           contentType: blob.contentType
         })
 
-        await logAudit(
+        void logAudit(
           prisma,
           parsedPayload?.userId || user.id || 'unknown',
           'upload_complete',

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     || (!!cronSecret && providedSecret === cronSecret)
     || (!isProduction && !cronSecret)
 
-  logger.info('Portfolio ROI cron invoked', {
+  logger.debug('Portfolio ROI cron invoked', {
     isVercelCron,
     isProduction,
     cronAuthConfigured: !!cronSecret,
@@ -29,9 +29,10 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       )
     }
-    logger.warn('Portfolio ROI cron unauthorized', {
+    logger.info('Portfolio ROI cron unauthorized (noise)', {
       isVercelCron,
-      cronAuthConfigured: !!cronSecret
+      cronAuthConfigured: !!cronSecret,
+      noise: true,
     })
     return NextResponse.json(
       { error: 'Unauthorized: Invalid cron secret' },

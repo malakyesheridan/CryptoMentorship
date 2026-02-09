@@ -36,6 +36,8 @@
     "test:ui": "playwright test --ui",
     "test:risk-profile": "tsx tests/risk-profile-score.test.ts",
     "typecheck": "tsc --noEmit",
+    "smoke:db": "npx tsx scripts/db-smoke.ts",
+    "smoke:learning-track": "npx tsx scripts/learning-track-smoke.ts",
     "audit:routes": "tsx scripts/auditRoutes.ts",
     "check:links": "npx ts-node scripts/checkLinks.ts",
     "test:ports": "node scripts/verify-port-fallback.mjs",

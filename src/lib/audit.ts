@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client'
+import { getPrismaErrorCode, withDbRetry } from '@/lib/db/retry'
 
 export type AuditAction = 
   | 'create' 
@@ -47,30 +48,45 @@ export async function logAudit(
   metadata?: AuditMetadata
 ) {
   try {
-    await txOrPrisma.audit.create({
-      data: {
-        actorId,
-        action,
-        subjectType,
-        subjectId,
-        metadata: metadata ? JSON.stringify(metadata) : null,
-      }
-    })
-  } catch (error) {
-    console.error('Failed to log audit:', error)
-    // Don't throw - audit logging shouldn't break the main flow
-    // In transaction context, we want the main operation to succeed even if audit fails
-    // However, if this is a critical error (like foreign key constraint), we should log it
-    if (error && typeof error === 'object' && 'code' in error) {
-      console.error('Audit error details:', {
-        code: (error as any).code,
-        meta: (error as any).meta,
-        actorId,
-        action,
-        subjectType,
-        subjectId
+    const auditPayload = {
+      actorId,
+      action,
+      subjectType,
+      subjectId,
+      metadata: metadata ? JSON.stringify(metadata) : null,
+    }
+
+    const requestId = typeof metadata?.requestId === 'string' ? metadata.requestId : undefined
+    const isRootPrismaClient = '$transaction' in txOrPrisma && typeof (txOrPrisma as PrismaClient).$transaction === 'function'
+
+    if (isRootPrismaClient && requestId) {
+      await withDbRetry(
+        () =>
+          (txOrPrisma as PrismaClient).audit.create({
+            data: auditPayload,
+          }),
+        {
+          mode: 'idempotent-write',
+          idempotencyKey: `audit:${action}:${subjectType}:${actorId}:${requestId}`,
+          operationName: 'audit_create',
+        }
+      )
+    } else {
+      await txOrPrisma.audit.create({
+        data: auditPayload,
       })
     }
+  } catch (error) {
+    const errorCode = getPrismaErrorCode(error) || (error && typeof error === 'object' && 'code' in error ? String((error as any).code) : 'unknown')
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Audit log failed (non-blocking)', {
+      actorId,
+      action,
+      subjectType,
+      subjectId,
+      errorCode,
+      message,
+    })
   }
 }
 

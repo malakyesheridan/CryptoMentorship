@@ -4,6 +4,7 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().optional(),
   DATABASE_URL_DEV: z.string().optional(),
+  DIRECT_URL: z.string().optional(),
   
   // NextAuth (required - will have defaults applied)
   NEXTAUTH_URL: z.string().url(),
@@ -91,6 +92,42 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>
 
+function parseUrl(input?: string): URL | null {
+  if (!input) return null
+  try {
+    return new URL(input)
+  } catch {
+    return null
+  }
+}
+
+export function isNeonPoolerHost(host: string): boolean {
+  return host.includes('.neon.tech') && host.includes('-pooler.')
+}
+
+export function getDatabaseRuntimeInfo(databaseUrl?: string) {
+  const parsed = parseUrl(databaseUrl ?? process.env.DATABASE_URL)
+  if (!parsed) {
+    return {
+      host: null,
+      usesNeonPooler: false,
+      sslmode: null as string | null,
+      pgbouncer: null as string | null,
+      connectionLimit: null as string | null,
+      connectTimeout: null as string | null,
+    }
+  }
+
+  return {
+    host: parsed.host,
+    usesNeonPooler: isNeonPoolerHost(parsed.host),
+    sslmode: parsed.searchParams.get('sslmode'),
+    pgbouncer: parsed.searchParams.get('pgbouncer'),
+    connectionLimit: parsed.searchParams.get('connection_limit'),
+    connectTimeout: parsed.searchParams.get('connect_timeout'),
+  }
+}
+
 function validateEnv(): Env {
   try {
     // Skip validation on client side - env vars should only be validated on server
@@ -129,6 +166,23 @@ function validateEnv(): Env {
       envWithDefaults.NODE_ENV = 'development'
     }
     
+    if (isProduction && (!envWithDefaults.DATABASE_URL || envWithDefaults.DATABASE_URL.trim() === '')) {
+      throw new Error('DATABASE_URL must be set in production')
+    }
+
+    const runtimeDb = parseUrl(envWithDefaults.DATABASE_URL)
+    if (runtimeDb && isNeonPoolerHost(runtimeDb.host)) {
+      const directUrl = parseUrl(envWithDefaults.DIRECT_URL)
+      if (isProduction) {
+        if (!directUrl) {
+          throw new Error('DIRECT_URL must be set to a non-pooler host for migrations in production')
+        }
+        if (isNeonPoolerHost(directUrl.host)) {
+          throw new Error('DIRECT_URL must target the Neon direct host (non-pooler) in production')
+        }
+      }
+    }
+
     return envSchema.parse(envWithDefaults)
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -143,6 +197,26 @@ function validateEnv(): Env {
 }
 
 export const env = validateEnv()
+
+if (typeof window === 'undefined') {
+  const globalWithFlag = globalThis as typeof globalThis & { __dbRuntimeLogged?: boolean }
+  if (!globalWithFlag.__dbRuntimeLogged) {
+    const info = getDatabaseRuntimeInfo(env.DATABASE_URL)
+    if (info.host) {
+      console.info('[DB] Runtime connection loaded', {
+        host: info.host,
+        usesNeonPooler: info.usesNeonPooler,
+        sslmode: info.sslmode,
+        pgbouncer: info.pgbouncer,
+        connectionLimit: info.connectionLimit,
+        connectTimeout: info.connectTimeout,
+      })
+    } else {
+      console.warn('[DB] Runtime connection not configured')
+    }
+    globalWithFlag.__dbRuntimeLogged = true
+  }
+}
 
 // Referral system configuration helpers
 function getAppUrl(): string {

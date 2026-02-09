@@ -3,7 +3,10 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
+import { withDbRetry } from '@/lib/db/retry'
+import { isDbUnreachableError } from '@/lib/db/errors'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
+import { DbHealthBanner } from '@/components/admin/learning/DbHealthBanner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -26,34 +29,48 @@ import { formatDate } from '@/lib/dates'
 export const dynamic = 'force-dynamic'
 
 async function getTracks() {
-  const tracks = await prisma.track.findMany({
-    include: {
-      sections: {
-        include: {
-          lessons: {
-            select: { id: true, durationMin: true },
+  try {
+    const tracks = await withDbRetry(
+      () =>
+        prisma.track.findMany({
+          include: {
+            sections: {
+              include: {
+                lessons: {
+                  select: { id: true, durationMin: true },
+                },
+              },
+            },
+            lessons: {
+              select: { id: true, durationMin: true },
+            },
+            enrollments: {
+              select: { id: true },
+            },
+            _count: {
+              select: {
+                enrollments: true,
+              },
+            },
           },
-        },
-      },
-      lessons: {
-        select: { id: true, durationMin: true },
-      },
-      enrollments: {
-        select: { id: true },
-      },
-      _count: {
-        select: {
-          enrollments: true,
-        },
-      },
-    },
-    orderBy: [
-      { order: 'asc' },
-      { createdAt: 'desc' },
-    ],
-  })
+          orderBy: [
+            { order: 'asc' },
+            { createdAt: 'desc' },
+          ],
+        }),
+      { mode: 'read', operationName: 'admin_tracks_page_list' }
+    )
 
-  return tracks
+    return { tracks, error: null as string | null }
+  } catch (error) {
+    if (isDbUnreachableError(error)) {
+      return {
+        tracks: [],
+        error: 'Database temporarily unreachable. Track data cannot be loaded right now. Try again in 30 seconds.',
+      }
+    }
+    throw error
+  }
 }
 
 export default async function AdminTracksPage() {
@@ -63,7 +80,7 @@ export default async function AdminTracksPage() {
     redirect('/login')
   }
 
-  const tracks = await getTracks()
+  const { tracks, error } = await getTracks()
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -88,6 +105,13 @@ export default async function AdminTracksPage() {
                 </Link>
               </div>
             </div>
+
+            <DbHealthBanner />
+            {error && (
+              <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                {error}
+              </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

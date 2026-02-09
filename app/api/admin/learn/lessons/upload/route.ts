@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { logger } from '@/lib/logger'
 import { nanoid } from 'nanoid'
-import { handleError } from '@/lib/errors'
+import { withDbRetry } from '@/lib/db/retry'
+import { toPrismaRouteErrorResponse } from '@/lib/db/errors'
 
 // Configure route for large file uploads
 export const runtime = 'nodejs'
@@ -68,9 +69,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if track exists
-    const track = await prisma.track.findUnique({
-      where: { id: trackId }
-    })
+    const track = await withDbRetry(
+      () =>
+        prisma.track.findUnique({
+          where: { id: trackId }
+        }),
+      { mode: 'read', operationName: 'learning_lesson_upload_track_lookup' }
+    )
 
     if (!track) {
       return NextResponse.json(
@@ -88,14 +93,18 @@ export async function POST(request: NextRequest) {
       .trim()
 
     // Check slug uniqueness within track
-    const existingLesson = await prisma.lesson.findUnique({
-      where: { 
-        trackId_slug: {
-          trackId: trackId,
-          slug: slug
-        }
-      }
-    })
+    const existingLesson = await withDbRetry(
+      () =>
+        prisma.lesson.findUnique({
+          where: {
+            trackId_slug: {
+              trackId: trackId,
+              slug: slug
+            }
+          }
+        }),
+      { mode: 'read', operationName: 'learning_lesson_upload_slug_check' }
+    )
     
     if (existingLesson) {
       return NextResponse.json(
@@ -105,14 +114,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get max order for lessons in this track
-    const maxOrder = await prisma.lesson.findFirst({
-      where: { 
-        trackId: trackId,
-        sectionId: null
-      },
-      orderBy: { order: 'desc' },
-      select: { order: true }
-    })
+    const maxOrder = await withDbRetry(
+      () =>
+        prisma.lesson.findFirst({
+          where: {
+            trackId: trackId,
+            sectionId: null
+          },
+          orderBy: { order: 'desc' },
+          select: { order: true }
+        }),
+      { mode: 'read', operationName: 'learning_lesson_upload_order_lookup' }
+    )
     const order = (maxOrder?.order ?? -1) + 1
 
     // Wrap in transaction for atomicity
@@ -142,26 +155,16 @@ export async function POST(request: NextRequest) {
         videoUrl: created.videoUrl
       })
       
-      // Audit log within transaction (non-blocking - won't fail transaction if audit fails)
-      try {
-        await logAudit(
-          tx,
-          user.id,
-          'create',
-          'lesson',
-          created.id,
-          { title: created.title, trackId: trackId }
-        )
-        console.log('[Lesson Creation] Audit log created successfully')
-      } catch (auditError) {
-        // Log but don't fail the transaction
-        console.error('[Lesson Creation] Audit logging failed (non-blocking):', auditError)
-      }
-      
       return created
     })
     
     console.log('[Lesson Creation] Transaction completed successfully')
+    void logAudit(prisma, user.id, 'create', 'lesson', lesson.id, {
+      title: lesson.title,
+      trackId: trackId,
+      uploadRequestId,
+    })
+
     return NextResponse.json({
       success: true,
       lesson: {
@@ -181,7 +184,7 @@ export async function POST(request: NextRequest) {
         error: error instanceof Error ? error.message : String(error)
       }).catch(() => {})
     }
-    return handleError(error)
+    return toPrismaRouteErrorResponse(error, 'Failed to finalize lesson upload.')
   }
 }
 

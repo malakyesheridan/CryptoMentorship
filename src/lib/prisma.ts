@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { env } from '@/lib/env'
+import { env, getDatabaseRuntimeInfo, isNeonPoolerHost } from '@/lib/env'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -68,21 +68,42 @@ function createPrismaClient(): PrismaClient {
     throw new Error('Invalid DATABASE_URL format. Must start with postgresql:// or postgres://')
   }
   
-  // Optimize connection string for pooling
+  // Optimize connection string for pooling and Neon serverless compatibility
   let optimizedUrl = dbUrl
   if (isPostgres) {
     const url = new URL(dbUrl)
+    const poolerHost = isNeonPoolerHost(url.host)
+
+    if (poolerHost && url.searchParams.get('sslmode') !== 'require') {
+      url.searchParams.set('sslmode', 'require')
+    }
+    if (poolerHost && url.searchParams.get('pgbouncer') !== 'true') {
+      url.searchParams.set('pgbouncer', 'true')
+    }
+
     // Add connection pooling parameters if not already present
     if (!url.searchParams.has('connection_limit')) {
-      url.searchParams.set('connection_limit', '10') // Limit concurrent connections
+      url.searchParams.set('connection_limit', poolerHost ? '5' : '10')
     }
     if (!url.searchParams.has('pool_timeout')) {
-      url.searchParams.set('pool_timeout', '20') // 20 second timeout
+      url.searchParams.set('pool_timeout', '20')
     }
     if (!url.searchParams.has('connect_timeout')) {
-      url.searchParams.set('connect_timeout', '10') // 10 second connect timeout
+      url.searchParams.set('connect_timeout', '10')
     }
     optimizedUrl = url.toString()
+
+    const runtimeInfo = getDatabaseRuntimeInfo(optimizedUrl)
+    if (runtimeInfo.host) {
+      console.info('[DB] Prisma runtime URL normalized', {
+        host: runtimeInfo.host,
+        usesNeonPooler: runtimeInfo.usesNeonPooler,
+        sslmode: runtimeInfo.sslmode,
+        pgbouncer: runtimeInfo.pgbouncer,
+        connectionLimit: runtimeInfo.connectionLimit,
+        connectTimeout: runtimeInfo.connectTimeout,
+      })
+    }
   }
   
   return new PrismaClient({
