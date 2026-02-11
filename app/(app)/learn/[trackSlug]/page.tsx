@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { enrollInTrack } from '@/lib/actions/enrollment'
 import { normalizePdfResources } from '@/lib/learning/resources'
 
 // Revalidate every 5 minutes - track content is published, not real-time
@@ -116,6 +115,13 @@ export default async function TrackPage({
   const totalDuration = track.lessons.reduce((sum, lesson) => sum + (lesson.durationMin || 0), 0)
   const progressPct = enrollment ? enrollment.progressPct : 0
 
+  const lessonIdsInSections = new Set(
+    track.sections.flatMap((section) => section.lessons.map((lesson) => lesson.id))
+  )
+  const firstSectionLesson = track.sections.find((section) => section.lessons.length > 0)?.lessons[0] || null
+  const firstStandaloneLesson = track.lessons.find((lesson) => !lessonIdsInSections.has(lesson.id)) || null
+  const firstLesson = firstSectionLesson || firstStandaloneLesson || track.lessons[0] || null
+
   // Find next lesson
   const nextLesson = track.lessons.find(lesson => !userProgress[lesson.id])
   const trackPdfResources = normalizePdfResources(track.pdfResources)
@@ -184,24 +190,35 @@ export default async function TrackPage({
                   </Button>
                 </Link>
               ) : (
-                // Allow re-watching completed tracks - start from first lesson
-                <Link href={`/learn/${track.slug}/lesson/${track.lessons[0]?.slug}`}>
-                  <Button size="lg" variant="outline" data-tour="track-continue">
+                firstLesson ? (
+                  // Allow re-watching completed tracks - start from first lesson
+                  <Link href={`/learn/${track.slug}/lesson/${firstLesson.slug}`}>
+                    <Button size="lg" variant="outline" data-tour="track-continue">
+                      <Play className="h-5 w-5 mr-2" />
+                      Watch Again
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button size="lg" variant="outline" disabled data-tour="track-continue">
                     <Play className="h-5 w-5 mr-2" />
-                    Watch Again
+                    No Lessons Available
                   </Button>
-                </Link>
+                )
               )
             ) : (
-              <form action={async () => {
-                'use server'
-                await enrollInTrack({ trackId: track.id })
-              }}>
-                <Button type="submit" size="lg" data-tour="track-continue">
+              firstLesson ? (
+                <Link href={`/learn/${track.slug}/lesson/${firstLesson.slug}`}>
+                  <Button size="lg" data-tour="track-continue">
+                    <Play className="h-5 w-5 mr-2" />
+                    Start Track
+                  </Button>
+                </Link>
+              ) : (
+                <Button size="lg" disabled data-tour="track-continue">
                   <Play className="h-5 w-5 mr-2" />
-                  Start Track
+                  No Lessons Available
                 </Button>
-              </form>
+              )
             )}
           </div>
       </div>
