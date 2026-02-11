@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
-import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
 import { runPortfolioRoiJob } from '@/lib/jobs/portfolio-roi'
 import { formatAllocationSignal, parseAllocationAssets, portfolioAssets } from '@/lib/portfolio-assets'
 import { deriveAllocations } from '@/lib/portfolio/deriveAllocations'
@@ -63,6 +62,25 @@ function scheduleImmediatePortfolioRoiRecompute(portfolioKey: string, userId?: s
       error instanceof Error ? error : new Error(String(error)),
       { portfolioKey }
     )
+  })
+}
+
+function triggerSignalEmailDispatch(request: NextRequest, signalId: string) {
+  const origin = request.nextUrl.origin
+  const url = new URL('/api/cron/signal-emails', origin)
+  if (process.env.VERCEL_CRON_SECRET) {
+    url.searchParams.set('secret', process.env.VERCEL_CRON_SECRET)
+  }
+  url.searchParams.set('signalId', signalId)
+
+  void fetch(url.toString(), {
+    method: 'POST',
+    keepalive: true,
+  }).catch((error) => {
+    logger.warn('Failed to trigger signal email dispatch', {
+      signalId,
+      error: error instanceof Error ? error.message : String(error)
+    })
   })
 }
 
@@ -256,29 +274,13 @@ export async function PUT(
       })
     }
 
-    logger.info('Triggering email sending for updated signal', {
+    logger.info('Triggering signal email dispatch for updated signal', {
       signalId: updatedSignal.id,
       tier: updatedSignal.tier,
       category: updatedSignal.category,
     })
 
-    try {
-      await sendSignalEmails(updatedSignal.id)
-      logger.info('Email sending completed successfully', {
-        signalId: updatedSignal.id,
-        tier: updatedSignal.tier,
-        category: updatedSignal.category,
-      })
-    } catch (error) {
-      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
-        signalId: updatedSignal.id,
-        tier: updatedSignal.tier,
-        category: updatedSignal.category,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
-      })
-      console.error('[PUT] Failed to send update emails:', error)
-    }
+    triggerSignalEmailDispatch(request, updatedSignal.id)
 
     return NextResponse.json(updatedSignal)
   } catch (error) {

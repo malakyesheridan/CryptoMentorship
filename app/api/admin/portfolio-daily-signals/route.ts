@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
 import { runPortfolioRoiJob } from '@/lib/jobs/portfolio-roi'
 import { logger } from '@/lib/logger'
 import { formatAllocationSignal, parseAllocationAssets, portfolioAssets } from '@/lib/portfolio-assets'
@@ -95,6 +94,25 @@ function scheduleImmediatePortfolioRoiRecompute(portfolioKey: string, userId?: s
       error instanceof Error ? error : new Error(String(error)),
       { portfolioKey }
     )
+  })
+}
+
+function triggerSignalEmailDispatch(request: NextRequest, signalId: string) {
+  const origin = request.nextUrl.origin
+  const url = new URL('/api/cron/signal-emails', origin)
+  if (process.env.VERCEL_CRON_SECRET) {
+    url.searchParams.set('secret', process.env.VERCEL_CRON_SECRET)
+  }
+  url.searchParams.set('signalId', signalId)
+
+  void fetch(url.toString(), {
+    method: 'POST',
+    keepalive: true,
+  }).catch((error) => {
+    logger.warn('Failed to trigger signal email dispatch', {
+      signalId,
+      error: error instanceof Error ? error.message : String(error)
+    })
   })
 }
 
@@ -331,19 +349,12 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    try {
-      await sendSignalEmails(signal.id)
-      logger.info('Email sending completed successfully', {
-        signalId: signal.id,
-        tier: signal.tier,
-      })
-    } catch (error) {
-      logger.error('Failed to send update emails', error instanceof Error ? error : new Error(String(error)), {
-        signalId: signal.id,
-        tier: signal.tier,
-      })
-      console.error('[POST] Failed to send update emails:', error)
-    }
+    triggerSignalEmailDispatch(request, signal.id)
+    logger.info('Signal email dispatch triggered', {
+      signalId: signal.id,
+      tier: signal.tier,
+      category: signal.category,
+    })
 
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {

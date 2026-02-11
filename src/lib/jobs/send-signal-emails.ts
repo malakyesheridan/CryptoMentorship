@@ -155,6 +155,67 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
       t2EmailsFailed: 0,
     }
 
+    const hasCategory = createdSignal.category !== null && createdSignal.category !== undefined &&
+      (createdSignal.category === 'majors' || createdSignal.category === 'memecoins')
+    let signalTier: 'T1' | 'T2' = 'T1'
+    if (createdSignal.tier === 'T3') {
+      signalTier = 'T2' // Old T3 -> new T2 (Elite)
+    } else if (createdSignal.tier === 'T2' && hasCategory) {
+      signalTier = 'T2' // T2 with category -> T2 (Elite)
+    } else if (createdSignal.tier === 'T2' && !hasCategory) {
+      signalTier = 'T1' // T2 without category -> T1 (Growth)
+    } else if (createdSignal.tier === 'T1') {
+      signalTier = 'T1' // T1 -> T1 (Growth)
+    }
+
+    let baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+    if (baseUrl && !baseUrl.startsWith('http')) {
+      baseUrl = `https://${baseUrl}`
+    }
+    const portfolioUrl = `${baseUrl}/portfolio`
+    const preferencesUrl = `${baseUrl}/account`
+
+    let pairedT2Signal: DailySignal | null = null
+    let shouldWaitForPairedT2Signal = false
+    if (signalTier === 'T2' && (createdSignal.category === 'majors' || createdSignal.category === 'memecoins')) {
+      const signalDate = new Date(createdSignal.publishedAt)
+      signalDate.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(signalDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      const pairedCategory = createdSignal.category === 'majors' ? 'memecoins' : 'majors'
+      const pairedSignal = await prisma.portfolioDailySignal.findFirst({
+        where: {
+          tier: 'T2',
+          category: pairedCategory,
+          publishedAt: {
+            gte: signalDate,
+            lte: endOfDay,
+          },
+        },
+        orderBy: { publishedAt: 'desc' },
+      })
+
+      if (pairedSignal) {
+        pairedT2Signal = pairedSignal as DailySignal
+        logger.info('Found paired T2 signal for email batch', {
+          signalId: createdSignal.id,
+          signalCategory: createdSignal.category,
+          pairedSignalId: pairedSignal.id,
+          pairedCategory,
+          signalDate: signalDate.toISOString(),
+        })
+      } else {
+        shouldWaitForPairedT2Signal = true
+        logger.info('Paired T2 signal not available yet; T2 email send deferred', {
+          signalId: createdSignal.id,
+          signalCategory: createdSignal.category,
+          expectedPairedCategory: pairedCategory,
+          signalDate: signalDate.toISOString(),
+        })
+      }
+    }
+
     for (const user of eligibleUsers) {
       // Declare userTier outside try block so it's accessible in catch block
       let userTier: 'T1' | 'T2' = 'T1'
@@ -191,21 +252,6 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         // Determine if this user should receive this signal based on their tier
         let shouldSend = false
         let signalToSend: DailySignal | null = null
-
-        // Map the created signal's tier for comparison
-        let signalTier: 'T1' | 'T2' = 'T1'
-        const hasCategory = createdSignal.category !== null && createdSignal.category !== undefined && 
-                           (createdSignal.category === 'majors' || createdSignal.category === 'memecoins')
-        
-        if (createdSignal.tier === 'T3') {
-          signalTier = 'T2' // Old T3 → new T2 (Elite)
-        } else if (createdSignal.tier === 'T2' && hasCategory) {
-          signalTier = 'T2' // T2 with category → T2 (Elite)
-        } else if (createdSignal.tier === 'T2' && !hasCategory) {
-          signalTier = 'T1' // T2 without category → T1 (Growth)
-        } else if (createdSignal.tier === 'T1') {
-          signalTier = 'T1' // T1 → T1 (Growth)
-        }
 
         logger.info('Tier matching check', {
           userId: user.id,
@@ -277,89 +323,18 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         // Always send email when signal is created or updated
         // No deduplication - user wants email on every create/update
 
-        // Build URLs
-        let baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-        // Ensure URL has protocol
-        if (baseUrl && !baseUrl.startsWith('http')) {
-          baseUrl = `https://${baseUrl}`
-        }
-        const portfolioUrl = `${baseUrl}/portfolio`
-        const preferencesUrl = `${baseUrl}/account`
-
         // For T2 users, prepare signals array (may include both majors and memecoins)
         // Always put majors (market rotation) first, then memecoins
         let signalsForEmail: DailySignal[] = [signalToSend]
         let shouldSkipEmail = false
         
         if (userTier === 'T2' && signalTier === 'T2') {
-          // Get the date of the created signal (start of day)
-          const signalDate = new Date(createdSignal.publishedAt)
-          signalDate.setHours(0, 0, 0, 0)
-          const endOfDay = new Date(signalDate)
-          endOfDay.setHours(23, 59, 59, 999)
-          
-          if (createdSignal.category === 'majors') {
-            // If this is a majors signal, also fetch memecoins signal for the same day
-            const memecoinsSignal = await prisma.portfolioDailySignal.findFirst({
-              where: {
-                tier: 'T2',
-                category: 'memecoins',
-                publishedAt: {
-                  gte: signalDate,
-                  lte: endOfDay,
-                },
-              },
-              orderBy: { publishedAt: 'desc' },
-            })
-            
-            if (memecoinsSignal) {
-              // Both signals exist - include both in email
-              signalsForEmail = [createdSignal as DailySignal, memecoinsSignal as DailySignal]
-              logger.info('Found memecoins signal for same day - will include in email', {
-                userId: user.id,
-                majorsSignalId: createdSignal.id,
-                memecoinsSignalId: memecoinsSignal.id,
-              })
-            } else {
-              // Only majors exists - skip email (will be sent when memecoins is created)
-              shouldSkipEmail = true
-              logger.info('Skipping email for T2 majors signal - memecoins signal not yet created for same day', {
-                userId: user.id,
-                majorsSignalId: createdSignal.id,
-                signalDate: signalDate.toISOString(),
-              })
-            }
-          } else if (createdSignal.category === 'memecoins') {
-            // If this is a memecoins signal, also fetch majors signal for the same day (put it first)
-            const majorsSignal = await prisma.portfolioDailySignal.findFirst({
-              where: {
-                tier: 'T2',
-                category: 'majors',
-                publishedAt: {
-                  gte: signalDate,
-                  lte: endOfDay,
-                },
-              },
-              orderBy: { publishedAt: 'desc' },
-            })
-            
-            if (majorsSignal) {
-              // Both signals exist - include both in email
-              signalsForEmail = [majorsSignal as DailySignal, createdSignal as DailySignal]
-              logger.info('Found majors signal for same day - will include in email', {
-                userId: user.id,
-                memecoinsSignalId: createdSignal.id,
-                majorsSignalId: majorsSignal.id,
-              })
-            } else {
-              // Only memecoins exists - skip email (will be sent when majors is created)
-              shouldSkipEmail = true
-              logger.info('Skipping email for T2 memecoins signal - majors signal not yet created for same day', {
-                userId: user.id,
-                memecoinsSignalId: createdSignal.id,
-                signalDate: signalDate.toISOString(),
-              })
-            }
+          if (shouldWaitForPairedT2Signal) {
+            shouldSkipEmail = true
+          } else if (pairedT2Signal) {
+            signalsForEmail = createdSignal.category === 'majors'
+              ? [createdSignal as DailySignal, pairedT2Signal]
+              : [pairedT2Signal, createdSignal as DailySignal]
           }
         }
         
