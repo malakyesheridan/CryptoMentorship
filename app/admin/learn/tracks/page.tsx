@@ -7,12 +7,13 @@ import { withDbRetry } from '@/lib/db/retry'
 import { isDbUnreachableError } from '@/lib/db/errors'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { DbHealthBanner } from '@/components/admin/learning/DbHealthBanner'
+import { AdminTracksUploadButton } from '@/components/admin/learning/AdminTracksUploadButton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
   BookOpen, 
-  Plus, 
+  Plus,
   Edit, 
   Trash2, 
   Eye, 
@@ -97,12 +98,9 @@ export default async function AdminTracksPage() {
                     Manage structured learning paths and educational content
                   </p>
                 </div>
-                <Link href="/admin/learn/tracks/new">
-                  <Button className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    New Track
-                  </Button>
-                </Link>
+                <AdminTracksUploadButton
+                  tracks={tracks.map((track) => ({ id: track.id, title: track.title }))}
+                />
               </div>
             </div>
 
