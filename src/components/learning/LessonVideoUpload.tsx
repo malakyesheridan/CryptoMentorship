@@ -10,7 +10,13 @@ import { CheckCircle, AlertCircle, Upload, Video, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { PdfAttachmentsField } from './PdfAttachmentsField'
 import type { PdfResource } from '@/lib/learning/resources'
-import { VIDEO_MAX_SIZE_BYTES, VIDEO_UPLOAD_MIME_TYPES, formatBytes } from '@/lib/upload-config'
+import {
+  VIDEO_MAX_SIZE_BYTES,
+  VIDEO_UPLOAD_MIME_TYPES,
+  IMAGE_MAX_SIZE_BYTES,
+  IMAGE_UPLOAD_MIME_TYPES,
+  formatBytes
+} from '@/lib/upload-config'
 
 interface LessonVideoUploadProps {
   trackId: string
@@ -22,22 +28,34 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0)
   const [lastUploadedTitle, setLastUploadedTitle] = useState<string | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
 
   useEffect(() => {
     if (uploadStatus !== 'success') return
     const timeout = setTimeout(() => {
       setUploadStatus('idle')
       setUploadProgress(0)
+      setThumbnailUploadProgress(0)
       setLastUploadedTitle(null)
     }, 10000)
     return () => clearTimeout(timeout)
   }, [uploadStatus])
 
+  useEffect(() => {
+    return () => {
+      if (thumbnailPreview) {
+        URL.revokeObjectURL(thumbnailPreview)
+      }
+    }
+  }, [thumbnailPreview])
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     video: null as File | null,
+    thumbnail: null as File | null,
     duration: null as number | null,
     pdfResources: [] as PdfResource[],
   })
@@ -88,6 +106,36 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     }
   }
 
+  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    if (!IMAGE_UPLOAD_MIME_TYPES.includes(file.type)) {
+      setErrorMessage('Invalid thumbnail file type. Please upload JPG, PNG, WebP, or GIF.')
+      setUploadStatus('error')
+      return
+    }
+
+    if (file.size > IMAGE_MAX_SIZE_BYTES) {
+      setErrorMessage(`Thumbnail too large. Maximum size is ${formatBytes(IMAGE_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
+      setUploadStatus('error')
+      return
+    }
+
+    const nextPreview = URL.createObjectURL(file)
+    setThumbnailPreview((prev) => {
+      if (prev) {
+        URL.revokeObjectURL(prev)
+      }
+      return nextPreview
+    })
+    setFormData((prev) => ({ ...prev, thumbnail: file }))
+    setErrorMessage('')
+    setUploadStatus('idle')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -112,12 +160,33 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
     setUploadStatus('uploading')
     setErrorMessage('')
     setUploadProgress(0)
+    setThumbnailUploadProgress(0)
     setLastUploadedTitle(null)
 
     try {
-      // Upload video to Vercel Blob Storage first
       const { uploadToBlob } = await import('@/lib/blob-upload')
-      
+
+      let coverUrl: string | undefined
+      if (formData.thumbnail) {
+        const thumbnailUpload = await uploadToBlob({
+          file: formData.thumbnail,
+          folder: 'lesson-thumbnails',
+          onProgress: (progress) => {
+            setThumbnailUploadProgress(progress)
+          }
+        })
+
+        if (!thumbnailUpload.success || !thumbnailUpload.url) {
+          setUploadStatus('error')
+          setErrorMessage(thumbnailUpload.error || 'Thumbnail upload failed')
+          toast.error(thumbnailUpload.error || 'Failed to upload thumbnail')
+          return
+        }
+
+        coverUrl = thumbnailUpload.url
+      }
+
+      // Upload video to Vercel Blob Storage first
       const uploadResult = await uploadToBlob({
         file: formData.video,
         folder: 'lessons',
@@ -144,6 +213,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           description: formData.description || '',
           trackId: trackId,
           videoUrl: uploadResult.url,
+          coverUrl,
           duration: formData.duration,
           pdfResources: formData.pdfResources,
           uploadRequestId: uploadResult.requestId,
@@ -173,8 +243,15 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           title: '',
           description: '',
           video: null,
+          thumbnail: null,
           duration: null,
           pdfResources: [],
+        })
+        setThumbnailPreview((prev) => {
+          if (prev) {
+            URL.revokeObjectURL(prev)
+          }
+          return null
         })
         // Call callback after state updates are complete
         if (onUploadSuccess) {
@@ -272,6 +349,49 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
             </p>
           </div>
 
+          {/* Thumbnail File */}
+          <div className="space-y-2">
+            <Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="thumbnail"
+                className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  formData.thumbnail
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="w-5 h-5 text-slate-600" />
+                  <span className="text-sm text-slate-600">
+                    {formData.thumbnail ? formData.thumbnail.name : 'Select thumbnail image'}
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  id="thumbnail"
+                  accept="image/*"
+                  onChange={handleThumbnailChange}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+              </label>
+              {thumbnailPreview && (
+                <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={thumbnailPreview}
+                    alt="Thumbnail preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              Optional poster image shown before video playback (JPG, PNG, WebP, GIF up to {formatBytes(IMAGE_MAX_SIZE_BYTES)})
+            </p>
+          </div>
+
           {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
@@ -307,6 +427,11 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 />
               </div>
             </div>
+          )}
+          {isUploading && thumbnailUploadProgress > 0 && (
+            <p className="text-xs text-slate-500">
+              Thumbnail upload: {thumbnailUploadProgress}%
+            </p>
           )}
 
           {/* Submit Button */}

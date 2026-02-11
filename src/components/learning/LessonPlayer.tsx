@@ -57,6 +57,7 @@ interface LessonPlayerProps {
     title: string
     durationMin?: number
     videoUrl?: string
+    coverUrl?: string
     contentMDX?: string
     pdfResources?: PdfResource[] | null
     quiz?: {
@@ -428,6 +429,7 @@ export function LessonPlayer({
                         <VideoPlayer
                           src={lesson.videoUrl}
                           title={lesson.title}
+                          poster={lesson.coverUrl}
                           className="w-full h-full"
                         />
                       )}

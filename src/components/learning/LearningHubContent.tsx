@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Search, Flame, BarChart3, Award, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { BookOpen, Video, Plus } from 'lucide-react'
+import { BookOpen, Video } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 
@@ -162,6 +162,35 @@ export function LearningHubContent({
         </div>
       )}
 
+      {/* Admin Quick Actions */}
+      {(userRole === 'admin' || userRole === 'editor') && (
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Admin Quick Actions</h2>
+              <p className="text-sm text-slate-600">
+                Manage learning tracks, sections, and lessons
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Link href="/admin/learn/tracks">
+                <Button variant="outline">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Manage Tracks
+                </Button>
+              </Link>
+              <Button
+                onClick={() => setUploadModalOpen(true)}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tab Navigation */}
       <LearningHubTabs 
         activeTab={activeTab} 
@@ -191,19 +220,6 @@ export function LearningHubContent({
       {/* Tab Content */}
       {activeTab === 'discover' && (
         <div className="space-y-8">
-          {/* Admin: Upload Button */}
-          {(userRole === 'admin' || userRole === 'editor') && (
-            <div className="flex justify-end">
-              <Button
-                onClick={() => setUploadModalOpen(true)}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload
-              </Button>
-            </div>
-          )}
-
           {/* All Learning Tracks */}
           <div>
             <h2 className="text-2xl font-bold text-slate-900 mb-6">

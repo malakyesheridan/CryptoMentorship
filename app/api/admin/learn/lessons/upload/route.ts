@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const description = body.description || ''
     const trackId = body.trackId
     const videoUrl = body.videoUrl
+    const coverUrl = typeof body.coverUrl === 'string' ? body.coverUrl.trim() : ''
     const durationSeconds = body.duration ? parseInt(body.duration) : null
     const durationMin = durationSeconds ? Math.round(durationSeconds / 60) : null
     const pdfResources = Array.isArray(body.pdfResources)
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
           title: title.trim(),
           contentMDX: description?.trim() || '', // Optional - can be empty for video-only lessons
           videoUrl: videoUrl.trim(),
+          coverUrl: coverUrl || undefined,
           durationMin: durationMin,
           pdfResources: pdfResources.length > 0 ? pdfResources : undefined,
           publishedAt: new Date(),
@@ -171,7 +173,8 @@ export async function POST(request: NextRequest) {
         id: lesson.id,
         title: lesson.title,
         slug: lesson.slug,
-        videoUrl: lesson.videoUrl
+        videoUrl: lesson.videoUrl,
+        coverUrl: lesson.coverUrl
       }
     })
   } catch (error) {

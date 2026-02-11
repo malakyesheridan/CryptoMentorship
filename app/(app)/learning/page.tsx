@@ -404,36 +404,6 @@ export default async function LearningDashboardPage() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        {/* Admin Quick Actions Widget */}
-        {['admin', 'editor'].includes(user.role || '') && (
-          <div className="mb-8">
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 mb-2">Admin Quick Actions</h2>
-                  <p className="text-sm text-slate-600">
-                    Manage learning tracks, sections, and lessons
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <Link href="/admin/learn/tracks">
-                    <Button variant="outline">
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Manage Tracks
-                    </Button>
-                  </Link>
-                  <Link href="/admin/learn/tracks/new">
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Track
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         <LearningHubContent
           enrollments={enrollments}
           progress={progress}

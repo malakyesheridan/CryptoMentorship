@@ -63,6 +63,7 @@ const CreateLessonSchema = z.object({
   contentMDX: z.string().optional(), // Optional - can be empty for video-only lessons
   durationMin: z.number().optional(),
   videoUrl: z.string().optional(),
+  coverUrl: z.string().optional(),
   pdfResources: z.array(PdfResourceSchema).optional(),
   publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
   order: z.number().optional(),
@@ -74,6 +75,7 @@ const UpdateLessonSchema = z.object({
   contentMDX: z.string().optional(),
   durationMin: z.number().optional(),
   videoUrl: z.string().optional(),
+  coverUrl: z.string().optional(),
   pdfResources: z.array(PdfResourceSchema).optional(),
   publishedAt: z.string().optional().transform(str => str ? new Date(str) : undefined),
   order: z.number().optional(),
@@ -480,6 +482,7 @@ export async function createLesson(input: unknown) {
       contentMDX: data.contentMDX,
       durationMin: data.durationMin,
       videoUrl: data.videoUrl,
+      coverUrl: data.coverUrl,
       pdfResources: data.pdfResources,
       publishedAt: data.publishedAt,
       order: order,

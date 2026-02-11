@@ -966,6 +966,7 @@ model Lesson {
   contentMDX  String? // Optional - can be empty for video-only lessons
   durationMin Int? // estimated
   videoUrl    String?
+  coverUrl    String?
   pdfResources Json?
   quizId      String?
   publishedAt DateTime?

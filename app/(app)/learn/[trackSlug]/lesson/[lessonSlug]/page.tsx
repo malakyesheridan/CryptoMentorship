@@ -155,6 +155,7 @@ export default async function LessonPage({
           ...lesson, 
           durationMin: lesson.durationMin ?? undefined,
           videoUrl: lesson.videoUrl ?? undefined,
+          coverUrl: lesson.coverUrl ?? undefined,
           contentMDX: lesson.contentMDX ?? undefined,
           pdfResources: normalizePdfResources(lesson.pdfResources),
           quiz: lesson.quiz ?? undefined,
