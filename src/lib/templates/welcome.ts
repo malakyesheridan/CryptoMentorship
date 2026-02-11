@@ -29,6 +29,15 @@ export function buildWelcomeEmail(input: WelcomeEmailInput) {
               <li>Crypto Compass research and breakdowns</li>
             </ul>
 
+            <p style="margin: 0 0 12px 0; font-size: 15px; color: #475569;">
+              Want personalized guidance? Book a free consultation with our team.
+            </p>
+            <div style="margin: 0 0 18px 0;">
+              <a href="https://stewartandco.org/apply" style="display: inline-block; background: #0f172a; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 18px; border-radius: 8px;">
+                Book Free Consultation
+              </a>
+            </div>
+
             <p style="margin: 0; font-size: 14px; color: #64748b;">
               Need help? Reply to this email and we will take care of you.
             </p>
@@ -50,6 +59,9 @@ What you can expect:
 - Learning hub tracks and videos to level up your skills
 - Community chat for live discussion and support
 - Crypto Compass research and breakdowns
+
+Want personalized guidance? Book a free consultation:
+https://stewartandco.org/apply
 
 Need help? Reply to this email and we will take care of you.
 

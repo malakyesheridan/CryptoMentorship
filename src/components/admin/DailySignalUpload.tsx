@@ -33,6 +33,14 @@ const tierLabels = {
   T2: 'Elite',
 }
 
+const assetDisplayLabels: Partial<Record<PortfolioAsset, string>> = {
+  XAUTUSD: 'XAUT (Gold)',
+}
+
+function getAssetDisplayLabel(asset: PortfolioAsset): string {
+  return assetDisplayLabels[asset] ?? asset
+}
+
 export default function DailySignalUpload({ tier, category, userRole, formIdPrefix, existingSignal, onEditComplete }: DailySignalUploadProps) {
   const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
@@ -317,7 +325,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
                 <option value="" disabled>Select primary asset</option>
                 {portfolioAssets.map((asset) => (
                   <option key={asset} value={asset}>
-                    {asset}
+                    {getAssetDisplayLabel(asset)}
                   </option>
                 ))}
               </Select>
@@ -335,7 +343,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
                 <option value="" disabled>Select secondary asset</option>
                 {portfolioAssets.map((asset) => (
                   <option key={asset} value={asset}>
-                    {asset}
+                    {getAssetDisplayLabel(asset)}
                   </option>
                 ))}
               </Select>
@@ -353,7 +361,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
                 <option value="" disabled>Select tertiary asset</option>
                 {portfolioAssets.map((asset) => (
                   <option key={asset} value={asset}>
-                    {asset}
+                    {getAssetDisplayLabel(asset)}
                   </option>
                 ))}
               </Select>
