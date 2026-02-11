@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     const description = body.description || ''
     const slug = body.slug
     const videoUrl = body.videoUrl
+    const coverUrl = typeof body.coverUrl === 'string' ? body.coverUrl.trim() : ''
     const duration = body.duration ? parseInt(body.duration) : null
 
     console.log('[Episode Creation] Request received:', {
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
           excerpt: description?.trim() || null,
           videoUrl: videoUrl.trim(),
           body: null,
-          coverUrl: null,
+          coverUrl: coverUrl || null,
           duration: duration,
           category: 'daily-update',
           locked: false, // Always false - everyone can view

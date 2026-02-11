@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,67 +8,106 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, AlertCircle, Play, Shield, Upload } from 'lucide-react'
+import {
+  VIDEO_MAX_SIZE_BYTES,
+  VIDEO_UPLOAD_MIME_TYPES,
+  IMAGE_MAX_SIZE_BYTES,
+  IMAGE_UPLOAD_MIME_TYPES,
+  formatBytes
+} from '@/lib/upload-config'
 
 export default function CryptoCompassUpload() {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
 
-  // Episode form data
   const [episodeData, setEpisodeData] = useState({
     title: '',
     description: '',
     video: null as File | null,
+    thumbnail: null as File | null,
     duration: null as number | null,
   })
 
+  useEffect(() => {
+    return () => {
+      if (thumbnailPreview) {
+        URL.revokeObjectURL(thumbnailPreview)
+      }
+    }
+  }, [thumbnailPreview])
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      // Validate file size (1GB limit)
-      const maxFileSize = 1024 * 1024 * 1024 // 1GB
-      if (file.size > maxFileSize) {
-        setErrorMessage(`File too large. Maximum size is 1GB. Your file is ${(file.size / (1024 * 1024 * 1024)).toFixed(2)}GB`)
-        setUploadStatus('error')
-        return
-      }
-      
-      // Validate file type
-      const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
-      if (!allowedTypes.includes(file.type)) {
-        setErrorMessage('Invalid file type. Please upload an MP4, WebM, QuickTime, or AVI video file.')
-        setUploadStatus('error')
-        return
-      }
-      
-      // Extract video duration
-      let duration: number | null = null
-      try {
-        const video = document.createElement('video')
-        video.preload = 'metadata'
-        video.src = URL.createObjectURL(file)
-        
-        await new Promise((resolve, reject) => {
-          video.onloadedmetadata = () => {
-            window.URL.revokeObjectURL(video.src)
-            duration = Math.round(video.duration)
-            resolve(duration)
-          }
-          video.onerror = () => {
-            window.URL.revokeObjectURL(video.src)
-            reject(new Error('Failed to load video metadata'))
-          }
-        })
-      } catch (error) {
-        console.warn('Failed to extract video duration:', error)
-        // Continue without duration - it's optional
-      }
-      
-      setEpisodeData({ ...episodeData, video: file, duration })
-      setErrorMessage('')
-      setUploadStatus('idle')
+    if (!file) return
+
+    if (file.size > VIDEO_MAX_SIZE_BYTES) {
+      setErrorMessage(`File too large. Maximum size is ${formatBytes(VIDEO_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
+      setUploadStatus('error')
+      return
     }
+
+    if (!VIDEO_UPLOAD_MIME_TYPES.includes(file.type)) {
+      setErrorMessage('Invalid file type. Please upload an MP4, WebM, QuickTime, or AVI video file.')
+      setUploadStatus('error')
+      return
+    }
+
+    let duration: number | null = null
+    try {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.src = URL.createObjectURL(file)
+
+      await new Promise((resolve, reject) => {
+        video.onloadedmetadata = () => {
+          window.URL.revokeObjectURL(video.src)
+          duration = Math.round(video.duration)
+          resolve(duration)
+        }
+        video.onerror = () => {
+          window.URL.revokeObjectURL(video.src)
+          reject(new Error('Failed to load video metadata'))
+        }
+      })
+    } catch (error) {
+      console.warn('Failed to extract video duration:', error)
+    }
+
+    setEpisodeData((prev) => ({ ...prev, video: file, duration }))
+    setErrorMessage('')
+    setUploadStatus('idle')
+  }
+
+  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!IMAGE_UPLOAD_MIME_TYPES.includes(file.type)) {
+      setErrorMessage('Invalid thumbnail file type. Please upload JPG, PNG, WebP, or GIF.')
+      setUploadStatus('error')
+      return
+    }
+
+    if (file.size > IMAGE_MAX_SIZE_BYTES) {
+      setErrorMessage(`Thumbnail too large. Maximum size is ${formatBytes(IMAGE_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
+      setUploadStatus('error')
+      return
+    }
+
+    const nextPreview = URL.createObjectURL(file)
+    setThumbnailPreview((prev) => {
+      if (prev) {
+        URL.revokeObjectURL(prev)
+      }
+      return nextPreview
+    })
+    setEpisodeData((prev) => ({ ...prev, thumbnail: file }))
+    setErrorMessage('')
+    setUploadStatus('idle')
   }
 
   const generateSlug = (title: string) => {
@@ -83,12 +122,11 @@ export default function CryptoCompassUpload() {
   const handleEpisodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Clear previous errors
     setErrorMessage('')
     setUploadStatus('idle')
     setUploadProgress(0)
+    setThumbnailUploadProgress(0)
 
-    // Validate required fields
     if (!episodeData.title || episodeData.title.trim() === '') {
       setErrorMessage('Episode title is required')
       setUploadStatus('error')
@@ -107,10 +145,28 @@ export default function CryptoCompassUpload() {
 
     try {
       const slug = generateSlug(episodeData.title)
-      
-      // Upload video to Vercel Blob Storage
-      const { uploadCryptoCompassVideo } = await import('@/lib/crypto-compass-upload')
+      let coverUrl: string | undefined
 
+      if (episodeData.thumbnail) {
+        const { uploadToBlob } = await import('@/lib/blob-upload')
+        const thumbnailUpload = await uploadToBlob({
+          file: episodeData.thumbnail,
+          folder: 'episodes/thumbnails',
+          onProgress: (progress) => {
+            setThumbnailUploadProgress(progress)
+          }
+        })
+
+        if (!thumbnailUpload.success || !thumbnailUpload.url) {
+          setUploadStatus('error')
+          setErrorMessage(thumbnailUpload.error || 'Thumbnail upload failed')
+          return
+        }
+
+        coverUrl = thumbnailUpload.url
+      }
+
+      const { uploadCryptoCompassVideo } = await import('@/lib/crypto-compass-upload')
       const uploadResult = await uploadCryptoCompassVideo({
         file: episodeData.video,
         onProgress: (progress) => {
@@ -124,7 +180,6 @@ export default function CryptoCompassUpload() {
         return
       }
 
-      // Create episode record with uploaded video URL
       const response = await fetch('/api/admin/episodes', {
         method: 'POST',
         headers: {
@@ -133,8 +188,9 @@ export default function CryptoCompassUpload() {
         body: JSON.stringify({
           title: episodeData.title,
           description: episodeData.description || '',
-          slug: slug,
+          slug,
           videoUrl: uploadResult.url,
+          coverUrl,
           duration: episodeData.duration,
         }),
       })
@@ -154,7 +210,14 @@ export default function CryptoCompassUpload() {
           title: '',
           description: '',
           video: null,
+          thumbnail: null,
           duration: null,
+        })
+        setThumbnailPreview((prev) => {
+          if (prev) {
+            URL.revokeObjectURL(prev)
+          }
+          return null
         })
         setTimeout(() => {
           window.location.reload()
@@ -169,14 +232,6 @@ export default function CryptoCompassUpload() {
     } finally {
       setIsUploading(false)
     }
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
   }
 
   return (
@@ -197,7 +252,6 @@ export default function CryptoCompassUpload() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleEpisodeSubmit} className="space-y-4">
-          {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="episode-title" className="flex items-center gap-2">
               Episode Name
@@ -207,7 +261,7 @@ export default function CryptoCompassUpload() {
               id="episode-title"
               value={episodeData.title}
               onChange={(e) => {
-                setEpisodeData({ ...episodeData, title: e.target.value })
+                setEpisodeData((prev) => ({ ...prev, title: e.target.value }))
                 setErrorMessage('')
               }}
               placeholder="e.g., Market Outlook: Q4 2024 Analysis"
@@ -217,7 +271,6 @@ export default function CryptoCompassUpload() {
             />
           </div>
 
-          {/* Video File Upload */}
           <div className="space-y-2">
             <Label htmlFor="video-file" className="flex items-center gap-2">
               Video File
@@ -249,7 +302,7 @@ export default function CryptoCompassUpload() {
               </label>
               {episodeData.video && (
                 <div className="text-sm text-slate-600">
-                  {formatFileSize(episodeData.video.size)}
+                  {formatBytes(episodeData.video.size)}
                 </div>
               )}
             </div>
@@ -258,20 +311,60 @@ export default function CryptoCompassUpload() {
             </p>
           </div>
 
-          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="thumbnail-file">Thumbnail Image (Optional)</Label>
+            <div className="flex items-center gap-4">
+              <label
+                htmlFor="thumbnail-file"
+                className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  episodeData.thumbnail
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="w-5 h-5 text-slate-600" />
+                  <span className="text-sm text-slate-600">
+                    {episodeData.thumbnail ? episodeData.thumbnail.name : 'Select thumbnail image'}
+                  </span>
+                </div>
+                <input
+                  id="thumbnail-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleThumbnailChange}
+                  disabled={isUploading}
+                  className="hidden"
+                />
+              </label>
+              {thumbnailPreview && (
+                <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={thumbnailPreview}
+                    alt="Thumbnail preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              Optional poster image shown on episode cards and before playback (JPG, PNG, WebP, GIF up to {formatBytes(IMAGE_MAX_SIZE_BYTES)})
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               value={episodeData.description}
-              onChange={(e) => setEpisodeData({ ...episodeData, description: e.target.value })}
+              onChange={(e) => setEpisodeData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Brief description of the episode..."
               rows={3}
               disabled={isUploading}
             />
           </div>
 
-          {/* Upload Progress */}
           {isUploading && uploadProgress > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
@@ -279,15 +372,19 @@ export default function CryptoCompassUpload() {
                 <span className="font-medium text-slate-900">{uploadProgress}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
             </div>
           )}
+          {isUploading && thumbnailUploadProgress > 0 && (
+            <p className="text-xs text-slate-500">
+              Thumbnail upload: {thumbnailUploadProgress}%
+            </p>
+          )}
 
-          {/* Submit Button */}
           <Button
             type="submit"
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-6 text-base"
@@ -304,7 +401,6 @@ export default function CryptoCompassUpload() {
           </Button>
         </form>
 
-        {/* Status Messages */}
         {uploadStatus === 'success' && (
           <div className="mt-4 flex items-center space-x-2 text-green-600">
             <CheckCircle className="w-5 h-5" />

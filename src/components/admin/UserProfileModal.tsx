@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { X, Mail, Calendar, Shield, CheckCircle2, XCircle, BookOpen, MessageSquare, Award, TrendingUp, Eye, Bookmark, HelpCircle, Users, Clock } from 'lucide-react'
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { RoleSelector } from './RoleSelector'
 import { CreateTrialModal } from './CreateTrialModal'
+import { toast } from 'sonner'
 
 interface UserProfileModalProps {
   userId: string
@@ -70,6 +72,8 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showTrialModal, setShowTrialModal] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [isSavingName, setIsSavingName] = useState(false)
 
   const fetchUserProfile = useCallback(async () => {
     setIsLoading(true)
@@ -81,6 +85,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
       }
       const profileData = await response.json()
       setData(profileData)
+      setNameInput(profileData.user?.name || '')
     } catch (err: any) {
       setError(err.message || 'Failed to load user profile')
       console.error('Error fetching user profile:', err)
@@ -94,6 +99,54 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
       fetchUserProfile()
     }
   }, [isOpen, userId, fetchUserProfile])
+
+  const handleSaveName = async () => {
+    if (!data || isSavingName) return
+
+    const trimmedName = nameInput.trim()
+    const currentName = (data.user.name || '').trim()
+    const nextName = trimmedName.length > 0 ? trimmedName : null
+    const currentValue = currentName.length > 0 ? currentName : null
+
+    if (nextName === currentValue) {
+      return
+    }
+
+    setIsSavingName(true)
+    try {
+      const response = await fetch(`/api/admin/users/${data.user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: nextName }),
+      })
+
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to update name')
+      }
+
+      const updatedName = payload?.user?.name ?? nextName
+      setData((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          user: {
+            ...prev.user,
+            name: updatedName,
+          },
+        }
+      })
+      setNameInput(updatedName || '')
+      toast.success('User name updated')
+      router.refresh()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update name')
+    } finally {
+      setIsSavingName(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -144,7 +197,23 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-slate-500">Name</p>
-                      <p className="font-medium">{data.user.name || 'No name'}</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <Input
+                          value={nameInput}
+                          onChange={(event) => setNameInput(event.target.value)}
+                          placeholder="No name"
+                          disabled={isSavingName}
+                          className="h-9"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleSaveName}
+                          disabled={isSavingName}
+                        >
+                          {isSavingName ? 'Saving...' : 'Save'}
+                        </Button>
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">Email</p>

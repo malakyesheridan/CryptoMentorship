@@ -135,6 +135,34 @@ export async function PUT(
     const userId = params.userId
     const body = await request.json()
     const { role, isActive } = body
+    const rawName = body?.name
+    let name: string | null | undefined = undefined
+
+    if (rawName !== undefined) {
+      if (rawName === null) {
+        name = null
+      } else if (typeof rawName === 'string') {
+        const trimmedName = rawName.trim()
+        if (!trimmedName) {
+          return NextResponse.json(
+            { error: 'Name cannot be empty. Use null to clear the name.' },
+            { status: 400 }
+          )
+        }
+        if (trimmedName.length > 100) {
+          return NextResponse.json(
+            { error: 'Name must be 100 characters or less' },
+            { status: 400 }
+          )
+        }
+        name = trimmedName
+      } else {
+        return NextResponse.json(
+          { error: 'Invalid name value' },
+          { status: 400 }
+        )
+      }
+    }
     
     // Prevent changing your own role
     if (userId === adminUser.id && role && role !== adminUser.role) {
@@ -186,6 +214,7 @@ export async function PUT(
       const updateData: any = {}
       if (role !== undefined) updateData.role = role
       if (isActive !== undefined) updateData.isActive = isActive
+      if (name !== undefined) updateData.name = name
       
       const updated = await tx.user.update({
         where: { id: userId },
@@ -201,10 +230,12 @@ export async function PUT(
         userId,
         {
           before: {
+            name: userBefore.name,
             role: userBefore.role,
             isActive: userBefore.isActive
           },
           after: {
+            name: name !== undefined ? name : userBefore.name,
             role: role !== undefined ? role : userBefore.role,
             isActive: isActive !== undefined ? isActive : userBefore.isActive
           }
@@ -217,13 +248,14 @@ export async function PUT(
     logger.info('User updated', {
       userId,
       updatedBy: adminUser.id,
-      changes: { role, isActive }
+      changes: { name, role, isActive }
     })
     
     return NextResponse.json({ 
       success: true,
       user: {
         id: updatedUser.id,
+        name: updatedUser.name,
         role: updatedUser.role,
         isActive: updatedUser.isActive
       }
