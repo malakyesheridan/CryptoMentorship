@@ -177,6 +177,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
 
     let pairedT2Signal: DailySignal | null = null
     let shouldWaitForPairedT2Signal = false
+    let shouldSendT2EmailForCurrentSignal = true
     if (signalTier === 'T2' && (createdSignal.category === 'majors' || createdSignal.category === 'memecoins')) {
       const signalDate = new Date(createdSignal.publishedAt)
       signalDate.setHours(0, 0, 0, 0)
@@ -198,12 +199,20 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
 
       if (pairedSignal) {
         pairedT2Signal = pairedSignal as DailySignal
+        const createdTimestamp = createdSignal.publishedAt.getTime()
+        const pairedTimestamp = pairedSignal.publishedAt.getTime()
+        // Only one T2 signal dispatch should send the consolidated majors+memecoins email.
+        // Prefer the later published signal as the canonical sender.
+        shouldSendT2EmailForCurrentSignal = createdTimestamp > pairedTimestamp
+          || (createdTimestamp === pairedTimestamp && createdSignal.id > pairedSignal.id)
+
         logger.info('Found paired T2 signal for email batch', {
           signalId: createdSignal.id,
           signalCategory: createdSignal.category,
           pairedSignalId: pairedSignal.id,
           pairedCategory,
           signalDate: signalDate.toISOString(),
+          shouldSendT2EmailForCurrentSignal,
         })
       } else {
         shouldWaitForPairedT2Signal = true
@@ -327,10 +336,15 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
         // Always put majors (market rotation) first, then memecoins
         let signalsForEmail: DailySignal[] = [signalToSend]
         let shouldSkipEmail = false
+        let skipReason: string | null = null
         
         if (userTier === 'T2' && signalTier === 'T2') {
           if (shouldWaitForPairedT2Signal) {
             shouldSkipEmail = true
+            skipReason = 'paired signal not available yet'
+          } else if (pairedT2Signal && !shouldSendT2EmailForCurrentSignal) {
+            shouldSkipEmail = true
+            skipReason = 'paired signal dispatch is canonical sender for consolidated T2 email'
           } else if (pairedT2Signal) {
             signalsForEmail = createdSignal.category === 'majors'
               ? [createdSignal as DailySignal, pairedT2Signal]
@@ -344,6 +358,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
             userId: user.id,
             signalId: createdSignal.id,
             category: createdSignal.category,
+            reason: skipReason,
           })
           continue
         }
