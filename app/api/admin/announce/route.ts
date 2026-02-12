@@ -15,7 +15,7 @@ const announceSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 'admin') {
+    if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

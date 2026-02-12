@@ -17,9 +17,9 @@ export interface OnboardingData {
 export async function createClientWithAdmin(data: OnboardingData) {
   const currentUser = await requireUser()
   
-  // Only admins can create new clients
-  if (currentUser.role !== 'admin') {
-    throw new Error('Only admins can create new clients')
+  // Only admins/editors can create new clients
+  if (!['admin', 'editor'].includes(currentUser.role)) {
+    throw new Error('Only admins or editors can create new clients')
   }
 
   // Check if client slug already exists
@@ -84,9 +84,9 @@ export async function createClientWithAdmin(data: OnboardingData) {
 export async function getOnboardingStatus(clientId: string) {
   const user = await requireUser()
   
-  // Only admins can check onboarding status
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can check onboarding status')
+  // Only admins/editors can check onboarding status
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can check onboarding status')
   }
 
   const client = await prisma.client.findUnique({
@@ -129,9 +129,9 @@ export async function getOnboardingStatus(clientId: string) {
 export async function inviteUserToClient(clientId: string, email: string, role: string = 'member') {
   const user = await requireUser()
   
-  // Only admins can invite users
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can invite users')
+  // Only admins/editors can invite users
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can invite users')
   }
 
   // Check if user already exists
@@ -202,7 +202,7 @@ export async function getClientOnboardingData(clientId: string) {
   const user = await requireUser()
   
   // Users can only see their own client's data
-  if (user.role !== 'admin' && (user as any).clientId !== clientId) {
+  if (!['admin', 'editor'].includes(user.role) && (user as any).clientId !== clientId) {
     throw new Error('You can only view your own client\'s data')
   }
 

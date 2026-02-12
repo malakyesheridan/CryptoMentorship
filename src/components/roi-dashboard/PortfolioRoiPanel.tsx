@@ -149,7 +149,7 @@ function getSeriesTrackingStats(navSeries: Array<{ date: string; nav: number }>)
 
 export function PortfolioRoiPanel() {
   const { data: session, status: sessionStatus } = useSession()
-  const isAdmin = session?.user?.role === 'admin'
+  const isAdmin = ['admin', 'editor'].includes(session?.user?.role || '')
   const userTier = (session?.user?.membershipTier ?? null) as 'T1' | 'T2' | null
   const canAccessT2 = isAdmin || userTier === 'T2'
   const availableTiers: Array<'T1' | 'T2'> = canAccessT2 ? ['T1', 'T2'] : ['T1']

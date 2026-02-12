@@ -35,7 +35,7 @@ const transcriptPasteSchema = z.object({
 export async function updateChapters(data: z.infer<typeof chaptersBatchSchema>) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 'admin') {
+    if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Unauthorized' }
     }
 
@@ -110,7 +110,7 @@ export async function updateChapters(data: z.infer<typeof chaptersBatchSchema>) 
 export async function uploadTranscript(data: z.infer<typeof transcriptUploadSchema>) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 'admin') {
+    if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Unauthorized' }
     }
 
@@ -207,7 +207,7 @@ export async function uploadTranscript(data: z.infer<typeof transcriptUploadSche
 export async function pasteTranscript(data: z.infer<typeof transcriptPasteSchema>) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 'admin') {
+    if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Unauthorized' }
     }
 

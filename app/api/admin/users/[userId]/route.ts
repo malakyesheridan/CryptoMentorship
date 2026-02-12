@@ -311,7 +311,7 @@ export async function DELETE(
     
     // Prevent deleting other admins (only allow deleting non-admin users)
     // Admins can delete members, editors, and guests, but not other admins
-    if (userToDelete.role === 'admin' && adminUser.role !== 'admin') {
+    if (userToDelete.role === 'admin' && !['admin', 'editor'].includes(adminUser.role)) {
       return NextResponse.json(
         { error: 'Insufficient permissions to delete admin users' },
         { status: 403 }

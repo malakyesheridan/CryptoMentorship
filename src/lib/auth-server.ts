@@ -7,6 +7,21 @@ import { prisma } from '@/lib/prisma'
 export { authOptions }
 export { prisma }
 
+export function isAdminOrEditorRole(role: string | null | undefined): boolean {
+  return role === 'admin' || role === 'editor'
+}
+
+function normalizeRequiredRoles(roleOrPredicate: string | string[]) {
+  if (typeof roleOrPredicate === 'string') {
+    return roleOrPredicate === 'admin' ? ['admin', 'editor'] : [roleOrPredicate]
+  }
+  const roles = new Set(roleOrPredicate)
+  if (roles.has('admin')) {
+    roles.add('editor')
+  }
+  return Array.from(roles)
+}
+
 export async function getSession() {
   const session = await getServerSession(authOptions)
   
@@ -42,12 +57,9 @@ export async function requireRole(roleOrPredicate: string | string[] | ((user: a
     if (!roleOrPredicate(user)) {
       redirect('/dashboard')
     }
-  } else if (Array.isArray(roleOrPredicate)) {
-    if (!roleOrPredicate.includes(user.role)) {
-      redirect('/dashboard')
-    }
   } else {
-    if (user.role !== roleOrPredicate) {
+    const allowedRoles = normalizeRequiredRoles(roleOrPredicate)
+    if (!allowedRoles.includes(user.role)) {
       redirect('/dashboard')
     }
   }
@@ -88,10 +100,8 @@ export async function requireRoleAPI(
   
   if (typeof roleOrPredicate === 'function') {
     hasRole = roleOrPredicate(user)
-  } else if (Array.isArray(roleOrPredicate)) {
-    hasRole = roleOrPredicate.includes(user.role)
   } else {
-    hasRole = user.role === roleOrPredicate
+    hasRole = normalizeRequiredRoles(roleOrPredicate).includes(user.role)
   }
   
   if (!hasRole) {
@@ -116,7 +126,7 @@ export function hasRole(user: any, role: 'guest' | 'member' | 'editor' | 'admin'
     case 'editor':
       return ['editor', 'admin'].includes(user.role)
     case 'admin':
-      return user.role === 'admin'
+      return isAdminOrEditorRole(user.role)
     default:
       return false
   }
@@ -137,8 +147,8 @@ export async function getUserWithMembership(userId: string) {
 }
 
 /**
- * Require admin access for API routes
- * Throws NextResponse error if user is not admin
+ * Require admin-equivalent access for API routes
+ * Throws NextResponse error if user is not admin/editor
  */
 export async function requireAdmin() {
   const session = await getSession()
@@ -155,9 +165,9 @@ export async function requireAdmin() {
     select: { id: true, role: true, email: true, name: true },
   })
   
-  if (!user || user.role !== 'admin') {
+  if (!user || !isAdminOrEditorRole(user.role)) {
     throw NextResponse.json(
-      { error: 'Admin access required' },
+      { error: 'Admin or editor access required' },
       { status: 403 }
     ) as any
   }

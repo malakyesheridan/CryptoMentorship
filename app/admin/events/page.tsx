@@ -311,7 +311,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                         <Users className="h-4 w-4" />
                       </Link>
                     </Button>
-                    {session.user.role === 'admin' && (
+                    {['admin', 'editor'].includes(session.user.role) && (
                       <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
                         <Trash2 className="h-4 w-4" />
                       </Button>

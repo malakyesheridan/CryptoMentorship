@@ -9,8 +9,12 @@ function isAuthorized(request: NextRequest): { ok: boolean; isProduction: boolea
   const isVercelCron = request.headers.get('x-vercel-cron') === '1'
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production'
   const providedSecret = request.nextUrl.searchParams.get('secret')
+  const internalDispatchSecret = process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
+  const providedInternalToken = request.headers.get('x-internal-job-token')
+  const hasValidInternalToken = !!internalDispatchSecret && providedInternalToken === internalDispatchSecret
   const authorized = isVercelCron
     || (!!cronSecret && providedSecret === cronSecret)
+    || hasValidInternalToken
     || (!isProduction && !cronSecret)
 
   return {

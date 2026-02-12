@@ -134,9 +134,10 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => {
+              const hasAdminAccess = ['admin', 'editor'].includes(userRole)
               const canView = video.visibility === 'public' || 
-                             (video.visibility === 'member' && (userRole === 'admin' || userTier)) ||
-                             userRole === 'admin'
+                             (video.visibility === 'member' && (hasAdminAccess || userTier)) ||
+                             hasAdminAccess
 
               return (
                 <Link key={video.id} href={`/videos/${video.id}`}>

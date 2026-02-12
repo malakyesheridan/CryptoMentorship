@@ -31,10 +31,8 @@ export async function GET(request: NextRequest) {
     const where: any = {}
     
     // Visibility filter
-    if (session?.user?.role === 'admin') {
-      // Admins can see all events
-    } else if (session?.user?.role === 'editor') {
-      where.visibility = { in: ['public', 'member'] }
+    if (['admin', 'editor'].includes(session?.user?.role || '')) {
+      // Admins/editors can see all events
     } else {
       where.visibility = visibility
     }

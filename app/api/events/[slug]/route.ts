@@ -50,7 +50,7 @@ export async function GET(
     }
 
     // Check visibility
-    if (event.visibility === 'admin' && session?.user?.role !== 'admin') {
+    if (event.visibility === 'admin' && !['admin', 'editor'].includes(session?.user?.role || '')) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
     if (event.visibility === 'member' && !session?.user?.id) {

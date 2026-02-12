@@ -26,9 +26,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is admin
-    if (session.user.role !== 'admin') {
-      return NextResponse.json({ ok: false, message: 'Admin access required' }, { status: 403 })
+    // Check if user is admin/editor
+    if (!['admin', 'editor'].includes(session.user.role)) {
+      return NextResponse.json({ ok: false, message: 'Admin or editor access required' }, { status: 403 })
     }
 
     const formData = await req.formData()

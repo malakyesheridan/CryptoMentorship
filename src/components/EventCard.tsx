@@ -60,7 +60,7 @@ export function EventCard({
   // Check if user can see this event
   const canView = visibility === 'public' || 
                   (visibility === 'member' && userRole) ||
-                  (visibility === 'admin' && userRole === 'admin')
+                  (visibility === 'admin' && ['admin', 'editor'].includes(userRole || ''))
 
   if (!canView) return null
 

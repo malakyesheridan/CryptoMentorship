@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
 import { runPortfolioRoiJob } from '@/lib/jobs/portfolio-roi'
 import { logger } from '@/lib/logger'
 import { formatAllocationSignal, parseAllocationAssets, portfolioAssets } from '@/lib/portfolio-assets'
@@ -104,16 +105,33 @@ function triggerSignalEmailDispatch(request: NextRequest, signalId: string) {
     url.searchParams.set('secret', process.env.VERCEL_CRON_SECRET)
   }
   url.searchParams.set('signalId', signalId)
+  const internalDispatchSecret = process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
+  const headers: Record<string, string> = {}
+  if (internalDispatchSecret) {
+    headers['x-internal-job-token'] = internalDispatchSecret
+  }
 
   void fetch(url.toString(), {
     method: 'POST',
     keepalive: true,
-  }).catch((error) => {
-    logger.warn('Failed to trigger signal email dispatch', {
-      signalId,
-      error: error instanceof Error ? error.message : String(error)
-    })
+    headers,
   })
+    .then((response) => {
+      if (!response.ok) {
+        logger.warn('Signal email dispatch returned non-success response; falling back to direct send', {
+          signalId,
+          status: response.status
+        })
+        void sendSignalEmails(signalId)
+      }
+    })
+    .catch((error) => {
+      logger.warn('Failed to trigger signal email dispatch', {
+        signalId,
+        error: error instanceof Error ? error.message : String(error)
+      })
+      void sendSignalEmails(signalId)
+    })
 }
 
 // GET /api/admin/portfolio-daily-signals - Get all daily updates

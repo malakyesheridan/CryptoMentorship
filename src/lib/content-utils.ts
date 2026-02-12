@@ -17,8 +17,8 @@ function mapTier(tier: string | null): string | null {
 }
 
 export function canViewContent(userRole: string, userTier: string | null, contentMinTier: string | null, contentLocked: boolean): boolean {
-  // Admins can view everything
-  if (userRole === 'admin') return true
+  // Admins/editors can view everything
+  if (userRole === 'admin' || userRole === 'editor') return true
   
   // If content is locked, check tier requirements
   if (contentLocked && contentMinTier) {

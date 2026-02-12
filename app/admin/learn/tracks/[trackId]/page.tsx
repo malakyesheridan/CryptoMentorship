@@ -72,7 +72,7 @@ async function getTrack(trackId: string) {
 export default async function TrackDetailPage({ params }: TrackDetailPageProps) {
   const session = await getServerSession(authOptions)
   
-  if (!session?.user || session.user.role !== 'admin') {
+  if (!session?.user || !['admin', 'editor'].includes(session.user.role)) {
     redirect('/admin')
   }
 

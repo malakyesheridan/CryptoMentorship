@@ -19,8 +19,8 @@ export default function AdminVideoUploadWrapper({ userRole }: AdminVideoUploadWr
     return <div className="h-32" /> // Placeholder to prevent layout shift
   }
 
-  // Only show upload form for admin users (or always for testing)
-  if (userRole !== 'admin' && userRole !== 'guest') {
+  // Only show upload form for admin/editor users (or always for testing)
+  if (!['admin', 'editor', 'guest'].includes(userRole || '')) {
     return null
   }
 

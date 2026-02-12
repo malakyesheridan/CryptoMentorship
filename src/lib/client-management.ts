@@ -12,9 +12,9 @@ export interface ClientData {
 export async function createClient(data: ClientData) {
   const user = await requireUser()
   
-  // Only admins can create clients
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can create clients')
+  // Only admins/editors can create clients
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can create clients')
   }
 
   const client = await prisma.client.create({
@@ -66,9 +66,9 @@ export async function getClientBySlug(slug: string) {
 export async function getAllClients() {
   const user = await requireUser()
   
-  // Only admins can see all clients
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can view all clients')
+  // Only admins/editors can see all clients
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can view all clients')
   }
 
   return await prisma.client.findMany({
@@ -95,9 +95,9 @@ export async function getAllClients() {
 export async function updateClient(clientId: string, data: Partial<ClientData>) {
   const user = await requireUser()
   
-  // Only admins can update clients
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can update clients')
+  // Only admins/editors can update clients
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can update clients')
   }
 
   const client = await prisma.client.update({
@@ -114,9 +114,9 @@ export async function updateClient(clientId: string, data: Partial<ClientData>) 
 export async function deleteClient(clientId: string) {
   const user = await requireUser()
   
-  // Only admins can delete clients
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can delete clients')
+  // Only admins/editors can delete clients
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can delete clients')
   }
 
   // First, remove all users from this client
@@ -136,9 +136,9 @@ export async function deleteClient(clientId: string) {
 export async function assignUserToClient(userId: string, clientId: string) {
   const user = await requireUser()
   
-  // Only admins can assign users to clients
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can assign users to clients')
+  // Only admins/editors can assign users to clients
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can assign users to clients')
   }
 
   const updatedUser = await prisma.user.update({
@@ -155,9 +155,9 @@ export async function assignUserToClient(userId: string, clientId: string) {
 export async function removeUserFromClient(userId: string) {
   const user = await requireUser()
   
-  // Only admins can remove users from clients
-  if (user.role !== 'admin') {
-    throw new Error('Only admins can remove users from clients')
+  // Only admins/editors can remove users from clients
+  if (!['admin', 'editor'].includes(user.role)) {
+    throw new Error('Only admins or editors can remove users from clients')
   }
 
   const updatedUser = await prisma.user.update({
@@ -172,7 +172,7 @@ export async function getClientUsers(clientId: string) {
   const user = await requireUser()
   
   // Users can only see users from their own client
-  if (user.role !== 'admin' && (user as any).clientId !== clientId) {
+  if (!['admin', 'editor'].includes(user.role) && (user as any).clientId !== clientId) {
     throw new Error('You can only view users from your own client')
   }
 
@@ -197,7 +197,7 @@ export async function getClientStats(clientId: string) {
   const user = await requireUser()
   
   // Users can only see stats from their own client
-  if (user.role !== 'admin' && (user as any).clientId !== clientId) {
+  if (!['admin', 'editor'].includes(user.role) && (user as any).clientId !== clientId) {
     throw new Error('You can only view stats from your own client')
   }
 

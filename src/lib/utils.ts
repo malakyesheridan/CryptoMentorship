@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function canView(content: { locked: boolean }, user: { role: string }) {
   if (!content.locked) return true
-  return user.role === 'member' || user.role === 'admin'
+  return user.role === 'member' || user.role === 'editor' || user.role === 'admin'
 }
 
 export function formatDate(date: Date) {

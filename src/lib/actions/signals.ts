@@ -193,7 +193,7 @@ export async function updateSignal(signalId: string, data: z.infer<typeof update
 export async function deleteSignal(signalId: string) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 'admin') {
+    if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Unauthorized' }
     }
 

@@ -19,8 +19,8 @@ export default function AdminCryptoCompassUploadWrapper({ userRole }: AdminCrypt
     return <div className="h-32" /> // Placeholder to prevent layout shift
   }
 
-  // Only show upload form for admin users
-  if (userRole !== 'admin') {
+  // Only show upload form for admin/editor users
+  if (!['admin', 'editor'].includes(userRole || '')) {
     return null
   }
 

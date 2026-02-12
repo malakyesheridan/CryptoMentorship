@@ -38,6 +38,11 @@ const tierColors: Record<'T1' | 'T2', { bg: string; border: string; text: string
   T2: { bg: '#FEFCE8', border: '#FEF08A', text: '#854D0E' }, // yellow-50, yellow-200, yellow-800 (old T3)
 }
 
+function getAssetDisplayName(asset: PortfolioAsset): string {
+  if (asset === 'XAUTUSD') return 'XAUT (Gold)'
+  return asset
+}
+
 /**
  * Generate HTML for a single update section
  */
@@ -73,7 +78,7 @@ function generateUpdateSection(signal: DailySignal): string {
                 <div class="allocation-row" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 12px;">
                   <span class="allocation-label" style="font-weight: 700; color: #1e293b;">${split.label}</span>
                   <span class="allocation-value" style="color: #334155; text-align: right;">
-                    ${split.allocations.map((allocation) => `${allocation.percent}% ${allocation.asset}`).join(' / ')}
+                    ${split.allocations.map((allocation) => `${allocation.percent}% ${getAssetDisplayName(allocation.asset)}`).join(' / ')}
                   </span>
                 </div>`
             )
@@ -278,7 +283,7 @@ export async function sendDailySignalEmail({
         allocationAssets.tertiaryAsset
       )
       const allocationLines = splits
-        .map((split) => `${split.label}: ${split.allocations.map((allocation) => `${allocation.percent}% ${allocation.asset}`).join(' / ')}`)
+        .map((split) => `${split.label}: ${split.allocations.map((allocation) => `${allocation.percent}% ${getAssetDisplayName(allocation.asset)}`).join(' / ')}`)
         .join('\n')
       text += `Allocation Split:\n${allocationLines}\n\n`
     } else {

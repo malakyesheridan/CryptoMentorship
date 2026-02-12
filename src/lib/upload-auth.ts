@@ -36,7 +36,12 @@ export async function requireUploadRole(
   }
 
   const role = (token.role as Role) ?? 'guest'
-  if (!allowedRoles.includes(role)) {
+  const normalizedAllowedRoles = new Set(allowedRoles)
+  if (normalizedAllowedRoles.has('admin')) {
+    normalizedAllowedRoles.add('editor')
+  }
+
+  if (!normalizedAllowedRoles.has(role)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

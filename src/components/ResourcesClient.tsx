@@ -41,7 +41,7 @@ export default function ResourcesClient({ resources, userRole, userTier }: Resou
       {filteredResources.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResources.map((resource) => {
-            const canView = !resource.locked || userRole === 'admin' || (userTier && ['T2', 'T3'].includes(userTier)) || false
+            const canView = !resource.locked || ['admin', 'editor'].includes(userRole) || (userTier && ['T2', 'T3'].includes(userTier)) || false
 
             return (
               <ResourceCard 
@@ -59,7 +59,7 @@ export default function ResourcesClient({ resources, userRole, userTier }: Resou
           </div>
           <h3 className="text-xl font-semibold text-slate-900 mb-2">No Resources Found</h3>
           <p className="text-slate-600 mb-6">Try adjusting your search or filter criteria.</p>
-          {userRole === 'admin' && (
+          {['admin', 'editor'].includes(userRole) && (
             <Button className="bg-yellow-500 hover:bg-yellow-600 text-white">
               <FileText className="w-4 h-4 mr-2" />
               Upload First Resource

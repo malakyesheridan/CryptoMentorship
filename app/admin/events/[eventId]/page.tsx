@@ -68,7 +68,7 @@ async function getEvent(eventId: string) {
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const session = await getServerSession(authOptions)
   
-  if (!session?.user || session.user.role !== 'admin') {
+  if (!session?.user || !['admin', 'editor'].includes(session.user.role)) {
     redirect('/admin')
   }
 

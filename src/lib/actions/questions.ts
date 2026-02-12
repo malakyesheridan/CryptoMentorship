@@ -51,7 +51,7 @@ export async function createQuestion(data: z.infer<typeof createQuestionSchema>)
     }
 
     // Check visibility permissions
-    if (event.visibility === 'admin' && session.user.role !== 'admin') {
+    if (event.visibility === 'admin' && !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Forbidden' }
     }
 
@@ -134,7 +134,7 @@ export async function voteQuestion(data: z.infer<typeof voteQuestionSchema>) {
     }
 
     // Check event visibility permissions
-    if (question.event.visibility === 'admin' && session.user.role !== 'admin') {
+    if (question.event.visibility === 'admin' && !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Forbidden' }
     }
 
@@ -193,7 +193,7 @@ export async function voteQuestion(data: z.infer<typeof voteQuestionSchema>) {
 export async function answerQuestion(data: z.infer<typeof answerQuestionSchema>) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 'admin') {
+    if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Unauthorized' }
     }
 
@@ -268,7 +268,7 @@ export async function answerQuestion(data: z.infer<typeof answerQuestionSchema>)
 export async function archiveQuestion(data: z.infer<typeof archiveQuestionSchema>) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 'admin') {
+    if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
       return { error: 'Unauthorized' }
     }
 
