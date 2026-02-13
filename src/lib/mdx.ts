@@ -59,17 +59,18 @@ const serializeInternal = async (
   const serialized = await serialize(content, {
     scope,
     mdxOptions: {
-      remarkPlugins: [remarkGfm],
+      // next-mdx-remote v6 can pull a separate unified/vfile tree; cast plugin types to avoid cross-package type conflicts.
+      remarkPlugins: [remarkGfm as any],
       rehypePlugins: [
-        rehypeSlug,
+        rehypeSlug as any,
         [
-          rehypeAutolinkHeadings,
+          rehypeAutolinkHeadings as any,
           {
             behavior: 'wrap',
             properties: { className: ['anchor'] },
           },
         ],
-        [rehypeSanitize, sanitizeSchema],
+        [rehypeSanitize as any, sanitizeSchema as any],
       ],
     },
   })
