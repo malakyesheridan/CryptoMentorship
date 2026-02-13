@@ -1,5 +1,16 @@
 import { z } from 'zod'
 
+function parseOptionalBoolean(value: unknown) {
+  if (value === '' || value === undefined || value === null) return undefined
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'true') return true
+    if (normalized === 'false') return false
+  }
+  return value
+}
+
 const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().optional(),
@@ -53,6 +64,24 @@ const envSchema = z.object({
   KLAVIYO_ENABLED: z.preprocess(
     (val) => (val === '' ? undefined : val),
     z.string().optional()
+  ),
+
+  // Customer.io (optional)
+  CUSTOMERIO_ENABLED: z.preprocess(
+    parseOptionalBoolean,
+    z.boolean().optional()
+  ),
+  CUSTOMERIO_SITE_ID: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().optional()
+  ),
+  CUSTOMERIO_TRACK_API_KEY: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.string().optional()
+  ),
+  CUSTOMERIO_REGION: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.enum(['us', 'eu']).optional()
   ),
   
   // Stripe Price IDs (optional - create in Stripe Dashboard)
@@ -183,7 +212,22 @@ function validateEnv(): Env {
       }
     }
 
-    return envSchema.parse(envWithDefaults)
+    const parsedEnv = envSchema.parse(envWithDefaults)
+
+    if (parsedEnv.CUSTOMERIO_ENABLED) {
+      const missing: string[] = []
+      if (!parsedEnv.CUSTOMERIO_SITE_ID) missing.push('CUSTOMERIO_SITE_ID')
+      if (!parsedEnv.CUSTOMERIO_TRACK_API_KEY) missing.push('CUSTOMERIO_TRACK_API_KEY')
+      if (!parsedEnv.CUSTOMERIO_REGION) missing.push('CUSTOMERIO_REGION')
+
+      if (missing.length > 0) {
+        throw new Error(
+          `CUSTOMERIO_ENABLED=true requires these env vars: ${missing.join(', ')}`
+        )
+      }
+    }
+
+    return parsedEnv
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missing = error.issues.map((e: z.ZodIssue) => `  - ${e.path.join('.')}: ${e.message}`).join('\n')

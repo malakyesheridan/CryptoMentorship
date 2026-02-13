@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { sendWelcomeEmail } from '@/lib/email'
 import { emitEvent } from '@/lib/events'
-import { sendTrialStartedToKlaviyo } from '@/lib/klaviyo/events'
+import { sendTrialStartedToCustomerIo } from '@/lib/customerio/events'
 
 export type TrialMembershipSnapshot = {
   status: string
@@ -55,14 +55,20 @@ export async function onTrialStarted(input: OnTrialStartedInput) {
     )
   })
 
-  void sendTrialStartedToKlaviyo(
+  void sendTrialStartedToCustomerIo(
     {
       id: userId,
       email: user.email,
       name: user.name,
     },
     membership
-  )
+  ).catch((error) => {
+    logger.error(
+      'Failed to queue Customer.io trial event',
+      error instanceof Error ? error : new Error(String(error)),
+      { userId }
+    )
+  })
 
   await emitEvent('Trial Started', {
     trialEnd: membership.currentPeriodEnd ? membership.currentPeriodEnd.toISOString() : null,
