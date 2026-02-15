@@ -38,6 +38,7 @@
     "typecheck": "tsc --noEmit",
     "smoke:db": "npx tsx scripts/db-smoke.ts",
     "smoke:learning-track": "npx tsx scripts/learning-track-smoke.ts",
+    "smoke:notifications": "npx tsx scripts/notifications-smoke.ts",
     "audit:routes": "tsx scripts/auditRoutes.ts",
     "check:links": "npx ts-node scripts/checkLinks.ts",
     "test:ports": "node scripts/verify-port-fallback.mjs",

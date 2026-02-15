@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
-import { generateSlug } from '@/lib/content'
 import { handleError } from '@/lib/errors'
 import { emit } from '@/lib/events'
 import { z } from 'zod'
@@ -18,6 +17,39 @@ const contentSchema = z.object({
   minTier: z.enum(['T1', 'T2']).optional(),
   tags: z.array(z.string()).default([]),
 })
+
+function emitPublishedContentNotification(content: {
+  id: string
+  kind: string
+  slug: string
+  title: string
+  minTier: string | null
+}) {
+  if (content.kind === 'research') {
+    emit({ type: 'research_published', contentId: content.id }).catch(err => {
+      console.error('Failed to emit notification event:', err)
+    })
+    return
+  }
+
+  if (content.kind === 'signal') {
+    emit({ type: 'signal_published', contentId: content.id }).catch(err => {
+      console.error('Failed to emit notification event:', err)
+    })
+    return
+  }
+
+  emit({
+    type: 'learning_hub_published',
+    subjectType: 'resource',
+    subjectId: content.id,
+    title: content.title,
+    url: `/content/${content.slug}`,
+    minTier: content.minTier === 'T1' || content.minTier === 'T2' ? content.minTier : null,
+  }).catch(err => {
+    console.error('Failed to emit learning hub notification event:', err)
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,15 +95,13 @@ export async function POST(request: NextRequest) {
     
     // Emit notification event for published content
     if (content.publishedAt) {
-      const eventType = content.kind === 'research' ? 'research_published' : 
-                        content.kind === 'signal' ? 'signal_published' : null
-      
-      if (eventType) {
-        // Fire and forget - don't wait for notification creation
-        emit({ type: eventType, contentId: content.id }).catch(err => {
-          console.error('Failed to emit notification event:', err)
-        })
-      }
+      emitPublishedContentNotification({
+        id: content.id,
+        kind: content.kind,
+        slug: content.slug,
+        title: content.title,
+        minTier: content.minTier ?? null,
+      })
     }
     
     return NextResponse.json(content)
@@ -147,15 +177,13 @@ export async function PUT(request: NextRequest) {
     // Emit notification event if content was just published (wasn't published before, now is)
     const wasJustPublished = !existingContent.publishedAt && content.publishedAt
     if (wasJustPublished) {
-      const eventType = content.kind === 'research' ? 'research_published' : 
-                        content.kind === 'signal' ? 'signal_published' : null
-      
-      if (eventType) {
-        // Fire and forget - don't wait for notification creation
-        emit({ type: eventType, contentId: content.id }).catch(err => {
-          console.error('Failed to emit notification event:', err)
-        })
-      }
+      emitPublishedContentNotification({
+        id: content.id,
+        kind: content.kind,
+        slug: content.slug,
+        title: content.title,
+        minTier: content.minTier ?? null,
+      })
     }
     
     return NextResponse.json(content)

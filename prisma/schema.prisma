@@ -49,6 +49,11 @@ enum EmailOutboxStatus {
 enum EmailType {
   WELCOME
   WELCOME_TRIAL
+  NOTIFICATION_PORTFOLIO_UPDATE
+  NOTIFICATION_CRYPTO_COMPASS
+  NOTIFICATION_LEARNING_HUB
+  NOTIFICATION_COMMUNITY_MENTION
+  NOTIFICATION_COMMUNITY_REPLY
 }
 
 enum OnboardingStatus {
@@ -504,12 +509,19 @@ model NotificationPreference {
   // channels
   inApp         Boolean @default(true)
   email         Boolean @default(true) // Email enabled by default for portfolio updates
+  inAppEnabled  Boolean @default(true)
+  emailEnabled  Boolean @default(true)
   // events
   onResearch    Boolean @default(true)
   onEpisode     Boolean @default(true)
   onSignal      Boolean @default(true) // Enabled by default for daily portfolio updates
   onMention     Boolean @default(true)
   onReply       Boolean @default(true)
+  portfolioUpdatesEmail   Boolean @default(true)
+  cryptoCompassEmail      Boolean @default(true)
+  learningHubEmail        Boolean @default(true)
+  communityMentionsEmail  Boolean @default(true)
+  communityRepliesEmail   Boolean @default(true)
   // digest
   digestEnabled Boolean @default(false)
   digestFreq    String  @default("weekly") // 'daily' | 'weekly'
@@ -734,6 +746,7 @@ model EmailOutbox {
   toEmail        String
   type           EmailType
   payload        Json
+  dedupeKey      String           @unique
   status         EmailOutboxStatus @default(QUEUED)
   attempts       Int              @default(0)
   lastError      String?

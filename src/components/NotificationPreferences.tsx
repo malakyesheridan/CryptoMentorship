@@ -2,23 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Bell, Mail, Clock } from 'lucide-react'
+import { Bell, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import useSWR from 'swr'
 
 interface NotificationPreference {
   userId: string
-  inApp: boolean
-  email: boolean
-  onResearch: boolean
-  onEpisode: boolean
-  onSignal: boolean
-  onMention: boolean
-  onReply: boolean
+  inAppEnabled: boolean
+  emailEnabled: boolean
+  portfolioUpdatesEmail: boolean
+  cryptoCompassEmail: boolean
+  learningHubEmail: boolean
+  communityMentionsEmail: boolean
+  communityRepliesEmail: boolean
   digestEnabled: boolean
   digestFreq: 'daily' | 'weekly'
   digestHourUTC: number
@@ -26,7 +24,6 @@ interface NotificationPreference {
 
 export function NotificationPreferences() {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null)
-  const [loading, setLoading] = useState(false)
 
   const { data, error, mutate } = useSWR(
     '/api/me/notification-preferences',
@@ -42,23 +39,25 @@ export function NotificationPreferences() {
   const updatePreference = async (updates: Partial<NotificationPreference>) => {
     if (!preferences) return
 
-    const newPreferences = { ...preferences, ...updates }
-    setPreferences(newPreferences)
+    const nextPreferences = { ...preferences, ...updates }
+    setPreferences(nextPreferences)
 
     try {
       const response = await fetch('/api/me/notification-preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPreferences)
+        body: JSON.stringify(nextPreferences)
       })
 
       if (!response.ok) {
         throw new Error('Failed to update preferences')
       }
 
-      mutate()
-    } catch (error) {
-      // Revert on error
+      const updated = await response.json()
+      setPreferences(updated)
+      await mutate(updated, { revalidate: false })
+      toast.success('Saved')
+    } catch (_error) {
       setPreferences(preferences)
       toast.error('Failed to update notification preferences')
     }
@@ -90,9 +89,10 @@ export function NotificationPreferences() {
     )
   }
 
+  const emailTypesDisabled = !preferences.emailEnabled
+
   return (
     <div className="space-y-6">
-      {/* Channels */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -112,8 +112,8 @@ export function NotificationPreferences() {
             </div>
             <Switch
               id="inApp"
-              checked={preferences.inApp}
-              onChange={(e) => updatePreference({ inApp: e.target.checked })}
+              checked={preferences.inAppEnabled}
+              onChange={(event) => updatePreference({ inAppEnabled: event.target.checked })}
             />
           </div>
 
@@ -123,19 +123,18 @@ export function NotificationPreferences() {
                 Email Notifications
               </Label>
               <p className="text-sm text-slate-600">
-                Receive daily portfolio updates via email
+                Receive notification emails
               </p>
             </div>
             <Switch
               id="email"
-              checked={preferences.email}
-              onChange={(e) => updatePreference({ email: e.target.checked })}
+              checked={preferences.emailEnabled}
+              onChange={(event) => updatePreference({ emailEnabled: event.target.checked })}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Notification Types */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -144,7 +143,7 @@ export function NotificationPreferences() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
             <div>
               <Label htmlFor="onPortfolio" className="text-base font-medium">
                 Portfolio Updates
@@ -155,12 +154,13 @@ export function NotificationPreferences() {
             </div>
             <Switch
               id="onPortfolio"
-              checked={preferences.onSignal}
-              onChange={(e) => updatePreference({ onSignal: e.target.checked })}
+              checked={preferences.portfolioUpdatesEmail}
+              disabled={emailTypesDisabled}
+              onChange={(event) => updatePreference({ portfolioUpdatesEmail: event.target.checked })}
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
             <div>
               <Label htmlFor="onCryptoCompass" className="text-base font-medium">
                 Crypto Compass
@@ -171,28 +171,30 @@ export function NotificationPreferences() {
             </div>
             <Switch
               id="onCryptoCompass"
-              checked={preferences.onEpisode}
-              onChange={(e) => updatePreference({ onEpisode: e.target.checked })}
+              checked={preferences.cryptoCompassEmail}
+              disabled={emailTypesDisabled}
+              onChange={(event) => updatePreference({ cryptoCompassEmail: event.target.checked })}
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
             <div>
               <Label htmlFor="onLearning" className="text-base font-medium">
                 Learning Hub
               </Label>
               <p className="text-sm text-slate-600">
-                New courses, lessons, and resources
+                New tracks, lessons, and resources
               </p>
             </div>
             <Switch
               id="onLearning"
-              checked={preferences.onResearch}
-              onChange={(e) => updatePreference({ onResearch: e.target.checked })}
+              checked={preferences.learningHubEmail}
+              disabled={emailTypesDisabled}
+              onChange={(event) => updatePreference({ learningHubEmail: event.target.checked })}
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
             <div>
               <Label htmlFor="onMention" className="text-base font-medium">
                 Community Mentions
@@ -203,12 +205,13 @@ export function NotificationPreferences() {
             </div>
             <Switch
               id="onMention"
-              checked={preferences.onMention}
-              onChange={(e) => updatePreference({ onMention: e.target.checked })}
+              checked={preferences.communityMentionsEmail}
+              disabled={emailTypesDisabled}
+              onChange={(event) => updatePreference({ communityMentionsEmail: event.target.checked })}
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
             <div>
               <Label htmlFor="onReply" className="text-base font-medium">
                 Community Replies
@@ -219,14 +222,14 @@ export function NotificationPreferences() {
             </div>
             <Switch
               id="onReply"
-              checked={preferences.onReply}
-              onChange={(e) => updatePreference({ onReply: e.target.checked })}
+              checked={preferences.communityRepliesEmail}
+              disabled={emailTypesDisabled}
+              onChange={(event) => updatePreference({ communityRepliesEmail: event.target.checked })}
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Digest Settings */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -253,7 +256,7 @@ export function NotificationPreferences() {
           </div>
 
           <div className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">
-            <strong>Coming Soon:</strong> Email digest notifications will be available in a future update. 
+            <strong>Coming Soon:</strong> Email digest notifications will be available in a future update.
             You&apos;ll be able to receive daily or weekly summaries of new content and mentions.
           </div>
         </CardContent>

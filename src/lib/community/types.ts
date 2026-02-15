@@ -34,6 +34,8 @@ export type ListMessagesResponse = {
 export type CreateMessageBody = {
   channelId: string
   body: string
+  replyToMessageId?: string
+  mentionedUserIds?: string[]
 }
 
 export type CreateMessageResponse = {

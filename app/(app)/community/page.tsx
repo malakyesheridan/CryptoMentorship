@@ -94,7 +94,7 @@ export default function CommunityPage() {
   const { unreadCounts, mutate: refreshUnreadCounts } = useUnreadCounts()
   const [activeChannelId, setActiveChannelId] = useState<string | null>(channels[0]?.id ?? null)
   const [mobileView, setMobileView] = useState<'channels' | 'chat'>('chat')
-  const [replyTo, setReplyTo] = useState<{ author: string; body: string } | null>(null)
+  const [replyTo, setReplyTo] = useState<{ messageId: string; author: string; body: string } | null>(null)
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
 
   React.useEffect(() => {
@@ -191,6 +191,26 @@ export default function CommunityPage() {
     return merged
   }, [activeChannelId, items])
 
+  const resolveMentionedUserIds = useCallback((rawText: string) => {
+    const tokens = rawText.match(/@([a-zA-Z0-9_.-]{2,40})/g) ?? []
+    if (tokens.length === 0) return []
+
+    const uniqueNames = Array.from(new Set(tokens.map((token) => token.slice(1).toLowerCase())))
+    const candidates = new Map<string, string>()
+    for (const message of mergedMessages) {
+      const authorName = message.author?.name?.toLowerCase()
+      const authorId = message.author?.id
+      if (authorName && authorId && !candidates.has(authorName)) {
+        candidates.set(authorName, authorId)
+      }
+    }
+
+    return uniqueNames
+      .map((name) => candidates.get(name))
+      .filter((id): id is string => Boolean(id))
+      .filter((id) => id !== session?.user?.id)
+  }, [mergedMessages, session?.user?.id])
+
   // Auto-scroll to bottom when channel changes (initial load) and mark as read
   const prevChannelRef = React.useRef<string | null>(null)
   React.useEffect(() => {
@@ -220,9 +240,10 @@ export default function CommunityPage() {
       if (!activeChannelId) return
 
       // Add reply context if replying
-      const messageText = replyTo 
+      const messageText = replyTo
         ? `Replying to ${replyTo.author}: ${replyTo.body}\n\n${text}`
         : text
+      const mentionedUserIds = resolveMentionedUserIds(messageText)
 
       const temp: ChatMessage = {
         id: `tmp:${crypto.randomUUID()}`,
@@ -247,7 +268,12 @@ export default function CommunityPage() {
       try {
         const response = await json<CreateMessageResponse>('/api/community/messages', {
           method: 'POST',
-          body: JSON.stringify({ channelId: activeChannelId, body: messageText }),
+          body: JSON.stringify({
+            channelId: activeChannelId,
+            body: messageText,
+            replyToMessageId: replyTo?.messageId,
+            mentionedUserIds,
+          }),
         })
 
         // Remove optimistic message
@@ -274,11 +300,12 @@ export default function CommunityPage() {
         throw error
       }
     },
-    [activeChannelId, mutate, replyTo, handleNewMessage, session?.user?.id, session?.user?.image, session?.user?.name],
+    [activeChannelId, mutate, replyTo, resolveMentionedUserIds, handleNewMessage, session?.user?.id, session?.user?.image, session?.user?.name],
   )
 
   const handleReply = useCallback((message: ChatMessage) => {
     setReplyTo({
+      messageId: message.id,
       author: message.author?.name ?? 'Anonymous',
       body: message.body,
     })

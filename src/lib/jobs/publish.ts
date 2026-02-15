@@ -47,12 +47,22 @@ export async function publishScheduledContent() {
         },
       })
       
-      // Emit notification event
-      const eventType = content.kind === 'research' ? 'research_published' : 
-                      content.kind === 'signal' ? 'signal_published' : null
-      
-      if (eventType) {
-        await emit({ type: eventType, contentId: content.id })
+      if (content.kind === 'research') {
+        await emit({ type: 'research_published', contentId: content.id })
+      } else if (content.kind === 'signal') {
+        await emit({ type: 'signal_published', contentId: content.id })
+      } else if (content.kind === 'resource') {
+        const minTier = content.minTier === 'T1' || content.minTier === 'T2'
+          ? content.minTier
+          : null
+        await emit({
+          type: 'learning_hub_published',
+          subjectType: 'resource',
+          subjectId: content.id,
+          title: content.title,
+          url: `/content/${content.slug}`,
+          minTier,
+        })
       }
       
       results.content++
@@ -72,7 +82,6 @@ export async function publishScheduledContent() {
         },
       })
       
-      // Emit notification event
       await emit({ type: 'episode_published', episodeId: episode.id })
       
       results.episodes++

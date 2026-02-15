@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
-import { sendDailySignalEmail } from '@/lib/email-templates'
 import { logger } from '@/lib/logger'
+import { enqueueEmail } from '@/lib/email/outbox'
+import { resolveEmailRecipientsForEvent } from '@/lib/notifications/preferences'
+import { buildNotificationDedupeKey, type NotificationEvent } from '@/lib/notifications/types'
 
 interface DailySignal {
   id: string
@@ -15,476 +17,150 @@ interface DailySignal {
   publishedAt: Date
 }
 
-/**
- * Send email notifications for daily portfolio updates
- * Users receive emails for their highest accessible tier only
- * T2 (Elite) users receive both majors and memecoins updates in one email
- */
+function resolveBaseUrl() {
+  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+  if (!baseUrl.startsWith('http')) {
+    baseUrl = `https://${baseUrl}`
+  }
+  return baseUrl.replace(/\/$/, '')
+}
+
+function mapSignalTier(signal: { tier: string; category?: string | null }): 'T1' | 'T2' {
+  const hasCategory = signal.category === 'majors' || signal.category === 'memecoins'
+  if (signal.tier === 'T3') return 'T2'
+  if (signal.tier === 'T2' && hasCategory) return 'T2'
+  return 'T1'
+}
+
+function sameUtcDay(a: Date, b: Date) {
+  return a.getUTCFullYear() === b.getUTCFullYear()
+    && a.getUTCMonth() === b.getUTCMonth()
+    && a.getUTCDate() === b.getUTCDate()
+}
+
 export async function sendSignalEmails(signalId: string): Promise<void> {
-  logger.info('sendSignalEmails called', { signalId })
-  console.log('[sendSignalEmails] Function called with signalId:', signalId)
-  try {
-    // Get the update that was just created
-    const createdSignal = await prisma.portfolioDailySignal.findUnique({
-      where: { id: signalId },
+  logger.info('sendSignalEmails enqueue flow started', { signalId })
+
+  const createdSignal = await prisma.portfolioDailySignal.findUnique({
+    where: { id: signalId },
+  })
+
+  if (!createdSignal) {
+    logger.warn('Portfolio signal not found for enqueue', { signalId })
+    return
+  }
+
+  const signalTier = mapSignalTier(createdSignal)
+  let canonicalSignal = createdSignal as DailySignal
+  let signalsForEmail: DailySignal[] = [createdSignal as DailySignal]
+
+  if (signalTier === 'T2' && (createdSignal.category === 'majors' || createdSignal.category === 'memecoins')) {
+    const pairedCategory = createdSignal.category === 'majors' ? 'memecoins' : 'majors'
+    const candidateSignals = await prisma.portfolioDailySignal.findMany({
+      where: {
+        tier: 'T2',
+        category: { in: ['majors', 'memecoins'] },
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 20,
     })
 
-    if (!createdSignal) {
-      logger.warn('Update not found for email sending', { signalId })
-      console.warn('[sendSignalEmails] Signal not found:', signalId)
-      return
-    }
-
-    logger.info('Signal found for email sending', {
-      signalId: createdSignal.id,
-      tier: createdSignal.tier,
-      category: createdSignal.category,
-      publishedAt: createdSignal.publishedAt.toISOString(),
-    })
-    console.log('[sendSignalEmails] Signal found:', {
-      id: createdSignal.id,
-      tier: createdSignal.tier,
-      category: createdSignal.category,
+    const pairedSignal = candidateSignals.find((signal) => {
+      return signal.category === pairedCategory && sameUtcDay(signal.publishedAt, createdSignal.publishedAt)
     })
 
-    // Get all users with active/trial memberships
-    // Note: email is required in User model, so no need to filter for null
-    console.log('[sendSignalEmails] About to fetch users from database')
-    logger.info('Fetching users for email sending', { signalId })
-    
-    let allUsers
-    try {
-      allUsers = await prisma.user.findMany({
-        where: {
-          role: { in: ['member', 'editor', 'admin'] },
-          isActive: true,
-        },
-        include: {
-          memberships: {
-            where: {
-              status: { in: ['active', 'trial'] },
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-          },
-          notificationPreference: true,
-        },
-      })
-      console.log('[sendSignalEmails] Users fetched:', allUsers.length)
-      logger.info('Users fetched', { signalId, userCount: allUsers.length })
-    } catch (error) {
-      console.error('[sendSignalEmails] Error fetching users:', error)
-      logger.error('Error fetching users', error instanceof Error ? error : new Error(String(error)), { signalId })
-      throw error
-    }
-
-    // Filter users by email preferences (we'll check tier access when sending)
-    // If user doesn't have preferences, use defaults (email: true, onSignal: true)
-    console.log('[sendSignalEmails] Filtering eligible users')
-    const now = new Date()
-    const eligibleUsers = allUsers.filter(user => {
-      const membership = user.memberships[0]
-      if (!membership) return false
-      if (membership.status !== 'active' && membership.status !== 'trial') return false
-      if (membership.currentPeriodEnd && membership.currentPeriodEnd < now) return false
-
-      // Check email preferences
-      const prefs = user.notificationPreference
-      
-      // If no preferences exist, use defaults (email enabled for signals by default)
-      // This matches the behavior in /api/me/notification-preferences
-      if (!prefs) {
-        // Default: email enabled, onSignal enabled
-        return true
-      }
-      
-      // If preferences exist, check if email and onSignal are enabled
-      if (!prefs.email) return false
-      if (!prefs.onSignal) return false
-
-      return true
-    })
-
-    console.log('[sendSignalEmails] Eligible users filtered:', eligibleUsers.length)
-    logger.info('Email sending preparation', {
-      signalId,
-      tier: createdSignal.tier,
-      category: createdSignal.category,
-      publishedAt: createdSignal.publishedAt.toISOString(),
-      totalUsers: allUsers.length,
-      eligibleUsers: eligibleUsers.length,
-    })
-    console.log('[sendSignalEmails] Email sending preparation:', {
-      signalId,
-      tier: createdSignal.tier,
-      category: createdSignal.category,
-      totalUsers: allUsers.length,
-      eligibleUsers: eligibleUsers.length,
-    })
-
-    if (eligibleUsers.length === 0) {
-      console.log('[sendSignalEmails] No eligible users - exiting early')
-      logger.info('No eligible users for update email', { 
-        signalId, 
-        tier: createdSignal.tier,
+    if (!pairedSignal) {
+      logger.info('Portfolio T2 email enqueue deferred until paired category exists', {
+        signalId,
         category: createdSignal.category,
-        totalUsers: allUsers.length,
-        reason: 'No users with email preferences enabled or active memberships'
       })
       return
     }
 
-    console.log('[sendSignalEmails] Processing eligible users:', eligibleUsers.length)
-    logger.info('Processing eligible users', {
-      signalId,
-      tier: createdSignal.tier,
-      category: createdSignal.category,
-      eligibleUsersCount: eligibleUsers.length,
-    })
+    const createdTs = createdSignal.publishedAt.getTime()
+    const pairedTs = pairedSignal.publishedAt.getTime()
+    const canonicalIsCurrent = createdTs > pairedTs || (createdTs === pairedTs && createdSignal.id > pairedSignal.id)
 
-    // Group users by tier and send emails
-    const results = {
-      sent: 0,
-      failed: 0,
-      errors: [] as string[],
-      t1UsersProcessed: 0,
-      t2UsersProcessed: 0,
-      t1EmailsSent: 0,
-      t2EmailsSent: 0,
-      t1EmailsFailed: 0,
-      t2EmailsFailed: 0,
-    }
-
-    const hasCategory = createdSignal.category !== null && createdSignal.category !== undefined &&
-      (createdSignal.category === 'majors' || createdSignal.category === 'memecoins')
-    let signalTier: 'T1' | 'T2' = 'T1'
-    if (createdSignal.tier === 'T3') {
-      signalTier = 'T2' // Old T3 -> new T2 (Elite)
-    } else if (createdSignal.tier === 'T2' && hasCategory) {
-      signalTier = 'T2' // T2 with category -> T2 (Elite)
-    } else if (createdSignal.tier === 'T2' && !hasCategory) {
-      signalTier = 'T1' // T2 without category -> T1 (Growth)
-    } else if (createdSignal.tier === 'T1') {
-      signalTier = 'T1' // T1 -> T1 (Growth)
-    }
-
-    let baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-    if (baseUrl && !baseUrl.startsWith('http')) {
-      baseUrl = `https://${baseUrl}`
-    }
-    const portfolioUrl = `${baseUrl}/portfolio`
-    const preferencesUrl = `${baseUrl}/account`
-
-    let pairedT2Signal: DailySignal | null = null
-    let shouldWaitForPairedT2Signal = false
-    let shouldSendT2EmailForCurrentSignal = true
-    if (signalTier === 'T2' && (createdSignal.category === 'majors' || createdSignal.category === 'memecoins')) {
-      const signalDate = new Date(createdSignal.publishedAt)
-      signalDate.setHours(0, 0, 0, 0)
-      const endOfDay = new Date(signalDate)
-      endOfDay.setHours(23, 59, 59, 999)
-
-      const pairedCategory = createdSignal.category === 'majors' ? 'memecoins' : 'majors'
-      const pairedSignal = await prisma.portfolioDailySignal.findFirst({
-        where: {
-          tier: 'T2',
-          category: pairedCategory,
-          publishedAt: {
-            gte: signalDate,
-            lte: endOfDay,
-          },
-        },
-        orderBy: { publishedAt: 'desc' },
+    if (!canonicalIsCurrent) {
+      logger.info('Portfolio T2 email enqueue skipped because paired signal is canonical sender', {
+        signalId,
+        pairedSignalId: pairedSignal.id,
       })
-
-      if (pairedSignal) {
-        pairedT2Signal = pairedSignal as DailySignal
-        const createdTimestamp = createdSignal.publishedAt.getTime()
-        const pairedTimestamp = pairedSignal.publishedAt.getTime()
-        // Only one T2 signal dispatch should send the consolidated majors+memecoins email.
-        // Prefer the later published signal as the canonical sender.
-        shouldSendT2EmailForCurrentSignal = createdTimestamp > pairedTimestamp
-          || (createdTimestamp === pairedTimestamp && createdSignal.id > pairedSignal.id)
-
-        logger.info('Found paired T2 signal for email batch', {
-          signalId: createdSignal.id,
-          signalCategory: createdSignal.category,
-          pairedSignalId: pairedSignal.id,
-          pairedCategory,
-          signalDate: signalDate.toISOString(),
-          shouldSendT2EmailForCurrentSignal,
-        })
-      } else {
-        shouldWaitForPairedT2Signal = true
-        logger.info('Paired T2 signal not available yet; T2 email send deferred', {
-          signalId: createdSignal.id,
-          signalCategory: createdSignal.category,
-          expectedPairedCategory: pairedCategory,
-          signalDate: signalDate.toISOString(),
-        })
-      }
+      return
     }
 
-    for (const user of eligibleUsers) {
-      // Declare userTier outside try block so it's accessible in catch block
-      let userTier: 'T1' | 'T2' = 'T1'
-      try {
-        // Safety check - should never happen due to filter, but be defensive
-        if (!user.memberships || user.memberships.length === 0) {
-          logger.warn('User has no memberships despite being in eligibleUsers', { userId: user.id })
-          continue
-        }
-        
-        const membership = user.memberships[0]
-        if (!membership) {
-          logger.warn('User membership is null/undefined', { userId: user.id })
-          continue
-        }
-        
-        const rawUserTier = membership.tier as 'T1' | 'T2' | 'T3'
-        
-        // Map old tiers to new tiers:
-        // Old T1 → removed (no access)
-        // Old T2 without category → new T1 (Growth)
-        // Old T2 with category → new T2 (Elite)
-        // Old T3 → new T2 (Elite)
-        // Current system: T1 = Growth, T2 = Elite
-        if (rawUserTier === 'T3') {
-          userTier = 'T2' // Old T3 → new T2 (Elite)
-        } else if (rawUserTier === 'T2') {
-          // T2 users in the current system are Elite
-          userTier = 'T2' // T2 = Elite
-        } else if (rawUserTier === 'T1') {
-          userTier = 'T1' // T1 = Growth
-        }
+    canonicalSignal = createdSignal as DailySignal
+    signalsForEmail = createdSignal.category === 'majors'
+      ? [createdSignal as DailySignal, pairedSignal as DailySignal]
+      : [pairedSignal as DailySignal, createdSignal as DailySignal]
+  }
 
-        // Determine if this user should receive this signal based on their tier
-        let shouldSend = false
-        let signalToSend: DailySignal | null = null
+  const recipients = await resolveEmailRecipientsForEvent({
+    type: 'portfolio_update',
+    requiredTier: signalTier,
+  })
 
-        logger.info('Tier matching check', {
-          userId: user.id,
-          userTier,
-          signalTier,
+  // Preserve existing behavior: T1 updates go to T1 members, T2 updates go to T2 members.
+  const tierMatchedRecipients = recipients.filter((recipient) => recipient.tier === signalTier)
+
+  if (tierMatchedRecipients.length === 0) {
+    logger.info('No recipients eligible for portfolio signal email enqueue', {
+      signalId,
+      signalTier,
+    })
+    return
+  }
+
+  const baseUrl = resolveBaseUrl()
+  const portfolioUrl = `${baseUrl}/portfolio`
+  const preferencesUrl = `${baseUrl}/account`
+
+  const enqueueResults = await Promise.all(
+    tierMatchedRecipients.map((recipient) => {
+      const serializedSignals = signalsForEmail.map((signal) => ({
+        ...signal,
+        publishedAt: signal.publishedAt.toISOString(),
+      }))
+
+      const notificationEvent: NotificationEvent = {
+        type: 'portfolio_update',
+        subjectId: canonicalSignal.id,
+        actorId: createdSignal.createdById ?? null,
+        recipientUserId: recipient.userId,
+        metadata: {
           signalId: createdSignal.id,
-          signalTierRaw: createdSignal.tier,
-          signalCategory: createdSignal.category,
-          hasCategory,
-        })
-
-        if (userTier === 'T2') {
-          results.t2UsersProcessed++
-          // T2 (Elite) users get T2 signals (with category) or old T3 signals
-          if (signalTier === 'T2') {
-            shouldSend = true
-            signalToSend = createdSignal as DailySignal
-            logger.info('T2 user matched with T2 signal - WILL SEND EMAIL', {
-              userId: user.id,
-              userEmail: user.email,
-              signalId: createdSignal.id,
-              category: createdSignal.category,
-              signalTierRaw: createdSignal.tier,
-            })
-          } else {
-            logger.info('T2 user did NOT match signal - skipping', {
-              userId: user.id,
-              userTier,
-              signalTier,
-              signalId: createdSignal.id,
-              signalTierRaw: createdSignal.tier,
-              signalCategory: createdSignal.category,
-            })
-          }
-        } else if (userTier === 'T1') {
-          results.t1UsersProcessed++
-          // T1 (Growth) users get T1 signals (or T2 without category)
-          if (signalTier === 'T1') {
-            shouldSend = true
-            signalToSend = createdSignal as DailySignal
-            logger.info('T1 user matched with T1 signal - WILL SEND EMAIL', {
-              userId: user.id,
-              userEmail: user.email,
-              signalId: createdSignal.id,
-            })
-          } else {
-            logger.info('T1 user did NOT match signal - skipping', {
-              userId: user.id,
-              userTier,
-              signalTier,
-              signalId: createdSignal.id,
-              signalTierRaw: createdSignal.tier,
-            })
-          }
-        }
-
-        if (!shouldSend || !signalToSend) {
-          logger.info('User tier does not match signal tier - skipping email', {
-            userId: user.id,
-            userTier,
-            signalTier,
-            signalId: createdSignal.id,
-            signalTierRaw: createdSignal.tier,
-            signalCategory: createdSignal.category,
-          })
-          continue
-        }
-
-        // Always send email when signal is created or updated
-        // No deduplication - user wants email on every create/update
-
-        // For T2 users, prepare signals array (may include both majors and memecoins)
-        // Always put majors (market rotation) first, then memecoins
-        let signalsForEmail: DailySignal[] = [signalToSend]
-        let shouldSkipEmail = false
-        let skipReason: string | null = null
-        
-        if (userTier === 'T2' && signalTier === 'T2') {
-          if (shouldWaitForPairedT2Signal) {
-            shouldSkipEmail = true
-            skipReason = 'paired signal not available yet'
-          } else if (pairedT2Signal && !shouldSendT2EmailForCurrentSignal) {
-            shouldSkipEmail = true
-            skipReason = 'paired signal dispatch is canonical sender for consolidated T2 email'
-          } else if (pairedT2Signal) {
-            signalsForEmail = createdSignal.category === 'majors'
-              ? [createdSignal as DailySignal, pairedT2Signal]
-              : [pairedT2Signal, createdSignal as DailySignal]
-          }
-        }
-        
-        // Skip email if we determined we should wait for the other signal
-        if (shouldSkipEmail) {
-          logger.info('Skipping email - will be sent when both signals are available', {
-            userId: user.id,
-            signalId: createdSignal.id,
-            category: createdSignal.category,
-            reason: skipReason,
-          })
-          continue
-        }
-
-        // Send email with the signals (may be one or two for T2 users)
-        logger.info('About to send email', {
-          userId: user.id,
-          userEmail: user.email,
-          userTier,
-          signalId: signalToSend.id,
           signalTier,
-          signalCategory: signalToSend.category,
-          signalsCount: signalsForEmail.length,
-        })
-        console.log('[sendSignalEmails] About to send email to:', user.email, {
-          userId: user.id,
-          signalId: signalToSend.id,
-          tier: signalTier,
-          category: signalToSend.category,
-          signalsCount: signalsForEmail.length,
-        })
-        
-        await sendDailySignalEmail({
-          to: user.email!,
-          userName: user.name,
-          signals: signalsForEmail, // Send all relevant signals (may include both majors and memecoins for T2)
+          signalCategory: createdSignal.category,
+        },
+      }
+
+      return enqueueEmail({
+        to: recipient.email,
+        userId: recipient.userId,
+        templateKey: 'portfolio_update',
+        subject: 'Daily Portfolio Update',
+        variables: {
+          userName: recipient.name,
+          signals: serializedSignals,
           portfolioUrl,
           preferencesUrl,
-        })
-        
-        logger.info('Email sent successfully', {
-          userId: user.id,
-          userEmail: user.email,
-          signalId: signalToSend.id,
-          signalsCount: signalsForEmail.length,
-        })
-        console.log('[sendSignalEmails] Email sent successfully to:', user.email, {
-          signalsCount: signalsForEmail.length,
-        })
-
-        // Create notification record for each signal sent
-        for (const signal of signalsForEmail) {
-          await prisma.notification.create({
-            data: {
-              userId: user.id,
-              type: 'signal_published',
-              entityType: 'content',
-              entityId: signal.id,
-              title: 'Daily Portfolio Update',
-              body: `New portfolio update for ${tierLabels[signalTier]}${signal.category === 'majors' ? ' Market Rotation' : signal.category === 'memecoins' ? ' Memecoins' : ''}`,
-              url: portfolioUrl,
-              channel: 'email',
-              sentAt: new Date(),
-            },
-          })
-        }
-
-        results.sent++
-        if (userTier === 'T1') {
-          results.t1EmailsSent++
-        } else if (userTier === 'T2') {
-          results.t2EmailsSent++
-        }
-        logger.info('Update email sent', { 
-          userId: user.id, 
-          userTier,
-          signalId: signalToSend.id,
-          signalTier,
-          signalDate: signalToSend.publishedAt.toISOString(),
-        })
-      } catch (error) {
-        results.failed++
-        if (userTier === 'T1') {
-          results.t1EmailsFailed++
-        } else if (userTier === 'T2') {
-          results.t2EmailsFailed++
-        }
-        const errorMsg = error instanceof Error ? error.message : String(error)
-        results.errors.push(`User ${user.id}: ${errorMsg}`)
-        logger.error('Failed to send update email', error instanceof Error ? error : new Error(String(error)), {
-          userId: user.id,
-          signalId,
-          userTier,
-        })
-      }
-    }
-
-    logger.info('Update email sending completed - SUMMARY', {
-      signalId,
-      signalTierRaw: createdSignal.tier,
-      signalCategory: createdSignal.category,
-      totalEligibleUsers: eligibleUsers.length,
-      t1UsersProcessed: results.t1UsersProcessed,
-      t2UsersProcessed: results.t2UsersProcessed,
-      t1EmailsSent: results.t1EmailsSent,
-      t2EmailsSent: results.t2EmailsSent,
-      t1EmailsFailed: results.t1EmailsFailed,
-      t2EmailsFailed: results.t2EmailsFailed,
-      totalSent: results.sent,
-      totalFailed: results.failed,
-      errors: results.errors.length > 0 ? results.errors : undefined,
+        },
+        dedupeKey: buildNotificationDedupeKey(notificationEvent, recipient.userId),
+      })
     })
-    console.log('[sendSignalEmails] SUMMARY:', {
-      signalId,
-      tier: createdSignal.tier,
-      category: createdSignal.category,
-      t1Users: results.t1UsersProcessed,
-      t2Users: results.t2UsersProcessed,
-      t1Sent: results.t1EmailsSent,
-      t2Sent: results.t2EmailsSent,
-      totalSent: results.sent,
-      totalFailed: results.failed,
-    })
-  } catch (error) {
-    console.error('[sendSignalEmails] ERROR in sendSignalEmails:', error)
-    logger.error('Error in sendSignalEmails', error instanceof Error ? error : new Error(String(error)), {
-      signalId,
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
-    })
-    // Don't throw - this is fire-and-forget
-  }
+  )
+
+  const queuedCount = enqueueResults.filter((result) => result.queued).length
+  const duplicateCount = enqueueResults.filter((result) => result.reason === 'duplicate').length
+  const failedCount = enqueueResults.filter((result) => result.reason === 'error').length
+
+  logger.info('Portfolio signal emails enqueued via outbox', {
+    signalId,
+    signalTier,
+    category: createdSignal.category,
+    recipients: tierMatchedRecipients.length,
+    queuedCount,
+    duplicateCount,
+    failedCount,
+  })
 }
-
-const tierLabels: Record<'T1' | 'T2', string> = {
-  T1: 'Growth',
-  T2: 'Elite',
-}
-

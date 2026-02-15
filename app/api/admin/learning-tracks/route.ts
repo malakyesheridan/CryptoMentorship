@@ -8,6 +8,7 @@ import { logAudit } from '@/lib/audit'
 import { withDbRetry } from '@/lib/db/retry'
 import { toPrismaRouteErrorResponse } from '@/lib/db/errors'
 import { buildTrackSlugSuggestion, normalizeTrackSlug } from '@/lib/learning/track-slug'
+import { emit } from '@/lib/events'
 
 const PdfResourceSchema = z.object({
   title: z.string().min(1),
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
             id: true,
             title: true,
             slug: true,
+            publishedAt: true,
           },
         }),
       {
@@ -140,6 +142,18 @@ export async function POST(request: NextRequest) {
       slug: track.slug,
       requestId: parsed.requestId ?? null,
     })
+
+    if (track.publishedAt) {
+      void emit({
+        type: 'learning_hub_published',
+        subjectType: 'track',
+        subjectId: track.id,
+        title: track.title,
+        url: `/learn/${track.slug}`,
+      }).catch((error) => {
+        console.error('Failed to emit learning track publish event:', error)
+      })
+    }
 
     return NextResponse.json({ success: true, track }, { status: 201 })
   } catch (error) {
@@ -158,4 +172,3 @@ export async function POST(request: NextRequest) {
     return toPrismaRouteErrorResponse(error, 'Failed to create learning track.')
   }
 }
-

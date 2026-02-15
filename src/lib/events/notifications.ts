@@ -1,14 +1,53 @@
 import { prisma } from '@/lib/prisma'
 import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
+import { enqueueEmail } from '@/lib/email/outbox'
+import { buildNotificationDedupeKey, type NotificationEvent } from '@/lib/notifications/types'
+import { canSendEmailFromPrefs, resolveNotificationPrefs } from '@/lib/notifications/preferences'
 
 export type AppEvent =
   | { type: 'research_published'; contentId: string }
   | { type: 'episode_published'; episodeId: string }
   | { type: 'signal_published'; contentId: string }
+  | {
+      type: 'learning_hub_published'
+      subjectType: 'track' | 'lesson' | 'resource'
+      subjectId: string
+      title: string
+      url: string
+      minTier?: 'T1' | 'T2' | null
+    }
   | { type: 'mention'; messageId: string; mentionedUserIds: string[] }
   | { type: 'reply'; messageId: string; parentAuthorId: string }
   | { type: 'announcement'; title: string; body?: string; url?: string }
   | { type: 'question_answered'; questionId: string; questionAuthorId: string }
+
+function getBaseUrl() {
+  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+  if (!baseUrl.startsWith('http')) {
+    baseUrl = `https://${baseUrl}`
+  }
+  return baseUrl.replace(/\/$/, '')
+}
+
+async function enqueueNotificationEmail(event: NotificationEvent, recipient: {
+  userId: string
+  email: string | null
+  name?: string | null
+}, variables: Record<string, unknown>, subject: string) {
+  if (!recipient.email) return
+
+  await enqueueEmail({
+    to: recipient.email,
+    userId: recipient.userId,
+    templateKey: event.type,
+    subject,
+    variables: {
+      ...variables,
+      preferencesUrl: `${getBaseUrl()}/account`,
+    },
+    dedupeKey: buildNotificationDedupeKey(event, recipient.userId),
+  })
+}
 
 export async function emit(event: AppEvent): Promise<void> {
   try {
@@ -19,6 +58,9 @@ export async function emit(event: AppEvent): Promise<void> {
         break
       case 'episode_published':
         await handleEpisodePublished(event.episodeId)
+        break
+      case 'learning_hub_published':
+        await handleLearningHubPublished(event)
         break
       case 'mention':
         await handleMention(event.messageId, event.mentionedUserIds)
@@ -35,23 +77,19 @@ export async function emit(event: AppEvent): Promise<void> {
     }
   } catch (error) {
     console.error('Error emitting event:', error)
-    // Don't throw - events should be fire-and-forget
   }
 }
 
 async function handleContentPublished(type: 'research_published' | 'signal_published', contentId: string) {
-  // Get the content to determine minTier and author
   const content = await prisma.content.findUnique({
     where: { id: contentId },
-    select: { minTier: true, publishedAt: true, slug: true }
+    select: { minTier: true, slug: true }
   })
 
   if (!content) return
 
-  // Get eligible users based on minTier
   const eligibleUsers = await getEligibleUsersForContent(content.minTier)
-  
-  // Create notifications for eligible users
+
   const notifications = eligibleUsers
     .filter(user => {
       const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
@@ -69,24 +107,20 @@ async function handleContentPublished(type: 'research_published' | 'signal_publi
     }))
 
   if (notifications.length > 0) {
-    await prisma.notification.createMany({
-      data: notifications
-    })
+    await prisma.notification.createMany({ data: notifications })
   }
 }
 
 async function handleEpisodePublished(episodeId: string) {
   const episode = await prisma.episode.findUnique({
     where: { id: episodeId },
-    select: { slug: true }
+    select: { slug: true, title: true, excerpt: true }
   })
 
   if (!episode) return
 
-  // Get eligible users (episodes don't have minTier restrictions for now)
   const eligibleUsers = await getEligibleActiveUsers()
 
-  // Create notifications
   const notifications = eligibleUsers
     .filter(user => {
       const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
@@ -104,31 +138,138 @@ async function handleEpisodePublished(episodeId: string) {
     }))
 
   if (notifications.length > 0) {
-    await prisma.notification.createMany({
-      data: notifications,
-    })
+    await prisma.notification.createMany({ data: notifications })
   }
+
+  const episodeUrl = `${getBaseUrl()}/crypto-compass/${episode.slug}`
+
+  const emailTasks = eligibleUsers
+    .filter(user => {
+      const prefs = resolveNotificationPrefs(user.notificationPreference ?? null)
+      return canSendEmailFromPrefs('crypto_compass', prefs)
+    })
+    .map(user => {
+      const notificationEvent: NotificationEvent = {
+        type: 'crypto_compass',
+        subjectId: episodeId,
+        actorId: null,
+        recipientUserId: user.id,
+        metadata: {
+          title: episode.title,
+          excerpt: episode.excerpt,
+          url: episodeUrl,
+        },
+      }
+
+      return enqueueNotificationEmail(
+        notificationEvent,
+        { userId: user.id, email: user.email, name: user.name },
+        {
+          title: episode.title,
+          excerpt: episode.excerpt,
+          url: episodeUrl,
+        },
+        'New Crypto Compass Episode'
+      )
+    })
+
+  await Promise.all(emailTasks)
+}
+
+async function handleLearningHubPublished(event: Extract<AppEvent, { type: 'learning_hub_published' }>) {
+  const eligibleUsers = await getEligibleUsersForContent(event.minTier ?? null)
+
+  const notifications = eligibleUsers
+    .filter(user => {
+      const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
+      return shouldSendInAppNotification('learning_hub', prefs)
+    })
+    .map(user => ({
+      userId: user.id,
+      type: 'learning_hub' as const,
+      entityType: event.subjectType,
+      entityId: event.subjectId,
+      title: `Learning Hub: ${event.title}`,
+      body: 'New learning content is available.',
+      url: event.url,
+      channel: 'inapp' as const,
+    }))
+
+  if (notifications.length > 0) {
+    await prisma.notification.createMany({ data: notifications })
+  }
+
+  const absoluteUrl = event.url.startsWith('http') ? event.url : `${getBaseUrl()}${event.url}`
+
+  const emailTasks = eligibleUsers
+    .filter(user => {
+      const prefs = resolveNotificationPrefs(user.notificationPreference ?? null)
+      return canSendEmailFromPrefs('learning_hub', prefs)
+    })
+    .map(user => {
+      const notificationEvent: NotificationEvent = {
+        type: 'learning_hub',
+        subjectId: event.subjectId,
+        actorId: null,
+        recipientUserId: user.id,
+        metadata: {
+          title: event.title,
+          url: absoluteUrl,
+          subjectType: event.subjectType,
+        },
+      }
+
+      return enqueueNotificationEmail(
+        notificationEvent,
+        { userId: user.id, email: user.email, name: user.name },
+        {
+          title: `${event.title}`,
+          url: absoluteUrl,
+          subjectType: event.subjectType,
+        },
+        'Learning Hub Update'
+      )
+    })
+
+  await Promise.all(emailTasks)
 }
 
 async function handleMention(messageId: string, mentionedUserIds: string[]) {
-  if (mentionedUserIds.length === 0) return
+  const uniqueMentioned = Array.from(new Set(mentionedUserIds))
+  if (uniqueMentioned.length === 0) return
 
-  const preferences = await prisma.notificationPreference.findMany({
-    where: {
-      userId: { in: mentionedUserIds }
-    }
+  const message = await prisma.message.findUnique({
+    where: { id: messageId },
+    select: {
+      id: true,
+      body: true,
+      userId: true,
+      user: { select: { name: true } },
+    },
   })
 
-  const preferenceMap = new Map(preferences.map(p => [p.userId, p]))
+  if (!message) return
 
-  // Create notifications
-  const notifications = mentionedUserIds
-    .filter(userId => {
-      const prefs = resolveNotificationPreferences(preferenceMap.get(userId) ?? null)
+  const recipients = await prisma.user.findMany({
+    where: {
+      id: { in: uniqueMentioned.filter((userId) => userId !== message.userId) },
+      isActive: true,
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      notificationPreference: true,
+    },
+  })
+
+  const notifications = recipients
+    .filter((user) => {
+      const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
       return shouldSendInAppNotification('mention', prefs)
     })
-    .map(userId => ({
-      userId,
+    .map((user) => ({
+      userId: user.id,
       type: 'mention' as const,
       entityType: 'message' as const,
       entityId: messageId,
@@ -139,41 +280,122 @@ async function handleMention(messageId: string, mentionedUserIds: string[]) {
     }))
 
   if (notifications.length > 0) {
-    await prisma.notification.createMany({
-      data: notifications,
-    })
+    await prisma.notification.createMany({ data: notifications })
   }
+
+  const actorName = message.user.name || 'Someone'
+  const snippet = message.body.length > 180 ? `${message.body.slice(0, 177)}...` : message.body
+  const messageUrl = `${getBaseUrl()}/community?message=${messageId}`
+
+  const emailTasks = recipients
+    .filter((user) => {
+      const prefs = resolveNotificationPrefs(user.notificationPreference ?? null)
+      return canSendEmailFromPrefs('community_mention', prefs)
+    })
+    .map((user) => {
+      const notificationEvent: NotificationEvent = {
+        type: 'community_mention',
+        subjectId: messageId,
+        actorId: message.userId,
+        recipientUserId: user.id,
+        metadata: {
+          actorName,
+          snippet,
+          url: messageUrl,
+        },
+      }
+
+      return enqueueNotificationEmail(
+        notificationEvent,
+        { userId: user.id, email: user.email, name: user.name },
+        {
+          actorName,
+          snippet,
+          url: messageUrl,
+        },
+        'You were mentioned in the community'
+      )
+    })
+
+  await Promise.all(emailTasks)
 }
 
 async function handleReply(messageId: string, parentAuthorId: string) {
-  // Get notification preferences for the parent author
-  const preference = await prisma.notificationPreference.findUnique({
-    where: { userId: parentAuthorId }
+  const replyMessage = await prisma.message.findUnique({
+    where: { id: messageId },
+    select: {
+      id: true,
+      userId: true,
+      body: true,
+      user: { select: { name: true } },
+    },
   })
 
-  const resolved = resolveNotificationPreferences(preference ?? null)
-  if (!shouldSendInAppNotification('reply', resolved)) return
+  if (!replyMessage) return
+  if (replyMessage.userId === parentAuthorId) return
 
-  // Create notification
-  await prisma.notification.create({
-    data: {
-      userId: parentAuthorId,
-      type: 'reply',
-      entityType: 'message',
-      entityId: messageId,
-      title: 'New reply to your message',
-      body: 'Someone replied to your community message',
-      url: `/community?message=${messageId}`,
-      channel: 'inapp',
-    }
+  const recipient = await prisma.user.findUnique({
+    where: { id: parentAuthorId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      notificationPreference: true,
+    },
   })
+
+  if (!recipient) return
+
+  const resolved = resolveNotificationPreferences(recipient.notificationPreference ?? null)
+  if (shouldSendInAppNotification('reply', resolved)) {
+    await prisma.notification.create({
+      data: {
+        userId: parentAuthorId,
+        type: 'reply',
+        entityType: 'message',
+        entityId: messageId,
+        title: 'New reply to your message',
+        body: 'Someone replied to your community message',
+        url: `/community?message=${messageId}`,
+        channel: 'inapp',
+      }
+    })
+  }
+
+  const emailPrefs = resolveNotificationPrefs(recipient.notificationPreference ?? null)
+  if (!canSendEmailFromPrefs('community_reply', emailPrefs)) return
+
+  const actorName = replyMessage.user.name || 'Someone'
+  const snippet = replyMessage.body.length > 180 ? `${replyMessage.body.slice(0, 177)}...` : replyMessage.body
+  const messageUrl = `${getBaseUrl()}/community?message=${messageId}`
+
+  const notificationEvent: NotificationEvent = {
+    type: 'community_reply',
+    subjectId: messageId,
+    actorId: replyMessage.userId,
+    recipientUserId: recipient.id,
+    metadata: {
+      actorName,
+      snippet,
+      url: messageUrl,
+    },
+  }
+
+  await enqueueNotificationEmail(
+    notificationEvent,
+    { userId: recipient.id, email: recipient.email, name: recipient.name },
+    {
+      actorName,
+      snippet,
+      url: messageUrl,
+    },
+    'New reply to your community message'
+  )
 }
 
 async function handleAnnouncement(title: string, body?: string, url?: string) {
-  // Get all members, editors, and admins
   const eligibleUsers = await getEligibleActiveUsers()
 
-  // Create notifications
   const notifications = eligibleUsers
     .filter(user => {
       const prefs = resolveNotificationPreferences(user.notificationPreference ?? null)
@@ -189,16 +411,13 @@ async function handleAnnouncement(title: string, body?: string, url?: string) {
     }))
 
   if (notifications.length > 0) {
-    await prisma.notification.createMany({
-      data: notifications,
-    })
+    await prisma.notification.createMany({ data: notifications })
   }
 }
 
 async function getEligibleUsersForContent(minTier: string | null) {
   const now = new Date()
   if (!minTier) {
-    // No tier restriction - all members can see
     return await prisma.user.findMany({
       where: {
         role: { in: ['member', 'editor', 'admin'] },
@@ -217,11 +436,10 @@ async function getEligibleUsersForContent(minTier: string | null) {
           }
         }
       },
-      select: { id: true, notificationPreference: true }
+      select: { id: true, email: true, name: true, notificationPreference: true }
     })
   }
 
-  // Get users with appropriate membership tier
   return await prisma.user.findMany({
     where: {
       role: { in: ['member', 'editor', 'admin'] },
@@ -241,12 +459,11 @@ async function getEligibleUsersForContent(minTier: string | null) {
         }
       }
     },
-    select: { id: true, notificationPreference: true }
+    select: { id: true, email: true, name: true, notificationPreference: true }
   })
 }
 
 async function handleQuestionAnswered(questionId: string, questionAuthorId: string) {
-  // Get the question and event details
   const question = await prisma.question.findUnique({
     where: { id: questionId },
     include: {
@@ -262,30 +479,27 @@ async function handleQuestionAnswered(questionId: string, questionAuthorId: stri
 
   if (!question) return
 
-  // Check if user wants to receive reply notifications
   const preferences = await prisma.notificationPreference.findUnique({
     where: { userId: questionAuthorId },
-    select: { onReply: true, inApp: true }
+    select: { onReply: true, inApp: true, inAppEnabled: true }
   })
 
   const resolved = resolveNotificationPreferences(preferences ?? null)
   if (!shouldSendInAppNotification('question_answered', resolved)) return
 
-  // Check for duplicate notifications within 10 minutes
   const recentNotification = await prisma.notification.findFirst({
     where: {
       userId: questionAuthorId,
       type: 'question_answered',
       entityId: questionId,
       createdAt: {
-        gte: new Date(Date.now() - 10 * 60 * 1000) // 10 minutes ago
+        gte: new Date(Date.now() - 10 * 60 * 1000)
       }
     }
   })
 
   if (recentNotification) return
 
-  // Create notification
   await prisma.notification.create({
     data: {
       userId: questionAuthorId,
@@ -320,6 +534,6 @@ async function getEligibleActiveUsers() {
         }
       }
     },
-    select: { id: true, notificationPreference: true }
+    select: { id: true, email: true, name: true, notificationPreference: true }
   })
 }

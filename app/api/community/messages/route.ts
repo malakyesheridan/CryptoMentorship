@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { broadcastMessage } from '@/lib/community/sse'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { requireActiveSubscription } from '@/lib/access'
+import { emit } from '@/lib/events'
 
 // Revalidate GET requests every 10 seconds - messages are real-time but we want some caching
 // Note: POST requests are not cached (they're write operations)
@@ -16,7 +17,39 @@ const getQuery = z.object({
 const postBody = z.object({
   channelId: z.string().min(1),
   body: z.string().trim().min(1).max(5000),
+  replyToMessageId: z.string().min(1).optional(),
+  mentionedUserIds: z.array(z.string().min(1)).max(30).optional(),
 })
+
+function parseMentionTokens(text: string) {
+  const matches = text.match(/@([a-zA-Z0-9_.-]{2,40})/g) ?? []
+  return Array.from(new Set(matches.map((token) => token.slice(1).trim()).filter(Boolean)))
+}
+
+async function resolveMentionedUserIds(
+  explicitMentionedUserIds: string[] | undefined,
+  body: string,
+  actorUserId: string
+) {
+  const explicit = (explicitMentionedUserIds ?? []).filter((id) => id !== actorUserId)
+  const tokens = parseMentionTokens(body)
+  if (tokens.length === 0) {
+    return Array.from(new Set(explicit))
+  }
+
+  const mentionedByName = await prisma.user.findMany({
+    where: {
+      id: { not: actorUserId },
+      OR: tokens.map((token) => ({
+        name: { equals: token, mode: 'insensitive' },
+      })),
+    },
+    select: { id: true },
+    take: 30,
+  })
+
+  return Array.from(new Set([...explicit, ...mentionedByName.map((user) => user.id)]))
+}
 
 export async function GET(req: Request) {
   await requireActiveSubscription('api')
@@ -97,7 +130,7 @@ export async function POST(req: Request) {
     )
   }
 
-  const { channelId, body: text } = parsed.data
+  const { channelId, body: text, replyToMessageId, mentionedUserIds } = parsed.data
 
   // ✅ Require authentication first (before any DB queries)
   const session = await requireActiveSubscription('api')
@@ -120,6 +153,39 @@ export async function POST(req: Request) {
       createdAt: true,
     },
   })
+
+  const resolvedMentionedUserIds = await resolveMentionedUserIds(
+    mentionedUserIds,
+    sanitizedBody,
+    session.id
+  )
+
+  if (resolvedMentionedUserIds.length > 0) {
+    void emit({
+      type: 'mention',
+      messageId: saved.id,
+      mentionedUserIds: resolvedMentionedUserIds,
+    }).catch((error) => {
+      console.error('Failed to emit mention event:', error)
+    })
+  }
+
+  if (replyToMessageId) {
+    const parent = await prisma.message.findUnique({
+      where: { id: replyToMessageId },
+      select: { userId: true },
+    })
+
+    if (parent?.userId && parent.userId !== session.id) {
+      void emit({
+        type: 'reply',
+        messageId: saved.id,
+        parentAuthorId: parent.userId,
+      }).catch((error) => {
+        console.error('Failed to emit reply event:', error)
+      })
+    }
+  }
 
   // Use session data directly - eliminates unnecessary database query
   const item = {
