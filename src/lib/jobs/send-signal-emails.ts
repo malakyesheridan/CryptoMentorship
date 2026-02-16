@@ -114,6 +114,7 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
   const baseUrl = resolveBaseUrl()
   const portfolioUrl = `${baseUrl}/portfolio`
   const preferencesUrl = `${baseUrl}/account`
+  const signalRevisionSubjectId = `${canonicalSignal.id}:rev:${createdSignal.updatedAt.getTime()}`
 
   const enqueueResults = await Promise.all(
     tierMatchedRecipients.map((recipient) => {
@@ -124,7 +125,8 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
 
       const notificationEvent: NotificationEvent = {
         type: 'portfolio_update',
-        subjectId: canonicalSignal.id,
+        // Use signal revision in subjectId so edits to the same signal can enqueue again.
+        subjectId: signalRevisionSubjectId,
         actorId: createdSignal.createdById ?? null,
         recipientUserId: recipient.userId,
         metadata: {

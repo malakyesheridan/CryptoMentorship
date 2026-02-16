@@ -395,12 +395,12 @@ export async function processEmailOutboxBatch({ limit = 50 }: { limit?: number }
 
   const claimed = await prisma.$queryRaw<EmailOutboxRow[]>(Prisma.sql`
     UPDATE "EmailOutbox"
-    SET "status" = ${EmailOutboxStatus.SENDING},
+    SET "status" = ${EmailOutboxStatus.SENDING}::"EmailOutboxStatus",
         "updatedAt" = NOW()
     WHERE "id" IN (
       SELECT "id"
       FROM "EmailOutbox"
-      WHERE "status" = ${EmailOutboxStatus.QUEUED}
+      WHERE "status" = ${EmailOutboxStatus.QUEUED}::"EmailOutboxStatus"
         AND "scheduledFor" <= NOW()
       ORDER BY "scheduledFor" ASC
       FOR UPDATE SKIP LOCKED
