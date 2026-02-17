@@ -7,24 +7,31 @@ type CronAuthResult = {
   isProduction: boolean
   cronSecretConfigured: boolean
   usedAuthorizationHeader: boolean
+  providedInternalToken: boolean
+  validInternalToken: boolean
 }
 
 function authorizeCronRequest(request: NextRequest): CronAuthResult {
   const cronSecret = process.env.VERCEL_CRON_SECRET || process.env.CRON_SECRET
+  const internalDispatchSecret = process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production'
   const authHeader = request.headers.get('authorization') || ''
   const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice('Bearer '.length).trim() : ''
   const querySecret = request.nextUrl.searchParams.get('secret') || ''
+  const internalToken = request.headers.get('x-internal-job-token') || ''
+  const validInternalToken = !!internalDispatchSecret && internalToken === internalDispatchSecret
 
-  const authorized = !!cronSecret
+  const authorized = validInternalToken || (!!cronSecret
     ? bearerToken === cronSecret || querySecret === cronSecret
-    : !isProduction
+    : !isProduction)
 
   return {
     authorized,
     isProduction,
     cronSecretConfigured: !!cronSecret,
     usedAuthorizationHeader: authHeader.startsWith('Bearer '),
+    providedInternalToken: !!internalToken,
+    validInternalToken,
   }
 }
 
@@ -36,6 +43,8 @@ export async function GET(request: NextRequest) {
     cronAuthConfigured: auth.cronSecretConfigured,
     authHeaderProvided: auth.usedAuthorizationHeader,
     authQueryProvided: !!request.nextUrl.searchParams.get('secret'),
+    internalTokenProvided: auth.providedInternalToken,
+    internalTokenValid: auth.validInternalToken,
     authorized: auth.authorized,
   })
 

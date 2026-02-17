@@ -21,11 +21,15 @@ function triggerOutboxProcessing() {
   if (!cronUrl) return
 
   const cronSecret = process.env.VERCEL_CRON_SECRET || process.env.CRON_SECRET
+  const internalDispatchSecret = process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
   if (cronSecret) {
     headers.authorization = `Bearer ${cronSecret}`
+  }
+  if (internalDispatchSecret) {
+    headers['x-internal-job-token'] = internalDispatchSecret
   }
 
   fetch(cronUrl, {
