@@ -8,7 +8,8 @@ import { onTrialStarted } from '@/lib/membership/trial'
 const createTrialSchema = z.object({
   userId: z.string(),
   tier: z.enum(['T1', 'T2']).default('T2'), // Default to T2 (Elite) for all trial accounts
-  durationDays: z.number().min(1).max(365).default(30), // Default 30 days (1 month)
+  trialEndDate: z.string().optional(),
+  durationDays: z.number().min(1).max(365).optional(), // Backward-compatible fallback
 })
 
 /**
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
     const admin = await requireAdmin()
     
     const body = await req.json()
-    const { userId, tier, durationDays } = createTrialSchema.parse(body)
+    const { userId, tier, trialEndDate: trialEndDateInput, durationDays } = createTrialSchema.parse(body)
     
     // Verify user exists
     const user = await prisma.user.findUnique({
@@ -42,23 +43,72 @@ export async function POST(req: NextRequest) {
       select: { currentPeriodEnd: true, currentPeriodStart: true },
     })
     
-    // Calculate trial end date
-    // If user has an existing membership with a future end date, extend from that date
-    // Otherwise, calculate from today
+    const now = new Date()
+    const isExtension = !!(existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > now)
+
+    // Calculate trial end date.
+    // Preferred path: explicit target date from admin date picker.
+    // Fallback path: durationDays (legacy callers).
     let trialEndDate: Date
     let trialStartDate: Date
-    
-    if (existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > new Date()) {
-      // Extend from existing end date
-      trialEndDate = new Date(existingMembership.currentPeriodEnd)
-      trialEndDate.setDate(trialEndDate.getDate() + durationDays)
+
+    if (isExtension) {
       // Keep the original start date when extending
-      trialStartDate = existingMembership.currentPeriodStart || new Date()
+      trialStartDate = existingMembership?.currentPeriodStart || now
     } else {
-      // Create new trial or extend from expired date - start from today
-      trialEndDate = new Date()
-      trialEndDate.setDate(trialEndDate.getDate() + durationDays)
-      trialStartDate = new Date()
+      // New trial or previously expired membership starts today
+      trialStartDate = now
+    }
+
+    if (trialEndDateInput) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trialEndDateInput)
+      if (!match) {
+        return NextResponse.json(
+          { error: 'Invalid trial end date. Use YYYY-MM-DD.' },
+          { status: 400 }
+        )
+      }
+      const year = Number(match[1])
+      const month = Number(match[2])
+      const day = Number(match[3])
+      const parsedDate = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+
+      if (
+        Number.isNaN(parsedDate.getTime()) ||
+        parsedDate.getUTCFullYear() !== year ||
+        parsedDate.getUTCMonth() !== month - 1 ||
+        parsedDate.getUTCDate() !== day
+      ) {
+        return NextResponse.json(
+          { error: 'Invalid trial end date. Use a real calendar date.' },
+          { status: 400 }
+        )
+      }
+
+      if (parsedDate <= now) {
+        return NextResponse.json(
+          { error: 'Trial end date must be in the future.' },
+          { status: 400 }
+        )
+      }
+
+      if (isExtension && existingMembership?.currentPeriodEnd && parsedDate <= existingMembership.currentPeriodEnd) {
+        return NextResponse.json(
+          { error: 'Extension date must be after the current trial end date.' },
+          { status: 400 }
+        )
+      }
+
+      trialEndDate = parsedDate
+    } else {
+      const safeDurationDays = durationDays ?? 30
+      if (isExtension && existingMembership?.currentPeriodEnd) {
+        trialEndDate = new Date(existingMembership.currentPeriodEnd)
+        trialEndDate.setDate(trialEndDate.getDate() + safeDurationDays)
+      } else {
+        trialEndDate = new Date(now)
+        trialEndDate.setDate(trialEndDate.getDate() + safeDurationDays)
+      }
     }
     
     // Get or create membership
@@ -89,13 +139,12 @@ export async function POST(req: NextRequest) {
       })
     }
     
-    const isExtension = !!(existingMembership?.currentPeriodEnd && existingMembership.currentPeriodEnd > new Date())
-    
     logger.info(isExtension ? 'Trial subscription extended' : 'Trial subscription created', {
       userId,
       userEmail: user.email,
       tier,
-      durationDays,
+      trialEndDateInput: trialEndDateInput || null,
+      durationDays: durationDays ?? null,
       trialEndDate: trialEndDate.toISOString(),
       trialStartDate: trialStartDate.toISOString(),
       previousEndDate: existingMembership?.currentPeriodEnd?.toISOString() || null,

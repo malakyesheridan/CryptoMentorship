@@ -1,7 +1,9 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/auth-server'
 import { RISK_ONBOARDING_WIZARD_KEY } from '@/lib/riskOnboarding/questions'
+import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
+import { normalizeScoreToProfileRange } from '@/lib/riskOnboarding/config'
 
 function sanitizeAnswers(answers: Record<string, unknown> | null | undefined, includeFreeText: boolean) {
   if (!answers) return null
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
   const includeAnswers = searchParams.get('includeAnswers') === '1' || searchParams.get('includeAnswers') === 'true'
   const includeFreeText = searchParams.get('includeFreeText') === '1' || searchParams.get('includeFreeText') === 'true'
 
-  const [onboarding, profile, userRecord] = await Promise.all([
+  const [onboarding, profile, userRecord, config] = await Promise.all([
     prisma.userOnboardingResponse.findUnique({
       where: {
         userId_wizardKey: {
@@ -38,6 +40,7 @@ export async function GET(request: NextRequest) {
         selectedRiskProfile: true,
       },
     }),
+    getRiskOnboardingConfig(),
   ])
 
   let status: 'not_started' | 'in_progress' | 'completed' = 'not_started'
@@ -58,6 +61,11 @@ export async function GET(request: NextRequest) {
     (overriddenByAdmin ? adminOverrideProfile : null) ||
     recommendedProfile
 
+  const normalizedScore =
+    profile && recommendedProfile
+      ? normalizeScoreToProfileRange(profile.score, recommendedProfile, config)
+      : profile?.score ?? null
+
   return NextResponse.json({
     wizardKey: RISK_ONBOARDING_WIZARD_KEY,
     status,
@@ -65,7 +73,7 @@ export async function GET(request: NextRequest) {
       ? sanitizeAnswers(onboarding?.answers as Record<string, unknown> | null, includeFreeText)
       : null,
     recommendedProfile,
-    score: profile?.score ?? null,
+    score: normalizedScore,
     drivers: (profile?.drivers as string[] | null) ?? [],
     completedAt: profile?.completedAt ?? null,
     version: profile?.version ?? null,
@@ -77,4 +85,3 @@ export async function GET(request: NextRequest) {
     effectiveProfile,
   })
 }
-

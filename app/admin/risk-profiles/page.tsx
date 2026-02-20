@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/dates'
 import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 import { RISK_ONBOARDING_WIZARD_KEY } from '@/lib/riskOnboarding/questions'
+import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
+import { normalizeScoreToProfileRange } from '@/lib/riskOnboarding/config'
 
 export const dynamic = 'force-dynamic'
 
 export default async function RiskProfilesPage() {
-  const [profiles, onboardingResponses] = await Promise.all([
+  const [profiles, onboardingResponses, config] = await Promise.all([
     prisma.userRiskProfile.findMany({
       include: {
         user: { select: { id: true, name: true, email: true, defaultRiskProfile: true } },
@@ -21,9 +23,15 @@ export default async function RiskProfilesPage() {
       include: { user: { select: { id: true, name: true, email: true } } },
       orderBy: { updatedAt: 'desc' },
     }),
+    getRiskOnboardingConfig(),
   ])
 
-  const profileByUser = new Map(profiles.map((profile) => [profile.userId, profile]))
+  const normalizedProfiles = profiles.map((profile) => ({
+    ...profile,
+    score: normalizeScoreToProfileRange(profile.score, profile.recommendedProfile, config),
+  }))
+
+  const profileByUser = new Map(normalizedProfiles.map((profile) => [profile.userId, profile]))
   const rows = onboardingResponses.map((response) => ({
     userId: response.userId,
     userName: response.user.name,
@@ -33,7 +41,7 @@ export default async function RiskProfilesPage() {
     profile: profileByUser.get(response.userId) || null,
   }))
 
-  for (const profile of profiles) {
+  for (const profile of normalizedProfiles) {
     if (!rows.find((row) => row.userId === profile.userId)) {
       rows.push({
         userId: profile.userId,
@@ -133,4 +141,3 @@ export default async function RiskProfilesPage() {
     </div>
   )
 }
-

@@ -3,6 +3,7 @@ import {
   DEFAULT_RISK_ONBOARDING_CONFIG,
   computeMaxScore,
   getProfileForScore,
+  normalizeScoreToProfileRange,
   type RiskOnboardingScoringConfig,
 } from './config'
 
@@ -131,7 +132,7 @@ export function computeRiskProfile(
 
   const maxScore = computeMaxScore(config)
   const normalizedScore = maxScore > 0 ? Math.round((rawScore / maxScore) * 100) : 0
-  const score = clamp(normalizedScore, 0, 100)
+  let score = clamp(normalizedScore, 0, 100)
 
   let recommendedProfile = getProfileForScore(score, config)
   const cappedReasons: string[] = []
@@ -154,6 +155,8 @@ export function computeRiskProfile(
     recommendedProfile = 'SEMI'
     cappedReasons.push('hold_through_downturns')
   }
+
+  score = normalizeScoreToProfileRange(score, recommendedProfile, config)
 
   const drivers = buildDrivers(answers, cappedReasons, score, config)
 

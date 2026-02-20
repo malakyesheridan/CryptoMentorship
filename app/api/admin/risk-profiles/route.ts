@@ -1,7 +1,9 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { RISK_ONBOARDING_WIZARD_KEY } from '@/lib/riskOnboarding/questions'
+import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
+import { normalizeScoreToProfileRange } from '@/lib/riskOnboarding/config'
 
 export async function GET(request: NextRequest) {
   await requireRoleAPI(['admin'])
@@ -50,6 +52,7 @@ export async function GET(request: NextRequest) {
   })
 
   const userIds = profiles.map((profile) => profile.userId)
+  const config = await getRiskOnboardingConfig()
   const responses = userIds.length
     ? await prisma.userOnboardingResponse.findMany({
         where: {
@@ -75,7 +78,7 @@ export async function GET(request: NextRequest) {
         userName: profile.user.name,
         userEmail: profile.user.email,
         recommendedProfile: profile.recommendedProfile,
-        score: profile.score,
+        score: normalizeScoreToProfileRange(profile.score, profile.recommendedProfile, config),
         drivers: profile.drivers,
         completedAt: profile.completedAt,
         version: profile.version,
@@ -89,4 +92,3 @@ export async function GET(request: NextRequest) {
     }),
   })
 }
-

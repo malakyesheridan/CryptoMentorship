@@ -24,7 +24,7 @@ interface CreateTrialModalProps {
 
 export function CreateTrialModal({ userId, userName, userEmail, currentMembership, onSuccess, onClose }: CreateTrialModalProps) {
   const [tier, setTier] = useState<'T1' | 'T2'>('T2') // Default to T2 (Elite) for all trial accounts
-  const [durationDays, setDurationDays] = useState(30)
+  const [trialEndDate, setTrialEndDate] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   
   // Set tier from existing membership if available
@@ -38,15 +38,45 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
   const isExtending = currentMembership?.currentPeriodEnd && new Date(currentMembership.currentPeriodEnd) > new Date()
   const currentEndDate = currentMembership?.currentPeriodEnd ? new Date(currentMembership.currentPeriodEnd) : null
 
+  useEffect(() => {
+    const baseDate = isExtending && currentEndDate ? currentEndDate : new Date()
+    const defaultTarget = new Date(baseDate)
+    defaultTarget.setDate(defaultTarget.getDate() + 30)
+    const yyyy = defaultTarget.getFullYear()
+    const mm = String(defaultTarget.getMonth() + 1).padStart(2, '0')
+    const dd = String(defaultTarget.getDate()).padStart(2, '0')
+    setTrialEndDate(`${yyyy}-${mm}-${dd}`)
+  }, [isExtending, currentMembership?.currentPeriodEnd])
+
+  const selectedEndDate = trialEndDate ? new Date(`${trialEndDate}T23:59:59`) : null
+  const invalidSelectedDate = !selectedEndDate || Number.isNaN(selectedEndDate.getTime())
+  const extensionNotAfterCurrent = Boolean(
+    isExtending &&
+    currentEndDate &&
+    selectedEndDate &&
+    !Number.isNaN(selectedEndDate.getTime()) &&
+    selectedEndDate <= currentEndDate
+  )
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!trialEndDate) {
+      toast.error('Please select a trial end date')
+      return
+    }
+
+    if (extensionNotAfterCurrent) {
+      toast.error('Extension date must be after the current trial end date')
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const res = await fetch('/api/admin/trials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, tier, durationDays }),
+        body: JSON.stringify({ userId, tier, trialEndDate }),
       })
 
       const data = await res.json()
@@ -91,9 +121,6 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
                 <p className="text-sm text-blue-700 mt-1">
                   {formatDate(currentEndDate, 'MMM d, yyyy h:mm a')}
                 </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Adding {durationDays} days will extend the trial to {formatDate(new Date(currentEndDate.getTime() + durationDays * 24 * 60 * 60 * 1000), 'MMM d, yyyy h:mm a')}
-                </p>
               </div>
             )}
             
@@ -111,28 +138,32 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
             </div>
             
             <div>
-              <Label htmlFor="duration">{isExtending ? 'Additional Days to Add' : 'Trial Duration (days)'}</Label>
+              <Label htmlFor="trialEndDate">{isExtending ? 'Extend Trial To' : 'Trial End Date'}</Label>
               <Input
-                id="duration"
-                type="number"
-                min="1"
-                max="365"
-                value={durationDays}
-                onChange={(e) => setDurationDays(parseInt(e.target.value) || 30)}
+                id="trialEndDate"
+                type="date"
+                value={trialEndDate}
+                onChange={(e) => setTrialEndDate(e.target.value)}
                 className="mt-1"
+                required
               />
-              <p className="text-sm text-slate-500 mt-1">
-                {isExtending 
-                  ? `Add ${durationDays} day${durationDays !== 1 ? 's' : ''} to the current trial`
-                  : 'Default: 30 days (1 month)'}
-              </p>
+              {selectedEndDate && !Number.isNaN(selectedEndDate.getTime()) && (
+                <p className="text-sm text-slate-500 mt-1">
+                  Selected end date: {formatDate(selectedEndDate, 'MMM d, yyyy')}
+                </p>
+              )}
+              {extensionNotAfterCurrent && (
+                <p className="text-sm text-red-600 mt-1">
+                  Select a date after the current trial end date.
+                </p>
+              )}
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2 justify-end pt-4">
               <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="w-full sm:w-auto min-h-[44px]">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto min-h-[44px]">
+              <Button type="submit" disabled={isLoading || !trialEndDate || invalidSelectedDate || extensionNotAfterCurrent} className="w-full sm:w-auto min-h-[44px]">
                 {isLoading 
                   ? (isExtending ? 'Extending...' : 'Creating...') 
                   : (isExtending ? 'Extend Trial' : 'Create Trial')}

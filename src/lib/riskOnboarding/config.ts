@@ -149,7 +149,39 @@ export function computeMaxScore(config: RiskOnboardingScoringConfig): number {
   return total
 }
 
+export function getScoreRangeForProfile(
+  profile: RiskProfile,
+  config: RiskOnboardingScoringConfig
+): RiskScoreRange | null {
+  return config.scoreRanges.find((range) => range.profile === profile) ?? null
+}
+
+export function normalizeScoreToProfileRange(
+  score: number,
+  profile: RiskProfile,
+  config: RiskOnboardingScoringConfig
+): number {
+  const safeScore = Math.min(Math.max(score, 0), 100)
+  const range = getScoreRangeForProfile(profile, config)
+  if (!range) return safeScore
+  return Math.min(Math.max(safeScore, range.min), range.max)
+}
+
 export function getProfileForScore(score: number, config: RiskOnboardingScoringConfig): RiskProfile {
-  const range = config.scoreRanges.find((candidate) => score >= candidate.min && score <= candidate.max)
-  return range?.profile ?? 'SEMI'
+  const sortedRanges = [...config.scoreRanges].sort((a, b) => a.min - b.min)
+  const range = sortedRanges.find((candidate) => score >= candidate.min && score <= candidate.max)
+
+  if (range) {
+    return range.profile
+  }
+
+  if (sortedRanges.length === 0) {
+    return 'SEMI'
+  }
+
+  if (score < sortedRanges[0].min) {
+    return sortedRanges[0].profile
+  }
+
+  return sortedRanges[sortedRanges.length - 1].profile
 }

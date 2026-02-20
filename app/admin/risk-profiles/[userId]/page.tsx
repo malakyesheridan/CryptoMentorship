@@ -1,10 +1,12 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/dates'
 import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 import { RISK_ONBOARDING_QUESTIONS, RISK_ONBOARDING_WIZARD_KEY } from '@/lib/riskOnboarding/questions'
 import { RiskProfileOverrideForm } from '@/components/admin/RiskProfileOverrideForm'
+import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
+import { normalizeScoreToProfileRange } from '@/lib/riskOnboarding/config'
 
 const LIKERT_LABELS: Record<string, string> = {
   strongly_agree: 'Strongly agree',
@@ -17,7 +19,7 @@ const LIKERT_LABELS: Record<string, string> = {
 export default async function RiskProfileDetailPage({ params }: { params: { userId: string } }) {
   const userId = params.userId
 
-  const [user, onboarding, profile] = await Promise.all([
+  const [user, onboarding, profile, config] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, defaultRiskProfile: true },
@@ -33,6 +35,7 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
     prisma.userRiskProfile.findUnique({
       where: { userId },
     }),
+    getRiskOnboardingConfig(),
   ])
 
   if (!user) {
@@ -47,6 +50,8 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
   }
 
   const answers = (onboarding?.answers || {}) as Record<string, any>
+  const normalizedScore =
+    profile ? normalizeScoreToProfileRange(profile.score, profile.recommendedProfile, config) : null
 
   return (
     <div className="space-y-8">
@@ -73,7 +78,7 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
               <div className="text-xl font-semibold text-slate-900">
                 {formatRiskProfileLabel(profile.recommendedProfile)}
               </div>
-              <div className="text-sm text-slate-600">Score: {profile.score}</div>
+              <div className="text-sm text-slate-600">Score: {normalizedScore}</div>
               <div className="text-sm text-slate-600">Completed: {formatDateTime(profile.completedAt)}</div>
               {profile.overriddenByAdmin && profile.adminOverrideProfile && (
                 <div className="text-sm text-amber-700">
@@ -166,4 +171,3 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
     </div>
   )
 }
-
