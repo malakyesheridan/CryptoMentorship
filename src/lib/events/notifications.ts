@@ -2,7 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
 import { enqueueEmail } from '@/lib/email/outbox'
 import { buildNotificationDedupeKey, type NotificationEvent } from '@/lib/notifications/types'
-import { canSendEmailFromPrefs, resolveNotificationPrefs } from '@/lib/notifications/preferences'
+import { resolveEmailRecipientsForEvent } from '@/lib/notifications/preferences'
+import { logger } from '@/lib/logger'
 
 export type AppEvent =
   | { type: 'research_published'; contentId: string }
@@ -29,14 +30,23 @@ function getBaseUrl() {
   return baseUrl.replace(/\/$/, '')
 }
 
+function resolveNotificationEventCronUrl(): string | null {
+  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || ''
+  if (!baseUrl) return null
+  if (!baseUrl.startsWith('http')) {
+    baseUrl = `https://${baseUrl}`
+  }
+  return new URL('/api/cron/notification-events', baseUrl.replace(/\/$/, '')).toString()
+}
+
 async function enqueueNotificationEmail(event: NotificationEvent, recipient: {
   userId: string
   email: string | null
   name?: string | null
 }, variables: Record<string, unknown>, subject: string) {
-  if (!recipient.email) return
+  if (!recipient.email) return { queued: false, reason: 'skipped_no_email' as const }
 
-  await enqueueEmail({
+  return enqueueEmail({
     to: recipient.email,
     userId: recipient.userId,
     templateKey: event.type,
@@ -49,34 +59,107 @@ async function enqueueNotificationEmail(event: NotificationEvent, recipient: {
   })
 }
 
+type NotificationEnqueueOutcome = {
+  queued: boolean
+  reason?: 'duplicate' | 'error' | 'skipped_no_email'
+}
+
+function logNotificationEmailSummary(
+  type: NotificationEvent['type'],
+  subjectId: string,
+  outcomes: NotificationEnqueueOutcome[],
+  context: Record<string, unknown> = {}
+) {
+  const queuedCount = outcomes.filter((result) => result.queued).length
+  const duplicateCount = outcomes.filter((result) => result.reason === 'duplicate').length
+  const failedCount = outcomes.filter((result) => result.reason === 'error').length
+  const skippedNoEmailCount = outcomes.filter((result) => result.reason === 'skipped_no_email').length
+
+  logger.info('Notification emails enqueued via outbox', {
+    notificationType: type,
+    subjectId,
+    recipients: outcomes.length,
+    queuedCount,
+    duplicateCount,
+    failedCount,
+    skippedNoEmailCount,
+    ...context,
+  })
+}
+
+export async function emitStrict(event: AppEvent): Promise<void> {
+  switch (event.type) {
+    case 'research_published':
+    case 'signal_published':
+      await handleContentPublished(event.type, event.contentId)
+      break
+    case 'episode_published':
+      await handleEpisodePublished(event.episodeId)
+      break
+    case 'learning_hub_published':
+      await handleLearningHubPublished(event)
+      break
+    case 'mention':
+      await handleMention(event.messageId, event.mentionedUserIds)
+      break
+    case 'reply':
+      await handleReply(event.messageId, event.parentAuthorId)
+      break
+    case 'announcement':
+      await handleAnnouncement(event.title, event.body, event.url)
+      break
+    case 'question_answered':
+      await handleQuestionAnswered(event.questionId, event.questionAuthorId)
+      break
+  }
+}
+
 export async function emit(event: AppEvent): Promise<void> {
-  try {
-    switch (event.type) {
-      case 'research_published':
-      case 'signal_published':
-        await handleContentPublished(event.type, event.contentId)
-        break
-      case 'episode_published':
-        await handleEpisodePublished(event.episodeId)
-        break
-      case 'learning_hub_published':
-        await handleLearningHubPublished(event)
-        break
-      case 'mention':
-        await handleMention(event.messageId, event.mentionedUserIds)
-        break
-      case 'reply':
-        await handleReply(event.messageId, event.parentAuthorId)
-        break
-      case 'announcement':
-        await handleAnnouncement(event.title, event.body, event.url)
-        break
-      case 'question_answered':
-        await handleQuestionAnswered(event.questionId, event.questionAuthorId)
-        break
+  const cronUrl = resolveNotificationEventCronUrl()
+  if (cronUrl) {
+    const internalDispatchSecret = process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
     }
+    if (internalDispatchSecret) {
+      headers['x-internal-job-token'] = internalDispatchSecret
+    }
+    const cronSecret = process.env.VERCEL_CRON_SECRET
+    const url = new URL(cronUrl)
+    if (cronSecret) {
+      url.searchParams.set('secret', cronSecret)
+    }
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        keepalive: true,
+        headers,
+        body: JSON.stringify(event),
+      })
+      if (response.ok) {
+        return
+      }
+      logger.warn('Notification event cron dispatch returned non-success response; falling back to direct emit', {
+        eventType: event.type,
+        status: response.status,
+      })
+    } catch (error) {
+      logger.warn('Notification event cron dispatch failed; falling back to direct emit', {
+        eventType: event.type,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  try {
+    await emitStrict(event)
   } catch (error) {
-    console.error('Error emitting event:', error)
+    logger.error(
+      'Error emitting event',
+      error instanceof Error ? error : new Error(String(error)),
+      { eventType: event.type }
+    )
   }
 }
 
@@ -142,38 +225,36 @@ async function handleEpisodePublished(episodeId: string) {
   }
 
   const episodeUrl = `${getBaseUrl()}/crypto-compass/${episode.slug}`
+  const emailRecipients = await resolveEmailRecipientsForEvent({ type: 'crypto_compass' })
+  const emailTasks = emailRecipients.map((recipient) => {
+    const notificationEvent: NotificationEvent = {
+      type: 'crypto_compass',
+      subjectId: episodeId,
+      actorId: null,
+      recipientUserId: recipient.userId,
+      metadata: {
+        title: episode.title,
+        excerpt: episode.excerpt,
+        url: episodeUrl,
+      },
+    }
 
-  const emailTasks = eligibleUsers
-    .filter(user => {
-      const prefs = resolveNotificationPrefs(user.notificationPreference ?? null)
-      return canSendEmailFromPrefs('crypto_compass', prefs)
-    })
-    .map(user => {
-      const notificationEvent: NotificationEvent = {
-        type: 'crypto_compass',
-        subjectId: episodeId,
-        actorId: null,
-        recipientUserId: user.id,
-        metadata: {
-          title: episode.title,
-          excerpt: episode.excerpt,
-          url: episodeUrl,
-        },
-      }
+    return enqueueNotificationEmail(
+      notificationEvent,
+      { userId: recipient.userId, email: recipient.email, name: recipient.name },
+      {
+        title: episode.title,
+        excerpt: episode.excerpt,
+        url: episodeUrl,
+      },
+      'New Crypto Compass Episode'
+    )
+  })
 
-      return enqueueNotificationEmail(
-        notificationEvent,
-        { userId: user.id, email: user.email, name: user.name },
-        {
-          title: episode.title,
-          excerpt: episode.excerpt,
-          url: episodeUrl,
-        },
-        'New Crypto Compass Episode'
-      )
-    })
-
-  await Promise.all(emailTasks)
+  const emailResults = await Promise.all(emailTasks)
+  logNotificationEmailSummary('crypto_compass', episodeId, emailResults, {
+    recipientsAfterPreferenceGate: emailRecipients.length,
+  })
 }
 
 async function handleLearningHubPublished(event: Extract<AppEvent, { type: 'learning_hub_published' }>) {
@@ -200,38 +281,40 @@ async function handleLearningHubPublished(event: Extract<AppEvent, { type: 'lear
   }
 
   const absoluteUrl = event.url.startsWith('http') ? event.url : `${getBaseUrl()}${event.url}`
+  const emailRecipients = await resolveEmailRecipientsForEvent({
+    type: 'learning_hub',
+    minTier: event.minTier ?? null,
+  })
+  const emailTasks = emailRecipients.map((recipient) => {
+    const notificationEvent: NotificationEvent = {
+      type: 'learning_hub',
+      subjectId: event.subjectId,
+      actorId: null,
+      recipientUserId: recipient.userId,
+      metadata: {
+        title: event.title,
+        url: absoluteUrl,
+        subjectType: event.subjectType,
+      },
+    }
 
-  const emailTasks = eligibleUsers
-    .filter(user => {
-      const prefs = resolveNotificationPrefs(user.notificationPreference ?? null)
-      return canSendEmailFromPrefs('learning_hub', prefs)
-    })
-    .map(user => {
-      const notificationEvent: NotificationEvent = {
-        type: 'learning_hub',
-        subjectId: event.subjectId,
-        actorId: null,
-        recipientUserId: user.id,
-        metadata: {
-          title: event.title,
-          url: absoluteUrl,
-          subjectType: event.subjectType,
-        },
-      }
+    return enqueueNotificationEmail(
+      notificationEvent,
+      { userId: recipient.userId, email: recipient.email, name: recipient.name },
+      {
+        title: `${event.title}`,
+        url: absoluteUrl,
+        subjectType: event.subjectType,
+      },
+      'Learning Hub Update'
+    )
+  })
 
-      return enqueueNotificationEmail(
-        notificationEvent,
-        { userId: user.id, email: user.email, name: user.name },
-        {
-          title: `${event.title}`,
-          url: absoluteUrl,
-          subjectType: event.subjectType,
-        },
-        'Learning Hub Update'
-      )
-    })
-
-  await Promise.all(emailTasks)
+  const emailResults = await Promise.all(emailTasks)
+  logNotificationEmailSummary('learning_hub', event.subjectId, emailResults, {
+    recipientsAfterPreferenceGate: emailRecipients.length,
+    subjectType: event.subjectType,
+  })
 }
 
 async function handleMention(messageId: string, mentionedUserIds: string[]) {
@@ -287,37 +370,51 @@ async function handleMention(messageId: string, mentionedUserIds: string[]) {
   const snippet = message.body.length > 180 ? `${message.body.slice(0, 177)}...` : message.body
   const messageUrl = `${getBaseUrl()}/community?message=${messageId}`
 
-  const emailTasks = recipients
-    .filter((user) => {
-      const prefs = resolveNotificationPrefs(user.notificationPreference ?? null)
-      return canSendEmailFromPrefs('community_mention', prefs)
-    })
-    .map((user) => {
-      const notificationEvent: NotificationEvent = {
+  const resolvedEmailRecipients = await Promise.all(
+    recipients.map((recipient) =>
+      resolveEmailRecipientsForEvent({
         type: 'community_mention',
-        subjectId: messageId,
-        actorId: message.userId,
-        recipientUserId: user.id,
-        metadata: {
-          actorName,
-          snippet,
-          url: messageUrl,
-        },
-      }
+        recipientUserId: recipient.id,
+      })
+    )
+  )
+  const emailRecipients = Array.from(
+    new Map(
+      resolvedEmailRecipients
+        .flat()
+        .map((recipient) => [recipient.userId, recipient] as const)
+    ).values()
+  )
 
-      return enqueueNotificationEmail(
-        notificationEvent,
-        { userId: user.id, email: user.email, name: user.name },
-        {
-          actorName,
-          snippet,
-          url: messageUrl,
-        },
-        'You were mentioned in the community'
-      )
-    })
+  const emailTasks = emailRecipients.map((recipient) => {
+    const notificationEvent: NotificationEvent = {
+      type: 'community_mention',
+      subjectId: messageId,
+      actorId: message.userId,
+      recipientUserId: recipient.userId,
+      metadata: {
+        actorName,
+        snippet,
+        url: messageUrl,
+      },
+    }
 
-  await Promise.all(emailTasks)
+    return enqueueNotificationEmail(
+      notificationEvent,
+      { userId: recipient.userId, email: recipient.email, name: recipient.name },
+      {
+        actorName,
+        snippet,
+        url: messageUrl,
+      },
+      'You were mentioned in the community'
+    )
+  })
+
+  const emailResults = await Promise.all(emailTasks)
+  logNotificationEmailSummary('community_mention', messageId, emailResults, {
+    recipientsAfterPreferenceGate: emailRecipients.length,
+  })
 }
 
 async function handleReply(messageId: string, parentAuthorId: string) {
@@ -362,18 +459,22 @@ async function handleReply(messageId: string, parentAuthorId: string) {
     })
   }
 
-  const emailPrefs = resolveNotificationPrefs(recipient.notificationPreference ?? null)
-  if (!canSendEmailFromPrefs('community_reply', emailPrefs)) return
+  const emailRecipients = await resolveEmailRecipientsForEvent({
+    type: 'community_reply',
+    recipientUserId: recipient.id,
+  })
+  if (emailRecipients.length === 0) return
 
   const actorName = replyMessage.user.name || 'Someone'
   const snippet = replyMessage.body.length > 180 ? `${replyMessage.body.slice(0, 177)}...` : replyMessage.body
   const messageUrl = `${getBaseUrl()}/community?message=${messageId}`
+  const emailRecipient = emailRecipients[0]
 
   const notificationEvent: NotificationEvent = {
     type: 'community_reply',
     subjectId: messageId,
     actorId: replyMessage.userId,
-    recipientUserId: recipient.id,
+    recipientUserId: emailRecipient.userId,
     metadata: {
       actorName,
       snippet,
@@ -381,9 +482,13 @@ async function handleReply(messageId: string, parentAuthorId: string) {
     },
   }
 
-  await enqueueNotificationEmail(
+  const enqueueResult = await enqueueNotificationEmail(
     notificationEvent,
-    { userId: recipient.id, email: recipient.email, name: recipient.name },
+    {
+      userId: emailRecipient.userId,
+      email: emailRecipient.email,
+      name: emailRecipient.name,
+    },
     {
       actorName,
       snippet,
@@ -391,6 +496,10 @@ async function handleReply(messageId: string, parentAuthorId: string) {
     },
     'New reply to your community message'
   )
+
+  logNotificationEmailSummary('community_reply', messageId, [enqueueResult], {
+    recipientsAfterPreferenceGate: emailRecipients.length,
+  })
 }
 
 async function handleAnnouncement(title: string, body?: string, url?: string) {

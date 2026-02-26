@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { broadcastMessage } from '@/lib/community/sse'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { requireActiveSubscription } from '@/lib/access'
-import { emit } from '@/lib/events'
+import { triggerNotificationEventDispatch } from '@/lib/events/dispatch'
 
 // Revalidate GET requests every 10 seconds - messages are real-time but we want some caching
 // Note: POST requests are not cached (they're write operations)
@@ -161,12 +161,14 @@ export async function POST(req: Request) {
   )
 
   if (resolvedMentionedUserIds.length > 0) {
-    void emit({
-      type: 'mention',
-      messageId: saved.id,
-      mentionedUserIds: resolvedMentionedUserIds,
-    }).catch((error) => {
-      console.error('Failed to emit mention event:', error)
+    triggerNotificationEventDispatch({
+      source: 'community-messages-post-mention',
+      origin: new URL(req.url).origin,
+      event: {
+        type: 'mention',
+        messageId: saved.id,
+        mentionedUserIds: resolvedMentionedUserIds,
+      },
     })
   }
 
@@ -177,12 +179,14 @@ export async function POST(req: Request) {
     })
 
     if (parent?.userId && parent.userId !== session.id) {
-      void emit({
-        type: 'reply',
-        messageId: saved.id,
-        parentAuthorId: parent.userId,
-      }).catch((error) => {
-        console.error('Failed to emit reply event:', error)
+      triggerNotificationEventDispatch({
+        source: 'community-messages-post-reply',
+        origin: new URL(req.url).origin,
+        event: {
+          type: 'reply',
+          messageId: saved.id,
+          parentAuthorId: parent.userId,
+        },
       })
     }
   }

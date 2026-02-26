@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger'
 import { nanoid } from 'nanoid'
 import { withDbRetry } from '@/lib/db/retry'
 import { toPrismaRouteErrorResponse } from '@/lib/db/errors'
-import { emit } from '@/lib/events'
+import { triggerNotificationEventDispatch } from '@/lib/events/dispatch'
 
 // Configure route for large file uploads
 export const runtime = 'nodejs'
@@ -169,14 +169,16 @@ export async function POST(request: NextRequest) {
     })
 
     if (lesson.publishedAt) {
-      void emit({
-        type: 'learning_hub_published',
-        subjectType: 'lesson',
-        subjectId: lesson.id,
-        title: lesson.title,
-        url: `/learn/${track.slug}/lesson/${lesson.slug}`,
-      }).catch((error) => {
-        console.error('Failed to emit lesson publish event:', error)
+      triggerNotificationEventDispatch({
+        source: 'admin-learning-lessons-upload-post',
+        origin: request.nextUrl.origin,
+        event: {
+          type: 'learning_hub_published',
+          subjectType: 'lesson',
+          subjectId: lesson.id,
+          title: lesson.title,
+          url: `/learn/${track.slug}/lesson/${lesson.slug}`,
+        },
       })
     }
 

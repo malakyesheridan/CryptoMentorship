@@ -3,7 +3,7 @@ import { requireRole } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleError } from '@/lib/errors'
-import { emit } from '@/lib/events'
+import { triggerNotificationEventDispatch } from '@/lib/events/dispatch'
 import { z } from 'zod'
 
 // Configure route for large file uploads
@@ -118,8 +118,10 @@ export async function POST(request: NextRequest) {
     console.log('[Episode Creation] Transaction completed successfully')
 
     if (episode.publishedAt) {
-      emit({ type: 'episode_published', episodeId: episode.id }).catch((err) => {
-        console.error('Failed to emit episode notification event:', err)
+      triggerNotificationEventDispatch({
+        source: 'admin-episodes-post',
+        origin: request.nextUrl.origin,
+        event: { type: 'episode_published', episodeId: episode.id },
       })
     }
     return NextResponse.json(episode)
