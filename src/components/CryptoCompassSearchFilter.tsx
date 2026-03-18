@@ -94,23 +94,23 @@ export default function CryptoCompassSearchFilter({
   const hasActiveFilters = searchQuery.trim() || filterBy !== 'all' || sortBy !== 'newest'
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
+    <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg border border-[var(--border-subtle)] p-6 mb-8">
       {/* Search Bar */}
       <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] w-5 h-5" />
         <Input
           type="text"
           placeholder="Search episodes and videos..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-4 py-3 text-lg border-slate-200 focus:border-gold-500 focus:ring-gold-500 rounded-xl"
+          className="pl-10 pr-4 py-3 text-lg border-[var(--border-subtle)] focus:border-gold-500 focus:ring-gold-500 rounded-xl"
         />
         {searchQuery && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSearchQuery('')}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-strong)]"
           >
             ×
           </Button>
@@ -121,8 +121,8 @@ export default function CryptoCompassSearchFilter({
       <div className="flex flex-wrap items-center gap-4">
         {/* Filter Buttons */}
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-700">Filter:</span>
+          <Filter className="w-4 h-4 text-[var(--text-muted)]" />
+          <span className="text-sm font-medium text-[var(--text-strong)]">Filter:</span>
           <div className="flex gap-2">
             {[
               { key: 'all', label: 'All', icon: null },
@@ -139,7 +139,7 @@ export default function CryptoCompassSearchFilter({
                 className={`text-xs px-3 py-1 h-auto ${
                   filterBy === key 
                     ? 'bg-gold-500 text-white border-gold-500' 
-                    : 'text-slate-600 border-slate-200 hover:border-gold-300'
+                    : 'text-[var(--text-strong)] border-[var(--border-subtle)] hover:border-gold-300'
                 }`}
               >
                 {Icon && <Icon className="w-3 h-3 mr-1" />}
@@ -151,8 +151,8 @@ export default function CryptoCompassSearchFilter({
 
         {/* Sort Options */}
         <div className="flex items-center gap-2">
-          <SortAsc className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-700">Sort:</span>
+          <SortAsc className="w-4 h-4 text-[var(--text-muted)]" />
+          <span className="text-sm font-medium text-[var(--text-strong)]">Sort:</span>
           <div className="flex gap-2">
             {[
               { key: 'newest', label: 'Newest', icon: Calendar },
@@ -167,7 +167,7 @@ export default function CryptoCompassSearchFilter({
                 className={`text-xs px-3 py-1 h-auto ${
                   sortBy === key 
                     ? 'bg-gold-500 text-white border-gold-500' 
-                    : 'text-slate-600 border-slate-200 hover:border-gold-300'
+                    : 'text-[var(--text-strong)] border-[var(--border-subtle)] hover:border-gold-300'
                 }`}
               >
                 {Icon && <Icon className="w-3 h-3 mr-1" />}
@@ -183,7 +183,7 @@ export default function CryptoCompassSearchFilter({
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="text-slate-500 hover:text-slate-700 text-xs"
+            className="text-[var(--text-muted)] hover:text-[var(--text-strong)] text-xs"
           >
             Clear all
           </Button>
@@ -191,8 +191,8 @@ export default function CryptoCompassSearchFilter({
       </div>
 
       {/* Results Summary */}
-      <div className="mt-4 pt-4 border-t border-slate-100">
-        <div className="flex items-center justify-between text-sm text-slate-600">
+      <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
+        <div className="flex items-center justify-between text-sm text-[var(--text-strong)]">
           <div className="flex items-center gap-4">
             <span>
               <Badge variant="outline" className="mr-1">{filteredAndSortedData.episodes.length}</Badge>

@@ -116,9 +116,9 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
             </div>
             
             {isExtending && currentEndDate && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-sm font-medium text-blue-900">Current Trial End Date</p>
-                <p className="text-sm text-blue-700 mt-1">
+              <div className="p-3 bg-[#1a1e2e] border border-[#4a7cc3] rounded-md">
+                <p className="text-sm font-medium text-[#4a7cc3]">Current Trial End Date</p>
+                <p className="text-sm text-[#4a7cc3] mt-1">
                   {formatDate(currentEndDate, 'MMM d, yyyy h:mm a')}
                 </p>
               </div>
@@ -130,7 +130,7 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
                 id="tier"
                 value={tier}
                 onChange={(e) => setTier(e.target.value as 'T1' | 'T2')}
-                className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full mt-1 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="T1">Growth</option>
                 <option value="T2">Elite</option>
@@ -148,12 +148,12 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
                 required
               />
               {selectedEndDate && !Number.isNaN(selectedEndDate.getTime()) && (
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                   Selected end date: {formatDate(selectedEndDate, 'MMM d, yyyy')}
                 </p>
               )}
               {extensionNotAfterCurrent && (
-                <p className="text-sm text-red-600 mt-1">
+                <p className="text-sm text-[#c03030] mt-1">
                   Select a date after the current trial end date.
                 </p>
               )}

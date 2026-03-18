@@ -247,7 +247,7 @@ export default function LoginPage() {
     <BeamsBackground intensity="medium">
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full relative z-20">
-          <div className="bg-[#FFFDF7] rounded-2xl p-8 lg:p-10 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
+          <div className="bg-[var(--bg-panel)] rounded-2xl p-8 lg:p-10 text-center shadow-2xl border border-[var(--border-subtle)] backdrop-blur-sm">
             {/* Header */}
             <div className="mb-8 flex flex-col items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -256,7 +256,7 @@ export default function LoginPage() {
                 alt="STEWART & CO"
                 className="mb-4 h-auto w-auto max-w-[200px]"
               />
-              <p className="text-slate-600 text-base lg:text-lg">
+              <p className="text-[var(--text-muted)] text-base lg:text-lg">
                 Premium cryptocurrency research and analysis
               </p>
             </div>
@@ -274,13 +274,13 @@ export default function LoginPage() {
                         setPassword('')
                         setError(null)
                       }}
-                      className="text-sm text-slate-500 hover:text-slate-700 transition-colors underline"
+                      className="text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] transition-colors underline"
                     >
                       ← Back to options
                     </button>
                   </div>
                   <form onSubmit={handleCredentialsLogin} className="space-y-4">
-                    <h3 className="text-lg font-semibold mb-4 text-slate-900">
+                    <h3 className="text-lg font-semibold mb-4 text-[var(--text-strong)]">
                       Sign In with Email
                     </h3>
                     <input
@@ -290,7 +290,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={isLoading}
-                      className="w-full px-4 py-3 text-base rounded-lg border border-slate-300 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all bg-white/80"
+                      className="w-full px-4 py-3 text-base rounded-lg border border-[var(--border-subtle)] focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all bg-[var(--bg-panel)]"
                     />
                     <input
                       type="password"
@@ -299,13 +299,13 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={isLoading}
-                      className="w-full px-4 py-3 text-base rounded-lg border border-slate-300 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all bg-white/80"
+                      className="w-full px-4 py-3 text-base rounded-lg border border-[var(--border-subtle)] focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition-all bg-[var(--bg-panel)]"
                     />
                     <div className="flex gap-3">
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 bg-gold-400 hover:bg-gold-500 text-slate-900 font-semibold h-12 rounded-lg transition-all"
+                        className="flex-1 bg-gold-400 hover:bg-gold-500 text-[var(--text-strong)] font-semibold h-12 rounded-lg transition-all"
                       >
                         {isLoading ? (
                           <>
@@ -326,14 +326,14 @@ export default function LoginPage() {
                         }}
                         disabled={isLoading}
                         variant="outline"
-                        className="px-6 h-12 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-50"
+                        className="px-6 h-12 rounded-lg border-[var(--border-subtle)] text-[var(--text-strong)] hover:bg-[#1a1815]"
                       >
                         Cancel
                       </Button>
                     </div>
                     <Link 
                       href="/forgot-password" 
-                      className="block text-sm text-slate-500 hover:text-slate-700 transition-colors text-center"
+                      className="block text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] transition-colors text-center"
                     >
                       Forgot password?
                     </Link>
@@ -345,7 +345,7 @@ export default function LoginPage() {
                     <Link href={trialRegisterUrl} className="block">
                       <Button
                         disabled={isLoading}
-                        className="w-full bg-gold-400 hover:bg-gold-500 text-slate-900 font-semibold h-12 rounded-lg transition-all shadow-md hover:shadow-lg"
+                        className="w-full bg-gold-400 hover:bg-gold-500 text-[var(--text-strong)] font-semibold h-12 rounded-lg transition-all shadow-md hover:shadow-lg"
                       >
                         {isLoading ? (
                           <>
@@ -361,22 +361,22 @@ export default function LoginPage() {
                       <Button
                         disabled={isLoading}
                         variant="outline"
-                        className="w-full h-12 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-50"
+                        className="w-full h-12 rounded-lg border-[var(--border-subtle)] text-[var(--text-strong)] hover:bg-[#1a1815]"
                       >
                         Create Account
                       </Button>
                     </Link>
                     
                     <div className="flex items-center gap-3 my-6">
-                      <div className="flex-1 h-px bg-slate-300"></div>
-                      <span className="text-sm text-slate-500">or</span>
-                      <div className="flex-1 h-px bg-slate-300"></div>
+                      <div className="flex-1 h-px bg-[#2a2520]"></div>
+                      <span className="text-sm text-[var(--text-muted)]">or</span>
+                      <div className="flex-1 h-px bg-[#2a2520]"></div>
                     </div>
 
                     <Button
                       onClick={() => setShowPasswordLogin(true)}
                       disabled={isLoading}
-                      className="w-full bg-gold-400 hover:bg-gold-500 text-slate-900 font-semibold h-12 rounded-lg transition-all shadow-md hover:shadow-lg"
+                      className="w-full bg-gold-400 hover:bg-gold-500 text-[var(--text-strong)] font-semibold h-12 rounded-lg transition-all shadow-md hover:shadow-lg"
                     >
                       Sign in with Email & Password
                     </Button>
@@ -385,7 +385,7 @@ export default function LoginPage() {
               )}
               
               {error && (
-                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                <div className="mt-6 p-4 bg-[#2e1a1a] border border-[#c03030] rounded-lg text-[#c03030] text-sm">
                   {error}
                 </div>
               )}

@@ -38,14 +38,14 @@ export default async function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Site Name</p>
-                <p className="text-xs text-slate-500">STEWART & CO</p>
+                <p className="text-xs text-[var(--text-muted)]">STEWART & CO</p>
               </div>
               <Badge variant="outline">Configured</Badge>
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Environment</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--text-muted)]">
                   {process.env.NODE_ENV || 'production'}
                 </p>
               </div>
@@ -72,14 +72,14 @@ export default async function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Authentication</p>
-                <p className="text-xs text-slate-500">NextAuth.js</p>
+                <p className="text-xs text-[var(--text-muted)]">NextAuth.js</p>
               </div>
               <Badge className="badge-preview">Active</Badge>
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Session Management</p>
-                <p className="text-xs text-slate-500">JWT-based</p>
+                <p className="text-xs text-[var(--text-muted)]">JWT-based</p>
               </div>
               <Badge variant="outline">Configured</Badge>
             </div>
@@ -104,14 +104,14 @@ export default async function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Provider</p>
-                <p className="text-xs text-slate-500">Stripe</p>
+                <p className="text-xs text-[var(--text-muted)]">Stripe</p>
               </div>
               <Badge variant="outline">Configured</Badge>
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Status</p>
-                <p className="text-xs text-slate-500">Active</p>
+                <p className="text-xs text-[var(--text-muted)]">Active</p>
               </div>
               <Badge className="badge-preview">Live</Badge>
             </div>
@@ -136,21 +136,21 @@ export default async function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Base Capital</p>
-                <p className="text-xs text-slate-500">For performance calculations</p>
+                <p className="text-xs text-[var(--text-muted)]">For performance calculations</p>
               </div>
               <Badge variant="outline">Locked</Badge>
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">Position Sizing</p>
-                <p className="text-xs text-slate-500">Risk-based calculations</p>
+                <p className="text-xs text-[var(--text-muted)]">Risk-based calculations</p>
               </div>
               <Badge variant="outline">Locked</Badge>
             </div>
             <Button variant="outline" className="w-full" disabled>
               Portfolio Settings (Locked)
             </Button>
-            <p className="text-xs text-slate-400 text-center">
+            <p className="text-xs text-[var(--text-muted)] text-center">
               Performance stats are not currently displayed
             </p>
           </CardContent>

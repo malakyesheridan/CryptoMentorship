@@ -124,8 +124,8 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                <div className="h-8 bg-slate-200 rounded"></div>
+                <div className="h-4 bg-[#2a2520] rounded mb-2"></div>
+                <div className="h-8 bg-[#2a2520] rounded"></div>
               </CardContent>
             </Card>
           ))}
@@ -153,7 +153,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
     return (
       <Card className={className}>
         <CardContent className="p-6 text-center">
-          <div className="text-slate-500 mb-2">No analytics data available</div>
+          <div className="text-[var(--text-muted)] mb-2">No analytics data available</div>
           <Button onClick={() => mutate()} variant="outline" size="sm">
             Refresh
           </Button>
@@ -189,7 +189,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Enrollments</p>
+                <p className="text-sm font-medium text-[var(--text-strong)]">Enrollments</p>
                 <p className="text-2xl font-bold">{analytics.overview.totalEnrollments}</p>
               </div>
               <BookOpen className="h-8 w-8 text-blue-500" />
@@ -201,7 +201,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Completed Tracks</p>
+                <p className="text-sm font-medium text-[var(--text-strong)]">Completed Tracks</p>
                 <p className="text-2xl font-bold">{analytics.overview.completedTracks}</p>
               </div>
               <Trophy className="h-8 w-8 text-yellow-500" />
@@ -213,7 +213,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Lessons Completed</p>
+                <p className="text-sm font-medium text-[var(--text-strong)]">Lessons Completed</p>
                 <p className="text-2xl font-bold">{analytics.overview.totalLessonsCompleted}</p>
               </div>
               <Target className="h-8 w-8 text-green-500" />
@@ -231,7 +231,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
             <div>
               <h3 className="text-lg font-semibold">Learning Streak</h3>
               <p className="text-3xl font-bold text-orange-600">{analytics.overview.streak} days</p>
-              <p className="text-sm text-slate-600">Keep up the great work!</p>
+              <p className="text-sm text-[var(--text-strong)]">Keep up the great work!</p>
             </div>
           </div>
         </CardContent>
@@ -249,10 +249,10 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
         <CardContent>
           <div className="space-y-4">
             {analytics.topTracks.map((track) => (
-              <div key={track.trackId} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+              <div key={track.trackId} className="flex items-center justify-between p-4 bg-[#1a1815] rounded-lg">
                 <div>
                   <h4 className="font-medium">{track.trackTitle}</h4>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-[var(--text-strong)]">
                     Started {formatDate(toISOString(track.startedAt))}
                   </p>
                 </div>
@@ -278,11 +278,11 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
         <CardContent>
           <div className="space-y-3">
             {analytics.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+              <div key={activity.id} className="flex items-center gap-3 p-3 bg-[#1a1815] rounded-lg">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div className="flex-1">
                   <p className="font-medium">{activity.lesson.title}</p>
-                  <p className="text-sm text-slate-600">{activity.lesson.track.title}</p>
+                  <p className="text-sm text-[var(--text-strong)]">{activity.lesson.track.title}</p>
                 </div>
                 <Badge variant="outline" className="text-xs">
                   {formatDate(toISOString(activity.completedAt))}
@@ -308,10 +308,10 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
               <div key={day.date} className="flex items-center justify-between p-2">
                 <span className="text-sm font-medium">{formatDate(day.date)}</span>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-[var(--text-strong)]">
                     {day.lessonsCompleted} lessons
                   </span>
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-[var(--text-strong)]">
                     {formatTimeSpent(day.timeSpent)}
                   </span>
                 </div>

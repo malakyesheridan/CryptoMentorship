@@ -136,7 +136,7 @@ export function ActivityChart({
       )}
       
       {/* Day labels */}
-      <div className="flex justify-between text-xs text-slate-500 mt-1">
+      <div className="flex justify-between text-xs text-[var(--text-muted)] mt-1">
         {chartData.map((item, index) => {
           const date = new Date(item.date)
           const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
@@ -160,7 +160,7 @@ export function ActivityChart({
       </div>
       
       {/* Count labels */}
-      <div className="flex justify-between text-xs font-medium text-slate-600 mt-1">
+      <div className="flex justify-between text-xs font-medium text-[var(--text-strong)] mt-1">
         {chartData.map((item, index) => {
           const isSelected = selectedBar === item.date
           
@@ -181,8 +181,8 @@ export function ActivityChart({
       
       {/* Selected day details */}
       {selectedBar && (
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="text-sm text-blue-800">
+        <div className="mt-4 p-3 bg-[#1a1d2e] rounded-lg border border-[#1a1d2e]">
+          <div className="text-sm text-[#5b8dd9]">
             <strong>{format(new Date(selectedBar), 'EEEE, MMMM d, yyyy')}</strong>
             <p className="mt-1">
               {chartData.find(d => d.date === selectedBar)?.count || 0} lesson{(chartData.find(d => d.date === selectedBar)?.count || 0) !== 1 ? 's' : ''} completed

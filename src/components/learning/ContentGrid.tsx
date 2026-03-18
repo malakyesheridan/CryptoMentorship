@@ -55,11 +55,11 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
   if (items.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <BookOpen className="w-12 h-12 text-slate-400" />
+        <div className="w-24 h-24 bg-[#1a1815] rounded-full flex items-center justify-center mx-auto mb-6">
+          <BookOpen className="w-12 h-12 text-[var(--text-muted)]" />
         </div>
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">No content available</h3>
-        <p className="text-slate-600">Check back soon for new content.</p>
+        <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">No content available</h3>
+        <p className="text-[var(--text-strong)]">Check back soon for new content.</p>
       </div>
     )
   }
@@ -76,7 +76,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
           <Card 
             key={item.id} 
             data-tour={isFirstCourse ? "learning-track-card" : undefined}
-            className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 relative overflow-hidden"
+            className="group bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-[var(--border-subtle)] relative overflow-hidden"
           >
             {/* Cover Image */}
             {item.coverUrl && (
@@ -94,7 +94,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isCourse ? 'bg-blue-100' : 'bg-purple-100'
+                    isCourse ? 'bg-[#1a1d2e]' : 'bg-[#231a2e]'
                   }`}>
                     {isCourse ? (
                       <BookOpen className="w-5 h-5 text-blue-600" />
@@ -104,8 +104,8 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                   </div>
                   <Badge className={`text-xs px-2 py-1 ${
                     item.locked 
-                      ? 'bg-blue-100 text-blue-700 border-blue-200' 
-                      : 'bg-green-100 text-green-700 border-green-200'
+                      ? 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]' 
+                      : 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]'
                   }`}>
                     {item.locked ? 'Member' : 'Public'}
                   </Badge>
@@ -143,10 +143,10 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                 )}
               </div>
 
-              <CardTitle className="text-xl font-semibold mb-2 text-slate-900 group-hover:text-yellow-600 transition-colors line-clamp-2">
+              <CardTitle className="text-xl font-semibold mb-2 text-[var(--text-strong)] group-hover:text-yellow-600 transition-colors line-clamp-2">
                 {item.title}
               </CardTitle>
-              <CardDescription className="text-sm text-slate-600 line-clamp-2">
+              <CardDescription className="text-sm text-[var(--text-strong)] line-clamp-2">
                 {item.description || 'No description available.'}
               </CardDescription>
             </CardHeader>
@@ -156,12 +156,12 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
               {showProgress && isCourse && item.progressPct !== undefined && (
                 <div className="mb-4">
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-slate-600">Progress</span>
+                    <span className="text-[var(--text-strong)]">Progress</span>
                     <span className="font-medium">{item.progressPct}%</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
+                  <div className="w-full bg-[#2a2520] rounded-full h-2">
                     <div 
-                      className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                      className="bg-gold-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${item.progressPct}%` }}
                     />
                   </div>
@@ -169,7 +169,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
               )}
 
               {/* Metadata */}
-              <div className="flex items-center gap-4 text-sm text-slate-600 mb-4">
+              <div className="flex items-center gap-4 text-sm text-[var(--text-strong)] mb-4">
                 {isCourse && item.totalLessons && (
                   <div className="flex items-center gap-1">
                     <BookOpen className="h-4 w-4" />
@@ -211,7 +211,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
               {/* Action Button */}
               <Link href={href} className="block" onClick={() => onItemClick?.(item)}>
                 <Button
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                  className="w-full bg-gold-500 hover:bg-gold-600 text-white"
                   data-tour={isFirstCourse ? "learning-track-cta" : undefined}
                 >
                   {isCourse && item.progressPct === 100 ? (
@@ -236,10 +236,10 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
 
             {/* Lock Overlay */}
             {item.locked && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <div className="absolute inset-0 bg-[#141210]/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <div className="text-center">
-                  <Lock className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-slate-600">Member Only</p>
+                  <Lock className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
+                  <p className="text-sm font-medium text-[var(--text-strong)]">Member Only</p>
                 </div>
               </div>
             )}

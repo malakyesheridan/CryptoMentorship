@@ -19,7 +19,7 @@ export function CircularProgress({
   size = 80,
   strokeWidth = 6,
   color = '#3b82f6', // blue-500
-  backgroundColor = '#e2e8f0', // slate-200
+  backgroundColor = '#2a2520', // slate-200
   showPercentage = true,
   className = '',
   animated = true
@@ -96,7 +96,7 @@ export function CircularProgress({
       {/* Percentage text */}
       {showPercentage && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-semibold text-slate-700">
+          <span className="text-sm font-semibold text-[var(--text-muted)]">
             {Math.round(animatedProgress)}%
           </span>
         </div>

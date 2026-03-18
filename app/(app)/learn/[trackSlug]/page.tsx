@@ -127,7 +127,7 @@ export default async function TrackPage({
   const trackPdfResources = normalizePdfResources(track.pdfResources)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <LearningHubWizard />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
@@ -157,20 +157,20 @@ export default async function TrackPage({
 
           {/* Title and Description */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-slate-900">{track.title}</h1>
-            <p className="text-slate-600 mt-2">{track.summary}</p>
+            <h1 className="text-3xl font-bold text-[var(--text-strong)]">{track.title}</h1>
+            <p className="text-[var(--text-muted)] mt-2">{track.summary}</p>
           </div>
 
           {/* Simple Progress and Action */}
           {enrollment && (
             <div className="mb-6" data-tour="track-progress">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-[var(--text-muted)]">
                   {completedLessons} of {totalLessons} lessons completed
                 </span>
-                <span className="text-sm font-medium text-slate-900">{progressPct}%</span>
+                <span className="text-sm font-medium text-[var(--text-strong)]">{progressPct}%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
+              <div className="w-full bg-[#2a2520] rounded-full h-2">
                 <div 
                   className="bg-gold-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progressPct}%` }}
@@ -225,15 +225,15 @@ export default async function TrackPage({
 
       {trackPdfResources.length > 0 && (
         <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+          <div className="bg-[var(--bg-panel)] rounded-lg shadow-sm border border-[var(--border-subtle)] p-6">
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5 text-slate-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Track PDFs</h2>
+              <FileText className="h-5 w-5 text-[var(--text-muted)]" />
+              <h2 className="text-lg font-semibold text-[var(--text-strong)]">Track PDFs</h2>
             </div>
             <div className="space-y-2">
               {trackPdfResources.map((resource) => (
                 <div key={resource.url} className="flex items-center justify-between gap-4">
-                  <span className="text-sm text-slate-700">{resource.title}</span>
+                  <span className="text-sm text-[var(--text-strong)]">{resource.title}</span>
                   <a
                     href={resource.url}
                     target="_blank"
@@ -250,21 +250,21 @@ export default async function TrackPage({
       )}
 
       {/* Lessons List - Prominent and Easy to Navigate */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200" data-tour="track-lessons">
-          <div className="p-6 border-b border-slate-200">
-            <h2 className="text-xl font-bold text-slate-900">Lessons</h2>
-            <p className="text-sm text-slate-600 mt-1">Select a lesson to watch</p>
+      <div className="bg-[var(--bg-panel)] rounded-lg shadow-sm border border-[var(--border-subtle)]" data-tour="track-lessons">
+          <div className="p-6 border-b border-[var(--border-subtle)]">
+            <h2 className="text-xl font-bold text-[var(--text-strong)]">Lessons</h2>
+            <p className="text-sm text-[var(--text-muted)] mt-1">Select a lesson to watch</p>
           </div>
-          
-          <div className="divide-y divide-slate-200">
+
+          <div className="divide-y divide-[var(--border-subtle)]">
             {/* Lessons in sections */}
             {track.sections.map((section) => (
               <div key={section.id}>
                 {section.title && (
-                  <div className="px-6 py-3 bg-slate-50 border-b border-slate-200">
-                    <h3 className="font-semibold text-slate-900">{section.title}</h3>
+                  <div className="px-6 py-3 bg-[#1a1815] border-b border-[var(--border-subtle)]">
+                    <h3 className="font-semibold text-[var(--text-strong)]">{section.title}</h3>
                     {section.summary && (
-                      <p className="text-sm text-slate-600 mt-1">{section.summary}</p>
+                      <p className="text-sm text-[var(--text-muted)] mt-1">{section.summary}</p>
                     )}
                   </div>
                 )}
@@ -276,13 +276,13 @@ export default async function TrackPage({
                     <Link
                       key={lesson.id}
                       href={`/learn/${track.slug}/lesson/${lesson.slug}`}
-                      className="block px-6 py-4 hover:bg-slate-50 transition-colors"
+                      className="block px-6 py-4 hover:bg-[#1a1815] transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
                           isCompleted 
-                            ? 'bg-green-100 text-green-600' 
-                            : 'bg-slate-100 text-slate-600'
+                            ? 'bg-[#1a2e1a] text-[#4a7c3f]' 
+                            : 'bg-[#1a1815] text-[var(--text-muted)]'
                         }`}>
                           {isCompleted ? (
                             <CheckCircle className="h-5 w-5" />
@@ -293,9 +293,9 @@ export default async function TrackPage({
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-slate-900">{lesson.title}</h4>
+                            <h4 className="font-medium text-[var(--text-strong)]">{lesson.title}</h4>
                             {isCompleted && (
-                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              <Badge variant="outline" className="text-xs bg-[#1a2e1a] text-[#4a7c3f] border-[#4a7c3f]">
                                 Completed
                               </Badge>
                             )}
@@ -306,7 +306,7 @@ export default async function TrackPage({
                             )}
                           </div>
                           {lesson.durationMin && (
-                            <p className="text-sm text-slate-600 mt-1">
+                            <p className="text-sm text-[var(--text-muted)] mt-1">
                               {lesson.durationMin} minutes
                             </p>
                           )}
@@ -339,8 +339,8 @@ export default async function TrackPage({
               return (
                 <div>
                   {track.sections.length > 0 && (
-                    <div className="px-6 py-3 bg-slate-50 border-b border-slate-200">
-                      <h3 className="font-semibold text-slate-900">Other Lessons</h3>
+                    <div className="px-6 py-3 bg-[#1a1815] border-b border-[var(--border-subtle)]">
+                      <h3 className="font-semibold text-[var(--text-strong)]">Other Lessons</h3>
                     </div>
                   )}
                   {lessonsWithoutSections.map((lesson) => {
@@ -351,13 +351,13 @@ export default async function TrackPage({
                     <Link
                       key={lesson.id}
                       href={`/learn/${track.slug}/lesson/${lesson.slug}`}
-                      className="block px-6 py-4 hover:bg-slate-50 transition-colors"
+                      className="block px-6 py-4 hover:bg-[#1a1815] transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
                           isCompleted 
-                            ? 'bg-green-100 text-green-600' 
-                            : 'bg-slate-100 text-slate-600'
+                            ? 'bg-[#1a2e1a] text-[#4a7c3f]' 
+                            : 'bg-[#1a1815] text-[var(--text-muted)]'
                         }`}>
                           {isCompleted ? (
                             <CheckCircle className="h-5 w-5" />
@@ -368,9 +368,9 @@ export default async function TrackPage({
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-slate-900">{lesson.title}</h4>
+                            <h4 className="font-medium text-[var(--text-strong)]">{lesson.title}</h4>
                             {isCompleted && (
-                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                              <Badge variant="outline" className="text-xs bg-[#1a2e1a] text-[#4a7c3f] border-[#4a7c3f]">
                                 Completed
                               </Badge>
                             )}
@@ -381,7 +381,7 @@ export default async function TrackPage({
                             )}
                           </div>
                           {lesson.durationMin && (
-                            <p className="text-sm text-slate-600 mt-1">
+                            <p className="text-sm text-[var(--text-muted)] mt-1">
                               {lesson.durationMin} minutes
                             </p>
                           )}

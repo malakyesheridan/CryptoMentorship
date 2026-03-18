@@ -97,7 +97,7 @@ export default function VideoSelector({
         <CardContent className="space-y-4">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] w-4 h-4" />
             <Input
               placeholder="Search videos..."
               value={searchTerm}
@@ -111,12 +111,12 @@ export default function VideoSelector({
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="w-6 h-6 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                <p className="text-slate-600">Loading videos...</p>
+                <p className="text-[var(--text-strong)]">Loading videos...</p>
               </div>
             ) : filteredVideos.length === 0 ? (
               <div className="text-center py-8">
-                <Video className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-slate-600">No videos found</p>
+                <Video className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
+                <p className="text-[var(--text-strong)]">No videos found</p>
               </div>
             ) : (
               filteredVideos.map((video) => (
@@ -125,21 +125,21 @@ export default function VideoSelector({
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                     selectedVideo?.id === video.id
                       ? 'border-gold-500 bg-gold-50'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-[var(--border-subtle)] hover:border-[var(--border-subtle)] hover:bg-[#1a1815]'
                   }`}
                   onClick={() => handleVideoSelect(video)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-slate-800 truncate">
+                      <h3 className="font-medium text-[var(--text-strong)] truncate">
                         {video.title}
                       </h3>
                       {video.description && (
-                        <p className="text-sm text-slate-600 truncate">
+                        <p className="text-sm text-[var(--text-strong)] truncate">
                           {video.description}
                         </p>
                       )}
-                      <div className="flex items-center space-x-3 mt-1 text-xs text-slate-500">
+                      <div className="flex items-center space-x-3 mt-1 text-xs text-[var(--text-muted)]">
                         <span>{formatDuration(video.duration)}</span>
                         <Badge variant="outline" className="text-xs">
                           {video.visibility}

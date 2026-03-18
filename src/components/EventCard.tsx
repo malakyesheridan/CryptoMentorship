@@ -121,7 +121,7 @@ export function EventCard({
   }
 
   return (
-    <Card className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200" data-testid="event-card">
+    <Card className="group bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-[var(--border-subtle)]" data-testid="event-card">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -130,12 +130,12 @@ export function EventCard({
               {isLive && <Badge variant="destructive" className="bg-red-500 text-white">Live</Badge>}
             </div>
             <Link href={`/events/${slug}`} className="group">
-              <h3 className="text-xl font-semibold text-slate-900 group-hover:text-yellow-600 transition-colors mb-3 line-clamp-2">
+              <h3 className="text-xl font-semibold text-[var(--text-strong)] group-hover:text-yellow-600 transition-colors mb-3 line-clamp-2">
                 {title}
               </h3>
             </Link>
             {summary && (
-              <p className="text-sm text-slate-600 line-clamp-3 mb-4">
+              <p className="text-sm text-[var(--text-strong)] line-clamp-3 mb-4">
                 {summary}
               </p>
             )}
@@ -144,14 +144,14 @@ export function EventCard({
 
         {/* Event Details */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center gap-2 text-sm text-[var(--text-strong)]">
             <Clock className="h-4 w-4" />
             <span>{formatDate(startAt, 'PPP')} at {formatTime(startAt)}</span>
-            <span className="text-slate-400">•</span>
+            <span className="text-[var(--text-muted)]">•</span>
             <span className="text-xs">{getTimeUntilStart()}</span>
           </div>
           
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center gap-2 text-sm text-[var(--text-strong)]">
             {getLocationIcon()}
             <span>
               {locationType === 'online' ? 'Online' : 'In Person'}
@@ -160,16 +160,16 @@ export function EventCard({
           </div>
 
           {host && (
-            <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex items-center gap-2 text-sm text-[var(--text-strong)]">
               <User className="h-4 w-4" />
               <span>Hosted by {host.name}</span>
             </div>
           )}
 
           {capacity && (
-            <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex items-center gap-2 text-sm text-[var(--text-strong)]">
               <Users className="h-4 w-4" />
-              <span className={getCapacityText() === 'Full' ? 'text-red-600' : ''}>
+              <span className={getCapacityText() === 'Full' ? 'text-[#c03030]' : ''}>
                 {getCapacityText()}
               </span>
             </div>
@@ -184,7 +184,7 @@ export function EventCard({
               size="sm"
               onClick={() => handleRSVP('going')}
               disabled={isRsvping || getCapacityText() === 'Full'}
-              className={userRsvp?.status === 'going' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'hover:bg-yellow-50 hover:border-yellow-300'}
+              className={userRsvp?.status === 'going' ? 'bg-gold-500 hover:bg-gold-600 text-white' : 'hover:bg-[#2a2418] hover:border-yellow-300'}
             >
               Going
             </Button>
@@ -193,7 +193,7 @@ export function EventCard({
               size="sm"
               onClick={() => handleRSVP('interested')}
               disabled={isRsvping}
-              className={userRsvp?.status === 'interested' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'hover:bg-yellow-50 hover:border-yellow-300'}
+              className={userRsvp?.status === 'interested' ? 'bg-gold-500 hover:bg-gold-600 text-white' : 'hover:bg-[#2a2418] hover:border-yellow-300'}
             >
               Interested
             </Button>
@@ -202,7 +202,7 @@ export function EventCard({
               size="sm"
               onClick={() => handleRSVP('declined')}
               disabled={isRsvping}
-              className={userRsvp?.status === 'declined' ? 'bg-red-500 hover:bg-red-600 text-white' : 'hover:bg-red-50 hover:border-red-300'}
+              className={userRsvp?.status === 'declined' ? 'bg-red-500 hover:bg-red-600 text-white' : 'hover:bg-[#2e1a1a] hover:border-red-300'}
             >
               Decline
             </Button>
@@ -210,16 +210,16 @@ export function EventCard({
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+        <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
           <Link href={`/events/${slug}`}>
-            <Button variant="ghost" size="sm" className="text-slate-600 hover:text-yellow-600 hover:bg-yellow-50">
+            <Button variant="ghost" size="sm" className="text-[var(--text-strong)] hover:text-yellow-600 hover:bg-[#2a2418]">
               View Details
             </Button>
           </Link>
           
           {isUpcoming && (
             <Link href={`/api/events/${slug}/ics`}>
-              <Button variant="outline" size="sm" className="border-slate-300 hover:border-yellow-300 hover:bg-yellow-50">
+              <Button variant="outline" size="sm" className="border-[var(--border-subtle)] hover:border-yellow-300 hover:bg-[#2a2418]">
                 Add to Calendar
               </Button>
             </Link>

@@ -54,54 +54,32 @@
 }
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
+  --background: 0 0% 4%;
+  --foreground: 36 30% 93%;
+  --card: 30 8% 8%;
+  --card-foreground: 36 30% 93%;
+  --popover: 30 8% 8%;
+  --popover-foreground: 36 30% 93%;
+  --primary: 43 70% 47%;
+  --primary-foreground: 0 0% 4%;
+  --secondary: 30 10% 12%;
+  --secondary-foreground: 36 30% 93%;
+  --muted: 30 10% 12%;
+  --muted-foreground: 30 12% 48%;
+  --accent: 30 10% 12%;
+  --accent-foreground: 36 30% 93%;
+  --destructive: 0 65% 47%;
+  --destructive-foreground: 36 30% 93%;
+  --border: 25 14% 15%;
+  --input: 25 14% 15%;
+  --ring: 43 70% 47%;
   --radius: 0.5rem;
-  
-  /* Custom CSS variables */
-  --gold-solid: #E0B040;
-  --gold-gradient-start: #F2C94C;
-  --gold-gradient-end: #D4A017;
-  --border-subtle: rgba(0, 0, 0, 0.08);
-}
 
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
+  /* Custom CSS variables */
+  --gold-solid: #c9a227;
+  --gold-gradient-start: #c9a227;
+  --gold-gradient-end: #a07d10;
+  --border-subtle: #2a2520;
 }
 
 * {
@@ -110,7 +88,7 @@
 
 body {
   color: hsl(var(--foreground));
-  background: linear-gradient(135deg, #FFFDF7 0%, #FBF9F3 100%);
+  background: var(--bg-page);
   font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -120,7 +98,9 @@ body {
 }
 
 .card {
-  @apply bg-white/90 backdrop-blur border border-[color:var(--border-subtle)] rounded-2xl shadow-lg;
+  @apply border rounded-2xl shadow-lg;
+  background-color: var(--bg-panel);
+  border-color: var(--border-subtle);
 }
 
 .text-gold {
@@ -128,16 +108,16 @@ body {
 }
 
 .bg-ivory {
-  background-color: #FBF9F3;
+  background-color: var(--bg-page);
 }
 
 .bg-surface {
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: var(--bg-panel);
 }
 
 /* Custom shadow utilities */
 .shadow-soft {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 /* Typography utilities */

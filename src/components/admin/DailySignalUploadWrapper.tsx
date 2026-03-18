@@ -90,16 +90,16 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
         <div className="mb-6">
           <div className="flex items-center space-x-2 mb-2">
             <Zap className="w-5 h-5 text-yellow-500" />
-            <h2 className="text-2xl font-bold text-slate-900">Daily Portfolio Updates</h2>
+            <h2 className="text-2xl font-bold text-[var(--text-strong)]">Daily Portfolio Updates</h2>
           </div>
-          <p className="text-slate-600">
+          <p className="text-[var(--text-strong)]">
             Create daily updates for each tier. Users will see updates for their tier and all lower tiers.
           </p>
         </div>
 
         {/* Tier Tab Navigation */}
         <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto">
             {(['T1', 'T2'] as Tier[]).map((tier) => (
               <Button
                 key={tier}
@@ -108,8 +108,8 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
                 className={cn(
                   'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 min-h-[44px] flex-1 sm:flex-none',
                   activeTier === tier
-                    ? 'bg-yellow-500 text-white shadow-md hover:bg-yellow-600'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
+                    : 'text-[var(--text-strong)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
                 )}
               >
                 {tierLabels[tier]}
@@ -121,7 +121,7 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
         {/* Category Tab Navigation (only for T2/Elite) */}
         {activeTier === 'T2' && (
           <div className="flex justify-center mb-6">
-            <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto">
+            <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto">
               {(['majors', 'memecoins'] as Category[]).map((category) => (
                 <Button
                   key={category}
@@ -130,8 +130,8 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
                   className={cn(
                     'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 min-h-[44px] flex-1 sm:flex-none capitalize',
                     activeCategory === category
-                      ? 'bg-yellow-500 text-white shadow-md hover:bg-yellow-600'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
+                      : 'text-[var(--text-strong)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
                   )}
                 >
                   {category === 'majors' ? 'Market Rotation' : 'Memecoins'}

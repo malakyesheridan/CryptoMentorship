@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { AllocationSnapshot } from '@/lib/roi-dashboard'
 
-const COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#f97316', '#0ea5e9', '#64748b']
+const COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#f97316', '#0ea5e9', '#8a7d6b']
 
 export function RoiAllocationChart({ allocation }: { allocation: AllocationSnapshot | null }) {
   if (!allocation) {
@@ -14,7 +14,7 @@ export function RoiAllocationChart({ allocation }: { allocation: AllocationSnaps
           <CardTitle>Allocation Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-500">No allocation data available.</p>
+          <p className="text-sm text-[var(--text-muted)]">No allocation data available.</p>
         </CardContent>
       </Card>
     )
@@ -54,9 +54,9 @@ export function RoiAllocationChart({ allocation }: { allocation: AllocationSnaps
             <div key={entry.name} className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                <span className="text-slate-700">{entry.name}</span>
+                <span className="text-[var(--text-strong)]">{entry.name}</span>
               </div>
-              <span className="text-slate-600">{entry.value.toFixed(1)}%</span>
+              <span className="text-[var(--text-muted)]">{entry.value.toFixed(1)}%</span>
             </div>
           ))}
         </div>

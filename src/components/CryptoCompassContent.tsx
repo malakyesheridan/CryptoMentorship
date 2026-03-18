@@ -47,7 +47,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
 
               return (
                 <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>
-                  <article className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100 overflow-hidden">
+                  <article className="group relative bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-[var(--border-subtle)] overflow-hidden">
                     <div className="flex items-center space-x-6 p-6">
                       <div className="flex-shrink-0">
                         <div className="relative group/image">
@@ -61,12 +61,12 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
                               />
                             </>
                           ) : (
-                            <div className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl">
+                            <div className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-[var(--gold-400)] to-[var(--gold-600)] rounded-xl">
                               <Play className="w-8 h-8 text-white opacity-80" />
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-xl flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">
-                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+                            <div className="bg-[var(--bg-panel)] backdrop-blur-sm rounded-full p-3">
                               <Play className="h-6 w-6 text-white" />
                             </div>
                           </div>
@@ -81,7 +81,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                          <div className="flex items-center gap-1 text-xs text-[var(--text-muted)] bg-[#1a1815] px-2 py-1 rounded-full">
                             <Calendar className="w-3 h-3" />
                             {formatContentDate(episode.publishedAt)}
                           </div>
@@ -92,19 +92,19 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
                         </h3>
 
                         {episode.summary && (
-                          <p className="text-slate-600 mb-4 line-clamp-2 leading-relaxed">
+                          <p className="text-[var(--text-strong)] mb-4 line-clamp-2 leading-relaxed">
                             {episode.summary}
                           </p>
                         )}
 
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 text-sm text-slate-500">
+                          <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
                             <div className="flex items-center gap-1">
                               <div className="w-2 h-2 bg-gold-400 rounded-full"></div>
                               <span>Crypto Compass Analysis</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 text-slate-400 group-hover:text-gold-500 transition-colors">
+                          <div className="flex items-center gap-2 text-[var(--text-muted)] group-hover:text-gold-500 transition-colors">
                             <span className="text-sm font-medium">Watch</span>
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                           </div>
@@ -129,7 +129,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
             <h2 className="heading-two-tone text-3xl mb-2">
               <span>Crypto Compass</span> <span className="gold">Videos</span>
             </h2>
-            <p className="text-slate-600">Latest video content and analysis</p>
+            <p className="text-[var(--text-strong)]">Latest video content and analysis</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -141,18 +141,18 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
 
               return (
                 <Link key={video.id} href={`/videos/${video.id}`}>
-                  <article className="group cursor-pointer bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100 overflow-hidden">
-                    <div className="relative bg-gradient-to-br from-slate-100 to-slate-200 aspect-video flex items-center justify-center overflow-hidden">
-                      <Play className="w-16 h-16 text-slate-400 group-hover:text-gold-500 transition-colors duration-300" />
+                  <article className="group cursor-pointer bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-[var(--border-subtle)] overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-[#1a1815] to-[#2a2520] aspect-video flex items-center justify-center overflow-hidden">
+                      <Play className="w-16 h-16 text-[var(--text-muted)] group-hover:text-gold-500 transition-colors duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="absolute top-3 left-3">
-                        <Badge className={`text-xs px-2 py-1 ${video.visibility === 'public' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                        <Badge className={`text-xs px-2 py-1 ${video.visibility === 'public' ? 'bg-[#1a2e1a] text-[#4a7c3f]' : 'bg-[#1a1a2e] text-blue-400'}`}>
                           {video.visibility}
                         </Badge>
                       </div>
                       {!canView && (
                         <div className="absolute top-3 right-3">
-                          <Badge className="bg-red-100 text-red-700 text-xs px-2 py-1">
+                          <Badge className="bg-[#2e1a1a] text-[#c03030] text-xs px-2 py-1">
                             <Lock className="w-3 h-3 mr-1" />
                             Locked
                           </Badge>
@@ -166,12 +166,12 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
                       </h3>
 
                       {video.description && (
-                        <p className="text-slate-600 mb-3 line-clamp-2 leading-relaxed">
+                        <p className="text-[var(--text-strong)] mb-3 line-clamp-2 leading-relaxed">
                           {video.description}
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between text-sm text-slate-500">
+                      <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-1">
                             <Eye className="w-4 h-4" />
@@ -182,7 +182,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
                             <span>{formatContentDate(video.createdAt)}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 text-slate-400 group-hover:text-gold-500 transition-colors">
+                        <div className="flex items-center gap-1 text-[var(--text-muted)] group-hover:text-gold-500 transition-colors">
                           <span className="text-xs font-medium">Watch</span>
                           <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-300" />
                         </div>
@@ -202,11 +202,11 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
       {/* Empty State */}
       {filteredEpisodes.length === 0 && filteredVideos.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Play className="w-12 h-12 text-slate-400" />
+          <div className="w-24 h-24 bg-[#1a1815] rounded-full flex items-center justify-center mx-auto mb-6">
+            <Play className="w-12 h-12 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl font-semibold text-slate-700 mb-2">No content found</h3>
-          <p className="text-slate-500 mb-6">Try adjusting your search or filter criteria</p>
+          <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">No content found</h3>
+          <p className="text-[var(--text-muted)] mb-6">Try adjusting your search or filter criteria</p>
           <button 
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-gold-500 text-white rounded-lg hover:bg-gold-600 transition-colors"

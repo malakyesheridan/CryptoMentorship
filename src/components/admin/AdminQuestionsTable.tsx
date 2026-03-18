@@ -92,7 +92,7 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
   const getStatusBadge = (question: Question) => {
     if (question.archivedAt) {
       return (
-        <Badge variant="outline" className="text-slate-500 border-slate-200">
+        <Badge variant="outline" className="text-[var(--text-muted)] border-[var(--border-subtle)]">
           <Archive className="h-3 w-3 mr-1" />
           Archived
         </Badge>
@@ -101,7 +101,7 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
     
     if (question.answeredAt) {
       return (
-        <Badge variant="outline" className="text-green-600 border-green-200">
+        <Badge variant="outline" className="text-[#4a7c3f] border-[#4a7c3f]">
           <CheckCircle className="h-3 w-3 mr-1" />
           Answered
         </Badge>
@@ -109,7 +109,7 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
     }
     
     return (
-      <Badge variant="outline" className="text-blue-600 border-blue-200">
+      <Badge variant="outline" className="text-[#4a7cc3] border-[#4a7cc3]">
         <Clock className="h-3 w-3 mr-1" />
         Open
       </Badge>
@@ -120,9 +120,9 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
     return (
       <Card>
         <CardContent className="p-12 text-center">
-          <MessageCircle className="h-16 w-16 mx-auto mb-4 text-slate-300" />
-          <h3 className="text-lg font-medium text-slate-800 mb-2">No questions found</h3>
-          <p className="text-slate-500">
+          <MessageCircle className="h-16 w-16 mx-auto mb-4 text-[var(--text-muted)]" />
+          <h3 className="text-lg font-medium text-[var(--text-strong)] mb-2">No questions found</h3>
+          <p className="text-[var(--text-muted)]">
             {questions.length === 0 
               ? 'No questions have been submitted for this event yet.'
               : 'No questions match your current filters.'
@@ -137,8 +137,8 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
     <div className="space-y-4">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800 text-sm">{error}</p>
+        <div className="bg-[#2e1a1a] border border-[#c03030] rounded-lg p-4">
+          <p className="text-[#c03030] text-sm">{error}</p>
         </div>
       )}
 
@@ -150,8 +150,8 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
               {/* Question Header */}
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="text-slate-800 mb-2 font-medium">{question.body}</p>
-                  <div className="flex items-center gap-4 text-sm text-slate-500">
+                  <p className="text-[var(--text-strong)] mb-2 font-medium">{question.body}</p>
+                  <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
                       {question.user.name}
@@ -174,12 +174,12 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
 
               {/* Existing Answer */}
               {question.answer && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="bg-[#1a2e1a] border border-[#4a7c3f] rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-800">Answer</span>
+                    <CheckCircle className="h-4 w-4 text-[#4a7c3f]" />
+                    <span className="text-sm font-medium text-[#4a7c3f]">Answer</span>
                   </div>
-                  <p className="text-green-800">{question.answer}</p>
+                  <p className="text-[#4a7c3f]">{question.answer}</p>
                 </div>
               )}
 
@@ -195,7 +195,7 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
                       maxLength={2000}
                     />
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-sm text-slate-500">
+                      <span className="text-sm text-[var(--text-muted)]">
                         {answerText.length}/2000 characters
                       </span>
                       <div className="flex gap-2">

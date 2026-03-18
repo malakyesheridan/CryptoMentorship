@@ -5,6 +5,31 @@ import { buildWelcomeEmail } from './templates/welcome'
 import { buildSignupAlertEmail, SignupAlertDetails } from './templates/signup-alert'
 import { buildTrialReminderDigestEmail, TrialReminderDigestEntry } from './templates/trial-7days-digest'
 
+const REQUIRED_TRIAL_ALERT_RECIPIENT = 'coen@stewartandco.org'
+
+function parseRecipientInput(input?: string | string[]) {
+  if (!input) return []
+  if (Array.isArray(input)) {
+    return input.flatMap((value) => value.split(/[;,]/))
+  }
+  return input.split(/[;,]/)
+}
+
+function resolveTrialReminderRecipients(input?: string | string[]) {
+  const preferred = parseRecipientInput(input)
+  const configured = parseRecipientInput(env.COEN_ALERT_EMAIL)
+  const required = [REQUIRED_TRIAL_ALERT_RECIPIENT]
+
+  const deduped = new Set<string>()
+  for (const raw of [...preferred, ...configured, ...required]) {
+    const normalized = raw.trim().toLowerCase()
+    if (!normalized) continue
+    deduped.add(normalized)
+  }
+
+  return Array.from(deduped)
+}
+
 /**
  * Create a nodemailer transporter based on EMAIL_SERVER configuration
  * Supports SMTP URLs like: smtp://user:pass@smtp.example.com:587
@@ -176,20 +201,31 @@ export async function sendTrialReminderDigestEmail({
   totalCount,
   runDate,
   appUrl,
-  to = env.COEN_ALERT_EMAIL || 'coen@stewartandco.org'
+  to
 }: {
   entries: TrialReminderDigestEntry[]
   totalCount: number
   runDate: string
   appUrl: string
-  to?: string
+  to?: string | string[]
 }): Promise<void> {
+  const recipients = resolveTrialReminderRecipients(to)
+  if (recipients.length === 0) {
+    throw new Error('No recipients resolved for trial reminder digest email')
+  }
+
   const message = buildTrialReminderDigestEmail({ entries, totalCount, runDate, appUrl })
   await sendEmail({
-    to,
+    to: recipients.join(', '),
     subject: message.subject,
     html: message.html,
     text: message.text
+  })
+
+  logger.info('Trial reminder digest email sent', {
+    recipients,
+    totalCount,
+    runDate,
   })
 }
 

@@ -86,7 +86,7 @@ export function FollowTagButton({
       className={`${sizeClasses[size]} ${className} ${
         following 
           ? 'bg-gold-500 hover:bg-gold-600 text-white border-gold-500' 
-          : 'text-slate-600 hover:text-slate-700 border-slate-300'
+          : 'text-[var(--text-strong)] hover:text-[var(--text-strong)] border-[var(--border-subtle)]'
       }`}
       aria-label={following ? `Unfollow ${tag}` : `Follow ${tag}`}
     >

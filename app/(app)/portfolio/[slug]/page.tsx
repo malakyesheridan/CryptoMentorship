@@ -150,7 +150,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
             <h1 className="heading-two-tone text-4xl sm:text-5xl">
               <span>{signal.symbol}</span> <span className="gold">{signal.direction.toUpperCase()}</span>
             </h1>
-            <p className="text-slate-600 mt-2">
+            <p className="text-[var(--text-muted)] mt-2">
               Signal Analysis & Performance
             </p>
           </div>
@@ -158,14 +158,14 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
       </div>
 
       {/* Disclaimer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
+      <div className="bg-[#2a2418] border border-[var(--border-subtle)] rounded-lg p-4 mb-8">
         <div className="flex items-start gap-3">
           <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
             <span className="text-white text-xs font-bold">!</span>
           </div>
           <div>
-            <h4 className="font-semibold text-amber-800 mb-1">Important Disclaimer</h4>
-            <p className="text-sm text-amber-700">
+            <h4 className="font-semibold text-[var(--text-strong)] mb-1">Important Disclaimer</h4>
+            <p className="text-sm text-[var(--text-muted)]">
               This is not financial advice. Past performance does not guarantee future results. 
               All investing involves risk. Please do your own research before making any investment decisions.
             </p>
@@ -195,28 +195,28 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link href="/portfolio/sol-long-2024-03" className="block">
-              <div className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+              <div className="p-4 border border-[var(--border-subtle)] rounded-lg hover:border-[var(--border-subtle)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-bold">SOL</span>
+                  <div className="w-8 h-8 bg-[#1a2e1a] rounded-lg flex items-center justify-center">
+                    <span className="text-[#4a7c3f] text-sm font-bold">SOL</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900">SOL Long</h4>
-                    <p className="text-sm text-slate-600">March 2024</p>
+                    <h4 className="font-semibold text-[var(--text-strong)]">SOL Long</h4>
+                    <p className="text-sm text-[var(--text-muted)]">March 2024</p>
                   </div>
                 </div>
               </div>
             </Link>
             
             <Link href="/portfolio/avax-short-2024-04" className="block">
-              <div className="p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+              <div className="p-4 border border-[var(--border-subtle)] rounded-lg hover:border-[var(--border-subtle)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                    <span className="text-red-600 text-sm font-bold">AVAX</span>
+                  <div className="w-8 h-8 bg-[#2e1a1a] rounded-lg flex items-center justify-center">
+                    <span className="text-[#c03030] text-sm font-bold">AVAX</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-900">AVAX Short</h4>
-                    <p className="text-sm text-slate-600">April 2024</p>
+                    <h4 className="font-semibold text-[var(--text-strong)]">AVAX Short</h4>
+                    <p className="text-sm text-[var(--text-muted)]">April 2024</p>
                   </div>
                 </div>
               </div>

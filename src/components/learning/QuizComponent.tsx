@@ -103,28 +103,28 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
         <CardContent>
           <div className={`p-4 rounded-lg border ${
             existingSubmission.passed 
-              ? 'bg-green-50 border-green-200' 
-              : 'bg-red-50 border-red-200'
+              ? 'bg-[#1a2e1a] border-[#1a2e1a]' 
+              : 'bg-[#2e1a1a] border-[#2e1a1a]'
           }`}>
             <div className="flex items-center gap-2 mb-2">
               {existingSubmission.passed ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-[#4a7c3f]" />
               ) : (
-                <XCircle className="h-5 w-5 text-red-600" />
+                <XCircle className="h-5 w-5 text-[#c03030]" />
               )}
               <span className={`font-medium ${
-                existingSubmission.passed ? 'text-green-800' : 'text-red-800'
+                existingSubmission.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
               }`}>
                 {existingSubmission.passed ? 'Quiz Passed!' : 'Quiz Failed'}
               </span>
             </div>
             <p className={`text-sm ${
-              existingSubmission.passed ? 'text-green-700' : 'text-red-700'
+              existingSubmission.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
             }`}>
               Score: {existingSubmission.scorePct}% (Required: {passPct}%)
             </p>
             {!existingSubmission.passed && (
-              <p className="text-sm text-red-600 mt-2">
+              <p className="text-sm text-[#c03030] mt-2">
                 You can retake the quiz to pass and complete this lesson.
               </p>
             )}
@@ -146,27 +146,27 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
         <CardContent>
           <div className={`p-4 rounded-lg border ${
             result.passed 
-              ? 'bg-green-50 border-green-200' 
-              : 'bg-red-50 border-red-200'
+              ? 'bg-[#1a2e1a] border-[#1a2e1a]' 
+              : 'bg-[#2e1a1a] border-[#2e1a1a]'
           }`}>
             <div className="flex items-center gap-2 mb-2">
               {result.passed ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-[#4a7c3f]" />
               ) : (
-                <XCircle className="h-5 w-5 text-red-600" />
+                <XCircle className="h-5 w-5 text-[#c03030]" />
               )}
               <span className={`font-medium ${
-                result.passed ? 'text-green-800' : 'text-red-800'
+                result.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
               }`}>
                 {result.passed ? 'Quiz Passed!' : 'Quiz Failed'}
               </span>
             </div>
             <p className={`text-sm ${
-              result.passed ? 'text-green-700' : 'text-red-700'
+              result.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
             }`}>
               Score: {result.scorePct}% ({result.correctAnswers}/{result.totalQuestions} correct)
             </p>
-            <p className="text-sm text-slate-600 mt-1">
+            <p className="text-sm text-[var(--text-strong)] mt-1">
               Required to pass: {passPct}%
             </p>
             
@@ -199,7 +199,7 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
         <div className="space-y-6">
           {questions.map((question, index) => (
             <div key={question.id} className="space-y-3">
-              <h4 className="font-medium text-slate-900">
+              <h4 className="font-medium text-[var(--text-strong)]">
                 {index + 1}. {question.prompt}
               </h4>
               
@@ -207,15 +207,15 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
                 {question.options.map((option, optionIndex) => (
                   <label
                     key={optionIndex}
-                    className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-3 border border-[var(--border-subtle)] rounded-lg hover:bg-[#1a1815] cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={(answers[question.id] || []).includes(optionIndex)}
                       onChange={(e) => handleAnswerChange(question.id, optionIndex, e.target.checked)}
-                      className="h-4 w-4 text-gold-600 focus:ring-gold-500 border-slate-300 rounded"
+                      className="h-4 w-4 text-gold-600 focus:ring-gold-500 border-[var(--border-subtle)] rounded"
                     />
-                    <span className="text-slate-700">{option}</span>
+                    <span className="text-[var(--text-strong)]">{option}</span>
                   </label>
                 ))}
               </div>
@@ -223,8 +223,8 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
           ))}
         </div>
 
-        <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-200">
-          <div className="text-sm text-slate-600">
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-[var(--border-subtle)]">
+          <div className="text-sm text-[var(--text-strong)]">
             {Object.keys(answers).length} of {questions.length} questions answered
           </div>
           

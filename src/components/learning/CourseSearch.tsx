@@ -79,11 +79,11 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
   const getCourseStatus = (course: CourseData) => {
     if (course.isEnrolled) {
       if (course.progressPct === 100) {
-        return { label: 'Completed', color: 'bg-green-100 text-green-800 border-green-200' }
+        return { label: 'Completed', color: 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]' }
       } else if (course.progressPct && course.progressPct > 0) {
-        return { label: 'In Progress', color: 'bg-blue-100 text-blue-800 border-blue-200' }
+        return { label: 'In Progress', color: 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]' }
       } else {
-        return { label: 'Started', color: 'bg-slate-100 text-slate-800 border-slate-200' }
+        return { label: 'Started', color: 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]' }
       }
     }
     return null
@@ -101,7 +101,7 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]" />
             <Input
               type="text"
               placeholder="Search courses by title or description..."
@@ -111,7 +111,7 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
             />
           </div>
           {debouncedQuery && (
-            <p className="text-sm text-slate-600 mt-2">
+            <p className="text-sm text-[var(--text-strong)] mt-2">
               {filteredCourses.length} course{filteredCourses.length !== 1 ? 's' : ''} found
             </p>
           )}
@@ -138,7 +138,7 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
                         className="w-full h-40 object-cover rounded-t-lg"
                       />
                     ) : (
-                      <div className="w-full h-40 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-t-lg flex items-center justify-center">
+                      <div className="w-full h-40 bg-gradient-to-br from-[#1a1d2e] to-[#1a1a2e] rounded-t-lg flex items-center justify-center">
                         <BookOpen className="h-12 w-12 text-blue-600" />
                       </div>
                     )}
@@ -155,18 +155,18 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
 
                   {/* Course info */}
                   <div className="p-4 space-y-3">
-                    <h3 className="font-semibold text-slate-900 line-clamp-2">
+                    <h3 className="font-semibold text-[var(--text-strong)] line-clamp-2">
                       {course.title}
                     </h3>
                     
                     {course.description && (
-                      <p className="text-sm text-slate-600 line-clamp-2">
+                      <p className="text-sm text-[var(--text-strong)] line-clamp-2">
                         {course.description}
                       </p>
                     )}
 
                     {/* Course metadata */}
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>Self-paced</span>
@@ -220,11 +220,11 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
       ) : (
         <Card>
           <CardContent className="text-center py-12">
-            <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            <Search className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">
               {debouncedQuery ? 'No courses found' : 'No courses available'}
             </h3>
-            <p className="text-slate-600 mb-4">
+            <p className="text-[var(--text-strong)] mb-4">
               {debouncedQuery 
                 ? `No courses match "${debouncedQuery}". Try a different search term.`
                 : 'There are no courses available at the moment.'

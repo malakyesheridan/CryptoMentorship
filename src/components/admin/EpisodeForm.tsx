@@ -170,7 +170,7 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
           placeholder="https://www.youtube.com/watch?v=... or embed URL"
           required
         />
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[var(--text-muted)]">
           Supports YouTube, Vimeo, or direct video URLs
         </p>
       </div>
@@ -203,14 +203,14 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="locked">Lock Episode</Label>
-              <p className="text-sm text-slate-500">Require membership to view</p>
+              <p className="text-sm text-[var(--text-muted)]">Require membership to view</p>
             </div>
             <input
               type="checkbox"
               id="locked"
               checked={formData.locked}
               onChange={(e) => setFormData(prev => ({ ...prev, locked: e.target.checked }))}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[var(--border-subtle)] rounded"
             />
           </div>
         </CardContent>

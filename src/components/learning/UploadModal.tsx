@@ -92,14 +92,14 @@ export function UploadModal({
         </DialogHeader>
 
         {lastCreatedTrack && (
-          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start justify-between gap-4">
+          <div className="mb-4 rounded-lg border border-[#1a2e1a] bg-[#1a2e1a] px-4 py-3 text-sm text-[#4a7c3f] flex items-start justify-between gap-4">
             <span>
               Track created: <span className="font-semibold">{lastCreatedTrack.title}</span>
             </span>
             <button
               type="button"
               onClick={() => setLastCreatedTrack(null)}
-              className="text-green-700 hover:text-green-900"
+              className="text-[#4a7c3f] hover:text-[#4a7c3f]"
               aria-label="Dismiss track created confirmation"
             >
               <X className="h-4 w-4" />
@@ -107,14 +107,14 @@ export function UploadModal({
           </div>
         )}
         {lastUploadedLessonTitle && (
-          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start justify-between gap-4">
+          <div className="mb-4 rounded-lg border border-[#1a2e1a] bg-[#1a2e1a] px-4 py-3 text-sm text-[#4a7c3f] flex items-start justify-between gap-4">
             <span>
               Lesson uploaded: <span className="font-semibold">{lastUploadedLessonTitle}</span>
             </span>
             <button
               type="button"
               onClick={() => setLastUploadedLessonTitle(null)}
-              className="text-green-700 hover:text-green-900"
+              className="text-[#4a7c3f] hover:text-[#4a7c3f]"
               aria-label="Dismiss lesson uploaded confirmation"
             >
               <X className="h-4 w-4" />
@@ -123,14 +123,14 @@ export function UploadModal({
         )}
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 mb-6">
+        <div className="flex border-b border-[var(--border-subtle)] mb-6">
           <button
             onClick={() => setActiveTab('new')}
             className={cn(
               'px-6 py-3 text-sm font-medium border-b-2 transition-colors',
               activeTab === 'new'
                 ? 'border-yellow-500 text-yellow-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-strong)]'
             )}
           >
             <Plus className="h-4 w-4 inline mr-2" />
@@ -142,7 +142,7 @@ export function UploadModal({
               'px-6 py-3 text-sm font-medium border-b-2 transition-colors',
               activeTab === 'existing'
                 ? 'border-yellow-500 text-yellow-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-strong)]'
             )}
           >
             <BookOpen className="h-4 w-4 inline mr-2" />
@@ -160,8 +160,8 @@ export function UploadModal({
         {activeTab === 'existing' && (
           <div className="space-y-6">
             {tracks.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+              <div className="text-center py-8 text-[var(--text-muted)]">
+                <BookOpen className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
                 <p>No tracks available. Create a track first!</p>
                 <Button
                   onClick={() => setActiveTab('new')}
@@ -175,13 +175,13 @@ export function UploadModal({
             ) : (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Select Track
                   </label>
                   <select
                     value={selectedTrackId}
                     onChange={(e) => setSelectedTrackId(e.target.value)}
-                    className="w-full h-10 px-3 py-2 rounded-md border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    className="w-full h-10 px-3 py-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-panel)] text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                   >
                     <option value="">Choose a track to upload to...</option>
                     {tracks.map((track) => (

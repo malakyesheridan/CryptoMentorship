@@ -147,14 +147,14 @@ export function LearningHubContent({
     <div className="space-y-8">
       {/* Learning Streak */}
       {streak > 0 && (
-        <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-6">
+        <div className="bg-gradient-to-r from-[#2a2418] to-[#2a2418] border border-[#2a2418] rounded-2xl p-6">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-yellow-500 rounded-xl flex items-center justify-center">
+            <div className="h-12 w-12 bg-gold-500 rounded-xl flex items-center justify-center">
               <Flame className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Learning Streak</h3>
-              <p className="text-slate-600">
+              <h3 className="text-xl font-semibold text-[var(--text-strong)]">Learning Streak</h3>
+              <p className="text-[var(--text-strong)]">
                 {streak} day{streak !== 1 ? 's' : ''} in a row! Keep it up!
               </p>
             </div>
@@ -164,11 +164,11 @@ export function LearningHubContent({
 
       {/* Admin Quick Actions */}
       {(userRole === 'admin' || userRole === 'editor') && (
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div className="bg-[var(--bg-panel)] rounded-lg shadow-sm border border-[var(--border-subtle)] p-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Admin Quick Actions</h2>
-              <p className="text-sm text-slate-600">
+              <h2 className="text-xl font-bold text-[var(--text-strong)] mb-2">Admin Quick Actions</h2>
+              <p className="text-sm text-[var(--text-strong)]">
                 Manage learning tracks, sections, and lessons
               </p>
             </div>
@@ -181,7 +181,7 @@ export function LearningHubContent({
               </Link>
               <Button
                 onClick={() => setUploadModalOpen(true)}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                className="bg-gold-500 hover:bg-gold-600 text-white"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload
@@ -202,10 +202,10 @@ export function LearningHubContent({
       {activeTab === 'discover' && (
         <div
           data-tour="learning-search"
-          className="bg-white rounded-2xl shadow-lg p-4 border border-slate-200"
+          className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-4 border border-[var(--border-subtle)]"
         >
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--text-muted)]" />
             <Input
               type="text"
               placeholder="Search learning tracks..."
@@ -222,7 +222,7 @@ export function LearningHubContent({
         <div className="space-y-8">
           {/* All Learning Tracks */}
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-6">
+            <h2 className="text-2xl font-bold text-[var(--text-strong)] mb-6">
               {filteredTracks.length === 0 ? 'No Learning Tracks' : 'Learning Tracks'}
             </h2>
             {filteredTracks.length > 0 ? (
@@ -233,8 +233,8 @@ export function LearningHubContent({
                 onEditTrack={(trackId) => setEditingTrackId(trackId)}
               />
             ) : (
-              <div className="text-center py-12 text-slate-500">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-slate-400" />
+              <div className="text-center py-12 text-[var(--text-muted)]">
+                <BookOpen className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
                 <p>No learning tracks found.</p>
                 {(userRole === 'admin' || userRole === 'editor') && (
                   <p className="text-sm mt-2">Create your first track above!</p>

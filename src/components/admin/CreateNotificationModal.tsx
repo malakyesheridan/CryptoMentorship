@@ -149,13 +149,13 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Type */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                 Type
               </label>
               <select
                 value={formData.type}
                 onChange={(e) => handleChange('type', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               >
                 <option value="announcement">Announcement</option>
                 <option value="portfolio_update">Portfolio Update</option>
@@ -168,7 +168,7 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -178,21 +178,21 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
                 placeholder="Enter notification title"
                 maxLength={200}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${
-                  errors.title ? 'border-red-300' : 'border-slate-300'
+                  errors.title ? 'border-[#c03030]' : 'border-[var(--border-subtle)]'
                 }`}
                 required
               />
               {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+                <p className="mt-1 text-sm text-[#c03030]">{errors.title}</p>
               )}
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {formData.title.length}/200 characters
               </p>
             </div>
 
             {/* Body */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                 Body (Optional)
               </label>
               <textarea
@@ -202,20 +202,20 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
                 maxLength={1000}
                 rows={4}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${
-                  errors.body ? 'border-red-300' : 'border-slate-300'
+                  errors.body ? 'border-[#c03030]' : 'border-[var(--border-subtle)]'
                 }`}
               />
               {errors.body && (
-                <p className="mt-1 text-sm text-red-600">{errors.body}</p>
+                <p className="mt-1 text-sm text-[#c03030]">{errors.body}</p>
               )}
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {formData.body?.length || 0}/1000 characters
               </p>
             </div>
 
             {/* URL */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                 URL (Optional)
               </label>
               <input
@@ -224,26 +224,26 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
                 onChange={(e) => handleChange('url', e.target.value)}
                 placeholder="https://example.com/page"
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${
-                  errors.url ? 'border-red-300' : 'border-slate-300'
+                  errors.url ? 'border-[#c03030]' : 'border-[var(--border-subtle)]'
                 }`}
               />
               {errors.url && (
-                <p className="mt-1 text-sm text-red-600">{errors.url}</p>
+                <p className="mt-1 text-sm text-[#c03030]">{errors.url}</p>
               )}
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
                 Users will be able to click the notification to navigate to this URL
               </p>
             </div>
 
             {/* Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-[#1a1e2e] border border-[#4a7cc3] rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <Users className="h-5 w-5 text-blue-600 mt-0.5" />
+                <Users className="h-5 w-5 text-[#4a7cc3] mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-blue-900 mb-1">
+                  <p className="text-sm font-medium text-[#4a7cc3] mb-1">
                     Notification Recipients
                   </p>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-[#4a7cc3]">
                     This notification will be sent to all active users (members, editors, and admins).
                     It will appear in their notification bell and be marked as unread until they view it.
                   </p>
@@ -264,7 +264,7 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-yellow-500 hover:bg-yellow-600"
+                className="bg-yellow-500 hover:bg-gold-600"
               >
                 {isSubmitting ? (
                   <>

@@ -33,7 +33,7 @@ export default function TradingViewWrapper() {
       <div className="absolute top-4 right-4 z-10">
         <button
           onClick={handleFullscreen}
-          className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+          className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-gold-600 text-white rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
           aria-label="Enter fullscreen"
         >
           <Maximize2 className="h-4 w-4" />

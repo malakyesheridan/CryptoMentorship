@@ -228,7 +228,7 @@ export function PortfolioRoiPanel() {
 
   if (loading) {
     return (
-      <div className="card p-6 text-center text-slate-500">
+      <div className="card p-6 text-center text-[var(--text-muted)]">
         Loading portfolio performance...
       </div>
     )
@@ -236,7 +236,7 @@ export function PortfolioRoiPanel() {
 
   if (error || !data) {
     return (
-      <div className="card p-6 text-center text-slate-500">
+      <div className="card p-6 text-center text-[var(--text-muted)]">
         ROI data is temporarily unavailable. Please try again soon.
       </div>
     )
@@ -244,10 +244,10 @@ export function PortfolioRoiPanel() {
 
   if (status === 'error') {
     return (
-      <div className="card p-6 text-center text-slate-500">
+      <div className="card p-6 text-center text-[var(--text-muted)]">
         ROI data is unavailable right now. Please check back soon.
         {data.lastError ? (
-          <div className="mt-2 text-xs text-slate-400">{data.lastError}</div>
+          <div className="mt-2 text-xs text-[var(--text-muted)]">{data.lastError}</div>
         ) : null}
         {isAdmin && data.portfolioKey ? (
           <div className="mt-3">
@@ -265,7 +265,7 @@ export function PortfolioRoiPanel() {
 
   if (data.navSeries.length === 0) {
     return (
-      <div className="card p-6 text-center text-slate-500">
+      <div className="card p-6 text-center text-[var(--text-muted)]">
         Data updating... Please check back soon.
       </div>
     )
@@ -317,68 +317,68 @@ export function PortfolioRoiPanel() {
       ))}
     </div>
   ) : (
-    <div className="text-sm text-slate-500">{tierLabel}</div>
+    <div className="text-sm text-[var(--text-muted)]">{tierLabel}</div>
   )
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {tierButtons}
-        <span className="text-sm text-slate-500">Viewing: {tierLabel}</span>
+        <span className="text-sm text-[var(--text-muted)]">Viewing: {tierLabel}</span>
       </div>
       {showStatusBadge ? (
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+        <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+          <span className="rounded-full bg-[#2a2418] px-3 py-1 text-xs font-semibold text-yellow-500">
             Updating / waiting for latest data
           </span>
-          <span className="text-xs text-slate-400">{allocationLabel}</span>
-          {primaryLabel ? <span className="text-xs text-slate-400">{primaryLabel}</span> : null}
-          {statusDetail ? <span className="text-xs text-slate-400">{statusDetail}</span> : null}
+          <span className="text-xs text-[var(--text-muted)]">{allocationLabel}</span>
+          {primaryLabel ? <span className="text-xs text-[var(--text-muted)]">{primaryLabel}</span> : null}
+          {statusDetail ? <span className="text-xs text-[var(--text-muted)]">{statusDetail}</span> : null}
         </div>
       ) : null}
-      <div className="text-xs text-slate-500">
+      <div className="text-xs text-[var(--text-muted)]">
         Tracking range: {trackingStartLabel} {'\u2192'} {trackingEndLabel}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">ROI Since Tracking Started</p>
-            <p className={roiInception !== null && roiInception >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">ROI Since Tracking Started</p>
+            <p className={roiInception !== null && roiInception >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
               {formatPercent(roiInception)}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">From {trackingStartLabel}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">From {trackingStartLabel}</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">{roiLastLabel}</p>
-            <p className={roi30d !== null && roi30d >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">{roiLastLabel}</p>
+            <p className={roi30d !== null && roi30d >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
               {formatPercent(roi30d)}
             </p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Max Drawdown</p>
-            <p className="text-xl font-semibold text-red-600">{formatPercent(maxDrawdown)}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Within tracked period</p>
+            <p className="text-xs text-[var(--text-muted)]">Max Drawdown</p>
+            <p className="text-xl font-semibold text-[#c03030]">{formatPercent(maxDrawdown)}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">Within tracked period</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Primary Move Since Last Update</p>
-            <p className={primaryMovePercent !== null && primaryMovePercent >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">Primary Move Since Last Update</p>
+            <p className={primaryMovePercent !== null && primaryMovePercent >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
               {formatPercent(primaryMovePercent)}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">
               {primaryMoveFrom && primaryMoveTo ? `${formatDateKey(primaryMoveFrom)} -> ${formatDateKey(primaryMoveTo)}` : '--'}
             </p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">As of</p>
-            <p className="text-xl font-semibold text-slate-800">{formatDateKey(asOfDate)}</p>
+            <p className="text-xs text-[var(--text-muted)]">As of</p>
+            <p className="text-xl font-semibold text-[var(--text-strong)]">{formatDateKey(asOfDate)}</p>
           </CardContent>
         </Card>
       </div>
@@ -394,7 +394,7 @@ export function PortfolioRoiPanel() {
         primaryChangeByDate={primaryChangeByDate}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-muted)]">
         <span>Last update posted: {formatDateKey(lastUpdateDate)}</span>
         <span>{allocationLabel}</span>
         <span>{primaryLabel ?? 'Primary: --'}</span>
@@ -402,7 +402,7 @@ export function PortfolioRoiPanel() {
           View My Portfolio
         </Link>
       </div>
-      <div className="text-xs text-slate-400">
+      <div className="text-xs text-[var(--text-muted)]">
         Disclaimer: ROI dashboard is in development; figures may not be accurate.
       </div>
     </div>

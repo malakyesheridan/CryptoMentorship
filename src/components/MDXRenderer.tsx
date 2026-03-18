@@ -24,8 +24,8 @@ const components = {
   ol: (props: any) => <ol className="mb-4 ml-6 list-decimal text-[var(--text-strong)]" {...props} />,
   li: (props: any) => <li className="mb-2" {...props} />,
   blockquote: (props: any) => <blockquote className="border-l-4 border-gold-400 pl-4 italic text-[var(--text-muted)] my-4" {...props} />,
-  code: (props: any) => <code className="bg-slate-100 px-2 py-1 rounded text-sm font-mono" {...props} />,
-  pre: (props: any) => <pre className="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto mb-4" {...props} />,
+  code: (props: any) => <code className="bg-[#1a1815] px-2 py-1 rounded text-sm font-mono" {...props} />,
+  pre: (props: any) => <pre className="bg-[var(--bg-page)] text-[var(--text-strong)] p-4 rounded-lg overflow-x-auto mb-4" {...props} />,
   a: (props: any) => {
     const isExternal = props.href && (props.href.startsWith('http') || props.href.startsWith('//'))
     return (

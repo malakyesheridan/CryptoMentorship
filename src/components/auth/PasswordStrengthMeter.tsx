@@ -22,30 +22,30 @@ export function PasswordStrengthMeter({ password, className }: PasswordStrengthM
     colorClass = 'bg-green-500'
     strengthText = 'Strong'
   } else if (strength >= 40) {
-    colorClass = 'bg-yellow-500'
+    colorClass = 'bg-gold-500'
     strengthText = 'Medium'
   }
 
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-slate-600">Password strength</span>
+        <span className="text-xs text-[var(--text-strong)]">Password strength</span>
         <span className={`text-xs font-medium ${
-          strength >= 70 ? 'text-green-600' : 
+          strength >= 70 ? 'text-[#4a7c3f]' : 
           strength >= 40 ? 'text-yellow-600' : 
-          'text-red-600'
+          'text-[#c03030]'
         }`}>
           {strengthText}
         </span>
       </div>
-      <div className="w-full bg-slate-200 rounded-full h-2">
+      <div className="w-full bg-[#2a2520] rounded-full h-2">
         <div
           className={`h-2 rounded-full transition-all duration-300 ${colorClass}`}
           style={{ width: `${strengthPercentage}%` }}
         />
       </div>
       {!validation.valid && validation.error && (
-        <p className="text-xs text-red-600 mt-1">{validation.error}</p>
+        <p className="text-xs text-[#c03030] mt-1">{validation.error}</p>
       )}
     </div>
   )

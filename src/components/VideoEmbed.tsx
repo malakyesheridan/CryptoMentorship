@@ -59,7 +59,7 @@ export default function VideoEmbed({
         <CardContent className="py-12">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-600">Loading video...</p>
+            <p className="text-[var(--text-strong)]">Loading video...</p>
           </div>
         </CardContent>
       </Card>
@@ -71,9 +71,9 @@ export default function VideoEmbed({
       <Card className={`card ${className}`}>
         <CardContent className="py-12">
           <div className="text-center">
-            <Video className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">Video unavailable</h3>
-            <p className="text-slate-600">{error || 'This video could not be loaded'}</p>
+            <Video className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">Video unavailable</h3>
+            <p className="text-[var(--text-strong)]">{error || 'This video could not be loaded'}</p>
           </div>
         </CardContent>
       </Card>
@@ -103,12 +103,12 @@ export default function VideoEmbed({
           <div className="space-y-3">
             {video.description && (
               <div>
-                <h4 className="font-semibold text-slate-800 mb-2">Description</h4>
-                <p className="text-slate-600 leading-relaxed">{video.description}</p>
+                <h4 className="font-semibold text-[var(--text-strong)] mb-2">Description</h4>
+                <p className="text-[var(--text-strong)] leading-relaxed">{video.description}</p>
               </div>
             )}
             
-            <div className="flex items-center space-x-4 text-sm text-slate-600">
+            <div className="flex items-center space-x-4 text-sm text-[var(--text-strong)]">
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
                 <span>{formatDuration(video.duration)}</span>

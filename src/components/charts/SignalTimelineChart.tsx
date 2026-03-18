@@ -46,7 +46,7 @@ export function SignalTimelineChart({
     if (signal.status === 'closed') {
       if (signal.pnl && signal.pnl > 0) return '#10b981' // green for profit
       if (signal.pnl && signal.pnl < 0) return '#ef4444' // red for loss
-      return '#64748b' // gray for break-even
+      return '#8a7d6b' // gray for break-even
     }
     return signal.direction === 'long' ? '#3b82f6' : '#f59e0b' // blue for long, amber for short
   }
@@ -61,16 +61,16 @@ export function SignalTimelineChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
-          <div className="font-semibold text-slate-900">{data.symbol}</div>
-          <div className="text-sm text-slate-600 mb-2">{formatTooltipDate(data.date)}</div>
+        <div className="bg-[var(--bg-panel)] p-3 border border-[var(--border-subtle)] rounded-lg shadow-lg">
+          <div className="font-semibold text-[var(--text-strong)]">{data.symbol}</div>
+          <div className="text-sm text-[var(--text-muted)] mb-2">{formatTooltipDate(data.date)}</div>
           <div className="text-sm">
             <div className="flex items-center gap-2 mb-1">
               <span className="font-medium">Direction:</span>
               <span className={`px-2 py-1 rounded text-xs font-medium ${
-                data.direction === 'long' 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-red-100 text-red-700'
+                data.direction === 'long'
+                  ? 'bg-[#1a2e1a] text-[#4a7c3f]'
+                  : 'bg-[#2e1a1a] text-[#c03030]'
               }`}>
                 {data.direction.toUpperCase()}
               </span>
@@ -86,7 +86,7 @@ export function SignalTimelineChart({
             {data.pnl !== undefined && (
               <div className="mb-1">
                 <span className="font-medium">P&L:</span> 
-                <span className={`ml-1 ${data.pnl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`ml-1 ${data.pnl >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
                   {data.pnl >= 0 ? '+' : ''}{formatTooltipValue(data.pnl)}
                 </span>
               </div>
@@ -115,16 +115,16 @@ export function SignalTimelineChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={height}>
           <ScatterChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
             <XAxis 
               dataKey="date" 
               tickFormatter={(value) => format(new Date(value), 'MMM dd')}
-              stroke="#64748b"
+              stroke="#8a7d6b"
               fontSize={12}
             />
             <YAxis 
               tickFormatter={(value) => formatTooltipValue(value)}
-              stroke="#64748b"
+              stroke="#8a7d6b"
               fontSize={12}
             />
             <Tooltip content={<CustomTooltip />} />

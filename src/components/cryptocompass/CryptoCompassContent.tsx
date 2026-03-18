@@ -117,7 +117,7 @@ export function CryptoCompassContent({
       case 'breakdown':
         return 'bg-green-500 text-white border-green-600'
       default:
-        return 'bg-slate-500 text-white border-slate-600'
+        return 'bg-[var(--border-subtle)] text-white border-[var(--border-subtle)]'
     }
   }
 
@@ -183,9 +183,9 @@ export function CryptoCompassContent({
           placeholder="Search episodes..."
           value={searchQuery}
           onChange={handleSearchChange}
-          className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm"
+          className="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--border-subtle)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm"
         />
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
       </div>
 
       {/* Episodes Grid */}
@@ -197,10 +197,10 @@ export function CryptoCompassContent({
 
             return (
               <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>
-                <article className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 border border-slate-200 overflow-hidden">
+                <article className="group relative bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 border border-[var(--border-subtle)] overflow-hidden">
                   <div className="flex flex-col lg:flex-row">
                     {/* Episode Image */}
-                  <div className="lg:w-80 lg:h-48 h-64 relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+                  <div className="lg:w-80 lg:h-48 h-64 relative overflow-hidden bg-gradient-to-br from-[#1a1815] to-[#2a2520]">
                       {getCoverUrl(episode.coverUrl) ? (
                         <>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -211,7 +211,7 @@ export function CryptoCompassContent({
                           />
                         </>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--gold-400)] to-[var(--gold-600)]">
                           <Play className="w-16 h-16 text-white opacity-80" />
                         </div>
                       )}
@@ -230,8 +230,8 @@ export function CryptoCompassContent({
                         )}
                       </div>
                       <div className="absolute bottom-4 left-4">
-                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white transition-colors shadow-lg">
-                          <Play className="w-6 h-6 text-slate-900 ml-1" />
+                        <div className="w-12 h-12 bg-[var(--bg-panel)]/90 rounded-full flex items-center justify-center group-hover:bg-[var(--bg-panel)] transition-colors shadow-lg">
+                          <Play className="w-6 h-6 text-[var(--text-strong)] ml-1" />
                         </div>
                       </div>
                     </div>
@@ -240,17 +240,17 @@ export function CryptoCompassContent({
                     <div className="flex-1 p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-slate-900 mb-3 group-hover:text-yellow-600 transition-colors line-clamp-2">
+                          <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-3 group-hover:text-yellow-600 transition-colors line-clamp-2">
                             {episode.title}
                           </h3>
-                          <p className="text-slate-600 leading-relaxed mb-4 line-clamp-3">
+                          <p className="text-[var(--text-strong)] leading-relaxed mb-4 line-clamp-3">
                             {episode.summary || 'No description available.'}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6 text-sm text-slate-500">
+                        <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             <span>{formatDate(new Date(episode.publishedAt), 'MMM d, yyyy')}</span>
@@ -260,7 +260,7 @@ export function CryptoCompassContent({
                             <span>{episode.duration ? formatDuration(episode.duration) : 'Duration unknown'}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-400 group-hover:text-yellow-500 transition-colors">
+                        <div className="flex items-center gap-2 text-[var(--text-muted)] group-hover:text-yellow-500 transition-colors">
                           <span className="font-medium">Watch</span>
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                         </div>
@@ -270,11 +270,11 @@ export function CryptoCompassContent({
 
                   {/* Access Control Overlay */}
                   {!canView && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                    <div className="absolute inset-0 bg-[var(--bg-panel)]/80 backdrop-blur-sm flex items-center justify-center">
                       <div className="text-center">
-                        <Lock className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                        <p className="text-sm font-medium text-slate-600">Member Only</p>
-                        <p className="text-xs text-slate-500">Upgrade to access</p>
+                        <Lock className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
+                        <p className="text-sm font-medium text-[var(--text-strong)]">Member Only</p>
+                        <p className="text-xs text-[var(--text-muted)]">Upgrade to access</p>
                       </div>
                     </div>
                   )}
@@ -287,14 +287,14 @@ export function CryptoCompassContent({
           })}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-12 text-center">
-          <div className="w-24 h-24 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Play className="w-12 h-12 text-slate-400" />
+        <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg border border-[var(--border-subtle)] p-12 text-center">
+          <div className="w-24 h-24 bg-gradient-to-br from-[#1a1815] to-[#2a2520] rounded-full flex items-center justify-center mx-auto mb-6">
+            <Play className="w-12 h-12 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">
+          <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">
             {searchQuery ? 'No episodes found' : 'No Episodes Yet'}
           </h3>
-          <p className="text-slate-600">
+          <p className="text-[var(--text-strong)]">
             {searchQuery 
               ? `No episodes match "${searchQuery}". Try a different search.`
               : activeCategory !== 'all'
@@ -323,7 +323,7 @@ export function CryptoCompassContent({
         <div className="text-center mt-8">
           <Button
             onClick={handleLoadMore}
-            className="bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-medium hover:bg-slate-300 transition-colors"
+            className="bg-[#2a2520] text-[var(--text-strong)] px-6 py-3 rounded-lg font-medium hover:bg-[#2a2520] transition-colors"
           >
             Load More Episodes
           </Button>

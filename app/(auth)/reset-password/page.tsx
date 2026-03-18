@@ -74,8 +74,8 @@ function ResetPasswordForm() {
       <BeamsBackground intensity="medium">
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="max-w-md w-full relative z-20">
-            <div className="bg-[#FFFDF7] rounded-2xl p-8 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
-              <p className="text-slate-600">Loading...</p>
+            <div className="bg-[var(--bg-panel)] rounded-2xl p-8 text-center shadow-2xl border border-[var(--border-subtle)] backdrop-blur-sm">
+              <p className="text-[var(--text-muted)]">Loading...</p>
             </div>
           </div>
         </div>
@@ -88,12 +88,12 @@ function ResetPasswordForm() {
       <BeamsBackground intensity="medium">
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="max-w-md w-full relative z-20">
-            <div className="bg-[#FFFDF7] rounded-2xl p-8 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
+            <div className="bg-[var(--bg-panel)] rounded-2xl p-8 text-center shadow-2xl border border-[var(--border-subtle)] backdrop-blur-sm">
               <div className="text-5xl mb-4 text-green-500">✓</div>
-              <h1 className="text-2xl font-bold mb-2 text-slate-900">
+              <h1 className="text-2xl font-bold mb-2 text-[var(--text-strong)]">
                 Password Reset!
               </h1>
-              <p className="text-slate-600 mb-6">
+              <p className="text-[var(--text-muted)] mb-6">
                 Your password has been reset successfully. Redirecting to login...
               </p>
             </div>
@@ -107,17 +107,17 @@ function ResetPasswordForm() {
     <BeamsBackground intensity="medium">
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full relative z-20">
-          <div className="bg-[#FFFDF7] rounded-2xl p-8 shadow-2xl border border-slate-200/50 backdrop-blur-sm">
+          <div className="bg-[var(--bg-panel)] rounded-2xl p-8 shadow-2xl border border-[var(--border-subtle)] backdrop-blur-sm">
           <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
             <h1 style={{ 
               fontSize: '2rem', 
               fontWeight: 'bold', 
               marginBottom: '0.5rem',
-              color: '#1e293b'
+              color: 'var(--text-strong)'
             }}>
               Reset Password
             </h1>
-            <p style={{ color: '#64748b', fontSize: '1rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
               Enter your new password
             </p>
           </div>
@@ -128,7 +128,7 @@ function ResetPasswordForm() {
                 display: 'block', 
                 fontSize: '0.875rem', 
                 fontWeight: '500',
-                color: '#1e293b',
+                color: 'var(--text-strong)',
                 marginBottom: '0.5rem'
               }}>
                 New Password *
@@ -146,7 +146,7 @@ function ResetPasswordForm() {
                   padding: '0.75rem',
                   fontSize: '1rem',
                   borderRadius: '0.5rem',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-subtle)',
                   outline: 'none',
                 }}
               />
@@ -162,7 +162,7 @@ function ResetPasswordForm() {
                 display: 'block', 
                 fontSize: '0.875rem', 
                 fontWeight: '500',
-                color: '#1e293b',
+                color: 'var(--text-strong)',
                 marginBottom: '0.5rem'
               }}>
                 Confirm Password *
@@ -180,7 +180,7 @@ function ResetPasswordForm() {
                   padding: '0.75rem',
                   fontSize: '1rem',
                   borderRadius: '0.5rem',
-                  border: '1px solid #cbd5e1',
+                  border: '1px solid var(--border-subtle)',
                   outline: 'none',
                 }}
               />
@@ -194,8 +194,8 @@ function ResetPasswordForm() {
             {error && (
               <div style={{
                 padding: '0.75rem',
-                background: '#fee2e2',
-                border: '1px solid #fca5a5',
+                background: '#2e1a1a',
+                border: '1px solid #c03030',
                 borderRadius: '0.5rem',
                 color: '#dc2626',
                 fontSize: '0.875rem'
@@ -225,7 +225,7 @@ function ResetPasswordForm() {
 
             <p style={{ 
               fontSize: '0.875rem', 
-              color: '#64748b', 
+              color: 'var(--text-muted)', 
               textAlign: 'center',
               marginTop: '0.5rem'
             }}>
@@ -255,8 +255,8 @@ export default function ResetPasswordPage() {
       <BeamsBackground intensity="medium">
         <div className="min-h-screen flex items-center justify-center p-4">
           <div className="max-w-md w-full relative z-20">
-            <div className="bg-[#FFFDF7] rounded-2xl p-8 text-center shadow-2xl border border-slate-200/50 backdrop-blur-sm">
-              <p className="text-slate-600">Loading...</p>
+            <div className="bg-[var(--bg-panel)] rounded-2xl p-8 text-center shadow-2xl border border-[var(--border-subtle)] backdrop-blur-sm">
+              <p className="text-[var(--text-muted)]">Loading...</p>
             </div>
           </div>
         </div>

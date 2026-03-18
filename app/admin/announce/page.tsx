@@ -115,23 +115,23 @@ export default function AdminAnnouncePage() {
 
               {/* Preview */}
               {preview && (title || body) && (
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <h4 className="font-semibold text-slate-800 mb-2">Preview</h4>
+                <div className="p-4 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]">
+                  <h4 className="font-semibold text-[var(--text-strong)] mb-2">Preview</h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">📢 Announcement</Badge>
-                      <span className="text-sm text-slate-500">Just now</span>
+                      <span className="text-sm text-[var(--text-muted)]">Just now</span>
                     </div>
-                    <h5 className="font-medium text-slate-800">
+                    <h5 className="font-medium text-[var(--text-strong)]">
                       {title || 'Announcement Title'}
                     </h5>
                     {body && (
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-[var(--text-strong)]">
                         {body}
                       </p>
                     )}
                     {url && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[var(--text-muted)]">
                         Link: {url}
                       </p>
                     )}
@@ -166,8 +166,8 @@ export default function AdminAnnouncePage() {
         {/* Info Card */}
         <Card className="mt-6">
           <CardContent className="p-6">
-            <h4 className="font-semibold text-slate-800 mb-3">About Announcements</h4>
-            <ul className="text-sm text-slate-600 space-y-2">
+            <h4 className="font-semibold text-[var(--text-strong)] mb-3">About Announcements</h4>
+            <ul className="text-sm text-[var(--text-strong)] space-y-2">
               <li>• Announcements are sent to all members, editors, and admins</li>
               <li>• Recipients can control notification preferences in their account settings</li>
               <li>• Announcements appear in the notifications bell and center</li>

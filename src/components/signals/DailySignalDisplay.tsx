@@ -44,8 +44,8 @@ const tierLabels: Record<Tier, string> = {
 }
 
 const tierColors: Record<Tier, string> = {
-  T1: 'bg-purple-50 border-purple-200',
-  T2: 'bg-yellow-50 border-yellow-200',
+  T1: 'bg-[#1a1520] border-purple-800',
+  T2: 'bg-[#2a2418] border-yellow-800',
 }
 
 const allocationLabelToProfile: Record<'Aggressive' | 'Semi Aggressive' | 'Conservative', RiskProfile> = {
@@ -224,9 +224,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
 
   if (error) {
     return (
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-[#c03030]/40 bg-[#2e1a1a]">
         <CardContent className="pt-6">
-          <div className="flex items-center space-x-2 text-red-600">
+          <div className="flex items-center space-x-2 text-[#c03030]">
             <AlertCircle className="w-5 h-5" />
             <span>Error loading daily updates. Please try again later.</span>
           </div>
@@ -247,9 +247,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
             />
           </div>
           <div className="text-center py-8">
-            <TrendingUp className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Daily Updates Available</h3>
-            <p className="text-slate-600">
+            <TrendingUp className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">No Daily Updates Available</h3>
+            <p className="text-[var(--text-muted)]">
               {selectedDate 
                 ? `No updates found for the selected date.`
                 : "Check back later for today's portfolio updates."}
@@ -274,7 +274,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
         {/* Tab Navigation */}
         <div className="flex justify-center mb-6">
           <div
-            className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto"
+            className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto"
             data-tour="portfolio-tier-tabs"
           >
             {tiers.map((tier) => {
@@ -292,8 +292,8 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                   className={cn(
                     'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none',
                     activeTier === tier
-                      ? 'bg-yellow-500 text-white shadow-md hover:bg-yellow-600'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                      ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
+                      : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]',
                     !hasSignal && 'opacity-50 cursor-not-allowed'
                   )}
                 >
@@ -311,7 +311,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
         {activeTier === 'T2' && (
           <div className="flex justify-center mb-6">
             <div
-              className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-slate-200 w-full sm:w-auto"
+              className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto"
               data-tour="portfolio-category-tabs"
             >
               {(['majors', 'memecoins'] as Category[]).map((category) => {
@@ -329,8 +329,8 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                     className={cn(
                       'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none capitalize',
                       activeCategory === category
-                        ? 'bg-yellow-500 text-white shadow-md hover:bg-yellow-600'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                        ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
+                        : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]',
                       !hasSignal && 'opacity-50 cursor-not-allowed'
                     )}
                   >
@@ -353,12 +353,12 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
           >
             {!hasAccess ? (
               <div className="text-center py-12">
-                <Lock className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Locked Content</h3>
-                <p className="text-slate-600 mb-4">
+                <Lock className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-[var(--text-strong)] mb-2">Locked Content</h3>
+                <p className="text-[var(--text-muted)] mb-4">
                   This update is available for {tierLabels[currentSignal.tier]} members and above.
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[var(--text-muted)]">
                   Upgrade your subscription to access this tier&apos;s updates.
                 </p>
               </div>
@@ -368,7 +368,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     <Zap className="w-5 h-5 text-yellow-500" />
-                    <h3 className="text-lg font-bold text-slate-900">
+                    <h3 className="text-lg font-bold text-[var(--text-strong)]">
                       ⚡ Portfolio Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Market Rotation' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
                     </h3>
                   </div>
@@ -384,7 +384,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                         Edit
                       </Button>
                     )}
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[var(--text-muted)]">
                       {formatDate(new Date(currentSignal.publishedAt), 'short')}
                     </span>
                   </div>
@@ -394,9 +394,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                 {allocationSplits.length > 0 ? (
                   <div className="mb-4" data-tour="portfolio-allocation">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-slate-900">Allocation Split</h4>
+                      <h4 className="font-bold text-[var(--text-strong)]">Allocation Split</h4>
                       {riskProfileData?.recommendedProfile && (
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-[var(--text-muted)]">
                           Recommended: {formatRiskProfileLabel(riskProfileData.recommendedProfile)}
                         </span>
                       )}
@@ -418,13 +418,13 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                             className={cn(
                               'w-full text-left rounded-2xl border p-4 transition-all',
                               isActive
-                                ? 'border-yellow-400 bg-yellow-50 shadow-sm'
-                                : 'border-slate-200 bg-white hover:border-slate-300'
+                                ? 'border-yellow-400 bg-[#2a2418] shadow-sm'
+                                : 'border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-[var(--border-subtle)]'
                             )}
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-semibold text-slate-900">{displayLabel}</span>
+                                <span className="font-semibold text-[var(--text-strong)]">{displayLabel}</span>
                                 {isRecommended && (
                                   <span className="text-[10px] uppercase tracking-wide bg-yellow-200 text-yellow-900 px-2 py-1 rounded-full">
                                     Recommended for you
@@ -432,11 +432,11 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                                 )}
                               </div>
                               {isActive && (
-                                <span className="text-xs text-slate-500">Selected</span>
+                                <span className="text-xs text-[var(--text-muted)]">Selected</span>
                               )}
                             </div>
                             {isActive && (
-                              <div className="mt-3 text-sm text-slate-700">
+                              <div className="mt-3 text-sm text-[var(--text-strong)]">
                                 {split.allocations
                                   .map((allocation) => `${allocation.percent}% ${allocation.asset}`)
                                   .join(' / ')}
@@ -449,9 +449,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                   </div>
                 ) : (
                   <div className="mb-4" data-tour="portfolio-allocation">
-                    <h4 className="font-bold text-slate-900 mb-2">Update:</h4>
-                    <div className="bg-white rounded-lg p-4 border border-slate-200">
-                      <div className="text-lg text-slate-800">
+                    <h4 className="font-bold text-[var(--text-strong)] mb-2">Update:</h4>
+                    <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
+                      <div className="text-lg text-[var(--text-strong)]">
                         {currentSignal.signal.split('\n').map((line, index) => (
                           <p key={index} className="mb-1 last:mb-0">
                             {line.trim() || '\u00A0'}
@@ -465,9 +465,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                 {/* Executive Summary */}
                 {currentSignal.executiveSummary && (
                   <div className="mb-4" data-tour="portfolio-summary">
-                    <h4 className="font-bold text-slate-900 mb-2">Executive Summary:</h4>
-                    <div className="bg-white rounded-lg p-4 border border-slate-200">
-                      <p className="text-slate-700 whitespace-pre-wrap">
+                    <h4 className="font-bold text-[var(--text-strong)] mb-2">Executive Summary:</h4>
+                    <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
+                      <p className="text-[var(--text-strong)] whitespace-pre-wrap">
                         {currentSignal.executiveSummary}
                       </p>
                     </div>
@@ -477,9 +477,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                 {/* Associated Data */}
                 {currentSignal.associatedData && (
                   <div data-tour="portfolio-data">
-                    <h4 className="font-bold text-slate-900 mb-2">Associated Data:</h4>
-                    <div className="bg-white rounded-lg p-4 border border-slate-200">
-                      <p className="text-slate-700 whitespace-pre-wrap">
+                    <h4 className="font-bold text-[var(--text-strong)] mb-2">Associated Data:</h4>
+                    <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
+                      <p className="text-[var(--text-strong)] whitespace-pre-wrap">
                         {currentSignal.associatedData}
                       </p>
                     </div>

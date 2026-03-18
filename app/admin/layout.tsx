@@ -10,7 +10,7 @@ export default async function AdminLayout({
   await requireRole(['admin', 'editor'])
 
   return (
-    <div className="min-h-screen bg-ivory">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="flex">
         <AdminSidebar />
         <main className="flex-1 ml-64">

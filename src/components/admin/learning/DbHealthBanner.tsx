@@ -52,13 +52,13 @@ export function DbHealthBanner() {
   }
 
   return (
-    <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3">
+    <div className="mb-6 rounded-md border border-[#c03030] bg-[#2e1a1a] px-4 py-3">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-2 text-red-900">
+        <div className="flex items-start gap-2 text-[#c03030]">
           <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold">Database connectivity issue</p>
-            <p className="text-sm text-red-800">{state.message}</p>
+            <p className="text-sm text-[#c03030]">{state.message}</p>
           </div>
         </div>
         <Button
@@ -67,7 +67,7 @@ export function DbHealthBanner() {
           size="sm"
           onClick={checkHealth}
           disabled={isRefreshing}
-          className="border-red-300 bg-white text-red-800 hover:bg-red-100"
+          className="border-[#c03030] bg-[var(--bg-panel)] text-[#c03030] hover:bg-[#2e1a1a]"
         >
           <RefreshCw className={`mr-2 h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           Retry

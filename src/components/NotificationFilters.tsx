@@ -35,8 +35,8 @@ export function NotificationFilters({ currentFilter }: NotificationFiltersProps)
 
   return (
     <div className="flex items-center gap-2">
-      <Filter className="h-4 w-4 text-slate-500" />
-      <span className="text-sm text-slate-600 mr-2">Filter:</span>
+      <Filter className="h-4 w-4 text-[var(--text-muted)]" />
+      <span className="text-sm text-[var(--text-strong)] mr-2">Filter:</span>
       {filters.map((filter) => (
         <Button
           key={filter.key}
@@ -46,7 +46,7 @@ export function NotificationFilters({ currentFilter }: NotificationFiltersProps)
           className={`${
             currentFilter === filter.key 
               ? 'bg-gold-500 hover:bg-gold-600 text-white' 
-              : 'text-slate-600 hover:text-slate-700'
+              : 'text-[var(--text-strong)] hover:text-[var(--text-strong)]'
           }`}
         >
           {filter.label}

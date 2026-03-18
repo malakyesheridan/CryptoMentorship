@@ -125,7 +125,7 @@ export function SmartNotifications({
         title: 'Complete Your First Lesson',
         message: 'Start your learning journey by completing your first lesson.',
         icon: <Target className="h-4 w-4" />,
-        color: 'bg-blue-500',
+        color: 'bg-indigo-500',
         action: nextLessonUrl ? {
           label: 'Start Learning',
           href: nextLessonUrl
@@ -143,7 +143,7 @@ export function SmartNotifications({
         title: '10 Lessons Completed!',
         message: 'Congratulations! You\'ve completed 10 lessons. You\'re making great progress!',
         icon: <Award className="h-4 w-4" />,
-        color: 'bg-yellow-500',
+        color: 'bg-gold-500',
         action: {
           label: 'View Progress',
           href: '/learning'
@@ -228,11 +228,11 @@ export function SmartNotifications({
 
   if (!notificationsEnabled) {
     return (
-      <Card className={cn('bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200', className)}>
+      <Card className={cn('bg-gradient-to-r from-[#1a1815] to-[#1a1815] border-[var(--border-subtle)]', className)}>
         <CardContent className="p-6 text-center">
-          <BellOff className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Notifications Disabled</h3>
-          <p className="text-slate-600 mb-4">Enable notifications to get learning reminders and achievements</p>
+          <BellOff className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">Notifications Disabled</h3>
+          <p className="text-[var(--text-strong)] mb-4">Enable notifications to get learning reminders and achievements</p>
           <Button onClick={() => setNotificationsEnabled(true)}>
             <Bell className="h-4 w-4 mr-2" />
             Enable Notifications
@@ -243,14 +243,14 @@ export function SmartNotifications({
   }
 
   return (
-    <Card className={cn('bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200', className)}>
+    <Card className={cn('bg-gradient-to-r from-[#1a1d2e] to-[#1a1a2e] border-[#1a1d2e]', className)}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell className="h-6 w-6 text-blue-600" />
-            <CardTitle className="text-blue-900">Smart Notifications</CardTitle>
+            <CardTitle className="text-[#5b8dd9]">Smart Notifications</CardTitle>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200">
+              <Badge variant="secondary" className="bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]">
                 {unreadCount} new
               </Badge>
             )}
@@ -260,7 +260,7 @@ export function SmartNotifications({
               variant="ghost"
               size="sm"
               onClick={() => setNotificationsEnabled(false)}
-              className="text-slate-600 hover:text-slate-800"
+              className="text-[var(--text-strong)] hover:text-[var(--text-strong)]"
             >
               <BellOff className="h-4 w-4" />
             </Button>
@@ -269,23 +269,23 @@ export function SmartNotifications({
                 variant="ghost"
                 size="sm"
                 onClick={clearAllNotifications}
-                className="text-slate-600 hover:text-slate-800"
+                className="text-[var(--text-strong)] hover:text-[var(--text-strong)]"
               >
                 Clear All
               </Button>
             )}
           </div>
         </div>
-        <p className="text-blue-700 text-sm">
+        <p className="text-[#5b8dd9] text-sm">
           Personalized learning reminders and achievements
         </p>
       </CardHeader>
       <CardContent>
         {notifications.length === 0 ? (
           <div className="text-center py-8">
-            <Bell className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">All Caught Up!</h3>
-            <p className="text-slate-600">No new notifications. Keep up the great work!</p>
+            <Bell className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">All Caught Up!</h3>
+            <p className="text-[var(--text-strong)]">No new notifications. Keep up the great work!</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -294,7 +294,7 @@ export function SmartNotifications({
                 key={notification.id}
                 className={cn(
                   'flex items-start gap-3 p-3 rounded-lg transition-all duration-300 group',
-                  notification.read ? 'bg-slate-50' : 'bg-white shadow-sm'
+                  notification.read ? 'bg-[#1a1815]' : 'bg-[var(--bg-panel)] shadow-sm'
                 )}
               >
                 <div className={cn(
@@ -308,7 +308,7 @@ export function SmartNotifications({
                   <div className="flex items-start justify-between mb-1">
                     <h4 className={cn(
                       'font-semibold text-sm',
-                      notification.read ? 'text-slate-600' : 'text-slate-900'
+                      notification.read ? 'text-[var(--text-strong)]' : 'text-[var(--text-strong)]'
                     )}>
                       {notification.title}
                     </h4>
@@ -318,21 +318,21 @@ export function SmartNotifications({
                           onClick={() => markAsRead(notification.id)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                         >
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-[#4a7c3f]" />
                         </button>
                       )}
                       <button
                         onClick={() => dismissNotification(notification.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                       >
-                        <X className="h-4 w-4 text-slate-400" />
+                        <X className="h-4 w-4 text-[var(--text-muted)]" />
                       </button>
                     </div>
                   </div>
                   
                   <p className={cn(
                     'text-xs mb-2',
-                    notification.read ? 'text-slate-500' : 'text-slate-600'
+                    notification.read ? 'text-[var(--text-muted)]' : 'text-[var(--text-strong)]'
                   )}>
                     {notification.message}
                   </p>
@@ -340,7 +340,7 @@ export function SmartNotifications({
                   {notification.action && (
                     <Link 
                       href={notification.action.href}
-                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-[#5b8dd9] transition-colors"
                     >
                       {notification.action.label}
                       <ArrowRight className="h-3 w-3" />

@@ -17,16 +17,16 @@ export default function GlobalError({
   return (
     <html>
       <body>
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center p-4">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">
+            <h1 className="text-2xl font-bold text-[var(--text-strong)] mb-4">
               Application Error
             </h1>
-            <p className="text-slate-600 mb-6">
+            <p className="text-[var(--text-muted)] mb-6">
               A server-side exception has occurred. Please try refreshing the page.
             </p>
             {error.digest && (
-              <p className="text-sm text-slate-500 mb-4">
+              <p className="text-sm text-[var(--text-muted)] mb-4">
                 Error ID: {error.digest}
               </p>
             )}

@@ -374,7 +374,7 @@ export default async function LearningDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <LearningHubWizard />
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -423,10 +423,10 @@ export default async function LearningDashboardPage() {
   } catch (error) {
     console.error('Error fetching learning data:', error)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen bg-[var(--bg-page)]">
         <div className="container mx-auto px-4 py-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Learning Hub</h1>
-          <p className="text-slate-600 mb-8">Unable to load learning data at this time. Please try again later.</p>
+          <h1 className="text-4xl font-bold text-[var(--text-strong)] mb-4">Learning Hub</h1>
+          <p className="text-[var(--text-muted)] mb-8">Unable to load learning data at this time. Please try again later.</p>
         </div>
       </div>
     )

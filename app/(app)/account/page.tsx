@@ -155,7 +155,7 @@ export default function AccountPage() {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
-        <p className="ml-3 text-slate-600">Loading account information...</p>
+        <p className="ml-3 text-[var(--text-muted)]">Loading account information...</p>
       </div>
     )
   }
@@ -186,9 +186,9 @@ export default function AccountPage() {
           
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
-              <User className="h-5 w-5 text-slate-400" />
+              <User className="h-5 w-5 text-[var(--text-muted)]" />
               <div>
-                <p className="text-sm text-slate-500">Name</p>
+                <p className="text-sm text-[var(--text-muted)]">Name</p>
                 <form onSubmit={handleNameSave} className="mt-2 space-y-2">
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Input
@@ -223,11 +223,11 @@ export default function AccountPage() {
             </div>
             
             <div className="flex items-center space-x-3">
-              <Mail className="h-5 w-5 text-slate-400" />
+              <Mail className="h-5 w-5 text-[var(--text-muted)]" />
               <div className="flex-1">
-                <p className="text-sm text-slate-500">Email</p>
+                <p className="text-sm text-[var(--text-muted)]">Email</p>
                 <div className="flex items-center gap-2">
-                  <p className="font-medium text-slate-800">{user?.email || 'Not provided'}</p>
+                  <p className="font-medium text-[var(--text-strong)]">{user?.email || 'Not provided'}</p>
                   {accountData?.user?.emailVerified && (
                     <Badge variant="default" className="flex items-center gap-1">
                       <CheckCircle className="h-3 w-3" />
@@ -239,9 +239,9 @@ export default function AccountPage() {
             </div>
             
             <div className="flex items-center space-x-3">
-              <Shield className="h-5 w-5 text-slate-400" />
+              <Shield className="h-5 w-5 text-[var(--text-muted)]" />
               <div>
-                <p className="text-sm text-slate-500">Role</p>
+                <p className="text-sm text-[var(--text-muted)]">Role</p>
                 <Badge variant={user?.role === 'admin' ? 'preview' : 'default'}>
                   {user?.role || 'guest'}
                 </Badge>
@@ -251,10 +251,10 @@ export default function AccountPage() {
             {accountData?.user && (
               <>
                 <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-slate-400" />
+                  <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
                   <div>
-                    <p className="text-sm text-slate-500">Account Created</p>
-                    <p className="font-medium text-slate-800">
+                    <p className="text-sm text-[var(--text-muted)]">Account Created</p>
+                    <p className="font-medium text-[var(--text-strong)]">
                       {formatDate(accountData.user.createdAt, 'MMMM d, yyyy')}
                     </p>
                   </div>
@@ -262,10 +262,10 @@ export default function AccountPage() {
 
                 {accountData.user.lastLoginAt && (
                   <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 text-slate-400" />
+                    <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
                     <div>
-                      <p className="text-sm text-slate-500">Last Login</p>
-                      <p className="font-medium text-slate-800">
+                      <p className="text-sm text-[var(--text-muted)]">Last Login</p>
+                      <p className="font-medium text-[var(--text-strong)]">
                         {formatDate(accountData.user.lastLoginAt, 'MMMM d, yyyy')}
                       </p>
                     </div>
@@ -284,17 +284,17 @@ export default function AccountPage() {
             <>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <Shield className="h-5 w-5 text-slate-400" />
+                  <Shield className="h-5 w-5 text-[var(--text-muted)]" />
                   <div>
-                    <p className="text-sm text-slate-500">Tier</p>
+                    <p className="text-sm text-[var(--text-muted)]">Tier</p>
                     <Badge variant="preview">{getTierDisplayName(membership.tier)}</Badge>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-slate-400" />
+                  <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
                   <div>
-                    <p className="text-sm text-slate-500">Status</p>
+                    <p className="text-sm text-[var(--text-muted)]">Status</p>
                     <Badge variant={getStatusVariant(membership.status)}>
                       {membership.status.charAt(0).toUpperCase() + membership.status.slice(1)}
                     </Badge>
@@ -302,19 +302,19 @@ export default function AccountPage() {
                 </div>
                 
                 <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-slate-400" />
+                  <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
                   <div>
-                    <p className="text-sm text-slate-500">Member Since</p>
-                    <p className="font-medium text-slate-800">{getMemberSinceDate()}</p>
+                    <p className="text-sm text-[var(--text-muted)]">Member Since</p>
+                    <p className="font-medium text-[var(--text-strong)]">{getMemberSinceDate()}</p>
                   </div>
                 </div>
 
                 {membership.currentPeriodEnd && (
                   <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 text-slate-400" />
+                    <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
                     <div>
-                      <p className="text-sm text-slate-500">Current Period Ends</p>
-                      <p className="font-medium text-slate-800">
+                      <p className="text-sm text-[var(--text-muted)]">Current Period Ends</p>
+                      <p className="font-medium text-[var(--text-strong)]">
                         {formatDate(membership.currentPeriodEnd, 'MMMM d, yyyy')}
                         {membership.cancelAtPeriodEnd && (
                           <span className="ml-2 text-orange-600 text-xs">(Cancels at period end)</span>
@@ -326,8 +326,8 @@ export default function AccountPage() {
               </div>
               
               <div className="mt-6 p-4 bg-gold-50 rounded-lg border border-gold-200">
-                <h4 className="font-semibold text-slate-800 mb-2">Membership Benefits</h4>
-                <ul className="text-sm text-slate-600 space-y-1">
+                <h4 className="font-semibold text-[var(--text-strong)] mb-2">Membership Benefits</h4>
+                <ul className="text-sm text-[var(--text-muted)] space-y-1">
                   <li>• Access to all research reports</li>
                   <li>• Weekly Crypto Compass episodes</li>
                   <li>• Portfolio positions and model portfolio</li>
@@ -337,7 +337,7 @@ export default function AccountPage() {
             </>
           ) : (
             <div className="text-center py-8">
-              <p className="text-slate-600 mb-4">No active membership</p>
+              <p className="text-[var(--text-muted)] mb-4">No active membership</p>
               <a href="/subscribe" className="text-gold-600 hover:text-gold-700 font-medium">
                 View subscription plans →
               </a>
@@ -351,17 +351,17 @@ export default function AccountPage() {
           <div className="space-y-3">
             <Link
               href="/account/subscription"
-              className="flex items-center justify-between p-3 rounded-lg border hover:bg-slate-50 transition-colors"
+              className="flex items-center justify-between p-3 rounded-lg border hover:bg-[#1a1815] transition-colors"
             >
               <span className="font-medium">Subscription Management</span>
-              <span className="text-slate-400">→</span>
+              <span className="text-[var(--text-muted)]">→</span>
             </Link>
             <Link
               href="/account/referrals"
-              className="flex items-center justify-between p-3 rounded-lg border hover:bg-slate-50 transition-colors"
+              className="flex items-center justify-between p-3 rounded-lg border hover:bg-[#1a1815] transition-colors"
             >
               <span className="font-medium">Referral Program</span>
-              <span className="text-slate-400">→</span>
+              <span className="text-[var(--text-muted)]">→</span>
             </Link>
           </div>
         </div>

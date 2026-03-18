@@ -54,8 +54,8 @@ export function DashboardStats({
         <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu">
           <CardContent className="p-6 text-center">
             <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
-            <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors duration-300">Learning Tracks</h3>
-            <p className="text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-300">Structured courses</p>
+            <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-[#5b8dd9] transition-colors duration-300">Learning Tracks</h3>
+            <p className="text-sm text-[var(--text-strong)] group-hover:text-[var(--text-strong)] transition-colors duration-300">Structured courses</p>
           </CardContent>
         </Card>
       </Link>
@@ -72,10 +72,10 @@ export function DashboardStats({
                 showPercentage={false}
                 animated={true}
               />
-              <Activity className="h-8 w-8 text-green-600 ml-2 group-hover:text-green-700 transition-colors duration-300" />
+              <Activity className="h-8 w-8 text-[#4a7c3f] ml-2 group-hover:text-[#4a7c3f] transition-colors duration-300" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-green-700 transition-colors duration-300">My Progress</h3>
-            <p className="text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-300">
+            <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-[#4a7c3f] transition-colors duration-300">My Progress</h3>
+            <p className="text-sm text-[var(--text-strong)] group-hover:text-[var(--text-strong)] transition-colors duration-300">
               {completedTracks} of {totalEnrollments} completed
             </p>
             {showActivityChart && (
@@ -97,7 +97,7 @@ export function DashboardStats({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 group-hover:scale-105 transition-transform duration-300">
                 <Award className="h-6 w-6 text-purple-600 group-hover:text-purple-700 transition-colors duration-300" />
-                <h3 className="font-semibold text-slate-900 group-hover:text-purple-700 transition-colors duration-300">Saved Content</h3>
+                <h3 className="font-semibold text-[var(--text-strong)] group-hover:text-purple-700 transition-colors duration-300">Saved Content</h3>
               </div>
               <Link href="/me/saved" className="text-sm text-purple-600 hover:text-purple-700 transition-colors duration-300 group-hover:scale-105 transform-gpu">
                 View All
@@ -113,7 +113,7 @@ export function DashboardStats({
               </div>
             ) : (
               <div className="text-center py-4 group-hover:scale-105 transition-transform duration-300">
-                <p className="text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-300">Bookmarked items</p>
+                <p className="text-sm text-[var(--text-strong)] group-hover:text-[var(--text-strong)] transition-colors duration-300">Bookmarked items</p>
               </div>
             )}
           </CardContent>

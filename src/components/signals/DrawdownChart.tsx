@@ -26,8 +26,8 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="text-center py-8 text-slate-500">
-            <TrendingDown className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+          <div className="text-center py-8 text-[var(--text-muted)]">
+            <TrendingDown className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
             <p>No drawdown data available</p>
             <p className="text-sm">Create some trades to see the drawdown curve</p>
           </div>
@@ -86,14 +86,14 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="text-center">
-              <p className="text-sm text-slate-600">Max Drawdown</p>
-              <p className="text-lg font-semibold text-red-600">
+              <p className="text-sm text-[var(--text-muted)]">Max Drawdown</p>
+              <p className="text-lg font-semibold text-[#c03030]">
                 {formatPercentage(maxDrawdown)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-600">Current Drawdown</p>
-              <p className="text-lg font-semibold text-slate-800">
+              <p className="text-sm text-[var(--text-muted)]">Current Drawdown</p>
+              <p className="text-lg font-semibold text-[var(--text-strong)]">
                 {formatPercentage(equityPoints[equityPoints.length - 1].drawdown)}
               </p>
             </div>
@@ -104,7 +104,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
             <svg
               width={chartWidth}
               height={chartHeight}
-              className="border border-slate-200 rounded-lg"
+              className="border border-[var(--border-subtle)] rounded-lg"
             >
               {/* Grid lines */}
               {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
@@ -117,7 +117,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
                       y1={y}
                       x2={chartWidth - margin.right}
                       y2={y}
-                      stroke="#e2e8f0"
+                      stroke="#2a2520"
                       strokeWidth={1}
                     />
                     <text
@@ -125,7 +125,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
                       y={y + 4}
                       textAnchor="end"
                       fontSize="12"
-                      fill="#64748b"
+                      fill="#8a7d6b"
                     >
                       {formatPercentage(value, 1)}
                     </text>
@@ -136,7 +136,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
               {/* Fill area under curve */}
               <path
                 d={fillPath}
-                fill="#fecaca"
+                fill="#5c2020"
                 fillOpacity={0.3}
               />
 
@@ -171,7 +171,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
                 y1={chartHeight - margin.bottom}
                 x2={chartWidth - margin.right}
                 y2={chartHeight - margin.bottom}
-                stroke="#374151"
+                stroke="#f5f0e8"
                 strokeWidth={2}
               />
               <line
@@ -179,7 +179,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
                 y1={margin.top}
                 x2={margin.left}
                 y2={chartHeight - margin.bottom}
-                stroke="#374151"
+                stroke="#f5f0e8"
                 strokeWidth={2}
               />
 
@@ -193,7 +193,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
                     y={chartHeight - margin.bottom + 20}
                     textAnchor="middle"
                     fontSize="12"
-                    fill="#64748b"
+                    fill="#8a7d6b"
                   >
                     {formatDate(point.date, 'short')}
                   </text>
@@ -203,7 +203,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 text-sm text-slate-600">
+          <div className="flex items-center justify-center gap-6 text-sm text-[var(--text-muted)]">
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 bg-red-500"></div>
               <span>Drawdown</span>

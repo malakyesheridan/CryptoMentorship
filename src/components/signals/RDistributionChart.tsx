@@ -19,8 +19,8 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="text-center py-8 text-slate-500">
-            <BarChart3 className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+          <div className="text-center py-8 text-[var(--text-muted)]">
+            <BarChart3 className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
             <p>No R-multiple data available</p>
             <p className="text-sm">Close some trades to see the distribution</p>
           </div>
@@ -85,26 +85,26 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
           {/* Summary Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <p className="text-sm text-slate-600">Avg R</p>
-              <p className="text-lg font-semibold text-slate-800">
+              <p className="text-sm text-[var(--text-muted)]">Avg R</p>
+              <p className="text-lg font-semibold text-[var(--text-strong)]">
                 {formatNumber(avgR, 2)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-600">Median R</p>
-              <p className="text-lg font-semibold text-slate-800">
+              <p className="text-sm text-[var(--text-muted)]">Median R</p>
+              <p className="text-lg font-semibold text-[var(--text-strong)]">
                 {formatNumber(medianR, 2)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-600">Win Rate</p>
-              <p className="text-lg font-semibold text-green-600">
+              <p className="text-sm text-[var(--text-muted)]">Win Rate</p>
+              <p className="text-lg font-semibold text-[#4a7c3f]">
                 {formatNumber(winRate, 1)}%
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-600">Total Trades</p>
-              <p className="text-lg font-semibold text-slate-800">
+              <p className="text-sm text-[var(--text-muted)]">Total Trades</p>
+              <p className="text-lg font-semibold text-[var(--text-strong)]">
                 {rMultiples.length}
               </p>
             </div>
@@ -115,7 +115,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
             <svg
               width={chartWidth}
               height={chartHeight}
-              className="border border-slate-200 rounded-lg"
+              className="border border-[var(--border-subtle)] rounded-lg"
             >
               {/* Grid lines */}
               {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
@@ -128,7 +128,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                       y1={y}
                       x2={chartWidth - margin.right}
                       y2={y}
-                      stroke="#e2e8f0"
+                      stroke="#2a2520"
                       strokeWidth={1}
                     />
                     <text
@@ -136,7 +136,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                       y={y + 4}
                       textAnchor="end"
                       fontSize="12"
-                      fill="#64748b"
+                      fill="#8a7d6b"
                     >
                       {count}
                     </text>
@@ -168,7 +168,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                       y={chartHeight - margin.bottom + 15}
                       textAnchor="middle"
                       fontSize="10"
-                      fill="#64748b"
+                      fill="#8a7d6b"
                     >
                       {formatNumber(bin.center, 1)}
                     </text>
@@ -182,7 +182,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y1={margin.top}
                 x2={scaleX(0)}
                 y2={chartHeight - margin.bottom}
-                stroke="#374151"
+                stroke="#f5f0e8"
                 strokeWidth={2}
                 strokeDasharray="4 4"
               />
@@ -193,7 +193,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y1={chartHeight - margin.bottom}
                 x2={chartWidth - margin.right}
                 y2={chartHeight - margin.bottom}
-                stroke="#374151"
+                stroke="#f5f0e8"
                 strokeWidth={2}
               />
               <line
@@ -201,7 +201,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y1={margin.top}
                 x2={margin.left}
                 y2={chartHeight - margin.bottom}
-                stroke="#374151"
+                stroke="#f5f0e8"
                 strokeWidth={2}
               />
 
@@ -211,7 +211,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y={chartHeight - 5}
                 textAnchor="middle"
                 fontSize="12"
-                fill="#64748b"
+                fill="#8a7d6b"
               >
                 R-Multiple
               </text>
@@ -220,7 +220,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y={chartHeight / 2}
                 textAnchor="middle"
                 fontSize="12"
-                fill="#64748b"
+                fill="#8a7d6b"
                 transform={`rotate(-90, 15, ${chartHeight / 2})`}
               >
                 Frequency
@@ -229,7 +229,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 text-sm text-slate-600">
+          <div className="flex items-center justify-center gap-6 text-sm text-[var(--text-muted)]">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
               <span>Winning Trades</span>
@@ -239,7 +239,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
               <span>Losing Trades</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-0.5 bg-slate-600 border-dashed"></div>
+              <div className="w-4 h-0.5 bg-[var(--text-muted)] border-dashed"></div>
               <span>Break-even</span>
             </div>
           </div>

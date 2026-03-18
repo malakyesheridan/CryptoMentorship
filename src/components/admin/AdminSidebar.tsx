@@ -39,7 +39,7 @@ export function AdminSidebar() {
   }, [pathname])
 
   return (
-    <div className="fixed inset-y-0 left-0 w-64 bg-white/90 backdrop-blur border-r border-[color:var(--border-subtle)] shadow-lg">
+    <div className="fixed inset-y-0 left-0 w-64 bg-[var(--bg-panel)] backdrop-blur border-r border-[color:var(--border-subtle)] shadow-lg">
       <div className="flex flex-col h-full">
         {/* Logo */}
         <div className="p-6 border-b border-[color:var(--border-subtle)]">
@@ -64,7 +64,7 @@ export function AdminSidebar() {
                   'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-gradient-to-r from-gold-400 to-gold-600 text-white'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
+                    : 'text-[var(--text-strong)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
                 )}
               >
                 <item.icon className="h-5 w-5" />
@@ -78,7 +78,7 @@ export function AdminSidebar() {
         <div className="p-4 border-t border-[color:var(--border-subtle)]">
           <Link
             href="/dashboard"
-            className="flex items-center space-x-2 text-sm text-slate-500 hover:text-slate-700"
+            className="flex items-center space-x-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)]"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Portal</span>

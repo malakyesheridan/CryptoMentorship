@@ -45,18 +45,18 @@ export default async function CertificatePage({
   const { user, track } = certificate
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/learning">
-            <div className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-4">
+            <div className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] mb-4">
               <BookOpen className="h-4 w-4" />
               Back to Learning
             </div>
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Certificate of Completion</h1>
-          <p className="text-slate-600">Verify this certificate at /learn/cert/{params.code}</p>
+          <h1 className="text-3xl font-bold text-[var(--text-strong)] mb-2">Certificate of Completion</h1>
+          <p className="text-[var(--text-muted)]">Verify this certificate at /learn/cert/{params.code}</p>
         </div>
 
         {/* Certificate */}
@@ -68,10 +68,10 @@ export default async function CertificatePage({
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-600 rounded-full mb-4">
                   <Award className="h-8 w-8 text-white" />
                 </div>
-                <h2 className="text-4xl font-bold text-slate-900 mb-2">
+                <h2 className="text-4xl font-bold text-[var(--text-strong)] mb-2">
                   Certificate of Completion
                 </h2>
-                <p className="text-lg text-slate-600">
+                <p className="text-lg text-[var(--text-muted)]">
                   This certifies that
                 </p>
               </div>
@@ -81,14 +81,14 @@ export default async function CertificatePage({
                 <h3 className="text-3xl font-bold text-gold-700 mb-2">
                   {user.name || 'Student'}
                 </h3>
-                <p className="text-lg text-slate-600">
+                <p className="text-lg text-[var(--text-muted)]">
                   has successfully completed the learning track
                 </p>
               </div>
 
               {/* Track Title */}
               <div className="mb-8">
-                <h4 className="text-2xl font-semibold text-slate-900 mb-4">
+                <h4 className="text-2xl font-semibold text-[var(--text-strong)] mb-4">
                   &ldquo;{track.title}&rdquo;
                 </h4>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-100 rounded-full">
@@ -101,31 +101,31 @@ export default async function CertificatePage({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <Calendar className="h-5 w-5 text-slate-600" />
-                    <span className="text-sm font-medium text-slate-600">Issued On</span>
+                    <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
+                    <span className="text-sm font-medium text-[var(--text-muted)]">Issued On</span>
                   </div>
-                  <p className="text-lg font-semibold text-slate-900">
+                  <p className="text-lg font-semibold text-[var(--text-strong)]">
                     {formatDate(certificate.issuedAt)}
                   </p>
                 </div>
                 
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <Award className="h-5 w-5 text-slate-600" />
-                    <span className="text-sm font-medium text-slate-600">Certificate ID</span>
+                    <Award className="h-5 w-5 text-[var(--text-muted)]" />
+                    <span className="text-sm font-medium text-[var(--text-muted)]">Certificate ID</span>
                   </div>
-                  <p className="text-lg font-semibold text-slate-900 font-mono">
+                  <p className="text-lg font-semibold text-[var(--text-strong)] font-mono">
                     {certificate.code}
                   </p>
                 </div>
               </div>
 
               {/* Verification Notice */}
-              <div className="border-t border-slate-200 pt-6">
-                <p className="text-sm text-slate-600 mb-2">
+              <div className="border-t border-[var(--border-subtle)] pt-6">
+                <p className="text-sm text-[var(--text-muted)] mb-2">
                   This certificate can be verified at:
                 </p>
-                <p className="text-sm font-mono text-slate-500">
+                <p className="text-sm font-mono text-[var(--text-muted)]">
                   /learn/cert/{params.code}
                 </p>
               </div>
@@ -147,26 +147,26 @@ export default async function CertificatePage({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm font-medium text-slate-600">Certificate ID</span>
-                  <span className="text-sm font-mono text-slate-900">{certificate.code}</span>
+                <div className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg">
+                  <span className="text-sm font-medium text-[var(--text-muted)]">Certificate ID</span>
+                  <span className="text-sm font-mono text-[var(--text-strong)]">{certificate.code}</span>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm font-medium text-slate-600">Track</span>
-                  <span className="text-sm text-slate-900">{track.title}</span>
+                <div className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg">
+                  <span className="text-sm font-medium text-[var(--text-muted)]">Track</span>
+                  <span className="text-sm text-[var(--text-strong)]">{track.title}</span>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm font-medium text-slate-600">Issued</span>
-                  <span className="text-sm text-slate-900">
+                <div className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg">
+                  <span className="text-sm font-medium text-[var(--text-muted)]">Issued</span>
+                  <span className="text-sm text-[var(--text-strong)]">
                     {formatDate(certificate.issuedAt)}
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-center gap-2 p-3 bg-green-50 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-800">Verified Certificate</span>
+                <div className="flex items-center justify-center gap-2 p-3 bg-[#1a2e1a] rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-[#4a7c3f]" />
+                  <span className="text-sm font-medium text-[#4a7c3f]">Verified Certificate</span>
                 </div>
               </div>
             </CardContent>

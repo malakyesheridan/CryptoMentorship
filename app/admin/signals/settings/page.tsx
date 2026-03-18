@@ -63,17 +63,17 @@ export default function PortfolioSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#1a1815] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto"></div>
-          <p className="text-slate-600 mt-2">Loading settings...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--text-strong)] mx-auto"></div>
+          <p className="text-[var(--text-strong)] mt-2">Loading settings...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="max-w-4xl mx-auto p-8">
         {/* Header */}
         <div className="mb-8">
@@ -85,8 +85,8 @@ export default function PortfolioSettingsPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Portfolio Settings</h1>
-              <p className="text-slate-600 mt-2">
+              <h1 className="text-3xl font-bold text-[var(--text-strong)]">Portfolio Settings</h1>
+              <p className="text-[var(--text-strong)] mt-2">
                 Configure parameters for portfolio performance calculations
               </p>
             </div>
@@ -101,7 +101,7 @@ export default function PortfolioSettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Base Capital (USD)
                 </label>
                 <Input
@@ -112,13 +112,13 @@ export default function PortfolioSettingsPage() {
                   onChange={(e) => setSettings(prev => ({ ...prev, baseCapitalUsd: parseFloat(e.target.value) || 0 }))}
                   placeholder="10000.00"
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   Starting capital for performance calculations
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Position Model
                 </label>
                 <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function PortfolioSettingsPage() {
                     <span className="text-sm">Fixed Fraction</span>
                   </label>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   How position sizes are calculated from trade parameters
                 </p>
               </div>
@@ -158,7 +158,7 @@ export default function PortfolioSettingsPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Slippage (Basis Points)
                   </label>
                   <Input
@@ -170,13 +170,13 @@ export default function PortfolioSettingsPage() {
                     onChange={(e) => setSettings(prev => ({ ...prev, slippageBps: parseInt(e.target.value) || 0 }))}
                     placeholder="5"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     Expected slippage per trade (1 bp = 0.01%)
                   </p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Trading Fees (Basis Points)
                   </label>
                   <Input
@@ -188,7 +188,7 @@ export default function PortfolioSettingsPage() {
                     onChange={(e) => setSettings(prev => ({ ...prev, feeBps: parseInt(e.target.value) || 0 }))}
                     placeholder="10"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     Trading fees per trade (1 bp = 0.01%)
                   </p>
                 </div>
@@ -202,9 +202,9 @@ export default function PortfolioSettingsPage() {
               <CardTitle>Performance Impact</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h4 className="font-medium text-slate-900 mb-2">Current Settings Impact</h4>
-                <div className="space-y-2 text-sm text-slate-600">
+              <div className="bg-[#1a1815] p-4 rounded-lg">
+                <h4 className="font-medium text-[var(--text-strong)] mb-2">Current Settings Impact</h4>
+                <div className="space-y-2 text-sm text-[var(--text-strong)]">
                   <p>• Base Capital: ${settings.baseCapitalUsd.toLocaleString()}</p>
                   <p>• Position Model: {settings.positionModel === 'risk_pct' ? 'Risk Percentage' : 'Fixed Fraction'}</p>
                   <p>• Slippage: {settings.slippageBps} bps ({(settings.slippageBps / 100).toFixed(2)}%)</p>

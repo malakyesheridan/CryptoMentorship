@@ -278,8 +278,8 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
   }
 
   return (
-    <Card className="bg-white rounded-2xl shadow-lg border border-slate-200">
-      <CardHeader className="border-b border-slate-200 pb-4">
+    <Card className="bg-[var(--bg-panel)] rounded-2xl shadow-lg border border-[var(--border-subtle)]">
+      <CardHeader className="border-b border-[var(--border-subtle)] pb-4">
         <CardTitle className="flex items-center gap-2 text-xl">
           <Video className="h-5 w-5 text-yellow-600" />
           Upload Video Lesson
@@ -319,13 +319,13 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 htmlFor="video"
                 className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                   formData.video
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                    ? 'border-green-500 bg-[#1a2e1a]'
+                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
                 } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <Upload className="w-5 h-5 text-slate-600" />
-                  <span className="text-sm text-slate-600">
+                  <Upload className="w-5 h-5 text-[var(--text-strong)]" />
+                  <span className="text-sm text-[var(--text-strong)]">
                     {formData.video ? formData.video.name : 'Select video file'}
                   </span>
                 </div>
@@ -339,12 +339,12 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 />
               </label>
               {formData.video && (
-                <div className="text-sm text-slate-600">
+                <div className="text-sm text-[var(--text-strong)]">
                   {formatBytes(formData.video.size)}
                 </div>
               )}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Select a video file from your computer to upload
             </p>
           </div>
@@ -357,13 +357,13 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 htmlFor="thumbnail"
                 className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                   formData.thumbnail
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                    ? 'border-green-500 bg-[#1a2e1a]'
+                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
                 } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <Upload className="w-5 h-5 text-slate-600" />
-                  <span className="text-sm text-slate-600">
+                  <Upload className="w-5 h-5 text-[var(--text-strong)]" />
+                  <span className="text-sm text-[var(--text-strong)]">
                     {formData.thumbnail ? formData.thumbnail.name : 'Select thumbnail image'}
                   </span>
                 </div>
@@ -377,7 +377,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 />
               </label>
               {thumbnailPreview && (
-                <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={thumbnailPreview}
@@ -387,7 +387,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 </div>
               )}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Optional poster image shown before video playback (JPG, PNG, WebP, GIF up to {formatBytes(IMAGE_MAX_SIZE_BYTES)})
             </p>
           </div>
@@ -417,19 +417,19 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           {isUploading && uploadProgress > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600">Upload Progress</span>
-                <span className="font-medium text-slate-900">{uploadProgress}%</span>
+                <span className="text-[var(--text-strong)]">Upload Progress</span>
+                <span className="font-medium text-[var(--text-strong)]">{uploadProgress}%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
+              <div className="w-full bg-[#2a2520] rounded-full h-2">
                 <div 
-                  className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gold-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
             </div>
           )}
           {isUploading && thumbnailUploadProgress > 0 && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Thumbnail upload: {thumbnailUploadProgress}%
             </p>
           )}
@@ -437,7 +437,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-6 text-base"
+            className="w-full bg-gold-500 hover:bg-gold-600 text-white font-medium py-6 text-base"
             disabled={isUploading || !formData.title || !formData.video}
           >
             {isUploading ? (
@@ -453,7 +453,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
 
         {/* Status Messages */}
         {uploadStatus === 'success' && (
-          <div className="mt-4 flex items-center justify-between gap-3 text-green-600">
+          <div className="mt-4 flex items-center justify-between gap-3 text-[#4a7c3f]">
             <div className="flex items-center space-x-2">
               <CheckCircle className="w-5 h-5" />
               <span>
@@ -467,7 +467,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 setUploadProgress(0)
                 setLastUploadedTitle(null)
               }}
-              className="text-green-700 hover:text-green-900"
+              className="text-[#4a7c3f] hover:text-[#4a7c3f]"
               aria-label="Dismiss lesson uploaded confirmation"
             >
               <X className="h-4 w-4" />
@@ -476,7 +476,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
         )}
 
         {uploadStatus === 'error' && errorMessage && (
-          <div className="mt-4 flex items-center space-x-2 text-red-600">
+          <div className="mt-4 flex items-center space-x-2 text-[#c03030]">
             <AlertCircle className="w-5 h-5" />
             <span>{errorMessage}</span>
           </div>

@@ -12,7 +12,7 @@ export default function NewContentPage() {
         <h1 className="heading-two-tone text-3xl mb-2">
           <span>Create</span> <span className="gold">Content</span>
         </h1>
-        <p className="text-slate-600">Add new research, signals, or resources</p>
+        <p className="text-[var(--text-strong)]">Add new research, signals, or resources</p>
       </div>
 
       {/* Form */}

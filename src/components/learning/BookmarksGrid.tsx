@@ -47,9 +47,9 @@ export function BookmarksGrid({
       <div className={cn('text-center py-12 px-6', className)}>
         <div className="max-w-md mx-auto">
           <div className="mb-6">
-            <Bookmark className="h-16 w-16 text-slate-400 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Build Your Knowledge Library</h3>
-            <p className="text-slate-600 mb-6">Save articles, videos, and resources you want to revisit later. Your personal learning collection starts here.</p>
+            <Bookmark className="h-16 w-16 text-[var(--text-muted)] mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+            <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">Build Your Knowledge Library</h3>
+            <p className="text-[var(--text-strong)] mb-6">Save articles, videos, and resources you want to revisit later. Your personal learning collection starts here.</p>
           </div>
           
           <div className="space-y-3">
@@ -60,7 +60,7 @@ export function BookmarksGrid({
               </Link>
             </Button>
             
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-[var(--text-muted)]">
               <p>📚 Save articles and research</p>
               <p>🎥 Bookmark video content</p>
               <p>🔖 Organize your favorites</p>
@@ -80,7 +80,7 @@ export function BookmarksGrid({
       case 'episode':
         return <Play className="h-4 w-4 text-purple-500" />
       default:
-        return <Bookmark className="h-4 w-4 text-slate-500" />
+        return <Bookmark className="h-4 w-4 text-[var(--text-muted)]" />
     }
   }
 
@@ -98,11 +98,11 @@ export function BookmarksGrid({
   const getContentTypeColor = (type: string) => {
     switch (type) {
       case 'content':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]'
       case 'episode':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
+        return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
       default:
-        return 'bg-slate-100 text-slate-800 border-slate-200'
+        return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
@@ -129,13 +129,13 @@ export function BookmarksGrid({
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Research': return 'bg-green-100 text-green-800 border-green-200'
-      case 'Tutorial': return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'News': return 'bg-orange-100 text-orange-800 border-orange-200'
-      case 'Strategy': return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'Technical': return 'bg-red-100 text-red-800 border-red-200'
-      case 'Video': return 'bg-purple-100 text-purple-800 border-purple-200'
-      default: return 'bg-slate-100 text-slate-800 border-slate-200'
+      case 'Research': return 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]'
+      case 'Tutorial': return 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]'
+      case 'News': return 'bg-[#2a2018] text-[#d97706] border-[#2a2018]'
+      case 'Strategy': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
+      case 'Technical': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
+      case 'Video': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
+      default: return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
@@ -181,7 +181,7 @@ export function BookmarksGrid({
                   className="w-full h-32 object-cover rounded-lg group-hover:brightness-110 transition-all duration-300"
                 />
               ) : (
-                <div className="w-full h-32 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center group-hover:from-slate-200 group-hover:to-slate-300 transition-all duration-300">
+                <div className="w-full h-32 bg-gradient-to-br from-[#1a1815] to-[#2a2520] rounded-lg flex items-center justify-center group-hover:from-[#2a2520] group-hover:to-[#2a2520] transition-all duration-300">
                   <div className="group-hover:scale-110 transition-transform duration-300">
                     {getContentIcon(bookmark.type)}
                   </div>
@@ -204,25 +204,25 @@ export function BookmarksGrid({
                 <button
                   onClick={() => handleRemoveBookmark(bookmark)}
                   disabled={removingId === bookmark.slug}
-                  className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full p-1.5 shadow-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110 transform-gpu"
+                  className="absolute top-2 right-2 bg-[var(--bg-panel)] hover:bg-[#1a1815] rounded-full p-1.5 shadow-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110 transform-gpu"
                   title="Remove bookmark"
                 >
-                  <X className="h-3 w-3 text-slate-600" />
+                  <X className="h-3 w-3 text-[var(--text-strong)]" />
                 </button>
               )}
             </div>
 
             {/* Content info */}
             <div className="space-y-2">
-              <h3 className="font-semibold text-slate-900 text-sm line-clamp-2 group-hover:text-blue-700 transition-colors duration-300">
+              <h3 className="font-semibold text-[var(--text-strong)] text-sm line-clamp-2 group-hover:text-[#5b8dd9] transition-colors duration-300">
                 {bookmark.title}
               </h3>
               
-              <div className="flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-600 transition-colors duration-300">
+              <div className="flex items-center justify-between text-xs text-[var(--text-muted)] group-hover:text-[var(--text-strong)] transition-colors duration-300">
                 <span>Saved {formatDate(bookmark.savedAt)}</span>
                 <Link 
                   href={bookmark.type === 'content' ? `/content/${bookmark.slug}` : `/crypto-compass/${bookmark.slug}`}
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors duration-300 group-hover:scale-105 transform-gpu"
+                  className="flex items-center gap-1 text-blue-600 hover:text-[#5b8dd9] transition-colors duration-300 group-hover:scale-105 transform-gpu"
                 >
                   <span>View</span>
                   <ExternalLink className="h-3 w-3" />

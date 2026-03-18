@@ -8,7 +8,7 @@ export default async function DashboardPage() {
   await requireActiveSubscription()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
@@ -32,11 +32,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* Welcome Message */}
-      <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">
+      <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-8 text-center">
+        <h2 className="text-2xl font-bold text-[var(--text-strong)] mb-4">
           Welcome to your Dashboard!
         </h2>
-        <p className="text-slate-600 mb-6">
+        <p className="text-[var(--text-strong)] mb-6">
           You&apos;re successfully logged in. Choose from the options above to get started.
         </p>
       </div>

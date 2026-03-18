@@ -18,10 +18,10 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#2e1a1a]">
             <AlertTriangle className="h-6 w-6 text-red-600" />
           </div>
           <CardTitle className="text-xl">Something went wrong</CardTitle>
@@ -31,7 +31,7 @@ export default function Error({
         </CardHeader>
         <CardContent className="space-y-4">
           {error.digest && (
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-[var(--text-muted)]">
               Error ID: {error.digest}
             </div>
           )}

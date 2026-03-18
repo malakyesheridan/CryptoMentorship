@@ -304,7 +304,7 @@ export function AffiliatePayouts() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--text-muted)]" />
       </div>
     )
   }
@@ -317,7 +317,7 @@ export function AffiliatePayouts() {
         </CardHeader>
         <CardContent>
           {readyAffiliates.length === 0 ? (
-            <p className="text-sm text-slate-600">No payable referrals right now.</p>
+            <p className="text-sm text-[var(--text-strong)]">No payable referrals right now.</p>
           ) : (
             <div className="space-y-4">
               {readyAffiliates.map((affiliate) => {
@@ -330,7 +330,7 @@ export function AffiliatePayouts() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="font-medium">{affiliate.referrer.name || 'Unnamed'}</p>
-                        <p className="text-sm text-slate-500">{affiliate.referrer.email || '--'}</p>
+                        <p className="text-sm text-[var(--text-muted)]">{affiliate.referrer.email || '--'}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">{affiliate.stats.payable} payable</Badge>
@@ -346,13 +346,13 @@ export function AffiliatePayouts() {
                     {isExpanded && (
                       <div className="mt-4">
                         {payable.length === 0 ? (
-                          <p className="text-sm text-slate-500">No payable referrals loaded.</p>
+                          <p className="text-sm text-[var(--text-muted)]">No payable referrals loaded.</p>
                         ) : (
                           <>
                             <div className="overflow-x-auto">
                               <table className="w-full text-sm">
                                 <thead>
-                                  <tr className="border-b border-[color:var(--border-subtle)] text-left text-slate-600">
+                                  <tr className="border-b border-[color:var(--border-subtle)] text-left text-[var(--text-strong)]">
                                     <th className="py-2 px-3">Select</th>
                                     <th className="py-2 px-3">Referred</th>
                                     <th className="py-2 px-3">Payable At</th>
@@ -414,9 +414,9 @@ export function AffiliatePayouts() {
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm text-slate-600">Affiliate</label>
+              <label className="text-sm text-[var(--text-strong)]">Affiliate</label>
               <select
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-panel)] px-3 py-2 text-sm"
                 value={manualReferrerId}
                 onChange={(event) => setManualReferrerId(event.target.value)}
               >
@@ -429,7 +429,7 @@ export function AffiliatePayouts() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-slate-600">Amount (AUD)</label>
+              <label className="text-sm text-[var(--text-strong)]">Amount (AUD)</label>
               <Input
                 type="number"
                 min="0"
@@ -440,7 +440,7 @@ export function AffiliatePayouts() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-slate-600">Date</label>
+              <label className="text-sm text-[var(--text-strong)]">Date</label>
               <Input
                 type="date"
                 value={manualDate}
@@ -448,9 +448,9 @@ export function AffiliatePayouts() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-slate-600">Frequency (optional)</label>
+              <label className="text-sm text-[var(--text-strong)]">Frequency (optional)</label>
               <select
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                className="w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-panel)] px-3 py-2 text-sm"
                 value={manualFrequency}
                 onChange={(event) => setManualFrequency(event.target.value)}
               >
@@ -466,10 +466,10 @@ export function AffiliatePayouts() {
                 checked={manualReminder}
                 onChange={(event) => setManualReminder(event.target.checked)}
               />
-              <span className="text-sm text-slate-600">Enable reminder</span>
+              <span className="text-sm text-[var(--text-strong)]">Enable reminder</span>
             </div>
             <div className="space-y-2 lg:col-span-3">
-              <label className="text-sm text-slate-600">Notes</label>
+              <label className="text-sm text-[var(--text-strong)]">Notes</label>
               <Textarea
                 value={manualNotes}
                 onChange={(event) => setManualNotes(event.target.value)}
@@ -488,7 +488,7 @@ export function AffiliatePayouts() {
           <div className="mt-6 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[color:var(--border-subtle)] text-left text-slate-600">
+                <tr className="border-b border-[color:var(--border-subtle)] text-left text-[var(--text-strong)]">
                   <th className="py-2 px-3">Affiliate</th>
                   <th className="py-2 px-3">Amount</th>
                   <th className="py-2 px-3">Scheduled</th>
@@ -531,7 +531,7 @@ export function AffiliatePayouts() {
                     <td className="py-2 px-3">
                       {editingManualId === payout.id ? (
                         <select
-                          className="w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-sm"
+                          className="w-full rounded-md border border-[var(--border-subtle)] bg-[var(--bg-panel)] px-2 py-1 text-sm"
                           value={editFrequency}
                           onChange={(event) => setEditFrequency(event.target.value)}
                         >
@@ -555,7 +555,7 @@ export function AffiliatePayouts() {
                         payout.reminderEnabled ? 'On' : 'Off'
                       )}
                     </td>
-                    <td className="py-2 px-3 text-slate-600">
+                    <td className="py-2 px-3 text-[var(--text-strong)]">
                       {editingManualId === payout.id ? (
                         <Textarea
                           value={editNotes}
@@ -591,7 +591,7 @@ export function AffiliatePayouts() {
                 ))}
                 {manualPayouts.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-6 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="py-6 text-center text-sm text-[var(--text-muted)]">
                       No manual payouts scheduled.
                     </td>
                   </tr>
@@ -622,7 +622,7 @@ export function AffiliatePayouts() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[color:var(--border-subtle)] text-left text-slate-600">
+                <tr className="border-b border-[color:var(--border-subtle)] text-left text-[var(--text-strong)]">
                   <th className="py-2 px-3">Batch</th>
                   <th className="py-2 px-3">Affiliate</th>
                   <th className="py-2 px-3">Total</th>
@@ -671,7 +671,7 @@ export function AffiliatePayouts() {
                 ))}
                 {payouts.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="py-8 text-center text-sm text-[var(--text-muted)]">
                       No payout batches found.
                     </td>
                   </tr>

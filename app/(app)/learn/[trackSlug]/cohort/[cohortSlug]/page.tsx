@@ -158,7 +158,7 @@ export default async function CohortDashboardPage({
   const availableLessons = cohort.releases.filter(release => release.lesson.publishedAt)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -171,7 +171,7 @@ export default async function CohortDashboardPage({
             </Link>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-slate-900">{cohort.title}</h1>
+                <h1 className="text-3xl font-bold text-[var(--text-strong)]">{cohort.title}</h1>
                 <Badge 
                   variant={isActive ? 'default' : isUpcoming ? 'secondary' : 'outline'}
                   className={isActive ? 'bg-green-600' : ''}
@@ -179,43 +179,43 @@ export default async function CohortDashboardPage({
                   {isActive ? 'Active' : isUpcoming ? 'Upcoming' : 'Past'}
                 </Badge>
               </div>
-              <p className="text-slate-600">{cohort.description}</p>
+              <p className="text-[var(--text-muted)]">{cohort.description}</p>
             </div>
           </div>
 
           {/* Cohort Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Total Lessons</p>
-                  <p className="text-2xl font-bold text-slate-900">{cohort.releases.length}</p>
+                  <p className="text-sm font-medium text-[var(--text-muted)]">Total Lessons</p>
+                  <p className="text-2xl font-bold text-[var(--text-strong)]">{cohort.releases.length}</p>
                 </div>
-                <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 bg-[#1a1e2e] rounded-lg flex items-center justify-center">
                   <BookOpen className="h-4 w-4 text-blue-600" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Available</p>
+                  <p className="text-sm font-medium text-[var(--text-muted)]">Available</p>
                   <p className="text-2xl font-bold text-green-600">{availableLessons.length}</p>
                 </div>
-                <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 bg-[#1a2e1a] rounded-lg flex items-center justify-center">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Members</p>
+                  <p className="text-sm font-medium text-[var(--text-muted)]">Members</p>
                   <p className="text-2xl font-bold text-purple-600">{cohort.enrollments.length}</p>
                 </div>
-                <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 bg-[#1a1e2e] rounded-lg flex items-center justify-center">
                   <Users className="h-4 w-4 text-purple-600" />
                 </div>
               </div>
@@ -224,14 +224,14 @@ export default async function CohortDashboardPage({
 
           {/* Progress Bar */}
           {isEnrolled && userProgress && (
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-8">
+            <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)] mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Your Progress</h3>
-                <span className="text-sm text-slate-600">
+                <h3 className="text-lg font-semibold text-[var(--text-strong)]">Your Progress</h3>
+                <span className="text-sm text-[var(--text-muted)]">
                   {userProgress.completedLessons} of {userProgress.totalLessons} lessons completed
                 </span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-3">
+              <div className="w-full bg-[#2a2520] rounded-full h-3">
                 <div 
                   className="bg-gold-600 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${userProgress.progressPct}%` }}
@@ -268,7 +268,7 @@ export default async function CohortDashboardPage({
 
         {/* Schedule Timeline */}
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-slate-900">Lessons</h2>
+          <h2 className="text-xl font-semibold text-[var(--text-strong)]">Lessons</h2>
           
           {/* Available Lessons */}
           {availableLessons.length > 0 && (
@@ -287,16 +287,16 @@ export default async function CohortDashboardPage({
                   {availableLessons.map((release) => (
                     <div
                       key={release.id}
-                      className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-[#1a2e1a] border border-[#4a7c3f] rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <div className="h-8 w-8 bg-[#1a2e1a] rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         </div>
                         
                         <div>
-                          <h4 className="font-medium text-slate-900">{release.lesson.title}</h4>
-                          <div className="flex items-center gap-4 text-sm text-slate-600">
+                          <h4 className="font-medium text-[var(--text-strong)]">{release.lesson.title}</h4>
+                          <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
                             {release.lesson.durationMin && (
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -327,9 +327,9 @@ export default async function CohortDashboardPage({
           {cohort.releases.length === 0 && (
             <Card>
               <CardContent className="text-center py-12">
-                <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">No Lessons Scheduled</h3>
-                <p className="text-slate-600">
+                <Calendar className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">No Lessons Scheduled</h3>
+                <p className="text-[var(--text-muted)]">
                   This cohort doesn&apos;t have any lessons scheduled yet.
                 </p>
               </CardContent>

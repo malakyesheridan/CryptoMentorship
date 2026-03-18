@@ -150,7 +150,7 @@ function SubscribePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       {/* Logo */}
       <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12">
         <div className="flex justify-center mb-6">
@@ -167,33 +167,33 @@ function SubscribePageContent() {
       {(isRequired || isNewUser || error) && (
         <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           {isRequired && (
-            <div className="max-w-2xl mx-auto mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
+            <div className="max-w-2xl mx-auto mb-6 p-4 bg-[#2a2418] border border-[var(--border-subtle)] rounded-lg flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-left">
-                <p className="font-semibold text-yellow-900 mb-1">Subscription Required</p>
-                <p className="text-sm text-yellow-800">
+                <p className="font-semibold text-[var(--text-strong)] mb-1">Subscription Required</p>
+                <p className="text-sm text-[var(--text-muted)]">
                   You need an active subscription to access the platform. Please choose a plan below to continue.
                 </p>
               </div>
             </div>
           )}
           {isNewUser && (
-            <div className="max-w-2xl mx-auto mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 font-medium">
+            <div className="max-w-2xl mx-auto mb-6 p-4 bg-[#1a2e1a] border border-[var(--border-subtle)] rounded-lg">
+              <p className="text-[#4a7c3f] font-medium">
                 Welcome! Your account has been created. Choose a subscription plan to get started.
               </p>
             </div>
           )}
           {error && (
-            <div className="max-w-2xl mx-auto mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="max-w-2xl mx-auto mb-8 p-4 bg-[#2e1a1a] border border-[var(--border-subtle)] rounded-lg flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-[#c03030] flex-shrink-0 mt-0.5" />
               <div className="text-left flex-1">
-                <p className="font-semibold text-red-900 mb-1">Error</p>
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="font-semibold text-[#c03030] mb-1">Error</p>
+                <p className="text-sm text-[var(--text-muted)]">{error}</p>
               </div>
               <button
                 onClick={() => setError(null)}
-                className="text-red-600 hover:text-red-800 text-xl leading-none"
+                className="text-[#c03030] hover:text-red-400 text-xl leading-none"
                 aria-label="Close error"
               >
                 ×
@@ -214,42 +214,42 @@ function SubscribePageContent() {
             return (
               <div
                 key={plan.tier}
-                className="h-full flex flex-col rounded-2xl border-2 border-yellow-400 shadow-sm bg-gradient-to-b from-yellow-50/50 to-white backdrop-blur-sm relative"
+                className="h-full flex flex-col rounded-2xl border-2 border-yellow-400 shadow-sm bg-[var(--bg-panel)] backdrop-blur-sm relative"
               >
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <span className="rounded-full border px-3 py-1 text-xs font-semibold bg-yellow-400 border-yellow-500 text-slate-900 shadow-sm">
+                  <span className="rounded-full border px-3 py-1 text-xs font-semibold bg-yellow-400 border-yellow-500 text-[var(--text-strong)] shadow-sm">
                     Founders Tier
                   </span>
                 </div>
                 <div className="p-6 lg:p-8 grow">
                   {/* Icon */}
                   <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 rounded-xl bg-yellow-100 border-2 border-yellow-300 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-xl bg-[#2a2418] border-2 border-yellow-300 flex items-center justify-center">
                       <Icon className="h-8 w-8 text-yellow-600" strokeWidth={2} />
                     </div>
                   </div>
 
                   {/* Title & Description */}
                   <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
-                    <p className="text-sm text-slate-600">{plan.description}</p>
+                    <h3 className="text-2xl font-bold text-[var(--text-strong)] mb-2">{plan.name}</h3>
+                    <p className="text-sm text-[var(--text-muted)]">{plan.description}</p>
                   </div>
 
                   {/* Price */}
                   <div className="text-center mb-8">
                     {loadingPrices ? (
                       <div className="h-12 flex items-center justify-center">
-                        <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                        <Loader2 className="h-5 w-5 animate-spin text-[var(--text-muted)]" />
                       </div>
                     ) : priceData ? (
                       <div>
                         <div className="text-4xl font-bold text-yellow-600 mb-1">
                           {priceData.formatted}
                         </div>
-                        <div className="text-sm text-slate-500">/ month</div>
+                        <div className="text-sm text-[var(--text-muted)]">/ month</div>
                       </div>
                     ) : (
-                      <div className="text-slate-400 text-sm">$300 / month</div>
+                      <div className="text-[var(--text-muted)] text-sm">$300 / month</div>
                     )}
                   </div>
 
@@ -258,7 +258,7 @@ function SubscribePageContent() {
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         <Check className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" strokeWidth={2.5} />
-                        <span className="text-slate-700 text-sm leading-relaxed">
+                        <span className="text-[var(--text-muted)] text-sm leading-relaxed">
                           {feature}
                         </span>
                       </li>
@@ -271,7 +271,7 @@ function SubscribePageContent() {
                   <Button
                     onClick={() => handleSubscribe(plan.tier)}
                     disabled={loading === plan.tier || !priceData}
-                    className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white"
+                    className="w-full rounded-xl bg-[var(--bg-panel)] hover:bg-[#1a1815] text-[var(--text-strong)] border border-[var(--border-subtle)]"
                     variant="default"
                   >
                     {loading === plan.tier ? (
@@ -290,7 +290,7 @@ function SubscribePageContent() {
         </div>
 
         {/* Footer Disclaimer */}
-        <p className="mt-8 text-center text-sm text-neutral-600">
+        <p className="mt-8 text-center text-sm text-[var(--text-muted)]">
           Founders pricing applies to this subscription only. Plans auto-renew monthly and can be canceled anytime.
         </p>
       </section>
@@ -301,11 +301,11 @@ function SubscribePageContent() {
 export default function SubscribePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center p-4">
         <div className="max-w-md w-full">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 text-center shadow-sm">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-slate-400" />
-            <p className="text-slate-600">Loading...</p>
+          <div className="bg-[var(--bg-panel)] backdrop-blur-sm rounded-2xl p-8 text-center shadow-sm border border-[var(--border-subtle)]">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[var(--text-muted)]" />
+            <p className="text-[var(--text-muted)]">Loading...</p>
           </div>
         </div>
       </div>

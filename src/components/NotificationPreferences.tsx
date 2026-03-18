@@ -67,7 +67,7 @@ export function NotificationPreferences() {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-red-600">Failed to load notification preferences</p>
+          <p className="text-[#c03030]">Failed to load notification preferences</p>
         </CardContent>
       </Card>
     )
@@ -78,10 +78,10 @@ export function NotificationPreferences() {
       <Card>
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+            <div className="h-4 bg-[#2a2520] rounded w-1/4"></div>
             <div className="space-y-2">
-              <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-              <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+              <div className="h-4 bg-[#2a2520] rounded w-3/4"></div>
+              <div className="h-4 bg-[#2a2520] rounded w-1/2"></div>
             </div>
           </div>
         </CardContent>
@@ -106,7 +106,7 @@ export function NotificationPreferences() {
               <Label htmlFor="inApp" className="text-base font-medium">
                 In-App Notifications
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 Show notifications in the app and browser
               </p>
             </div>
@@ -122,7 +122,7 @@ export function NotificationPreferences() {
               <Label htmlFor="email" className="text-base font-medium">
                 Email Notifications
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 Receive notification emails
               </p>
             </div>
@@ -148,7 +148,7 @@ export function NotificationPreferences() {
               <Label htmlFor="onPortfolio" className="text-base font-medium">
                 Portfolio Updates
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 Daily portfolio updates and signals
               </p>
             </div>
@@ -165,7 +165,7 @@ export function NotificationPreferences() {
               <Label htmlFor="onCryptoCompass" className="text-base font-medium">
                 Crypto Compass
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 New episodes and weekly updates
               </p>
             </div>
@@ -182,7 +182,7 @@ export function NotificationPreferences() {
               <Label htmlFor="onLearning" className="text-base font-medium">
                 Learning Hub
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 New tracks, lessons, and resources
               </p>
             </div>
@@ -199,7 +199,7 @@ export function NotificationPreferences() {
               <Label htmlFor="onMention" className="text-base font-medium">
                 Community Mentions
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 When someone mentions you in community
               </p>
             </div>
@@ -216,7 +216,7 @@ export function NotificationPreferences() {
               <Label htmlFor="onReply" className="text-base font-medium">
                 Community Replies
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 When someone replies to your messages
               </p>
             </div>
@@ -243,7 +243,7 @@ export function NotificationPreferences() {
               <Label htmlFor="digestEnabled" className="text-base font-medium">
                 Email Digest
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-[var(--text-strong)]">
                 Receive a summary of activity via email (coming soon)
               </p>
             </div>
@@ -255,7 +255,7 @@ export function NotificationPreferences() {
             />
           </div>
 
-          <div className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">
+          <div className="text-sm text-[var(--text-muted)] bg-[#1a1815] p-3 rounded-lg">
             <strong>Coming Soon:</strong> Email digest notifications will be available in a future update.
             You&apos;ll be able to receive daily or weekly summaries of new content and mentions.
           </div>

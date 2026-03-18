@@ -23,44 +23,44 @@ export function Topbar({ onMenuClick, isMenuOpen }: TopbarProps) {
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur border-b border-[color:var(--border-subtle)] relative z-50">
+    <div className="relative z-50" style={{ backgroundColor: 'var(--bg-panel)', borderBottom: '1px solid var(--border-subtle)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Mobile menu button */}
           <button
             onClick={onMenuClick}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-[#1a1815] transition-colors"
             aria-label="Toggle menu"
           >
             {isMenuOpen ? (
-              <X className="h-6 w-6 text-slate-700" />
+              <X className="h-6 w-6 text-[var(--text-strong)]" />
             ) : (
-              <Menu className="h-6 w-6 text-slate-700" />
+              <Menu className="h-6 w-6 text-[var(--text-strong)]" />
             )}
           </button>
-          
+
           <div className="flex-1 md:flex-none">
             {/* Ticker removed */}
           </div>
-          
+
           <div className="ml-4 flex items-center gap-2">
             <NotificationDropdown />
             <DropdownMenu>
-              <DropdownMenuTrigger 
+              <DropdownMenuTrigger
                 data-testid="user-menu"
-                className="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-100 transition-colors"
+                className="flex items-center space-x-3 p-2 rounded-xl hover:bg-[#1a1815] transition-colors"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={session?.user?.image || ''} />
-                  <AvatarFallback className="bg-gold-500 text-white text-sm">
+                  <AvatarFallback className="bg-[var(--gold-400)] text-white text-sm">
                     {session?.user?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-left hidden sm:block">
-                  <p className="text-sm font-medium text-slate-800">
+                  <p className="text-sm font-medium text-[var(--text-strong)]">
                     {session?.user?.name || 'User'}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--text-muted)]">
                     {session?.user?.role || 'guest'}
                   </p>
                 </div>

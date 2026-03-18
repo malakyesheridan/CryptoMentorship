@@ -106,9 +106,9 @@ export function EnhancedPerformanceCharts({
   if (!data || !data.stats || !data.equitySeries || !data.drawdownSeries || !data.monthlyReturns) {
     return (
       <div className="text-center py-12">
-        <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Performance Data Unavailable</h3>
-        <p className="text-slate-600">
+        <BarChart3 className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">Performance Data Unavailable</h3>
+        <p className="text-[var(--text-muted)]">
           Unable to load performance data. Please try again later.
         </p>
       </div>
@@ -148,8 +148,8 @@ export function EnhancedPerformanceCharts({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600">Time Range:</span>
-          <span className="px-2 py-1 bg-slate-100 rounded text-sm font-medium">{scope}</span>
+          <span className="text-sm text-[var(--text-muted)]">Time Range:</span>
+          <span className="px-2 py-1 bg-[#1a1815] rounded text-sm font-medium">{scope}</span>
         </div>
       </div>
 
@@ -188,14 +188,14 @@ export function EnhancedPerformanceCharts({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Total Return</p>
+                    <p className="text-sm font-medium text-[var(--text-muted)]">Total Return</p>
                     <p className={`text-2xl font-bold ${
-                      totalReturn >= 0 ? 'text-green-600' : 'text-red-600'
+                      totalReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'
                     }`}>
                       {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
                     </p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-slate-400" />
+                  <TrendingUp className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
               </CardContent>
             </Card>
@@ -204,12 +204,12 @@ export function EnhancedPerformanceCharts({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Max Drawdown</p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-sm font-medium text-[var(--text-muted)]">Max Drawdown</p>
+                    <p className="text-2xl font-bold text-[#c03030]">
                       -{maxDrawdown.toFixed(2)}%
                     </p>
                   </div>
-                  <TrendingDown className="h-8 w-8 text-slate-400" />
+                  <TrendingDown className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
               </CardContent>
             </Card>
@@ -218,12 +218,12 @@ export function EnhancedPerformanceCharts({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Win Rate</p>
+                    <p className="text-sm font-medium text-[var(--text-muted)]">Win Rate</p>
                     <p className="text-2xl font-bold text-blue-600">
                       {winRate.toFixed(1)}%
                     </p>
                   </div>
-                  <Target className="h-8 w-8 text-slate-400" />
+                  <Target className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
               </CardContent>
             </Card>
@@ -232,12 +232,12 @@ export function EnhancedPerformanceCharts({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Total Trades</p>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-sm font-medium text-[var(--text-muted)]">Total Trades</p>
+                    <p className="text-2xl font-bold text-[var(--text-strong)]">
                       {data.tradeStats.totalTrades || 0}
                     </p>
                   </div>
-                  <BarChart3 className="h-8 w-8 text-slate-400" />
+                  <BarChart3 className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
               </CardContent>
             </Card>

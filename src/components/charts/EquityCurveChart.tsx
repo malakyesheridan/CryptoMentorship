@@ -58,7 +58,7 @@ export function EquityCurveChart({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
+              <TrendingUp className="h-5 w-5 text-[#4a7c3f]" />
               {title}
             </CardTitle>
             <CardDescription>{description}</CardDescription>
@@ -66,16 +66,16 @@ export function EquityCurveChart({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4 text-sm">
               <div className="text-right">
-                <div className={`font-semibold ${totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`font-semibold ${totalReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
                   {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
                 </div>
-                <div className="text-slate-500">Total Return</div>
+                <div className="text-[var(--text-muted)]">Total Return</div>
               </div>
               <div className="text-right">
-                <div className="font-semibold text-red-600">
+                <div className="font-semibold text-[#c03030]">
                   -{maxDrawdown.toFixed(2)}%
                 </div>
-                <div className="text-slate-500">Max Drawdown</div>
+                <div className="text-[var(--text-muted)]">Max Drawdown</div>
               </div>
             </div>
             <ChartExport chartRef={chartRef} filename={`equity-curve-${Date.now()}`} />
@@ -86,24 +86,24 @@ export function EquityCurveChart({
         <div ref={chartRef}>
           <ResponsiveContainer width="100%" height={height}>
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
             <XAxis 
               dataKey="date" 
               tickFormatter={(value) => format(new Date(value), 'MMM dd')}
-              stroke="#64748b"
+              stroke="#8a7d6b"
               fontSize={12}
             />
             <YAxis 
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-              stroke="#64748b"
+              stroke="#8a7d6b"
               fontSize={12}
             />
             <Tooltip
               formatter={(value: number) => [formatTooltipValue(value), 'Equity']}
               labelFormatter={(label) => formatTooltipDate(label)}
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e2e8f0',
+                backgroundColor: '#141210',
+                border: '1px solid #2a2520',
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
               }}
@@ -111,7 +111,7 @@ export function EquityCurveChart({
             {showReferenceLine && (
               <ReferenceLine 
                 y={referenceValue} 
-                stroke="#64748b" 
+                stroke="#8a7d6b" 
                 strokeDasharray="2 2" 
                 label={{ value: "Starting Value", position: "top" }}
               />

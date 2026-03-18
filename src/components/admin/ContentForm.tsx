@@ -134,7 +134,7 @@ export function ContentForm({ initialData }: ContentFormProps) {
           <select 
             value={formData.kind} 
             onChange={(e) => setFormData(prev => ({ ...prev, kind: e.target.value }))}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="research">Research</option>
             <option value="signal">Trading Signal</option>
@@ -147,7 +147,7 @@ export function ContentForm({ initialData }: ContentFormProps) {
           <select 
             value={formData.minTier} 
             onChange={(e) => setFormData(prev => ({ ...prev, minTier: e.target.value }))}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">No requirement</option>
             <option value="T1">T1</option>
@@ -197,7 +197,7 @@ export function ContentForm({ initialData }: ContentFormProps) {
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="ml-1 hover:text-red-600"
+                className="ml-1 hover:text-[#c03030]"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -215,14 +215,14 @@ export function ContentForm({ initialData }: ContentFormProps) {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="locked">Lock Content</Label>
-              <p className="text-sm text-slate-500">Require membership to view</p>
+              <p className="text-sm text-[var(--text-muted)]">Require membership to view</p>
             </div>
             <input
               type="checkbox"
               id="locked"
               checked={formData.locked}
               onChange={(e) => setFormData(prev => ({ ...prev, locked: e.target.checked }))}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[var(--border-subtle)] rounded"
             />
           </div>
         </CardContent>

@@ -82,7 +82,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const questionCount = event.questions.length
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <Link href="/admin/events">
@@ -122,29 +122,29 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-slate-900 mb-2">Description</h4>
-                  <p className="text-slate-600">{event.description || 'No description provided'}</p>
+                  <h4 className="font-medium text-[var(--text-strong)] mb-2">Description</h4>
+                  <p className="text-[var(--text-strong)]">{event.description || 'No description provided'}</p>
                 </div>
                 
                 {event.summary && (
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">Summary</h4>
-                    <p className="text-slate-600">{event.summary}</p>
+                    <h4 className="font-medium text-[var(--text-strong)] mb-2">Summary</h4>
+                    <p className="text-[var(--text-strong)]">{event.summary}</p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">
+                    <Calendar className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-strong)]">
                       {formatDate(event.startAt)} at {formatTime(event.startAt)}
                     </span>
                   </div>
                   
                   {event.startAt && event.endAt && (
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-slate-500" />
-                      <span className="text-sm text-slate-600">
+                      <Clock className="h-4 w-4 text-[var(--text-muted)]" />
+                      <span className="text-sm text-[var(--text-strong)]">
                         {Math.round((new Date(event.endAt).getTime() - new Date(event.startAt).getTime()) / (1000 * 60))} minutes
                       </span>
                     </div>
@@ -152,19 +152,19 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   
                   {event.locationText && (
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-slate-500" />
-                      <span className="text-sm text-slate-600">{event.locationText}</span>
+                      <MapPin className="h-4 w-4 text-[var(--text-muted)]" />
+                      <span className="text-sm text-[var(--text-strong)]">{event.locationText}</span>
                     </div>
                   )}
                   
                   {event.joinUrl && (
                     <div className="flex items-center gap-2">
-                      <ExternalLink className="h-4 w-4 text-slate-500" />
+                      <ExternalLink className="h-4 w-4 text-[var(--text-muted)]" />
                       <a 
                         href={event.joinUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline"
+                        className="text-sm text-[#4a7cc3] hover:underline"
                       >
                         Join Event
                       </a>
@@ -193,12 +193,12 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   <div className="space-y-2">
                     {JSON.parse(event.resources).map((resource: any, index: number) => (
                       <div key={index} className="flex items-center gap-2">
-                        <ExternalLink className="h-4 w-4 text-slate-500" />
+                        <ExternalLink className="h-4 w-4 text-[var(--text-muted)]" />
                         <a 
                           href={resource.url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
+                          className="text-[#4a7cc3] hover:underline"
                         >
                           {resource.title}
                         </a>
@@ -220,16 +220,16 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">Attendees</span>
+                    <Users className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-strong)]">Attendees</span>
                   </div>
                   <span className="font-medium">{attendeeCount}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">Questions</span>
+                    <Calendar className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-strong)]">Questions</span>
                   </div>
                   <span className="font-medium">{questionCount}</span>
                 </div>

@@ -213,8 +213,8 @@ export function TrackEditModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-            <div className="h-64 bg-slate-200 rounded"></div>
+            <div className="h-8 bg-[#2a2520] rounded w-1/4"></div>
+            <div className="h-64 bg-[#2a2520] rounded"></div>
           </div>
         </DialogContent>
       </Dialog>
@@ -232,7 +232,7 @@ export function TrackEditModal({
         </DialogHeader>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-slate-200">
+        <div className="flex gap-2 mb-6 border-b border-[var(--border-subtle)]">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
@@ -243,7 +243,7 @@ export function TrackEditModal({
                 className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors border-b-2 ${
                   isActive
                     ? 'border-yellow-500 text-yellow-600'
-                    : 'border-transparent text-slate-600 hover:text-slate-900'
+                    : 'border-transparent text-[var(--text-strong)] hover:text-[var(--text-strong)]'
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -258,7 +258,7 @@ export function TrackEditModal({
           {activeTab === 'basic' && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Track Title *
                 </label>
                 <Input
@@ -270,7 +270,7 @@ export function TrackEditModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   URL Slug *
                 </label>
                 <Input
@@ -279,26 +279,26 @@ export function TrackEditModal({
                   placeholder="e.g., crypto-trading-foundations"
                   required
                 />
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                   This will be the URL: /learn/{formData.slug || 'track-slug'}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Summary
                 </label>
                 <textarea
                   value={formData.summary}
                   onChange={(e) => handleInputChange('summary', e.target.value)}
                   placeholder="Brief description of what students will learn..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-[var(--text-strong)] bg-[var(--bg-panel)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Cover Image
                 </label>
                 <div className="flex items-center gap-4">
@@ -306,13 +306,13 @@ export function TrackEditModal({
                     htmlFor="cover-image-edit"
                     className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                       formData.coverImage
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                        ? 'border-green-500 bg-[#1a2e1a]'
+                        : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
                     } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <Upload className="w-5 h-5 text-slate-600" />
-                      <span className="text-sm text-slate-600">
+                      <Upload className="w-5 h-5 text-[var(--text-strong)]" />
+                      <span className="text-sm text-[var(--text-strong)]">
                         {formData.coverImage ? formData.coverImage.name : 'Select new cover image'}
                       </span>
                     </div>
@@ -342,7 +342,7 @@ export function TrackEditModal({
                     />
                   </label>
                   {coverImagePreview && (
-                    <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                    <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={coverImagePreview}
@@ -354,16 +354,16 @@ export function TrackEditModal({
                 </div>
                 {coverUploadProgress > 0 && coverUploadProgress < 100 && (
                   <div className="mt-2">
-                    <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div className="w-full bg-[#2a2520] rounded-full h-2">
                       <div 
-                        className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                        className="bg-gold-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${coverUploadProgress}%` }}
                       />
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">Uploading cover image... {coverUploadProgress}%</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Uploading cover image... {coverUploadProgress}%</p>
                   </div>
                 )}
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   Upload a cover image from your computer (JPG, PNG, WebP up to 10MB). Leave empty to keep existing image.
                 </p>
               </div>
@@ -383,7 +383,7 @@ export function TrackEditModal({
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Upload Video Lessons</h3>
-                <p className="text-sm text-slate-600 mb-6">
+                <p className="text-sm text-[var(--text-strong)] mb-6">
                   Upload video files to create lessons in this track. Each video will become a lesson that students can watch.
                 </p>
                 <LessonVideoUpload 
@@ -411,7 +411,7 @@ export function TrackEditModal({
                                 <div>
                                   <p className="font-medium">{lesson.title}</p>
                                   {lesson.videoUrl && (
-                                    <p className="text-xs text-slate-500">Video: {lesson.videoUrl}</p>
+                                    <p className="text-xs text-[var(--text-muted)]">Video: {lesson.videoUrl}</p>
                                   )}
                                 </div>
                               </div>
@@ -485,14 +485,14 @@ export function TrackEditModal({
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-slate-400">No lessons in this section</p>
+                          <p className="text-sm text-[var(--text-muted)]">No lessons in this section</p>
                         )}
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 text-center py-8">
+                <p className="text-sm text-[var(--text-muted)] text-center py-8">
                   No sections yet. Click &quot;Add Section&quot; to create one.
                 </p>
               )}
@@ -503,26 +503,26 @@ export function TrackEditModal({
           {activeTab === 'settings' && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Minimum Tier Required
                 </label>
                 <select
                   value={formData.minTier}
                   onChange={(e) => handleInputChange('minTier', e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-[var(--text-strong)] bg-[var(--bg-panel)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                 >
                   <option value="guest">Guest</option>
                   <option value="member">Member</option>
                   <option value="editor">Editor</option>
                   <option value="admin">Admin</option>
                 </select>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                   Users must have at least this tier to access the track
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Publish Date
                 </label>
                 <Input
@@ -530,14 +530,14 @@ export function TrackEditModal({
                   onChange={(e) => handleInputChange('publishedAt', e.target.value)}
                   type="datetime-local"
                 />
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                   Leave empty to save as draft. Set a future date to schedule publishing.
                 </p>
               </div>
 
               <div className="flex items-center gap-2 text-sm">
                 {formData.publishedAt ? (
-                  <span className="flex items-center gap-1 text-green-600">
+                  <span className="flex items-center gap-1 text-[#4a7c3f]">
                     <Eye className="h-4 w-4" />
                     Will be published
                   </span>
@@ -552,7 +552,7 @@ export function TrackEditModal({
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+          <div className="flex items-center justify-between pt-6 border-t border-[var(--border-subtle)]">
             <Button
               type="button"
               variant="destructive"

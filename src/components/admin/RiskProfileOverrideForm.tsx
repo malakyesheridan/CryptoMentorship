@@ -56,11 +56,11 @@ export function RiskProfileOverrideForm({
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-slate-700">Override profile</label>
+        <label className="text-sm font-medium text-[var(--text-strong)]">Override profile</label>
         <select
           value={profile}
           onChange={(event) => setProfile(event.target.value as typeof profile)}
-          className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          className="mt-2 w-full rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-sm"
         >
           {PROFILE_OPTIONS.map((option) => (
             <option key={option} value={option}>
@@ -71,16 +71,16 @@ export function RiskProfileOverrideForm({
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700">Reason</label>
+        <label className="text-sm font-medium text-[var(--text-strong)]">Reason</label>
         <textarea
           value={reason}
           onChange={(event) => setReason(event.target.value)}
-          className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm min-h-[96px]"
+          className="mt-2 w-full rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-sm min-h-[96px]"
           placeholder="Why is this override needed?"
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-[#c03030]">{error}</p>}
       {status === 'saved' && <p className="text-sm text-emerald-600">Override saved.</p>}
 
       <Button onClick={handleSubmit} disabled={status === 'saving'}>

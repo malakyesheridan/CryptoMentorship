@@ -41,10 +41,10 @@ export function RiskOnboardingGate() {
       <RiskOnboardingModal open={open} onOpenChange={handleOpenChange} />
 
       {data?.status !== 'completed' && (
-        <div className="mb-8 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-8 rounded-2xl border border-[var(--gold-400)]/30 bg-[#2a2418] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-yellow-900">Get your recommended profile (2 mins)</p>
-            <p className="text-sm text-yellow-800">
+            <p className="text-sm font-semibold text-[var(--gold-400)]">Get your recommended profile (2 mins)</p>
+            <p className="text-sm text-[var(--gold-400)]">
               {data?.status === 'in_progress'
                 ? 'You are part-way through. Resume to get your recommendation.'
                 : 'Answer a few quick questions to personalize your daily updates.'}
@@ -57,13 +57,13 @@ export function RiskOnboardingGate() {
       )}
 
       {data?.status === 'completed' && (
-        <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-5 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-slate-500">Your recommended profile</p>
-              <h3 className="text-2xl font-semibold text-slate-900">{recommendedLabel}</h3>
+              <p className="text-sm text-[var(--text-muted)]">Your recommended profile</p>
+              <h3 className="text-2xl font-semibold text-[var(--text-strong)]">{recommendedLabel}</h3>
               {effectiveLabel && effectiveLabel !== recommendedLabel && (
-                <p className="text-sm text-slate-500 mt-1">Current default: {effectiveLabel}</p>
+                <p className="text-sm text-[var(--text-muted)] mt-1">Current default: {effectiveLabel}</p>
               )}
               {data?.overriddenByAdmin && data?.adminOverrideProfile && (
                 <p className="text-xs text-amber-600 mt-1">Admin override applied</p>
@@ -81,11 +81,11 @@ export function RiskOnboardingGate() {
 
           <div
             className={cn(
-              'mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700',
+              'mt-4 rounded-xl border border-[var(--border-subtle)] bg-[#1a1815] p-4 text-sm text-[var(--text-strong)]',
               showWhy ? 'block' : 'hidden'
             )}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Drivers</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Drivers</p>
             <ul className="mt-2 space-y-1">
               {(data?.drivers || []).map((driver) => (
                 <li key={driver}>- {driver}</li>

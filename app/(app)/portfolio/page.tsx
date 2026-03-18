@@ -119,7 +119,7 @@ export default async function PortfolioPage() {
     const userTier = (user as any)?.membershipTier || null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <PortfolioWizard />
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -145,14 +145,14 @@ export default async function PortfolioPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mt-12" data-tour="portfolio-disclaimer">
+        <div className="bg-[#2a2418] border border-[var(--border-subtle)] rounded-2xl p-6 mt-12" data-tour="portfolio-disclaimer">
           <div className="flex items-start gap-4">
             <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
               <span className="text-white text-sm font-bold">!</span>
             </div>
             <div>
-              <h4 className="font-semibold text-amber-800 mb-2 text-lg">Important Disclaimer</h4>
-              <p className="text-amber-700">
+              <h4 className="font-semibold text-[var(--text-strong)] mb-2 text-lg">Important Disclaimer</h4>
+              <p className="text-[var(--text-muted)]">
                 This is not financial advice. Past performance does not guarantee future results. 
                 All investing involves risk. Please do your own research before making any investment decisions.
               </p>
@@ -165,10 +165,10 @@ export default async function PortfolioPage() {
   } catch (error) {
     console.error('Error fetching content data:', error)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen bg-[var(--bg-page)]">
         <div className="container mx-auto px-4 py-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Portfolio</h1>
-          <p className="text-slate-600 mb-8">Unable to load portfolio at this time. Please try again later.</p>
+          <h1 className="text-4xl font-bold text-[var(--text-strong)] mb-4">Portfolio</h1>
+          <p className="text-[var(--text-strong)] mb-8">Unable to load portfolio at this time. Please try again later.</p>
         </div>
       </div>
     )

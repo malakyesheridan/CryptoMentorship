@@ -84,7 +84,7 @@ export default async function AdminTracksPage() {
   const { tracks, error } = await getTracks()
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -93,8 +93,8 @@ export default async function AdminTracksPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900">Learning Tracks</h1>
-                  <p className="text-slate-600 mt-2">
+                  <h1 className="text-3xl font-bold text-[var(--text-strong)]">Learning Tracks</h1>
+                  <p className="text-[var(--text-strong)] mt-2">
                     Manage structured learning paths and educational content
                   </p>
                 </div>
@@ -106,63 +106,63 @@ export default async function AdminTracksPage() {
 
             <DbHealthBanner />
             {error && (
-              <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <div className="mb-6 rounded-md border border-[#c03030] bg-[#2e1a1a] px-4 py-3 text-sm text-[#c03030]">
                 {error}
               </div>
             )}
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Total Tracks</p>
-                    <p className="text-2xl font-bold text-slate-900">{tracks.length}</p>
+                    <p className="text-sm font-medium text-[var(--text-strong)]">Total Tracks</p>
+                    <p className="text-2xl font-bold text-[var(--text-strong)]">{tracks.length}</p>
                   </div>
-                  <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <BookOpen className="h-4 w-4 text-blue-600" />
+                  <div className="h-8 w-8 bg-[#1a1e2e] rounded-lg flex items-center justify-center">
+                    <BookOpen className="h-4 w-4 text-[#4a7cc3]" />
                   </div>
                 </div>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Published</p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-sm font-medium text-[var(--text-strong)]">Published</p>
+                    <p className="text-2xl font-bold text-[#4a7c3f]">
                       {tracks.filter(t => t.publishedAt).length}
                     </p>
                   </div>
-                  <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Eye className="h-4 w-4 text-green-600" />
+                  <div className="h-8 w-8 bg-[#1a2e1a] rounded-lg flex items-center justify-center">
+                    <Eye className="h-4 w-4 text-[#4a7c3f]" />
                   </div>
                 </div>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Draft</p>
-                    <p className="text-2xl font-bold text-yellow-600">
+                    <p className="text-sm font-medium text-[var(--text-strong)]">Draft</p>
+                    <p className="text-2xl font-bold text-[#c9a227]">
                       {tracks.filter(t => !t.publishedAt).length}
                     </p>
                   </div>
-                  <div className="h-8 w-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <EyeOff className="h-4 w-4 text-yellow-600" />
+                  <div className="h-8 w-8 bg-[#2a2418] rounded-lg flex items-center justify-center">
+                    <EyeOff className="h-4 w-4 text-[#c9a227]" />
                   </div>
                 </div>
               </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-[var(--bg-panel)] p-6 rounded-lg shadow-sm border border-[var(--border-subtle)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-600">Total Students</p>
-                    <p className="text-2xl font-bold text-purple-600">
+                    <p className="text-sm font-medium text-[var(--text-strong)]">Total Students</p>
+                    <p className="text-2xl font-bold text-[#9a6dd7]">
                       {tracks.reduce((sum, track) => sum + track._count.enrollments, 0)}
                     </p>
                   </div>
-                  <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Users className="h-4 w-4 text-purple-600" />
+                  <div className="h-8 w-8 bg-[#2a1e2e] rounded-lg flex items-center justify-center">
+                    <Users className="h-4 w-4 text-[#9a6dd7]" />
                   </div>
                 </div>
               </div>
@@ -179,35 +179,35 @@ export default async function AdminTracksPage() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50 border-b border-slate-200">
+                    <thead className="bg-[#1a1815] border-b border-[var(--border-subtle)]">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                           Track
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                           Content
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                           Students
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                           Created
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y divide-[var(--border-subtle)]">
                       {tracks.map((track) => {
                         const totalLessons = track.lessons.length
                         const totalDuration = track.lessons.reduce((sum, lesson) => sum + (lesson.durationMin || 0), 0)
                         
                         return (
-                          <tr key={track.id} className="hover:bg-slate-50">
+                          <tr key={track.id} className="hover:bg-[#1a1815]">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 {track.coverUrl && (
@@ -221,21 +221,21 @@ export default async function AdminTracksPage() {
                                   </div>
                                 )}
                                 <div>
-                                  <div className="text-sm font-medium text-slate-900">
+                                  <div className="text-sm font-medium text-[var(--text-strong)]">
                                     {track.title}
                                   </div>
-                                  <div className="text-sm text-slate-500">
+                                  <div className="text-sm text-[var(--text-muted)]">
                                     {track.summary}
                                   </div>
                                   <div className="flex items-center gap-2 mt-1">
                                     <Badge variant="outline" className="text-xs">
                                       {track.minTier} tier
                                     </Badge>
-                                    <span className="text-xs text-slate-500">
+                                    <span className="text-xs text-[var(--text-muted)]">
                                       {totalLessons} lessons
                                     </span>
                                     {totalDuration > 0 && (
-                                      <span className="text-xs text-slate-500">
+                                      <span className="text-xs text-[var(--text-muted)]">
                                         {Math.round(totalDuration / 60)}h {totalDuration % 60}m
                                       </span>
                                     )}
@@ -254,28 +254,28 @@ export default async function AdminTracksPage() {
                             </td>
                             
                             <td className="px-6 py-4">
-                              <div className="text-sm text-slate-900">
+                              <div className="text-sm text-[var(--text-strong)]">
                                 {track.sections.length} sections
                               </div>
-                              <div className="text-sm text-slate-500">
+                              <div className="text-sm text-[var(--text-muted)]">
                                 {totalLessons} lessons
                               </div>
                             </td>
                             
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-1">
-                                <Users className="h-4 w-4 text-slate-400" />
-                                <span className="text-sm text-slate-900">
+                                <Users className="h-4 w-4 text-[var(--text-muted)]" />
+                                <span className="text-sm text-[var(--text-strong)]">
                                   {track._count.enrollments}
                                 </span>
                               </div>
                             </td>
                             
                             <td className="px-6 py-4">
-                              <div className="text-sm text-slate-900">
+                              <div className="text-sm text-[var(--text-strong)]">
                                 {formatDate(track.createdAt)}
                               </div>
-                              <div className="text-sm text-slate-500">
+                              <div className="text-sm text-[var(--text-muted)]">
                                 {track.createdAt.toLocaleTimeString()}
                               </div>
                             </td>
@@ -292,7 +292,7 @@ export default async function AdminTracksPage() {
                                     <Edit className="h-4 w-4" />
                                   </Button>
                                 </Link>
-                                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                                <Button variant="outline" size="sm" className="text-[#c03030] hover:text-[#c03030]">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -306,9 +306,9 @@ export default async function AdminTracksPage() {
                 
                 {tracks.length === 0 && (
                   <div className="text-center py-12">
-                    <BookOpen className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">No Tracks Created</h3>
-                    <p className="text-slate-600 mb-4">
+                    <BookOpen className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">No Tracks Created</h3>
+                    <p className="text-[var(--text-strong)] mb-4">
                       Create your first learning track to get started.
                     </p>
                     <Link href="/admin/learn/tracks/new">

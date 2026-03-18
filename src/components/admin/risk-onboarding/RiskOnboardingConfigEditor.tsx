@@ -134,7 +134,7 @@ export function RiskOnboardingConfigEditor() {
   if (isLoading || !config) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-slate-500" />
+        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-[var(--text-muted)]" />
       </div>
     )
   }
@@ -148,16 +148,16 @@ export function RiskOnboardingConfigEditor() {
         <p className="subhead">
           Customize question wording, scoring weights, and risk profile thresholds.
         </p>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-[var(--text-muted)]">
           Current max raw score: {maxScore} (scores normalize to 0–100)
         </div>
       </div>
 
       {errors.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-[#c03030] bg-[#2e1a1a]">
           <CardContent className="pt-6">
-            <p className="text-sm font-semibold text-red-700">Fix the following before saving:</p>
-            <ul className="mt-2 list-disc pl-5 text-sm text-red-700 space-y-1">
+            <p className="text-sm font-semibold text-[#c03030]">Fix the following before saving:</p>
+            <ul className="mt-2 list-disc pl-5 text-sm text-[#c03030] space-y-1">
               {errors.map((error) => (
                 <li key={error}>{error}</li>
               ))}
@@ -188,16 +188,16 @@ export function RiskOnboardingConfigEditor() {
             <div key={range.profile} className="rounded-2xl border border-[color:var(--border-subtle)] p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">
+                  <p className="text-sm font-semibold text-[var(--text-strong)]">
                     {formatRiskProfileLabel(range.profile)}
                   </p>
-                  <p className="text-xs text-slate-500">Profile tag</p>
+                  <p className="text-xs text-[var(--text-muted)]">Profile tag</p>
                 </div>
                 <Badge variant="outline">{range.profile}</Badge>
               </div>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="text-xs text-slate-500">Label</label>
+                  <label className="text-xs text-[var(--text-muted)]">Label</label>
                   <Input
                     value={range.label}
                     onChange={(event) => {
@@ -212,7 +212,7 @@ export function RiskOnboardingConfigEditor() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500">Min score</label>
+                  <label className="text-xs text-[var(--text-muted)]">Min score</label>
                   <Input
                     type="number"
                     value={range.min}
@@ -228,7 +228,7 @@ export function RiskOnboardingConfigEditor() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500">Max score</label>
+                  <label className="text-xs text-[var(--text-muted)]">Max score</label>
                   <Input
                     type="number"
                     value={range.max}
@@ -244,7 +244,7 @@ export function RiskOnboardingConfigEditor() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500">Description</label>
+                  <label className="text-xs text-[var(--text-muted)]">Description</label>
                   <Input
                     value={range.description}
                     onChange={(event) => {
@@ -274,7 +274,7 @@ export function RiskOnboardingConfigEditor() {
                   <span>{question.title}</span>
                   <Badge variant="outline">{question.id}</Badge>
                 </CardTitle>
-                <div className="text-xs text-slate-500 flex items-center gap-2">
+                <div className="text-xs text-[var(--text-muted)] flex items-center gap-2">
                   <span className="uppercase tracking-wide">{question.type}</span>
                   {question.optional && <span>Optional</span>}
                 </div>
@@ -282,7 +282,7 @@ export function RiskOnboardingConfigEditor() {
               <CardContent className="space-y-4">
                 <div className="grid gap-3">
                   <div>
-                    <label className="text-xs text-slate-500">Question title</label>
+                    <label className="text-xs text-[var(--text-muted)]">Question title</label>
                     <Input
                       value={question.title}
                       onChange={(event) =>
@@ -294,7 +294,7 @@ export function RiskOnboardingConfigEditor() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500">Description (optional)</label>
+                    <label className="text-xs text-[var(--text-muted)]">Description (optional)</label>
                     <Textarea
                       value={question.description || ''}
                       onChange={(event) =>
@@ -306,7 +306,7 @@ export function RiskOnboardingConfigEditor() {
                       rows={2}
                     />
                   </div>
-                  <label className="flex items-center gap-2 text-xs text-slate-500">
+                  <label className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                     <input
                       type="checkbox"
                       checked={!!question.optional}
@@ -323,12 +323,12 @@ export function RiskOnboardingConfigEditor() {
 
                 {question.type === 'single' && question.options && (
                   <div className="space-y-3">
-                    <div className="text-sm font-semibold text-slate-700">Options & scoring</div>
+                    <div className="text-sm font-semibold text-[var(--text-strong)]">Options & scoring</div>
                     <div className="grid gap-3">
                       {question.options.map((option) => (
                         <div key={option.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
                           <div className="md:col-span-2">
-                            <label className="text-xs text-slate-500">Option label</label>
+                            <label className="text-xs text-[var(--text-muted)]">Option label</label>
                             <Input
                               value={option.label}
                               onChange={(event) =>
@@ -344,7 +344,7 @@ export function RiskOnboardingConfigEditor() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-slate-500">Score</label>
+                            <label className="text-xs text-[var(--text-muted)]">Score</label>
                             <Input
                               type="number"
                               value={questionScores[option.id] ?? 0}
@@ -362,13 +362,13 @@ export function RiskOnboardingConfigEditor() {
 
                 {question.type === 'likert-group' && question.statements && (
                   <div className="space-y-4">
-                    <div className="text-sm font-semibold text-slate-700">Statements & scoring</div>
+                    <div className="text-sm font-semibold text-[var(--text-strong)]">Statements & scoring</div>
                     {question.statements.map((statement) => {
                       const mapping = config.scoring.likertStatements[statement.id] || {}
                       return (
                         <div key={statement.id} className="rounded-2xl border border-[color:var(--border-subtle)] p-4 space-y-3">
                           <div className="flex items-center justify-between">
-                            <div className="text-sm font-medium text-slate-800">{statement.id}</div>
+                            <div className="text-sm font-medium text-[var(--text-strong)]">{statement.id}</div>
                             <Badge variant="outline">Statement</Badge>
                           </div>
                           <Input
@@ -385,7 +385,7 @@ export function RiskOnboardingConfigEditor() {
                           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                             {likertOptions.map((option) => (
                               <div key={option.id}>
-                                <label className="text-[10px] uppercase tracking-wide text-slate-500">
+                                <label className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
                                   {option.label}
                                 </label>
                                 <Input

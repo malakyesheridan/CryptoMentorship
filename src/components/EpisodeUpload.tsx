@@ -135,7 +135,7 @@ export default function EpisodeUpload() {
               rows={6}
               disabled={isUploading}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Supports Markdown formatting for rich content
             </p>
           </div>
@@ -162,7 +162,7 @@ export default function EpisodeUpload() {
               placeholder="https://example.com/episode-video.mp4"
               disabled={isUploading}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Direct link to the episode video file
             </p>
           </div>
@@ -174,7 +174,7 @@ export default function EpisodeUpload() {
               value={formData.visibility}
               onChange={(e) => setFormData({ ...formData, visibility: e.target.value })}
               disabled={isUploading}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-[#1a1815] disabled:cursor-not-allowed"
             >
               <option value="public">Public - Everyone can view</option>
               <option value="member">Member - Members only</option>
@@ -184,14 +184,14 @@ export default function EpisodeUpload() {
 
           {/* Status Messages */}
           {uploadStatus === 'success' && (
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-[#4a7c3f]">
               <CheckCircle className="w-5 h-5" />
               <span>Episode created successfully!</span>
             </div>
           )}
 
           {uploadStatus === 'error' && (
-            <div className="flex items-center space-x-2 text-red-600">
+            <div className="flex items-center space-x-2 text-[#c03030]">
               <AlertCircle className="w-5 h-5" />
               <span>{errorMessage}</span>
             </div>
@@ -200,7 +200,7 @@ export default function EpisodeUpload() {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+            className="w-full bg-gold-500 hover:bg-gold-600 text-white"
             disabled={isUploading || !formData.title}
           >
             {isUploading ? 'Creating Episode...' : 'Create Crypto Compass Episode'}

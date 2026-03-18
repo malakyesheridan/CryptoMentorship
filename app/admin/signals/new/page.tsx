@@ -76,7 +76,7 @@ export default function NewSignalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="max-w-4xl mx-auto p-8">
         {/* Header */}
         <div className="mb-8">
@@ -88,8 +88,8 @@ export default function NewSignalPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Create New Signal</h1>
-              <p className="text-slate-600 mt-2">
+              <h1 className="text-3xl font-bold text-[var(--text-strong)]">Create New Signal</h1>
+              <p className="text-[var(--text-strong)] mt-2">
                 Add a new trading signal to the portfolio
               </p>
             </div>
@@ -105,7 +105,7 @@ export default function NewSignalPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Symbol *
                   </label>
                   <Input
@@ -118,13 +118,13 @@ export default function NewSignalPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Market
                   </label>
                   <select
                     value={formData.market}
                     onChange={(e) => handleInputChange('market', e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm"
                   >
                     <option value="crypto:spot">Crypto Spot</option>
                     <option value="crypto:perp">Crypto Perpetual</option>
@@ -134,7 +134,7 @@ export default function NewSignalPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Direction *
                 </label>
                 <div className="flex gap-4">
@@ -146,7 +146,7 @@ export default function NewSignalPage() {
                       onChange={(e) => handleInputChange('direction', e.target.value)}
                       className="mr-2"
                     />
-                    <span className="text-green-600 font-medium">Long</span>
+                    <span className="text-[#4a7c3f] font-medium">Long</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -156,13 +156,13 @@ export default function NewSignalPage() {
                       onChange={(e) => handleInputChange('direction', e.target.value)}
                       className="mr-2"
                     />
-                    <span className="text-red-600 font-medium">Short</span>
+                    <span className="text-[#c03030] font-medium">Short</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Tags
                 </label>
                 <div className="space-y-2">
@@ -185,7 +185,7 @@ export default function NewSignalPage() {
                         <button
                           type="button"
                           onClick={() => removeTag(tag)}
-                          className="ml-1 hover:text-red-600"
+                          className="ml-1 hover:text-[#c03030]"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -205,7 +205,7 @@ export default function NewSignalPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Entry Time *
                   </label>
                   <Input
@@ -217,7 +217,7 @@ export default function NewSignalPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Entry Price *
                   </label>
                   <Input
@@ -233,7 +233,7 @@ export default function NewSignalPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Stop Loss
                   </label>
                   <Input
@@ -246,7 +246,7 @@ export default function NewSignalPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Take Profit
                   </label>
                   <Input
@@ -261,13 +261,13 @@ export default function NewSignalPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Conviction (1-5)
                   </label>
                   <select
                     value={formData.conviction}
                     onChange={(e) => handleInputChange('conviction', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                    className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm"
                   >
                     <option value={1}>1 - Very Low</option>
                     <option value={2}>2 - Low</option>
@@ -278,7 +278,7 @@ export default function NewSignalPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                     Risk Percentage
                   </label>
                   <Input
@@ -290,7 +290,7 @@ export default function NewSignalPage() {
                     onChange={(e) => handleInputChange('riskPct', e.target.value)}
                     placeholder="2.0"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     Percentage of portfolio to risk on this trade
                   </p>
                 </div>
@@ -305,17 +305,17 @@ export default function NewSignalPage() {
             </CardHeader>
             <CardContent>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Analysis & Reasoning
                 </label>
                 <textarea
                   value={formData.thesis}
                   onChange={(e) => handleInputChange('thesis', e.target.value)}
                   placeholder="Explain your analysis, reasoning, and expectations for this trade..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm min-h-[200px]"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm min-h-[200px]"
                   rows={8}
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   Supports Markdown formatting
                 </p>
               </div>

@@ -75,7 +75,7 @@ export default async function RiskProfilesPage() {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="text-left text-slate-500">
+              <thead className="text-left text-[var(--text-muted)]">
                 <tr>
                   <th className="py-2 pr-4">Member</th>
                   <th className="py-2 pr-4">Recommended</th>
@@ -85,22 +85,22 @@ export default async function RiskProfilesPage() {
                   <th className="py-2">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-[var(--border-subtle)]">
                 {rows.map((row) => {
                   const status = row.status || 'NOT_STARTED'
                   const profile = row.profile
                   return (
-                    <tr key={row.userId} className="text-slate-700">
+                    <tr key={row.userId} className="text-[var(--text-strong)]">
                       <td className="py-3 pr-4">
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-[var(--text-strong)]">
                           {row.userName || 'Unnamed'}
                         </div>
-                        <div className="text-xs text-slate-500">{row.userEmail}</div>
+                        <div className="text-xs text-[var(--text-muted)]">{row.userEmail}</div>
                       </td>
                       <td className="py-3 pr-4">
                         {profile ? (
                           <>
-                            <div className="font-semibold text-slate-900">
+                            <div className="font-semibold text-[var(--text-strong)]">
                               {formatRiskProfileLabel(profile.recommendedProfile)}
                             </div>
                             {profile.overriddenByAdmin && profile.adminOverrideProfile && (
@@ -110,12 +110,12 @@ export default async function RiskProfilesPage() {
                             )}
                           </>
                         ) : (
-                          <span className="text-xs text-slate-500">Pending</span>
+                          <span className="text-xs text-[var(--text-muted)]">Pending</span>
                         )}
                       </td>
                       <td className="py-3 pr-4">{profile ? profile.score : '-'}</td>
                       <td className="py-3 pr-4">
-                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                        <span className="inline-flex rounded-full bg-[#1a1815] px-2 py-1 text-xs text-[var(--text-strong)]">
                           {status.replace('_', ' ')}
                         </span>
                       </td>
@@ -125,7 +125,7 @@ export default async function RiskProfilesPage() {
                       <td className="py-3">
                         <Link
                           href={`/admin/risk-profiles/${row.userId}`}
-                          className="text-sm font-semibold text-slate-900 hover:text-slate-700"
+                          className="text-sm font-semibold text-[var(--text-strong)] hover:text-[var(--text-strong)]"
                         >
                           View
                         </Link>

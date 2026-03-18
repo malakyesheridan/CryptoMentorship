@@ -163,7 +163,7 @@ export default function AdminEventForm({ event, isEdit = false }: AdminEventForm
                     placeholder="event-url-slug"
                     required
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     URL: /events/{formData.slug}
                   </p>
                 </div>
@@ -226,7 +226,7 @@ export default function AdminEventForm({ event, isEdit = false }: AdminEventForm
                   <select 
                     value={formData.timezone} 
                     onChange={(e) => setFormData(prev => ({ ...prev, timezone: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="UTC">UTC</option>
                     <option value="America/New_York">Eastern Time</option>
@@ -253,7 +253,7 @@ export default function AdminEventForm({ event, isEdit = false }: AdminEventForm
                   <select 
                     value={formData.locationType} 
                     onChange={(e) => setFormData(prev => ({ ...prev, locationType: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="online">Online</option>
                     <option value="in_person">In Person</option>
@@ -349,7 +349,7 @@ export default function AdminEventForm({ event, isEdit = false }: AdminEventForm
                   <select 
                     value={formData.visibility} 
                     onChange={(e) => setFormData(prev => ({ ...prev, visibility: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="public">Public</option>
                     <option value="member">Members Only</option>

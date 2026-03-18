@@ -57,7 +57,7 @@ export function ChannelForm() {
           required
           disabled={isLoading}
         />
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--text-muted)]">
           This will be displayed as #{formData.name || 'channel-name'}
         </p>
       </div>

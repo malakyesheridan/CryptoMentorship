@@ -232,7 +232,7 @@ export default function NewTrackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -246,8 +246,8 @@ export default function NewTrackPage() {
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900">Create New Track</h1>
-                  <p className="mt-2 text-slate-600">Design a structured learning path for your students</p>
+                  <h1 className="text-3xl font-bold text-[var(--text-strong)]">Create New Track</h1>
+                  <p className="mt-2 text-[var(--text-strong)]">Design a structured learning path for your students</p>
                 </div>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function NewTrackPage() {
             <DbHealthBanner />
 
             {errorMessage && (
-              <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <div className="mb-6 rounded-md border border-[#c03030] bg-[#2e1a1a] px-4 py-3 text-sm text-[#c03030]">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                   <span>{errorMessage}</span>
@@ -274,7 +274,7 @@ export default function NewTrackPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Track Title *</label>
+                    <label className="mb-2 block text-sm font-medium text-[var(--text-strong)]">Track Title *</label>
                     <Input
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
@@ -284,7 +284,7 @@ export default function NewTrackPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">URL Slug *</label>
+                    <label className="mb-2 block text-sm font-medium text-[var(--text-strong)]">URL Slug *</label>
                     <Input
                       value={formData.slug}
                       onChange={(e) => {
@@ -295,15 +295,15 @@ export default function NewTrackPage() {
                       required
                     />
                     <div className="mt-1 flex items-center gap-2 text-sm">
-                      <span className="text-slate-500">This will be the URL: /learn/{formData.slug || 'track-slug'}</span>
+                      <span className="text-[var(--text-muted)]">This will be the URL: /learn/{formData.slug || 'track-slug'}</span>
                       {slugHint && (
                         <span
                           className={
                             slugStatus === 'available'
                               ? 'text-green-700'
                               : slugStatus === 'taken' || slugStatus === 'invalid'
-                              ? 'text-red-700'
-                              : 'text-slate-500'
+                              ? 'text-[#c03030]'
+                              : 'text-[var(--text-muted)]'
                           }
                         >
                           {slugStatus === 'available' && <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />}
@@ -329,18 +329,18 @@ export default function NewTrackPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Summary</label>
+                    <label className="mb-2 block text-sm font-medium text-[var(--text-strong)]">Summary</label>
                     <textarea
                       value={formData.summary}
                       onChange={(e) => handleInputChange('summary', e.target.value)}
                       placeholder="Brief description of what students will learn..."
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      className="w-full rounded-md border border-[var(--border-subtle)] px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gold-500"
                       rows={3}
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Cover Image URL</label>
+                    <label className="mb-2 block text-sm font-medium text-[var(--text-strong)]">Cover Image URL</label>
                     <Input
                       value={formData.coverUrl}
                       onChange={(e) => handleInputChange('coverUrl', e.target.value)}
@@ -382,28 +382,28 @@ export default function NewTrackPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Minimum Tier Required</label>
+                    <label className="mb-2 block text-sm font-medium text-[var(--text-strong)]">Minimum Tier Required</label>
                     <select
                       value={formData.minTier}
                       onChange={(e) => handleInputChange('minTier', e.target.value)}
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gold-500"
+                      className="w-full rounded-md border border-[var(--border-subtle)] px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-gold-500"
                     >
                       <option value="guest">Guest</option>
                       <option value="member">Member</option>
                       <option value="editor">Editor</option>
                       <option value="admin">Admin</option>
                     </select>
-                    <p className="mt-1 text-sm text-slate-500">Users must have at least this tier to access the track</p>
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">Users must have at least this tier to access the track</p>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Publish Date</label>
+                    <label className="mb-2 block text-sm font-medium text-[var(--text-strong)]">Publish Date</label>
                     <Input
                       value={formData.publishedAt}
                       onChange={(e) => handleInputChange('publishedAt', e.target.value)}
                       type="datetime-local"
                     />
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">
                       Leave empty to save as draft. Set a future date to schedule publishing.
                     </p>
                   </div>
@@ -433,14 +433,14 @@ export default function NewTrackPage() {
                   </Button>
                 </div>
 
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-[var(--text-muted)]">
                   {formData.publishedAt ? (
-                    <span className="flex items-center gap-1 text-green-600">
+                    <span className="flex items-center gap-1 text-[#4a7c3f]">
                       <Eye className="h-4 w-4" />
                       Will be published
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-yellow-600">
+                    <span className="flex items-center gap-1 text-[#c9a227]">
                       <EyeOff className="h-4 w-4" />
                       Will be saved as draft
                     </span>

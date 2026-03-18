@@ -58,10 +58,10 @@ export function RoleSelector({ userId, currentRole, currentUserId, className, on
   }
 
   const roleColors: Record<string, string> = {
-    admin: 'border-red-300 text-red-700 bg-red-50',
-    editor: 'border-blue-300 text-blue-700 bg-blue-50',
-    member: 'border-green-300 text-green-700 bg-green-50',
-    guest: 'border-slate-300 text-slate-700 bg-slate-50',
+    admin: 'border-[#c03030] text-[#c03030] bg-[#2e1a1a]',
+    editor: 'border-[#4a7cc3] text-[#4a7cc3] bg-[#1a1e2e]',
+    member: 'border-[#4a7c3f] text-[#4a7c3f] bg-[#1a2e1a]',
+    guest: 'border-[var(--border-subtle)] text-[var(--text-strong)] bg-[#1a1815]',
   }
 
   return (

@@ -48,7 +48,7 @@ export default async function EditEpisodePage({
         <h1 className="heading-two-tone text-3xl mb-2">
           <span>Edit</span> <span className="gold">Episode</span>
         </h1>
-        <p className="text-slate-600">Update Crypto Compass episode</p>
+        <p className="text-[var(--text-strong)]">Update Crypto Compass episode</p>
       </div>
 
       {/* Form */}

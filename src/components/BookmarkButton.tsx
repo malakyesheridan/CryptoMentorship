@@ -95,7 +95,7 @@ export function BookmarkButton({
       onClick={handleToggle}
       disabled={loading}
       className={`${sizeClasses[size]} ${className} ${
-        bookmarked ? 'text-gold-600 hover:text-gold-700' : 'text-slate-500 hover:text-slate-700'
+        bookmarked ? 'text-gold-600 hover:text-gold-700' : 'text-[var(--text-muted)] hover:text-[var(--text-strong)]'
       }`}
       aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
     >

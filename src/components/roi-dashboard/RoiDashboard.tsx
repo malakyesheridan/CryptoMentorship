@@ -18,38 +18,38 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">ROI Since Tracking Started</p>
-            <p className={metrics.roiSinceInceptionPct >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">ROI Since Tracking Started</p>
+            <p className={metrics.roiSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
               {formatPercent(metrics.roiSinceInceptionPct)}
             </p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">ROI (last 30 days)</p>
-            <p className={metrics.roiLast30DaysPct >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">ROI (last 30 days)</p>
+            <p className={metrics.roiLast30DaysPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
               {formatPercent(metrics.roiLast30DaysPct)}
             </p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Max Drawdown</p>
-            <p className="text-xl font-semibold text-red-600">{formatPercent(metrics.maxDrawdownPct)}</p>
+            <p className="text-xs text-[var(--text-muted)]">Max Drawdown</p>
+            <p className="text-xl font-semibold text-[#c03030]">{formatPercent(metrics.maxDrawdownPct)}</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Buy and Hold BTC</p>
-            <p className={btcSinceInceptionPct >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">Buy and Hold BTC</p>
+            <p className={btcSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
               {formatPercent(btcSinceInceptionPct)}
             </p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
-            <p className="text-xs text-slate-500">Buy and Hold ETH</p>
-            <p className={ethSinceInceptionPct >= 0 ? 'text-xl font-semibold text-green-600' : 'text-xl font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">Buy and Hold ETH</p>
+            <p className={ethSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
               {formatPercent(ethSinceInceptionPct)}
             </p>
           </CardContent>

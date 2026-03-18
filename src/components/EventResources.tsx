@@ -30,13 +30,13 @@ export function EventResources({ recordingUrl, resources, eventTitle }: EventRes
       <CardContent className="space-y-4">
         {/* Recording */}
         {recordingUrl && (
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="p-4 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Play className="h-5 w-5 text-slate-600" />
+                <Play className="h-5 w-5 text-[var(--text-strong)]" />
                 <div>
-                  <h4 className="font-medium text-slate-800">Event Recording</h4>
-                  <p className="text-sm text-slate-600">
+                  <h4 className="font-medium text-[var(--text-strong)]">Event Recording</h4>
+                  <p className="text-sm text-[var(--text-strong)]">
                     Watch the replay of &ldquo;{eventTitle}&rdquo;
                   </p>
                 </div>
@@ -54,18 +54,18 @@ export function EventResources({ recordingUrl, resources, eventTitle }: EventRes
         {/* Resources */}
         {resources && resources.length > 0 && (
           <div>
-            <h4 className="font-medium text-slate-800 mb-3">Additional Resources</h4>
+            <h4 className="font-medium text-[var(--text-strong)] mb-3">Additional Resources</h4>
             <div className="space-y-2">
               {resources.map((resource, index) => (
                 <div 
                   key={index}
-                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200"
+                  className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]"
                 >
                   <div className="flex items-center gap-3">
-                    <FileText className="h-4 w-4 text-slate-600" />
+                    <FileText className="h-4 w-4 text-[var(--text-strong)]" />
                     <div>
-                      <p className="font-medium text-slate-800">{resource.title}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="font-medium text-[var(--text-strong)]">{resource.title}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
                         {resource.url.includes('drive.google.com') ? 'Google Drive' :
                          resource.url.includes('dropbox.com') ? 'Dropbox' :
                          resource.url.includes('youtube.com') ? 'YouTube' :
@@ -87,8 +87,8 @@ export function EventResources({ recordingUrl, resources, eventTitle }: EventRes
 
         {/* Download All */}
         {(recordingUrl || (resources && resources.length > 0)) && (
-          <div className="pt-4 border-t border-slate-200">
-            <p className="text-sm text-slate-600 mb-3">
+          <div className="pt-4 border-t border-[var(--border-subtle)]">
+            <p className="text-sm text-[var(--text-strong)] mb-3">
               Download all resources for offline access
             </p>
             <Button variant="outline" size="sm">

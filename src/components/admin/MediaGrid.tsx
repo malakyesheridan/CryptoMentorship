@@ -103,7 +103,7 @@ export function MediaGrid({ media }: MediaGridProps) {
     <div className="space-y-4">
       {/* Bulk Actions */}
       {media.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-[#1a1815] rounded-lg">
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2">
               <input
@@ -141,7 +141,7 @@ export function MediaGrid({ media }: MediaGridProps) {
             <div key={item.id} className="card p-4 group">
               <div className="relative">
                 {/* Preview */}
-                <div className="aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                <div className="aspect-square bg-[#1a1815] rounded-lg mb-3 overflow-hidden">
                   {isImage ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}

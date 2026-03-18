@@ -100,14 +100,14 @@ export default async function SavedPage() {
                         </Badge>
                       ))}
                       {bookmark.content.tags.split(',').length > 3 && (
-                        <span className="text-xs text-slate-500 px-2 py-1">
+                        <span className="text-xs text-[var(--text-muted)] px-2 py-1">
                           +{bookmark.content.tags.split(',').length - 3} more
                         </span>
                       )}
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-sm text-slate-500">
+                  <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs">
                         {entityType === 'content' ? bookmark.content?.kind : 'Episode'}
@@ -124,7 +124,7 @@ export default async function SavedPage() {
 
                   {/* Note if present */}
                   {bookmark.note && (
-                    <div className="mt-3 p-2 bg-slate-50 rounded text-sm text-slate-600">
+                    <div className="mt-3 p-2 bg-[#1a1815] rounded text-sm text-[var(--text-muted)]">
                       <strong>Note:</strong> {bookmark.note}
                     </div>
                   )}
@@ -135,7 +135,7 @@ export default async function SavedPage() {
         </div>
       ) : (
         <EmptyState
-          icon={<Bookmark className="w-16 h-16 text-slate-400 mx-auto mb-4" />}
+          icon={<Bookmark className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />}
           title="No saved content yet"
           description="Bookmark articles, episodes, and resources to save them for later reading."
           action={{

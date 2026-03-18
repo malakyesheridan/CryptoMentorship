@@ -307,7 +307,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
               maxLength={500}
               rows={3}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Provide the allocation update for memecoins
             </p>
           </div>
@@ -365,7 +365,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
                   </option>
                 ))}
               </Select>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-muted)]">
                 Select the primary, secondary, and tertiary assets for allocation splits
               </p>
             </div>
@@ -383,7 +383,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
             rows={3}
             disabled={isUploading}
           />
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--text-muted)]">
             Brief summary of the signal and management approach
           </p>
         </div>
@@ -399,14 +399,14 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
             rows={2}
             disabled={isUploading}
           />
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--text-muted)]">
             Additional conditions, warnings, or data points
           </p>
         </div>
 
         {/* Preview */}
         <div className="flex items-center justify-between">
-          <Label className="text-base font-semibold text-slate-900">Preview</Label>
+          <Label className="text-base font-semibold text-[var(--text-strong)]">Preview</Label>
           <Button
             type="button"
             variant="outline"
@@ -418,22 +418,22 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
         </div>
 
         {showPreview && (
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-slate-900">
+              <h4 className="text-sm font-semibold text-[var(--text-strong)]">
                 Portfolio Update - {tierLabels[tier]}{previewCategoryLabel ? ` ${previewCategoryLabel}` : ''}
               </h4>
-              <span className="text-xs text-slate-500">Preview</span>
+              <span className="text-xs text-[var(--text-muted)]">Preview</span>
             </div>
 
             {!isMemecoins && hasPreviewAssets ? (
               <div className="mb-4">
-                <h5 className="text-sm font-semibold text-slate-900 mb-2">Allocation Split:</h5>
-                <div className="space-y-2 text-sm text-slate-800">
+                <h5 className="text-sm font-semibold text-[var(--text-strong)] mb-2">Allocation Split:</h5>
+                <div className="space-y-2 text-sm text-[var(--text-strong)]">
                   {previewSplits.map((split) => (
                     <div key={split.label} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="font-semibold text-slate-900">{split.label}</span>
-                      <span className="text-slate-700">
+                      <span className="font-semibold text-[var(--text-strong)]">{split.label}</span>
+                      <span className="text-[var(--text-strong)]">
                         {split.allocations
                           .map((allocation) => `${allocation.percent}% ${allocation.asset}`)
                           .join(' / ')}
@@ -444,28 +444,28 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
               </div>
             ) : isMemecoins ? (
               <div className="mb-4">
-                <h5 className="text-sm font-semibold text-slate-900 mb-2">Update:</h5>
-                <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                <h5 className="text-sm font-semibold text-[var(--text-strong)] mb-2">Update:</h5>
+                <p className="text-sm text-[var(--text-strong)] whitespace-pre-wrap">
                   {formData.signalText.trim() || 'Enter the memecoin allocation update to preview.'}
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 mb-4">
+              <p className="text-sm text-[var(--text-muted)] mb-4">
                 Select primary, secondary, and tertiary assets to preview the allocation split.
               </p>
             )}
 
             {formData.executiveSummary.trim() && (
               <div className="mb-4">
-                <h5 className="text-sm font-semibold text-slate-900 mb-2">Executive Summary:</h5>
-                <p className="text-sm text-slate-700 whitespace-pre-wrap">{formData.executiveSummary}</p>
+                <h5 className="text-sm font-semibold text-[var(--text-strong)] mb-2">Executive Summary:</h5>
+                <p className="text-sm text-[var(--text-strong)] whitespace-pre-wrap">{formData.executiveSummary}</p>
               </div>
             )}
 
             {formData.associatedData.trim() && (
               <div>
-                <h5 className="text-sm font-semibold text-slate-900 mb-2">Associated Data:</h5>
-                <p className="text-sm text-slate-700 whitespace-pre-wrap">{formData.associatedData}</p>
+                <h5 className="text-sm font-semibold text-[var(--text-strong)] mb-2">Associated Data:</h5>
+                <p className="text-sm text-[var(--text-strong)] whitespace-pre-wrap">{formData.associatedData}</p>
               </div>
             )}
           </div>
@@ -480,7 +480,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
         )}
 
         {uploadStatus === 'error' && (
-          <div className="flex items-center space-x-2 text-red-600">
+          <div className="flex items-center space-x-2 text-[#c03030]">
             <AlertCircle className="w-5 h-5" />
             <span>{errorMessage}</span>
           </div>
@@ -489,7 +489,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-6 text-lg"
+          className="w-full bg-yellow-500 hover:bg-gold-600 text-white font-semibold py-6 text-lg"
           disabled={
             isUploading ||
             (isMemecoins

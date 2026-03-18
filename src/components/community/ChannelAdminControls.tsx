@@ -289,7 +289,7 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange, onCha
   return (
     <div className="mb-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-slate-700">Admin Controls</h4>
+        <h4 className="text-sm font-semibold text-[var(--text-strong)]">Admin Controls</h4>
         {!showCreateForm && !editingChannel && (
           <Button
             size="sm"
@@ -307,9 +307,9 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange, onCha
       </div>
 
       {(showCreateForm || editingChannel) && (
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+        <div className="bg-[#1a1815] border border-[var(--border-subtle)] rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h5 className="font-medium text-slate-900">
+            <h5 className="font-medium text-[var(--text-strong)]">
               {editingChannel ? 'Edit Channel' : 'Create Channel'}
             </h5>
             <Button
@@ -335,7 +335,7 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange, onCha
                 disabled={isLoading}
                 maxLength={100}
               />
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-[var(--text-muted)] mt-1">
                 Channel name can be any name (1-100 characters)
               </p>
             </div>
@@ -389,20 +389,20 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange, onCha
               onDragEnd={handleDragEnd}
               className={`flex items-center justify-between p-3 rounded-lg transition-all duration-150 relative ${
                 draggedChannelId === channel.id
-                  ? 'opacity-40 bg-slate-200 scale-95 cursor-grabbing'
+                  ? 'opacity-40 bg-[#2a2520] scale-95 cursor-grabbing'
                   : draggedOverChannelId === channel.id
                   ? dropPosition === 'before'
-                    ? 'bg-blue-50 border-t-4 border-blue-500 border-b-2 border-blue-200'
-                    : 'bg-blue-50 border-b-4 border-blue-500 border-t-2 border-blue-200'
-                  : 'hover:bg-slate-50 border-2 border-transparent'
+                    ? 'bg-[#1a1a2e] border-t-4 border-blue-500 border-b-2 border-blue-200'
+                    : 'bg-[#1a1a2e] border-b-4 border-blue-500 border-t-2 border-blue-200'
+                  : 'hover:bg-[#1a1815] border-2 border-transparent'
               } ${isLoading ? 'pointer-events-none opacity-50' : 'cursor-grab active:cursor-grabbing'}`}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <GripVertical className="h-5 w-5 text-slate-400 flex-shrink-0" />
+                <GripVertical className="h-5 w-5 text-[var(--text-muted)] flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-slate-900">#{channel.name}</div>
+                  <div className="font-medium text-[var(--text-strong)]">#{channel.name}</div>
                   {channel.description && (
-                    <div className="text-xs text-slate-500 truncate">{channel.description}</div>
+                    <div className="text-xs text-[var(--text-muted)] truncate">{channel.description}</div>
                   )}
                 </div>
               </div>
@@ -427,7 +427,7 @@ export function ChannelAdminControls({ channels, isAdmin, onChannelChange, onCha
                     handleDelete(channel.id)
                   }}
                   disabled={isLoading}
-                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                  className="h-8 w-8 p-0 text-[#c03030] hover:text-[#c03030]"
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>

@@ -54,7 +54,7 @@ export default async function EditContentPage({
         <h1 className="heading-two-tone text-3xl mb-2">
           <span>Edit</span> <span className="gold">Content</span>
         </h1>
-        <p className="text-slate-600">Update research, signals, or resources</p>
+        <p className="text-[var(--text-strong)]">Update research, signals, or resources</p>
       </div>
 
       {/* Form */}

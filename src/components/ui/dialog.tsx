@@ -71,7 +71,7 @@ export function DialogContent({ children, className, ...props }: DialogContentPr
   return (
     <div
       className={cn(
-        'bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col',
+        'bg-[var(--bg-panel)] rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col',
         className
       )}
       {...props}
@@ -101,7 +101,7 @@ export function DialogHeader({ children, className, ...props }: DialogHeaderProp
 
 export function DialogTitle({ children, className, ...props }: DialogTitleProps) {
   return (
-    <h2 className={cn('text-2xl font-bold text-slate-900', className)} {...props}>
+    <h2 className={cn('text-2xl font-bold text-[var(--text-strong)]', className)} {...props}>
       {children}
     </h2>
   )
@@ -109,7 +109,7 @@ export function DialogTitle({ children, className, ...props }: DialogTitleProps)
 
 export function DialogDescription({ children, className, ...props }: DialogDescriptionProps) {
   return (
-    <p className={cn('text-sm text-slate-600 mt-2', className)} {...props}>
+    <p className={cn('text-sm text-[var(--text-muted)] mt-2', className)} {...props}>
       {children}
     </p>
   )

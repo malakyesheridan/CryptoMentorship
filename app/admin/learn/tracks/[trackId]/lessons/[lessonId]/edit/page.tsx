@@ -113,14 +113,14 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
 
   if (isLoadingLesson) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#1a1815]">
         <div className="flex">
           <AdminSidebar />
           <div className="flex-1 p-8">
             <div className="max-w-4xl mx-auto">
               <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-                <div className="h-64 bg-slate-200 rounded"></div>
+                <div className="h-8 bg-[#2a2520] rounded w-1/4"></div>
+                <div className="h-64 bg-[#2a2520] rounded"></div>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -142,8 +142,8 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                   Back to Track
                 </Button>
               </Link>
-              <h1 className="text-3xl font-bold text-slate-900">Edit Lesson</h1>
-              <p className="text-slate-600 mt-2">
+              <h1 className="text-3xl font-bold text-[var(--text-strong)]">Edit Lesson</h1>
+              <p className="text-[var(--text-strong)] mt-2">
                 Update lesson content and settings
               </p>
             </div>
@@ -158,7 +158,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Lesson Title *
                     </label>
                     <Input
@@ -170,7 +170,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       URL Slug *
                     </label>
                     <Input
@@ -183,7 +183,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                         Duration (minutes)
                       </label>
                       <Input
@@ -196,7 +196,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                         Publish Date
                       </label>
                       <Input
@@ -208,7 +208,7 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Video URL
                     </label>
                     <Input
@@ -238,13 +238,13 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                 </CardHeader>
                 <CardContent>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Content *
                     </label>
                     <textarea
                       value={formData.contentMDX}
                       onChange={(e) => setFormData(prev => ({ ...prev, contentMDX: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
                       rows={20}
                       required
                     />
@@ -264,14 +264,14 @@ export default function EditLessonPage({ params }: EditLessonPageProps) {
                 </Button>
                 
                 <div className="flex items-center gap-4">
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-[var(--text-muted)]">
                     {formData.publishedAt ? (
-                      <span className="flex items-center gap-1 text-green-600">
+                      <span className="flex items-center gap-1 text-[#4a7c3f]">
                         <Eye className="h-4 w-4" />
                         Will be published
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-yellow-600">
+                      <span className="flex items-center gap-1 text-[#c9a227]">
                         <EyeOff className="h-4 w-4" />
                         Will be saved as draft
                       </span>

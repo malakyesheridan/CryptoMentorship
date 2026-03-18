@@ -120,7 +120,7 @@ export function Questions({ eventId, initialQuestions = [] }: QuestionsProps) {
               maxLength={1000}
             />
             <div className="flex justify-between items-center mt-2">
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-[var(--text-muted)]">
                 {newQuestion.length}/1000 characters
               </span>
               <Button 
@@ -136,16 +136,16 @@ export function Questions({ eventId, initialQuestions = [] }: QuestionsProps) {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800 text-sm">{error}</p>
+          <div className="bg-[#2e1a1a] border border-[#c03030]/30 rounded-lg p-4">
+            <p className="text-[#c03030] text-sm">{error}</p>
           </div>
         )}
 
         {/* Questions List */}
         <div className="space-y-4">
           {sortedQuestions.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">
-              <MessageCircle className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+            <div className="text-center py-8 text-[var(--text-muted)]">
+              <MessageCircle className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
               <p>No questions yet. Be the first to ask!</p>
             </div>
           ) : (
@@ -154,14 +154,14 @@ export function Questions({ eventId, initialQuestions = [] }: QuestionsProps) {
                 key={question.id}
                 className={`border rounded-lg p-4 ${
                   question.archivedAt 
-                    ? 'bg-slate-50 border-slate-200' 
-                    : 'bg-white border-slate-200'
+                    ? 'bg-[#1a1815] border-[var(--border-subtle)]' 
+                    : 'bg-[var(--bg-panel)] border-[var(--border-subtle)]'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <p className="text-slate-800 mb-2">{question.body}</p>
-                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                    <p className="text-[var(--text-strong)] mb-2">{question.body}</p>
+                    <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
                       <span>by {question.user.name}</span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
@@ -173,13 +173,13 @@ export function Questions({ eventId, initialQuestions = [] }: QuestionsProps) {
                   <div className="flex items-center gap-2">
                     {/* Status Badges */}
                     {question.answeredAt && (
-                      <Badge variant="outline" className="text-green-600 border-green-200">
+                      <Badge variant="outline" className="text-[#4a7c3f] border-[#4a7c3f]/30">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Answered
                       </Badge>
                     )}
                     {question.archivedAt && (
-                      <Badge variant="outline" className="text-slate-500 border-slate-200">
+                      <Badge variant="outline" className="text-[var(--text-muted)] border-[var(--border-subtle)]">
                         <Archive className="h-3 w-3 mr-1" />
                         Archived
                       </Badge>
@@ -189,12 +189,12 @@ export function Questions({ eventId, initialQuestions = [] }: QuestionsProps) {
 
                 {/* Answer */}
                 {question.answer && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
+                  <div className="bg-[#1a2e1a] border border-[#4a7c3f]/30 rounded-lg p-4 mb-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">Answer</span>
+                      <CheckCircle className="h-4 w-4 text-[#4a7c3f]" />
+                      <span className="text-sm font-medium text-[#4a7c3f]">Answer</span>
                     </div>
-                    <p className="text-green-800">{question.answer}</p>
+                    <p className="text-[#4a7c3f]">{question.answer}</p>
                   </div>
                 )}
 
@@ -214,7 +214,7 @@ export function Questions({ eventId, initialQuestions = [] }: QuestionsProps) {
                       <ThumbsUp className="h-3 w-3" />
                       {question.voteCount}
                     </Button>
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-[var(--text-muted)]">
                       {question.voteCount === 1 ? 'vote' : 'votes'}
                     </span>
                   </div>

@@ -16,7 +16,7 @@ export function SectionHeader({ title, subtitle, badge, actions }: SectionHeader
     <div className="mb-8">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <h2 className="heading-md text-slate-800">{title}</h2>
+          <h2 className="heading-md text-[var(--text-strong)]">{title}</h2>
           {badge && (
             <Badge variant={badge.variant}>{badge.text}</Badge>
           )}
@@ -28,7 +28,7 @@ export function SectionHeader({ title, subtitle, badge, actions }: SectionHeader
         )}
       </div>
       {subtitle && (
-        <p className="text-slate-500 text-lg">{subtitle}</p>
+        <p className="text-[var(--text-muted)] text-lg">{subtitle}</p>
       )}
     </div>
   )

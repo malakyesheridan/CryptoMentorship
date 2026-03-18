@@ -176,7 +176,7 @@ export function LessonPlayer({
   // Show locked lesson view
   if (isLocked) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#1a1815]">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
@@ -197,7 +197,7 @@ export function LessonPlayer({
                   <div className="space-y-2">
                     {track.sections.map((section) => (
                       <div key={section.id} className="space-y-1">
-                        <h4 className="font-medium text-slate-900 text-sm">{section.title}</h4>
+                        <h4 className="font-medium text-[var(--text-strong)] text-sm">{section.title}</h4>
                         <div className="space-y-1 ml-2">
                           {section.lessons.map((sectionLesson) => {
                             const isCurrentLesson = sectionLesson.id === lesson.id
@@ -211,8 +211,8 @@ export function LessonPlayer({
                                   isCurrentLesson
                                     ? 'bg-gold-100 text-gold-700 font-medium'
                                     : isCompleted
-                                    ? 'text-green-600 hover:bg-green-50'
-                                    : 'text-slate-600 hover:bg-slate-50'
+                                    ? 'text-[#4a7c3f] hover:bg-[#1a2e1a]'
+                                    : 'text-[var(--text-strong)] hover:bg-[#1a1815]'
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
@@ -245,18 +245,18 @@ export function LessonPlayer({
                         {lesson.title}
                       </CardTitle>
                       {lesson.section && (
-                        <CardDescription className="text-sm text-slate-600 mb-2">
+                        <CardDescription className="text-sm text-[var(--text-strong)] mb-2">
                           {lesson.section.title}
                         </CardDescription>
                       )}
-                      <div className="flex items-center gap-4 text-sm text-slate-600">
+                      <div className="flex items-center gap-4 text-sm text-[var(--text-strong)]">
                         {lesson.durationMin && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
                             {lesson.durationMin} minutes
                           </span>
                         )}
-                        <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
+                        <Badge variant="secondary" className="text-xs bg-[#2a2418] text-[#c9a227]">
                           <Lock className="h-3 w-3 mr-1" />
                           Locked
                         </Badge>
@@ -267,15 +267,15 @@ export function LessonPlayer({
                 <CardContent>
                   <div className="text-center py-12">
                     <Lock className="h-16 w-16 text-yellow-500 mx-auto mb-6" />
-                    <h3 className="text-xl font-semibold text-slate-900 mb-4">
+                    <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-4">
                       This lesson is not yet available
                     </h3>
-                    <p className="text-slate-600 mb-6">
+                    <p className="text-[var(--text-strong)] mb-6">
                       This lesson will be released as part of your cohort schedule.
                     </p>
                     {accessInfo?.releaseAt && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                        <div className="flex items-center justify-center gap-2 text-yellow-800">
+                      <div className="bg-[#2a2418] border border-[#2a2418] rounded-lg p-4 mb-6">
+                        <div className="flex items-center justify-center gap-2 text-[#c9a227]">
                           <Calendar className="h-4 w-4" />
                           <span className="font-medium">
                             {formatRelativeTime(accessInfo.releaseAt)}
@@ -300,7 +300,7 @@ export function LessonPlayer({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
@@ -330,12 +330,12 @@ export function LessonPlayer({
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-900 mb-3">Lessons</h4>
+                    <h4 className="text-sm font-semibold text-[var(--text-strong)] mb-3">Lessons</h4>
                     <div className="space-y-1">
                       {track.sections.map((section) => (
                         <div key={section.id} className="space-y-1">
                           {section.title && (
-                            <h5 className="text-xs font-medium text-slate-600 uppercase tracking-wide px-2 py-1">
+                            <h5 className="text-xs font-medium text-[var(--text-strong)] uppercase tracking-wide px-2 py-1">
                               {section.title}
                             </h5>
                           )}
@@ -351,8 +351,8 @@ export function LessonPlayer({
                                   isCurrentLesson
                                     ? 'bg-gold-100 text-gold-900 font-medium border border-gold-200'
                                     : isCompleted
-                                    ? 'text-green-700 hover:bg-green-50'
-                                    : 'text-slate-700 hover:bg-slate-50'
+                                    ? 'text-[#4a7c3f] hover:bg-[#1a2e1a]'
+                                    : 'text-[var(--text-strong)] hover:bg-[#1a1815]'
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
@@ -383,11 +383,11 @@ export function LessonPlayer({
                   <div>
                     <CardTitle className="text-2xl mb-2">{lesson.title}</CardTitle>
                     {lesson.section && (
-                      <CardDescription className="text-sm text-slate-600 mb-2">
+                      <CardDescription className="text-sm text-[var(--text-strong)] mb-2">
                         {lesson.section.title}
                       </CardDescription>
                     )}
-                    <div className="flex items-center gap-4 text-sm text-slate-600">
+                    <div className="flex items-center gap-4 text-sm text-[var(--text-strong)]">
                       {lesson.durationMin && (
                         <span className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
@@ -440,7 +440,7 @@ export function LessonPlayer({
                 {/* Description */}
                 {lesson.contentMDX && lesson.contentMDX.trim() && (
                   <div className="mb-6">
-                    <div className="prose prose-slate max-w-none">
+                    <div className="prose prose-invert max-w-none">
                       <LessonMDXRenderer content={lesson.contentMDX} />
                     </div>
                   </div>
@@ -448,15 +448,15 @@ export function LessonPlayer({
 
                 {pdfResources.length > 0 && (
                   <div className="mb-6">
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="rounded-lg border border-[var(--border-subtle)] bg-[#1a1815] p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <FileText className="h-4 w-4 text-slate-600" />
-                        <h3 className="text-sm font-semibold text-slate-900">Lesson PDFs</h3>
+                        <FileText className="h-4 w-4 text-[var(--text-strong)]" />
+                        <h3 className="text-sm font-semibold text-[var(--text-strong)]">Lesson PDFs</h3>
                       </div>
                       <div className="space-y-2">
                         {pdfResources.map((resource) => (
                           <div key={resource.url} className="flex items-center justify-between gap-4">
-                            <span className="text-sm text-slate-700">{resource.title}</span>
+                            <span className="text-sm text-[var(--text-strong)]">{resource.title}</span>
                             <a
                               href={resource.url}
                               target="_blank"
@@ -508,7 +508,7 @@ export function LessonPlayer({
                 )}
 
                 {/* Navigation */}
-                <div className="flex items-center justify-between pt-6 border-t border-slate-200">
+                <div className="flex items-center justify-between pt-6 border-t border-[var(--border-subtle)]">
                   <div>
                     {prevLesson ? (
                       <Link href={`/learn/${track.slug}/lesson/${prevLesson.slug}`}>

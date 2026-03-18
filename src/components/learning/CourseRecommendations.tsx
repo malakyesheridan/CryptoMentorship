@@ -122,10 +122,10 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
 
   const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200'
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200'
-      default: return 'bg-slate-100 text-slate-800 border-slate-200'
+      case 'high': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
+      case 'medium': return 'bg-[#2a2418] text-[#c9a227] border-[#2a2418]'
+      case 'low': return 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]'
+      default: return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
@@ -141,9 +141,9 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
   if (recommendedCourses.length === 0) {
     return (
       <div className={cn('text-center py-8', className)}>
-        <Sparkles className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">All Caught Up!</h3>
-        <p className="text-slate-600 mb-4">You&apos;re started in all available courses. Great job!</p>
+        <Sparkles className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">All Caught Up!</h3>
+        <p className="text-[var(--text-strong)] mb-4">You&apos;re started in all available courses. Great job!</p>
         <Button asChild>
           <Link href="/learning">Browse All Courses</Link>
         </Button>
@@ -155,7 +155,7 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
     <div className={cn('space-y-6', className)}>
       <div className="flex items-center gap-2">
         <Sparkles className="h-6 w-6 text-purple-600" />
-        <h2 className="text-2xl font-bold text-slate-900">Recommended for You</h2>
+        <h2 className="text-2xl font-bold text-[var(--text-strong)]">Recommended for You</h2>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -187,21 +187,21 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
             <CardContent className="p-4">
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-semibold text-slate-900 text-sm line-clamp-2 group-hover:text-blue-700 transition-colors duration-300">
+                  <h3 className="font-semibold text-[var(--text-strong)] text-sm line-clamp-2 group-hover:text-[#5b8dd9] transition-colors duration-300">
                     {course.title}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1 group-hover:text-slate-600 transition-colors duration-300">
+                  <p className="text-xs text-[var(--text-muted)] mt-1 group-hover:text-[var(--text-strong)] transition-colors duration-300">
                     {course.reason}
                   </p>
                 </div>
 
                 {course.description && (
-                  <p className="text-xs text-slate-600 line-clamp-2 group-hover:text-slate-700 transition-colors duration-300">
+                  <p className="text-xs text-[var(--text-strong)] line-clamp-2 group-hover:text-[var(--text-strong)] transition-colors duration-300">
                     {course.description}
                   </p>
                 )}
 
-                <div className="flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-600 transition-colors duration-300">
+                <div className="flex items-center justify-between text-xs text-[var(--text-muted)] group-hover:text-[var(--text-strong)] transition-colors duration-300">
                   <span>New Course</span>
                   {course.publishedAt && (
                     <span className="flex items-center gap-1">

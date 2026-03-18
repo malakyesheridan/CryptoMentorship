@@ -84,29 +84,29 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-slate-50">
+          <Card className="shadow-lg border-0 bg-[var(--bg-panel)]">
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-3xl mb-3 text-slate-900 font-bold">{video.title}</CardTitle>
-                  <div className="flex items-center space-x-6 text-sm text-slate-600">
+                  <CardTitle className="text-3xl mb-3 text-[var(--text-strong)] font-bold">{video.title}</CardTitle>
+                  <div className="flex items-center space-x-6 text-sm text-[var(--text-muted)]">
                     <div className="flex items-center space-x-2">
-                      <Eye className="w-5 h-5 text-slate-500" />
+                      <Eye className="w-5 h-5 text-[var(--text-muted)]" />
                       <span className="font-medium">{video._count.views} views</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Clock className="w-5 h-5 text-slate-500" />
+                      <Clock className="w-5 h-5 text-[var(--text-muted)]" />
                       <span className="font-medium">{formatDuration(video.duration)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Calendar className="w-5 h-5 text-slate-500" />
+                      <Calendar className="w-5 h-5 text-[var(--text-muted)]" />
                       <span className="font-medium">{formatDistanceToNow(video.createdAt)} ago</span>
                     </div>
                   </div>
                 </div>
                 <Badge
                   variant={video.status === 'ready' ? 'default' : 'secondary'}
-                  className={`${video.status === 'ready' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-slate-100 text-slate-800'} px-3 py-1`}
+                  className={`${video.status === 'ready' ? 'bg-[#1a2e1a] text-[#4a7c3f] hover:bg-[#1a2e1a]' : 'bg-[#1a1815] text-[var(--text-strong)]'} px-3 py-1`}
                 >
                   {video.status}
                 </Badge>
@@ -115,8 +115,8 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
             <CardContent>
               {video.description && (
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-800">Description</h3>
-                  <p className="text-slate-600 leading-relaxed">{video.description}</p>
+                  <h3 className="font-semibold text-[var(--text-strong)]">Description</h3>
+                  <p className="text-[var(--text-muted)] leading-relaxed">{video.description}</p>
                 </div>
               )}
             </CardContent>
@@ -126,35 +126,35 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Video Details */}
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-slate-50">
+          <Card className="shadow-lg border-0 bg-[var(--bg-panel)]">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl font-bold text-slate-900">Video Details</CardTitle>
+              <CardTitle className="text-xl font-bold text-[var(--text-strong)]">Video Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                  <span className="text-slate-600 font-medium">Duration</span>
-                  <span className="font-semibold text-slate-900">{formatDuration(video.duration)}</span>
+                <div className="flex justify-between items-center py-2 border-b border-[var(--border-subtle)]">
+                  <span className="text-[var(--text-muted)] font-medium">Duration</span>
+                  <span className="font-semibold text-[var(--text-strong)]">{formatDuration(video.duration)}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                  <span className="text-slate-600 font-medium">File Size</span>
-                  <span className="font-semibold text-slate-900">{formatFileSize(video.fileSize)}</span>
+                <div className="flex justify-between items-center py-2 border-b border-[var(--border-subtle)]">
+                  <span className="text-[var(--text-muted)] font-medium">File Size</span>
+                  <span className="font-semibold text-[var(--text-strong)]">{formatFileSize(video.fileSize)}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                  <span className="text-slate-600 font-medium">Format</span>
-                  <span className="font-semibold text-slate-900">{video.mimeType}</span>
+                <div className="flex justify-between items-center py-2 border-b border-[var(--border-subtle)]">
+                  <span className="text-[var(--text-muted)] font-medium">Format</span>
+                  <span className="font-semibold text-[var(--text-strong)]">{video.mimeType}</span>
                 </div>
                 {video.resolution && (
-                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                    <span className="text-slate-600 font-medium">Resolution</span>
-                    <span className="font-semibold text-slate-900">{video.resolution}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-[var(--border-subtle)]">
+                    <span className="text-[var(--text-muted)] font-medium">Resolution</span>
+                    <span className="font-semibold text-[var(--text-strong)]">{video.resolution}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-slate-600 font-medium">Visibility</span>
+                  <span className="text-[var(--text-muted)] font-medium">Visibility</span>
                   <Badge
                     variant="outline"
-                    className={`${video.visibility === 'public' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'} px-3 py-1`}
+                    className={`${video.visibility === 'public' ? 'bg-[#1a2e1a] text-[#4a7c3f] border-[#4a7c3f]/30' : 'bg-[#1a1e2e] text-blue-400 border-blue-400/30'} px-3 py-1`}
                   >
                     {video.visibility}
                   </Badge>
@@ -164,18 +164,18 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
           </Card>
 
           {/* Uploader Info */}
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-slate-50">
+          <Card className="shadow-lg border-0 bg-[var(--bg-panel)]">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl font-bold text-slate-900">Uploaded By</CardTitle>
+              <CardTitle className="text-xl font-bold text-[var(--text-strong)]">Uploaded By</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center shadow-sm">
-                  <User className="w-6 h-6 text-slate-600" />
+                <div className="w-12 h-12 bg-[#1a1815] rounded-full flex items-center justify-center shadow-sm">
+                  <User className="w-6 h-6 text-[var(--text-muted)]" />
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900 text-lg">{video.uploader.name}</p>
-                  <p className="text-sm text-slate-600">{video.uploader.email}</p>
+                  <p className="font-semibold text-[var(--text-strong)] text-lg">{video.uploader.name}</p>
+                  <p className="text-sm text-[var(--text-muted)]">{video.uploader.email}</p>
                 </div>
               </div>
             </CardContent>

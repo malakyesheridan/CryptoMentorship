@@ -90,7 +90,7 @@ export function PdfAttachmentsField({
     <div className="space-y-3">
       <div className="space-y-2">
         <Label className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-slate-600" />
+          <FileText className="h-4 w-4 text-[var(--text-strong)]" />
           {label}
         </Label>
         <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ export function PdfAttachmentsField({
             {isUploading ? 'Uploading...' : 'Upload PDF'}
           </Button>
           {isUploading && uploadProgress > 0 && (
-            <span className="text-sm text-slate-500">{uploadProgress}%</span>
+            <span className="text-sm text-[var(--text-muted)]">{uploadProgress}%</span>
           )}
           <input
             ref={fileInputRef}
@@ -117,14 +117,14 @@ export function PdfAttachmentsField({
           />
         </div>
         {helperText && (
-          <p className="text-xs text-slate-500">{helperText}</p>
+          <p className="text-xs text-[var(--text-muted)]">{helperText}</p>
         )}
       </div>
 
       {value.length > 0 ? (
         <div className="space-y-2">
           {value.map((item, index) => (
-            <div key={`${item.url}-${index}`} className="flex flex-col gap-2 rounded-lg border border-slate-200 p-3">
+            <div key={`${item.url}-${index}`} className="flex flex-col gap-2 rounded-lg border border-[var(--border-subtle)] p-3">
               <Input
                 value={item.title}
                 onChange={(e) => handleTitleChange(index, e.target.value)}
@@ -146,14 +146,14 @@ export function PdfAttachmentsField({
                   onClick={() => handleRemove(index)}
                   aria-label="Remove PDF"
                 >
-                  <X className="h-4 w-4 text-slate-500" />
+                  <X className="h-4 w-4 text-[var(--text-muted)]" />
                 </Button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-xs text-slate-500">No PDFs attached yet.</p>
+        <p className="text-xs text-[var(--text-muted)]">No PDFs attached yet.</p>
       )}
     </div>
   )

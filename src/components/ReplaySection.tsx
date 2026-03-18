@@ -90,9 +90,9 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
   const renderPlayer = () => {
     if (!recordingUrl) {
       return (
-        <div className="bg-slate-100 rounded-lg aspect-video flex items-center justify-center">
-          <div className="text-center text-slate-500">
-            <Play className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+        <div className="bg-[#1a1815] rounded-lg aspect-video flex items-center justify-center">
+          <div className="text-center text-[var(--text-muted)]">
+            <Play className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
             <p>No recording available</p>
           </div>
         </div>
@@ -170,8 +170,8 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
           </CardHeader>
           <CardContent>
             {chapters.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <Clock className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+              <div className="text-center py-8 text-[var(--text-muted)]">
+                <Clock className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
                 <p>No chapters available</p>
               </div>
             ) : (
@@ -180,13 +180,13 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
                   <button
                     key={chapter.id}
                     onClick={() => handleChapterClick(chapter.startMs)}
-                    className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-gold-300 hover:bg-gold-50 transition-colors"
+                    className="w-full text-left p-3 rounded-lg border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-[#2a2418] transition-colors"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-slate-800">
+                      <span className="font-medium text-[var(--text-strong)]">
                         {chapter.title}
                       </span>
-                      <span className="text-sm text-slate-500">
+                      <span className="text-sm text-[var(--text-muted)]">
                         {msToTime(chapter.startMs)}
                       </span>
                     </div>
@@ -207,15 +207,15 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
           </CardHeader>
           <CardContent>
             {!transcript ? (
-              <div className="text-center py-8 text-slate-500">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+              <div className="text-center py-8 text-[var(--text-muted)]">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
                 <p>No transcript available</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]" />
                   <Input
                     type="text"
                     placeholder="Search transcript..."
@@ -228,8 +228,8 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
                 {/* Transcript Segments */}
                 <div className="max-h-96 overflow-y-auto space-y-2">
                   {filteredSegments.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <Search className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                    <div className="text-center py-8 text-[var(--text-muted)]">
+                      <Search className="h-8 w-8 mx-auto mb-2 text-[var(--text-muted)]" />
                       <p>No matching segments found</p>
                     </div>
                   ) : (
@@ -237,13 +237,13 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
                       <button
                         key={segment.id}
                         onClick={() => handleSegmentClick(segment.startMs)}
-                        className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-gold-300 hover:bg-gold-50 transition-colors"
+                        className="w-full text-left p-3 rounded-lg border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-[#2a2418] transition-colors"
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <span className="text-sm text-slate-600">
+                          <span className="text-sm text-[var(--text-strong)]">
                             {msToTime(segment.startMs)}
                           </span>
-                          <span className="text-slate-800 flex-1">
+                          <span className="text-[var(--text-strong)] flex-1">
                             {searchTerm ? (
                               <span
                                 dangerouslySetInnerHTML={{

@@ -111,7 +111,7 @@ export default function ResourceFilters({ resources, onFilteredResources }: Reso
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="flex-1 max-w-md">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] w-4 h-4" />
             <Input
               placeholder="Search resources..."
               className="pl-10"
@@ -125,7 +125,7 @@ export default function ResourceFilters({ resources, onFilteredResources }: Reso
             <select 
               value={categoryFilter} 
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-36 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-36 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Categories</option>
               {categories.map(category => (
@@ -136,7 +136,7 @@ export default function ResourceFilters({ resources, onFilteredResources }: Reso
           <select 
             value={accessFilter} 
             onChange={(e) => setAccessFilter(e.target.value as 'all' | 'public' | 'member')}
-            className="w-32 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-32 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Access</option>
             <option value="public">Public</option>
@@ -145,7 +145,7 @@ export default function ResourceFilters({ resources, onFilteredResources }: Reso
           <select 
             value={sortBy} 
             onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
-            className="w-32 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-32 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -155,7 +155,7 @@ export default function ResourceFilters({ resources, onFilteredResources }: Reso
       </div>
       
       {/* Results count */}
-      <div className="mt-4 text-sm text-slate-600">
+      <div className="mt-4 text-sm text-[var(--text-strong)]">
         Showing {filteredAndSortedResources.length} of {resources.length} resources
         {searchQuery && (
           <span className="ml-2">

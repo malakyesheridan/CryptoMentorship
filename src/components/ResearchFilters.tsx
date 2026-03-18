@@ -55,11 +55,11 @@ export function ResearchFilters() {
   const hasActiveFilters = search || selectedTags.length > 0
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
+    <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-6 mb-12">
       <div className="space-y-6">
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] w-5 h-5" />
           <Input
             placeholder="Search research articles..."
             value={search}
@@ -71,14 +71,14 @@ export function ResearchFilters() {
         {/* Tags */}
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <Filter className="w-5 h-5 text-slate-600" />
-            <span className="text-sm font-semibold text-slate-900">Filter by tags:</span>
+            <Filter className="w-5 h-5 text-[var(--text-strong)]" />
+            <span className="text-sm font-semibold text-[var(--text-strong)]">Filter by tags:</span>
             {hasActiveFilters && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-slate-500 hover:text-slate-700"
+                className="text-[var(--text-muted)] hover:text-[var(--text-strong)]"
               >
                 <X className="w-4 h-4 mr-1" />
                 Clear
@@ -92,8 +92,8 @@ export function ResearchFilters() {
                 variant={selectedTags.includes(tag) ? "default" : "outline"}
                 className={`cursor-pointer transition-all duration-200 px-3 py-1 ${
                   selectedTags.includes(tag) 
-                    ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
-                    : 'hover:bg-slate-100 hover:border-slate-300'
+                    ? 'bg-gold-500 text-white hover:bg-gold-600' 
+                    : 'hover:bg-[#1a1815] hover:border-[var(--border-subtle)]'
                 }`}
                 onClick={() => toggleTag(tag)}
               >
@@ -105,15 +105,15 @@ export function ResearchFilters() {
 
         {/* Active filters summary */}
         {hasActiveFilters && (
-          <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
-            <span className="text-sm font-medium text-slate-600">Active filters:</span>
+          <div className="flex items-center gap-3 pt-4 border-t border-[var(--border-subtle)]">
+            <span className="text-sm font-medium text-[var(--text-strong)]">Active filters:</span>
             {search && (
-              <Badge variant="secondary" className="text-xs bg-slate-100 text-slate-700">
+              <Badge variant="secondary" className="text-xs bg-[#1a1815] text-[var(--text-strong)]">
                 Search: &ldquo;{search}&rdquo;
               </Badge>
             )}
             {selectedTags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 text-slate-700">
+              <Badge key={tag} variant="secondary" className="text-xs bg-[#1a1815] text-[var(--text-strong)]">
                 {tag}
               </Badge>
             ))}

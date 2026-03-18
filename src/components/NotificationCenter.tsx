@@ -151,10 +151,10 @@ export function NotificationCenter({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label="Notifications"
-        className="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-slate-100 transition-colors"
+        className="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-[#1a1815] transition-colors"
       >
         <span className="sr-only">Notifications</span>
-        <Bell className="h-5 w-5 text-slate-700" />
+        <Bell className="h-5 w-5 text-[var(--text-strong)]" />
         {effectiveBadgeCount > 0 && (
           <span className="absolute -right-1 -top-1 min-w-5 rounded-full px-1 text-xs leading-5 text-white bg-gold-500 text-center">
             {effectiveBadgeCount > 99 ? '99+' : effectiveBadgeCount}
@@ -173,8 +173,8 @@ export function NotificationCenter({
               onPointerDown={stop}
               className={
                 isMobile
-                  ? 'absolute left-0 right-0 bottom-0 mx-auto w-full max-w-none rounded-t-2xl bg-white border border-slate-200 shadow-2xl'
-                  : 'absolute right-4 top-16 w-[420px] rounded-2xl bg-white border border-slate-200 shadow-2xl'
+                  ? 'absolute left-0 right-0 bottom-0 mx-auto w-full max-w-none rounded-t-2xl bg-[var(--bg-panel)] border border-[var(--border-subtle)] shadow-2xl'
+                  : 'absolute right-4 top-16 w-[420px] rounded-2xl bg-[var(--bg-panel)] border border-[var(--border-subtle)] shadow-2xl'
               }
               style={isMobile ? { maxHeight: '90dvh' } : { maxHeight: '70vh' }}
               role="dialog"
@@ -223,10 +223,10 @@ function Header({
   headerActions?: React.ReactNode
 }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-white rounded-t-2xl">
+    <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-panel)] rounded-t-2xl">
       <div className="flex flex-col">
-        <div className="text-sm font-semibold text-slate-900">Notifications</div>
-        <div className="text-xs text-slate-500">
+        <div className="text-sm font-semibold text-[var(--text-strong)]">Notifications</div>
+        <div className="text-xs text-[var(--text-muted)]">
           {loading ? 'Loading…' : unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up"}
         </div>
       </div>
@@ -267,7 +267,7 @@ function Body({
 }) {
   if (error) {
     return (
-      <div className="p-6 text-sm text-slate-600">
+      <div className="p-6 text-sm text-[var(--text-strong)]">
         <div className="mb-3">{error}</div>
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
@@ -277,35 +277,35 @@ function Body({
   }
 
   if (loading && items.length === 0) {
-    return <div className="p-6 text-sm text-slate-500">Loading…</div>
+    return <div className="p-6 text-sm text-[var(--text-muted)]">Loading…</div>
   }
 
   if (!loading && items.length === 0) {
-    return <div className="p-6 text-sm text-slate-500">No notifications.</div>
+    return <div className="p-6 text-sm text-[var(--text-muted)]">No notifications.</div>
   }
 
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-[var(--border-subtle)]">
       {items.map((notification) => {
         const unread = !notification.readAt
         return (
           <div
             key={notification.id}
-            className="p-4 hover:bg-slate-50 cursor-pointer transition-colors"
+            className="p-4 hover:bg-[#1a1815] cursor-pointer transition-colors"
             onClick={() => onItemClick(notification)}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   {unread && <span className="h-2 w-2 rounded-full bg-gold-500" />}
-                  <div className={`text-sm ${unread ? 'text-slate-900 font-semibold' : 'text-slate-700'}`}>
+                  <div className={`text-sm ${unread ? 'text-[var(--text-strong)] font-semibold' : 'text-[var(--text-strong)]'}`}>
                     {notification.title}
                   </div>
                 </div>
                 {notification.body && (
-                  <div className="mt-1 text-xs text-slate-500 line-clamp-2">{notification.body}</div>
+                  <div className="mt-1 text-xs text-[var(--text-muted)] line-clamp-2">{notification.body}</div>
                 )}
-                <div className="mt-2 text-[11px] text-slate-400">
+                <div className="mt-2 text-[11px] text-[var(--text-muted)]">
                   {formatDate(notification.createdAt, 'MMM d, yyyy h:mm a')}
                 </div>
               </div>
@@ -332,7 +332,7 @@ function Body({
                     event.stopPropagation()
                     onItemClick(notification)
                   }}
-                  className="text-slate-600 hover:text-slate-800"
+                  className="text-[var(--text-strong)] hover:text-[var(--text-strong)]"
                 >
                   <Check className="h-4 w-4" />
                 </Button>

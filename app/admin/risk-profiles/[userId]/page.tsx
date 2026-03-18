@@ -42,7 +42,7 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
     return (
       <div className="space-y-4">
         <p>User not found.</p>
-        <Link href="/admin/risk-profiles" className="text-sm text-slate-600">
+        <Link href="/admin/risk-profiles" className="text-sm text-[var(--text-strong)]">
           Back to list
         </Link>
       </div>
@@ -62,7 +62,7 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
           </h1>
           <p className="subhead">{user.name || 'Unnamed'} - {user.email}</p>
         </div>
-        <Link href="/admin/risk-profiles" className="text-sm text-slate-600">
+        <Link href="/admin/risk-profiles" className="text-sm text-[var(--text-strong)]">
           Back to list
         </Link>
       </div>
@@ -74,29 +74,29 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
         <CardContent className="space-y-3">
           {profile ? (
             <>
-              <div className="text-sm text-slate-600">Recommended</div>
-              <div className="text-xl font-semibold text-slate-900">
+              <div className="text-sm text-[var(--text-strong)]">Recommended</div>
+              <div className="text-xl font-semibold text-[var(--text-strong)]">
                 {formatRiskProfileLabel(profile.recommendedProfile)}
               </div>
-              <div className="text-sm text-slate-600">Score: {normalizedScore}</div>
-              <div className="text-sm text-slate-600">Completed: {formatDateTime(profile.completedAt)}</div>
+              <div className="text-sm text-[var(--text-strong)]">Score: {normalizedScore}</div>
+              <div className="text-sm text-[var(--text-strong)]">Completed: {formatDateTime(profile.completedAt)}</div>
               {profile.overriddenByAdmin && profile.adminOverrideProfile && (
                 <div className="text-sm text-amber-700">
                   Override: {formatRiskProfileLabel(profile.adminOverrideProfile)}
                 </div>
               )}
               {profile.adminOverrideReason && (
-                <div className="text-sm text-slate-600">Reason: {profile.adminOverrideReason}</div>
+                <div className="text-sm text-[var(--text-strong)]">Reason: {profile.adminOverrideReason}</div>
               )}
-              <div className="text-sm text-slate-600">Drivers:</div>
-              <ul className="text-sm text-slate-700 space-y-1">
+              <div className="text-sm text-[var(--text-strong)]">Drivers:</div>
+              <ul className="text-sm text-[var(--text-strong)] space-y-1">
                 {(profile.drivers as string[]).map((driver) => (
                   <li key={driver}>- {driver}</li>
                 ))}
               </ul>
             </>
           ) : (
-            <p className="text-sm text-slate-600">No profile computed yet.</p>
+            <p className="text-sm text-[var(--text-strong)]">No profile computed yet.</p>
           )}
         </CardContent>
       </Card>
@@ -111,9 +111,9 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
               const value = answers[question.id]
               const optionLabel = question.options?.find((option) => option.id === value)?.label || 'N/A'
               return (
-                <div key={question.id} className="border-b border-slate-100 pb-3">
-                  <div className="text-sm font-semibold text-slate-800">{question.title}</div>
-                  <div className="text-sm text-slate-600">{optionLabel}</div>
+                <div key={question.id} className="border-b border-[var(--border-subtle)] pb-3">
+                  <div className="text-sm font-semibold text-[var(--text-strong)]">{question.title}</div>
+                  <div className="text-sm text-[var(--text-strong)]">{optionLabel}</div>
                 </div>
               )
             }
@@ -121,12 +121,12 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
             if (question.type === 'likert-group') {
               const groupAnswers = answers[question.id] || {}
               return (
-                <div key={question.id} className="border-b border-slate-100 pb-3">
-                  <div className="text-sm font-semibold text-slate-800">{question.title}</div>
+                <div key={question.id} className="border-b border-[var(--border-subtle)] pb-3">
+                  <div className="text-sm font-semibold text-[var(--text-strong)]">{question.title}</div>
                   <div className="mt-2 space-y-2">
                     {question.statements?.map((statement) => (
-                      <div key={statement.id} className="text-sm text-slate-600">
-                        <span className="font-medium text-slate-700">{statement.label}:</span>{' '}
+                      <div key={statement.id} className="text-sm text-[var(--text-strong)]">
+                        <span className="font-medium text-[var(--text-strong)]">{statement.label}:</span>{' '}
                         {LIKERT_LABELS[groupAnswers[statement.id] as string] || 'N/A'}
                       </div>
                     ))}
@@ -139,18 +139,18 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
           })}
 
           {answers.goal_other_text && (
-            <div className="text-sm text-slate-600">
-              <span className="font-medium text-slate-700">Goal details:</span> {answers.goal_other_text}
+            <div className="text-sm text-[var(--text-strong)]">
+              <span className="font-medium text-[var(--text-strong)]">Goal details:</span> {answers.goal_other_text}
             </div>
           )}
           {answers.holdings_text && (
-            <div className="text-sm text-slate-600">
-              <span className="font-medium text-slate-700">Holdings:</span> {answers.holdings_text}
+            <div className="text-sm text-[var(--text-strong)]">
+              <span className="font-medium text-[var(--text-strong)]">Holdings:</span> {answers.holdings_text}
             </div>
           )}
           {answers.learn_more_text && (
-            <div className="text-sm text-slate-600">
-              <span className="font-medium text-slate-700">Learning goals:</span> {answers.learn_more_text}
+            <div className="text-sm text-[var(--text-strong)]">
+              <span className="font-medium text-[var(--text-strong)]">Learning goals:</span> {answers.learn_more_text}
             </div>
           )}
         </CardContent>

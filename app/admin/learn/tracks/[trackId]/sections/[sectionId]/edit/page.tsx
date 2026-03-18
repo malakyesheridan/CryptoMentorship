@@ -95,14 +95,14 @@ export default function EditSectionPage({ params }: EditSectionPageProps) {
 
   if (isLoadingSection) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#1a1815]">
         <div className="flex">
           <AdminSidebar />
           <div className="flex-1 p-8">
             <div className="max-w-2xl mx-auto">
               <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-                <div className="h-64 bg-slate-200 rounded"></div>
+                <div className="h-8 bg-[#2a2520] rounded w-1/4"></div>
+                <div className="h-64 bg-[#2a2520] rounded"></div>
               </div>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function EditSectionPage({ params }: EditSectionPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -124,8 +124,8 @@ export default function EditSectionPage({ params }: EditSectionPageProps) {
                   Back to Track
                 </Button>
               </Link>
-              <h1 className="text-3xl font-bold text-slate-900">Edit Section</h1>
-              <p className="text-slate-600 mt-2">
+              <h1 className="text-3xl font-bold text-[var(--text-strong)]">Edit Section</h1>
+              <p className="text-[var(--text-strong)] mt-2">
                 Update section information
               </p>
             </div>
@@ -140,7 +140,7 @@ export default function EditSectionPage({ params }: EditSectionPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Section Title *
                     </label>
                     <Input
@@ -152,14 +152,14 @@ export default function EditSectionPage({ params }: EditSectionPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Summary
                     </label>
                     <textarea
                       value={formData.summary}
                       onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
                       placeholder="Brief description of what this section covers..."
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                       rows={3}
                     />
                   </div>

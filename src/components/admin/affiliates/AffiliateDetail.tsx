@@ -71,13 +71,13 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--text-muted)]" />
       </div>
     )
   }
 
   if (!data) {
-    return <div className="text-slate-600">Affiliate not found.</div>
+    return <div className="text-[var(--text-strong)]">Affiliate not found.</div>
   }
 
   return (
@@ -91,8 +91,8 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
         <CardContent>
           <div className="space-y-2">
             <p className="text-lg font-semibold">{data.referrer.name || 'Unnamed'}</p>
-            <p className="text-sm text-slate-600">{data.referrer.email || '--'}</p>
-            <p className="text-sm text-slate-500">Slug: {data.referrer.referralSlug || '--'}</p>
+            <p className="text-sm text-[var(--text-strong)]">{data.referrer.email || '--'}</p>
+            <p className="text-sm text-[var(--text-muted)]">Slug: {data.referrer.referralSlug || '--'}</p>
           </div>
         </CardContent>
       </Card>
@@ -100,25 +100,25 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="card">
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-600">Total Referrals</p>
+            <p className="text-sm text-[var(--text-strong)]">Total Referrals</p>
             <p className="text-2xl font-bold">{stats.total}</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-600">Qualified</p>
+            <p className="text-sm text-[var(--text-strong)]">Qualified</p>
             <p className="text-2xl font-bold">{stats.qualified}</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-600">Payable</p>
+            <p className="text-sm text-[var(--text-strong)]">Payable</p>
             <p className="text-2xl font-bold">{stats.payable}</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-600">Paid</p>
+            <p className="text-sm text-[var(--text-strong)]">Paid</p>
             <p className="text-2xl font-bold">{stats.paid}</p>
           </CardContent>
         </Card>
@@ -132,7 +132,7 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-slate-600">
+                <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-[var(--text-strong)]">
                   <th className="py-3 px-4">Referred</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Signed Up</th>
@@ -147,10 +147,10 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
                   <tr key={referral.id} className="border-b border-[color:var(--border-subtle)]">
                     <td className="py-4 px-4">
                       <div>
-                        <p className="font-medium text-slate-800">
+                        <p className="font-medium text-[var(--text-strong)]">
                           {referral.referredName || referral.referredEmail || 'Pending'}
                         </p>
-                        <p className="text-sm text-slate-500">{referral.referredEmail || '--'}</p>
+                        <p className="text-sm text-[var(--text-muted)]">{referral.referredEmail || '--'}</p>
                       </div>
                     </td>
                     <td className="py-4 px-4">
@@ -158,19 +158,19 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
                         {referral.status}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.signedUpAt ? format(new Date(referral.signedUpAt), 'MMM d, yyyy') : '--'}
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.qualifiedAt ? format(new Date(referral.qualifiedAt), 'MMM d, yyyy') : '--'}
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.payableAt ? format(new Date(referral.payableAt), 'MMM d, yyyy') : '--'}
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.paidAt ? format(new Date(referral.paidAt), 'MMM d, yyyy') : '--'}
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.commissionAmountCents !== null
                         ? `$${(referral.commissionAmountCents / 100).toFixed(2)}`
                         : '--'}
@@ -179,7 +179,7 @@ export function AffiliateDetail({ affiliateId }: { affiliateId: string }) {
                 ))}
                 {data.referrals.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="py-8 text-center text-sm text-[var(--text-muted)]">
                       No referrals found.
                     </td>
                   </tr>

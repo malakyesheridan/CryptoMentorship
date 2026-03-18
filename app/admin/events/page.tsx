@@ -129,10 +129,10 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Total Events</p>
-                <p className="text-2xl font-bold text-slate-800">{stats._count.id}</p>
+                <p className="text-sm text-[var(--text-strong)]">Total Events</p>
+                <p className="text-2xl font-bold text-[var(--text-strong)]">{stats._count.id}</p>
               </div>
-              <Calendar className="h-8 w-8 text-slate-400" />
+              <Calendar className="h-8 w-8 text-[var(--text-muted)]" />
             </div>
           </CardContent>
         </Card>
@@ -141,10 +141,10 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Upcoming</p>
-                <p className="text-2xl font-bold text-slate-800">{upcomingCount}</p>
+                <p className="text-sm text-[var(--text-strong)]">Upcoming</p>
+                <p className="text-2xl font-bold text-[var(--text-strong)]">{upcomingCount}</p>
               </div>
-              <Clock className="h-8 w-8 text-slate-400" />
+              <Clock className="h-8 w-8 text-[var(--text-muted)]" />
             </div>
           </CardContent>
         </Card>
@@ -153,10 +153,10 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Past Events</p>
-                <p className="text-2xl font-bold text-slate-800">{pastCount}</p>
+                <p className="text-sm text-[var(--text-strong)]">Past Events</p>
+                <p className="text-2xl font-bold text-[var(--text-strong)]">{pastCount}</p>
               </div>
-              <Calendar className="h-8 w-8 text-slate-400" />
+              <Calendar className="h-8 w-8 text-[var(--text-muted)]" />
             </div>
           </CardContent>
         </Card>
@@ -165,10 +165,10 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Total RSVPs</p>
-                <p className="text-2xl font-bold text-slate-800">{totalRSVPs}</p>
+                <p className="text-sm text-[var(--text-strong)]">Total RSVPs</p>
+                <p className="text-2xl font-bold text-[var(--text-strong)]">{totalRSVPs}</p>
               </div>
-              <Users className="h-8 w-8 text-slate-400" />
+              <Users className="h-8 w-8 text-[var(--text-muted)]" />
             </div>
           </CardContent>
         </Card>
@@ -237,7 +237,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
       {/* Search */}
       <div className="mb-6">
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]" />
           <Input
             placeholder="Search events..."
             className="pl-10"
@@ -269,7 +269,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                       )}
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-600">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-[var(--text-strong)]">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         <span>{formatDate(event.startAt, 'PPP')} at {formatTime(event.startAt)}</span>
@@ -287,7 +287,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                         <Users className="h-4 w-4" />
                         <span>{event._count.rsvps} RSVPs</span>
                         {event.capacity && (
-                          <span className="text-slate-400">
+                          <span className="text-[var(--text-muted)]">
                             ({event._count.rsvps}/{event.capacity})
                           </span>
                         )}
@@ -312,7 +312,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                       </Link>
                     </Button>
                     {['admin', 'editor'].includes(session.user.role) && (
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button variant="outline" size="sm" className="text-[#c03030] hover:text-[#c03030]">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}

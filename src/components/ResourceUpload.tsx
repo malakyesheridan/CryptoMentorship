@@ -128,7 +128,7 @@ export default function ResourceUpload() {
           {/* File Upload */}
           <div className="space-y-2">
             <Label htmlFor="file">PDF Document *</Label>
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-slate-400 transition-colors">
+            <div className="border-2 border-dashed border-[var(--border-subtle)] rounded-lg p-4 text-center hover:border-[var(--border-subtle)] transition-colors">
               <input
                 type="file"
                 id="file"
@@ -141,8 +141,8 @@ export default function ResourceUpload() {
                 {formData.file ? (
                   <div className="space-y-2">
                     <CheckCircle className="w-6 h-6 text-green-500 mx-auto" />
-                    <p className="font-medium text-slate-800">{formData.file.name}</p>
-                    <p className="text-sm text-slate-600">{formatFileSize(formData.file.size)}</p>
+                    <p className="font-medium text-[var(--text-strong)]">{formData.file.name}</p>
+                    <p className="text-sm text-[var(--text-strong)]">{formatFileSize(formData.file.size)}</p>
                     <Button
                       type="button"
                       variant="outline"
@@ -156,9 +156,9 @@ export default function ResourceUpload() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <Upload className="w-6 h-6 text-slate-400 mx-auto" />
-                    <p className="font-medium text-slate-800">Click to select PDF file</p>
-                    <p className="text-sm text-slate-600">PDF files up to 1GB</p>
+                    <Upload className="w-6 h-6 text-[var(--text-muted)] mx-auto" />
+                    <p className="font-medium text-[var(--text-strong)]">Click to select PDF file</p>
+                    <p className="text-sm text-[var(--text-strong)]">PDF files up to 1GB</p>
                   </div>
                 )}
               </label>
@@ -201,7 +201,7 @@ export default function ResourceUpload() {
               placeholder="e.g., guide, tutorial, reference (comma-separated)"
               disabled={isUploading}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Separate multiple tags with commas. These will be used for filtering and categorization.
             </p>
           </div>
@@ -213,7 +213,7 @@ export default function ResourceUpload() {
               value={formData.visibility}
               onChange={(e) => setFormData({ ...formData, visibility: e.target.value })}
               disabled={isUploading}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-[#1a1815] disabled:cursor-not-allowed"
             >
               <option value="public">Public - Everyone can view</option>
               <option value="member">Member - Members only</option>
@@ -223,14 +223,14 @@ export default function ResourceUpload() {
 
           {/* Status Messages */}
           {uploadStatus === 'success' && (
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-[#4a7c3f]">
               <CheckCircle className="w-5 h-5" />
               <span>Resource uploaded successfully!</span>
             </div>
           )}
 
           {uploadStatus === 'error' && (
-            <div className="flex items-center space-x-2 text-red-600">
+            <div className="flex items-center space-x-2 text-[#c03030]">
               <AlertCircle className="w-5 h-5" />
               <span>{errorMessage}</span>
             </div>

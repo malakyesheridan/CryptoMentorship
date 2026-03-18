@@ -316,7 +316,7 @@ export function LearningHubWizard() {
         <Button
           variant="outline"
           size="sm"
-          className="shadow-lg bg-white"
+          className="shadow-lg bg-[var(--bg-panel)]"
           onClick={handleStart}
         >
           <HelpCircle className="h-4 w-4 mr-2" />
@@ -329,9 +329,9 @@ export function LearningHubWizard() {
   if (!stepOnRoute) {
     return (
       <div className="fixed bottom-6 right-6 z-[130]">
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-4 w-72">
-          <p className="text-sm font-semibold text-slate-900 mb-2">Continue your tour</p>
-          <p className="text-sm text-slate-600 mb-4">
+        <div className="bg-[var(--bg-panel)] border border-[var(--border-subtle)] rounded-2xl shadow-xl p-4 w-72">
+          <p className="text-sm font-semibold text-[var(--text-strong)] mb-2">Continue your tour</p>
+          <p className="text-sm text-[var(--text-strong)] mb-4">
             Head to {step.routeLabel || "the next Learning Hub page"} to keep going.
           </p>
           <div className="flex items-center gap-2">
@@ -375,24 +375,24 @@ export function LearningHubWizard() {
       <div
         ref={calloutRef}
         className={cn(
-          "pointer-events-auto absolute z-10 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 w-80 max-w-[calc(100vw-32px)]"
+          "pointer-events-auto absolute z-10 bg-[var(--bg-panel)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl p-4 w-80 max-w-[calc(100vw-32px)]"
         )}
         style={calloutStyle}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-slate-500">
+          <span className="text-xs font-semibold text-[var(--text-muted)]">
             Step {state.stepIndex + 1} of {STEPS.length}
           </span>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-[var(--text-muted)] hover:text-[var(--text-strong)]"
             aria-label="End tour"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <h3 className="text-base font-semibold text-slate-900 mb-2">{step.title}</h3>
-        <p className="text-sm text-slate-600 mb-4">{bodyText}</p>
+        <h3 className="text-base font-semibold text-[var(--text-strong)] mb-2">{step.title}</h3>
+        <p className="text-sm text-[var(--text-strong)] mb-4">{bodyText}</p>
         <div className="flex items-center justify-between">
           <Button
             size="sm"

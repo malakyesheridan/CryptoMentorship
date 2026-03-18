@@ -64,7 +64,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -76,8 +76,8 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                   Back to Track
                 </Button>
               </Link>
-              <h1 className="text-3xl font-bold text-slate-900">Create New Lesson</h1>
-              <p className="text-slate-600 mt-2">
+              <h1 className="text-3xl font-bold text-[var(--text-strong)]">Create New Lesson</h1>
+              <p className="text-[var(--text-strong)] mt-2">
                 Add a new lesson to this track
               </p>
             </div>
@@ -92,7 +92,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Lesson Title *
                     </label>
                     <Input
@@ -110,7 +110,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       URL Slug *
                     </label>
                     <Input
@@ -119,14 +119,14 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                       placeholder="e.g., introduction-to-bitcoin"
                       required
                     />
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
                       This will be the URL: /learn/{params.trackId}/{formData.slug || 'lesson-slug'}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                         Duration (minutes)
                       </label>
                       <Input
@@ -139,7 +139,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                         Publish Date
                       </label>
                       <Input
@@ -151,7 +151,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Video URL
                     </label>
                     <Input
@@ -181,17 +181,17 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
                 </CardHeader>
                 <CardContent>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Content *
                     </label>
                     <textarea
                       value={formData.contentMDX}
                       onChange={(e) => setFormData(prev => ({ ...prev, contentMDX: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
                       rows={20}
                       required
                     />
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
                       Supports Markdown and MDX components
                     </p>
                   </div>
@@ -199,14 +199,14 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
               </Card>
 
               <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-[var(--text-muted)]">
                   {formData.publishedAt ? (
-                    <span className="flex items-center gap-1 text-green-600">
+                    <span className="flex items-center gap-1 text-[#4a7c3f]">
                       <Eye className="h-4 w-4" />
                       Will be published
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-yellow-600">
+                    <span className="flex items-center gap-1 text-[#c9a227]">
                       <EyeOff className="h-4 w-4" />
                       Will be saved as draft
                     </span>
@@ -236,9 +236,9 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
 export default function NewLessonPage({ params }: NewLessonPageProps) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#1a1815] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-600">Loading...</p>
+          <p className="text-[var(--text-strong)]">Loading...</p>
         </div>
       </div>
     }>

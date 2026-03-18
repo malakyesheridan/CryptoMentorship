@@ -101,10 +101,10 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <p className="font-semibold text-slate-900 mb-1">{user.name || 'No name'}</p>
+                        <p className="font-semibold text-[var(--text-strong)] mb-1">{user.name || 'No name'}</p>
                         <div className="flex items-center gap-1 mb-2">
-                          <Mail className="w-3 h-3 text-slate-400" />
-                          <p className="text-sm text-slate-600">{user.email}</p>
+                          <Mail className="w-3 h-3 text-[var(--text-muted)]" />
+                          <p className="text-sm text-[var(--text-strong)]">{user.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
@@ -124,7 +124,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                     
                     <div className="space-y-2 mb-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Role</span>
+                        <span className="text-xs text-[var(--text-muted)]">Role</span>
                         <div onClick={(e) => e.stopPropagation()}>
                           <RoleSelector
                             userId={user.id}
@@ -135,36 +135,36 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Membership</span>
+                        <span className="text-xs text-[var(--text-muted)]">Membership</span>
                         {membership ? (
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary" className="text-xs">
                               {membership.tier}
                             </Badge>
-                            <span className="text-xs text-slate-500 capitalize">{membership.status}</span>
+                            <span className="text-xs text-[var(--text-muted)] capitalize">{membership.status}</span>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400">No membership</span>
+                          <span className="text-xs text-[var(--text-muted)]">No membership</span>
                         )}
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Joined</span>
-                        <div className="flex items-center gap-1 text-xs text-slate-600">
+                        <span className="text-xs text-[var(--text-muted)]">Joined</span>
+                        <div className="flex items-center gap-1 text-xs text-[var(--text-strong)]">
                           <Calendar className="w-3 h-3" />
                           {formatDate(user.createdAt, 'MMM d, yyyy')}
                         </div>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Activity</span>
-                        <div className="text-xs text-slate-600">
+                        <span className="text-xs text-[var(--text-muted)]">Activity</span>
+                        <div className="text-xs text-[var(--text-strong)]">
                           {user._count.messages} msgs • {user._count.enrollments} enrolls • {user._count.certificates} certs
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border-subtle)]" onClick={(e) => e.stopPropagation()}>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -183,7 +183,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                       >
                         <Power className={cn(
                           "w-4 h-4",
-                          user.isActive ? "text-red-600" : "text-green-600"
+                          user.isActive ? "text-[#c03030]" : "text-[#4a7c3f]"
                         )} />
                       </Button>
                       {currentUserId && (
@@ -202,7 +202,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
             
             {users.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-slate-500">No users found.</p>
+                <p className="text-[var(--text-muted)]">No users found.</p>
               </div>
             )}
           </div>
@@ -212,13 +212,13 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[color:var(--border-subtle)]">
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">User</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Role</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Membership</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Activity</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Joined</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-600">Actions</th>
+                  <th className="text-left py-3 px-4 font-medium text-[var(--text-strong)]">User</th>
+                  <th className="text-left py-3 px-4 font-medium text-[var(--text-strong)]">Role</th>
+                  <th className="text-left py-3 px-4 font-medium text-[var(--text-strong)]">Membership</th>
+                  <th className="text-left py-3 px-4 font-medium text-[var(--text-strong)]">Activity</th>
+                  <th className="text-left py-3 px-4 font-medium text-[var(--text-strong)]">Joined</th>
+                  <th className="text-left py-3 px-4 font-medium text-[var(--text-strong)]">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-[var(--text-strong)]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -227,15 +227,15 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                   return (
                     <tr 
                       key={user.id} 
-                      className="border-b border-[color:var(--border-subtle)] hover:bg-slate-50 cursor-pointer"
+                      className="border-b border-[color:var(--border-subtle)] hover:bg-[#1a1815] cursor-pointer"
                       onClick={() => setSelectedUserId(user.id)}
                     >
                       <td className="py-4 px-4">
                         <div>
-                          <p className="font-medium text-slate-800">{user.name || 'No name'}</p>
+                          <p className="font-medium text-[var(--text-strong)]">{user.name || 'No name'}</p>
                           <div className="flex items-center gap-1 mt-1">
-                            <Mail className="w-3 h-3 text-slate-400" />
-                            <p className="text-sm text-slate-500">{user.email}</p>
+                            <Mail className="w-3 h-3 text-[var(--text-muted)]" />
+                            <p className="text-sm text-[var(--text-muted)]">{user.email}</p>
                           </div>
                         </div>
                       </td>
@@ -252,23 +252,23 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                             <Badge variant="secondary" className="text-xs">
                               {membership.tier}
                             </Badge>
-                            <p className="text-xs text-slate-500 mt-1 capitalize">
+                            <p className="text-xs text-[var(--text-muted)] mt-1 capitalize">
                               {membership.status}
                             </p>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400">No membership</span>
+                          <span className="text-xs text-[var(--text-muted)]">No membership</span>
                         )}
                       </td>
                       <td className="py-4 px-4">
-                        <div className="text-sm text-slate-600">
+                        <div className="text-sm text-[var(--text-strong)]">
                           <p>{user._count.messages} messages</p>
                           <p>{user._count.enrollments} enrollments</p>
                           <p>{user._count.certificates} certificates</p>
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="flex items-center gap-1 text-sm text-slate-500">
+                        <div className="flex items-center gap-1 text-sm text-[var(--text-muted)]">
                           <Calendar className="w-4 h-4" />
                           {formatDate(user.createdAt, 'MMM d, yyyy')}
                         </div>
@@ -296,7 +296,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                           >
                             <Power className={cn(
                               "w-3 h-3",
-                              user.isActive ? "text-red-600" : "text-green-600"
+                              user.isActive ? "text-[#c03030]" : "text-[#4a7c3f]"
                             )} />
                           </Button>
                         </div>
@@ -330,7 +330,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
             
             {users.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-slate-500">No users found.</p>
+                <p className="text-[var(--text-muted)]">No users found.</p>
               </div>
             )}
           </div>

@@ -41,23 +41,23 @@ export function DrawdownChart({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-red-600" />
+              <TrendingDown className="h-5 w-5 text-[#c03030]" />
               {title}
             </CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div className="text-right">
-              <div className="font-semibold text-red-600">
+              <div className="font-semibold text-[#c03030]">
                 {maxDrawdown.toFixed(2)}%
               </div>
-              <div className="text-slate-500">Max Drawdown</div>
+              <div className="text-[var(--text-muted)]">Max Drawdown</div>
             </div>
             <div className="text-right">
-              <div className="font-semibold text-slate-600">
+              <div className="font-semibold text-[var(--text-muted)]">
                 {avgDrawdown.toFixed(2)}%
               </div>
-              <div className="text-slate-500">Avg Drawdown</div>
+              <div className="text-[var(--text-muted)]">Avg Drawdown</div>
             </div>
           </div>
         </div>
@@ -65,29 +65,29 @@ export function DrawdownChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
             <XAxis 
               dataKey="date" 
               tickFormatter={(value) => format(new Date(value), 'MMM dd')}
-              stroke="#64748b"
+              stroke="#8a7d6b"
               fontSize={12}
             />
             <YAxis 
               tickFormatter={(value) => `${value}%`}
-              stroke="#64748b"
+              stroke="#8a7d6b"
               fontSize={12}
             />
             <Tooltip
               formatter={(value: number) => [formatTooltipValue(value), 'Drawdown']}
               labelFormatter={(label) => formatTooltipDate(label)}
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e2e8f0',
+                backgroundColor: '#141210',
+                border: '1px solid #2a2520',
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
               }}
             />
-            <ReferenceLine y={0} stroke="#64748b" strokeDasharray="2 2" />
+            <ReferenceLine y={0} stroke="#8a7d6b" strokeDasharray="2 2" />
             <Area
               type="monotone"
               dataKey="drawdown"

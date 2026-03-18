@@ -283,7 +283,7 @@ export function PortfolioWizard() {
         <Button
           variant="outline"
           size="sm"
-          className="shadow-lg bg-white"
+          className="shadow-lg bg-[var(--bg-panel)]"
           onClick={handleStart}
         >
           <HelpCircle className="h-4 w-4 mr-2" />
@@ -309,30 +309,30 @@ export function PortfolioWizard() {
           }}
         />
       ) : (
-        <div className="absolute inset-0 z-0 bg-slate-950/60" />
+        <div className="absolute inset-0 z-0 bg-black/60" />
       )}
 
       <div
         ref={calloutRef}
         className={cn(
-          "pointer-events-auto absolute z-10 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 w-80 max-w-[calc(100vw-32px)]"
+          "pointer-events-auto absolute z-10 bg-[var(--bg-panel)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl p-4 w-80 max-w-[calc(100vw-32px)]"
         )}
         style={calloutStyle}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-slate-500">
+          <span className="text-xs font-semibold text-[var(--text-muted)]">
             Step {state.stepIndex + 1} of {STEPS.length}
           </span>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-[var(--text-muted)] hover:text-[var(--text-strong)]"
             aria-label="End tour"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <h3 className="text-base font-semibold text-slate-900 mb-2">{step.title}</h3>
-        <p className="text-sm text-slate-600 mb-4">{bodyText}</p>
+        <h3 className="text-base font-semibold text-[var(--text-strong)] mb-2">{step.title}</h3>
+        <p className="text-sm text-[var(--text-strong)] mb-4">{bodyText}</p>
         <div className="flex items-center justify-between">
           <Button
             size="sm"

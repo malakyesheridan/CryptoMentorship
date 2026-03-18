@@ -59,10 +59,10 @@ export function NotificationList({
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'success': return 'bg-green-100 text-green-800 border-green-200'
-      case 'warning': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'error': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'success': return 'bg-[#1a2e1a] text-[#4a7c3f] border-[#4a7c3f]/30'
+      case 'warning': return 'bg-[#2a2418] text-[var(--gold-400)] border-[var(--gold-400)]/30'
+      case 'error': return 'bg-[#2e1a1a] text-[#c03030] border-[#c03030]/30'
+      default: return 'bg-[#1a1a2e] text-blue-400 border-blue-400/30'
     }
   }
 
@@ -79,9 +79,9 @@ export function NotificationList({
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Bell className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">No notifications</h3>
-          <p className="text-slate-600">You&apos;re all caught up! Check back later for updates.</p>
+          <Bell className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">No notifications</h3>
+          <p className="text-[var(--text-strong)]">You&apos;re all caught up! Check back later for updates.</p>
         </CardContent>
       </Card>
     )
@@ -94,7 +94,7 @@ export function NotificationList({
       {unreadCount > 0 && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="bg-[#1a1a2e] text-blue-400 border-blue-400/30">
               {unreadCount} unread
             </Badge>
           </div>
@@ -115,7 +115,7 @@ export function NotificationList({
           <Card 
             key={notification.id} 
             className={`transition-all duration-200 hover:shadow-md ${
-              !notification.read ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : ''
+              !notification.read ? 'border-l-4 border-l-blue-500 bg-[#1a1a2e]/30' : ''
             }`}
           >
             <CardContent className="p-4">
@@ -125,15 +125,15 @@ export function NotificationList({
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getTypeColor(notification.type)}`}>
                       {getTypeIcon(notification.type)}
                     </div>
-                    <h4 className={`font-semibold ${!notification.read ? 'text-slate-900' : 'text-slate-700'}`}>
+                    <h4 className={`font-semibold ${!notification.read ? 'text-[var(--text-strong)]' : 'text-[var(--text-strong)]'}`}>
                       {notification.title}
                     </h4>
                     {!notification.read && (
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     )}
                   </div>
-                  <p className="text-slate-600 text-sm mb-2">{notification.message}</p>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <p className="text-[var(--text-strong)] text-sm mb-2">{notification.message}</p>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                     <Clock className="h-3 w-3" />
                     <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
                   </div>
@@ -154,7 +154,7 @@ export function NotificationList({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(notification.id)}
-                    className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
+                    className="h-8 w-8 p-0 text-[var(--text-muted)] hover:text-[#c03030]"
                   >
                     <X className="h-4 w-4" />
                   </Button>

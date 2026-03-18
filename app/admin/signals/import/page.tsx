@@ -165,7 +165,7 @@ export default function CSVImportPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -180,8 +180,8 @@ export default function CSVImportPage() {
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900">Import Signals</h1>
-                  <p className="text-slate-600 mt-2">
+                  <h1 className="text-3xl font-bold text-[var(--text-strong)]">Import Signals</h1>
+                  <p className="text-[var(--text-strong)] mt-2">
                     Upload a CSV file to import multiple trading signals
                   </p>
                 </div>
@@ -190,25 +190,25 @@ export default function CSVImportPage() {
               {/* Progress Steps */}
               <div className="flex items-center gap-4 mb-6">
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'upload' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                  currentStep.step === 'upload' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
                 }`}>
                   <Upload className="h-4 w-4" />
                   Upload
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'mapping' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                  currentStep.step === 'mapping' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
                 }`}>
                   <FileText className="h-4 w-4" />
                   Mapping
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'preview' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                  currentStep.step === 'preview' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
                 }`}>
                   <CheckCircle className="h-4 w-4" />
                   Preview
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'import' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                  currentStep.step === 'import' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
                 }`}>
                   <CheckCircle className="h-4 w-4" />
                   Import
@@ -218,13 +218,13 @@ export default function CSVImportPage() {
 
             {/* Step Content */}
             {currentStep.step === 'upload' && (
-              <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-[var(--bg-panel)] p-8 rounded-lg shadow-sm border border-[var(--border-subtle)]">
                 <div className="text-center">
-                  <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <Upload className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">
                     Upload CSV File
                   </h3>
-                  <p className="text-slate-600 mb-6">
+                  <p className="text-[var(--text-strong)] mb-6">
                     Select a CSV file containing trading signals data
                   </p>
                   
@@ -250,12 +250,12 @@ export default function CSVImportPage() {
                   </div>
 
                   {currentStep.errors && (
-                    <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-red-700">
+                    <div className="mt-6 p-4 bg-[#2e1a1a] border border-[#c03030] rounded-lg">
+                      <div className="flex items-center gap-2 text-[#c03030]">
                         <XCircle className="h-5 w-5" />
                         <span className="font-medium">Upload Error</span>
                       </div>
-                      <p className="text-red-600 mt-1">
+                      <p className="text-[#c03030] mt-1">
                         {currentStep.errors[0]?.message}
                       </p>
                     </div>
@@ -265,42 +265,42 @@ export default function CSVImportPage() {
             )}
 
             {currentStep.step === 'mapping' && (
-              <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">
+              <div className="bg-[var(--bg-panel)] p-8 rounded-lg shadow-sm border border-[var(--border-subtle)]">
+                <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-4">
                   Column Mapping
                 </h3>
-                <p className="text-slate-600 mb-6">
+                <p className="text-[var(--text-strong)] mb-6">
                   Map CSV columns to signal fields. Some columns are required.
                 </p>
                 
                 {/* TODO: Implement column mapping UI */}
                 <div className="text-center py-8">
                   <AlertTriangle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
-                  <p className="text-slate-600">Column mapping UI coming soon...</p>
+                  <p className="text-[var(--text-strong)]">Column mapping UI coming soon...</p>
                 </div>
               </div>
             )}
 
             {currentStep.step === 'preview' && (
-              <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-[var(--bg-panel)] p-8 rounded-lg shadow-sm border border-[var(--border-subtle)]">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-[var(--text-strong)]">
                     Preview Import
                   </h3>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-[var(--text-strong)]">
                       {currentStep.data?.length || 0} rows ready to import
                     </span>
                   </div>
                 </div>
 
                 {currentStep.errors && currentStep.errors.length > 0 && (
-                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-yellow-700 mb-2">
+                  <div className="mb-6 p-4 bg-[#2a2418] border border-[#c9a227] rounded-lg">
+                    <div className="flex items-center gap-2 text-[#c9a227] mb-2">
                       <AlertTriangle className="h-5 w-5" />
                       <span className="font-medium">Validation Errors</span>
                     </div>
-                    <div className="text-sm text-yellow-600">
+                    <div className="text-sm text-[#c9a227]">
                       {currentStep.errors.length} rows have errors and will be skipped.
                     </div>
                   </div>
@@ -309,24 +309,24 @@ export default function CSVImportPage() {
                 {/* Preview Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-[#1a1815]">
                       <tr>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">Symbol</th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">Direction</th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">Entry Time</th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">Entry Price</th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">Conviction</th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">Risk %</th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">Status</th>
+                        <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Symbol</th>
+                        <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Direction</th>
+                        <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Entry Time</th>
+                        <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Entry Price</th>
+                        <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Conviction</th>
+                        <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Risk %</th>
+                        <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {currentStep.data?.slice(0, 10).map((row, index) => (
-                        <tr key={index} className="border-b border-slate-100">
+                        <tr key={index} className="border-b border-[var(--border-subtle)]">
                           <td className="px-3 py-2">{row.symbol}</td>
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded text-xs ${
-                              row.direction === 'LONG' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                              row.direction === 'LONG' ? 'bg-[#1a2e1a] text-[#4a7c3f]' : 'bg-[#2e1a1a] text-[#c03030]'
                             }`}>
                               {row.direction}
                             </span>
@@ -337,7 +337,7 @@ export default function CSVImportPage() {
                           <td className="px-3 py-2">{row.riskPct}%</td>
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded text-xs ${
-                              row.exitTime ? 'bg-slate-100 text-slate-700' : 'bg-blue-100 text-blue-700'
+                              row.exitTime ? 'bg-[#1a1815] text-[var(--text-strong)]' : 'bg-[#1a1e2e] text-[#4a7cc3]'
                             }`}>
                               {row.exitTime ? 'Closed' : 'Open'}
                             </span>
@@ -349,7 +349,7 @@ export default function CSVImportPage() {
                 </div>
 
                 {currentStep.data && currentStep.data.length > 10 && (
-                  <p className="text-sm text-slate-600 mt-4 text-center">
+                  <p className="text-sm text-[var(--text-strong)] mt-4 text-center">
                     Showing first 10 rows of {currentStep.data.length} total rows
                   </p>
                 )}
@@ -373,7 +373,7 @@ export default function CSVImportPage() {
             )}
 
             {currentStep.step === 'import' && importResult && (
-              <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-[var(--bg-panel)] p-8 rounded-lg shadow-sm border border-[var(--border-subtle)]">
                 <div className="text-center">
                   {importResult.success ? (
                     <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
@@ -381,11 +381,11 @@ export default function CSVImportPage() {
                     <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                   )}
                   
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">
                     {importResult.success ? 'Import Successful' : 'Import Failed'}
                   </h3>
                   
-                  <p className="text-slate-600 mb-6">
+                  <p className="text-[var(--text-strong)] mb-6">
                     {importResult.success 
                       ? `${importResult.imported} signals imported successfully`
                       : 'There was an error importing the signals'

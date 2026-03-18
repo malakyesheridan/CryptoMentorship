@@ -88,7 +88,7 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
   )
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <Link href="/admin/learn/tracks">
@@ -125,14 +125,14 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-slate-900 mb-2">Summary</h4>
-                  <p className="text-slate-600">{track.summary || 'No summary provided'}</p>
+                  <h4 className="font-medium text-[var(--text-strong)] mb-2">Summary</h4>
+                  <p className="text-[var(--text-strong)]">{track.summary || 'No summary provided'}</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">
+                    <BookOpen className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-strong)]">
                       {totalLessons} lessons ({publishedLessons} published)
                     </span>
                   </div>
@@ -180,12 +180,12 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                 <div className="space-y-6">
                   {track.sections.length > 0 ? (
                     track.sections.map((section) => (
-                      <div key={section.id} className="border-l-2 border-slate-200 pl-4">
+                      <div key={section.id} className="border-l-2 border-[var(--border-subtle)] pl-4">
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <h4 className="font-medium text-slate-900">{section.title}</h4>
+                            <h4 className="font-medium text-[var(--text-strong)]">{section.title}</h4>
                             {section.summary && (
-                              <p className="text-sm text-slate-600 mt-1">{section.summary}</p>
+                              <p className="text-sm text-[var(--text-strong)] mt-1">{section.summary}</p>
                             )}
                           </div>
                           <div className="flex gap-2">
@@ -210,16 +210,16 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                                   {lesson.publishedAt ? (
                                     <Play className="h-3 w-3 text-green-500" />
                                   ) : (
-                                    <Lock className="h-3 w-3 text-slate-400" />
+                                    <Lock className="h-3 w-3 text-[var(--text-muted)]" />
                                   )}
                                   <Link 
                                     href={`/admin/learn/tracks/${track.id}/lessons/${lesson.id}/edit`}
-                                    className={lesson.publishedAt ? 'text-slate-700 hover:text-gold-600' : 'text-slate-400'}
+                                    className={lesson.publishedAt ? 'text-[var(--text-strong)] hover:text-gold-600' : 'text-[var(--text-muted)]'}
                                   >
                                     {lesson.title}
                                   </Link>
                                   {lesson.durationMin && (
-                                    <span className="text-slate-500">({lesson.durationMin}m)</span>
+                                    <span className="text-[var(--text-muted)]">({lesson.durationMin}m)</span>
                                   )}
                                   {lesson.quiz && (
                                     <Badge variant="outline" className="text-xs">
@@ -235,13 +235,13 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-slate-400 italic">No lessons in this section</p>
+                            <p className="text-sm text-[var(--text-muted)] italic">No lessons in this section</p>
                           )}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-slate-500">
+                    <div className="text-center py-8 text-[var(--text-muted)]">
                       <p className="mb-4">No sections yet. Create your first section to get started.</p>
                       <Link href={`/admin/learn/tracks/${track.id}/sections/new`}>
                         <Button variant="outline">
@@ -255,7 +255,7 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                   {/* Lessons without sections */}
                   {track.lessons.length > 0 && (
                     <div className="border-t pt-6 mt-6">
-                      <h4 className="font-medium text-slate-900 mb-3">Lessons (No Section)</h4>
+                      <h4 className="font-medium text-[var(--text-strong)] mb-3">Lessons (No Section)</h4>
                       <div className="space-y-2">
                         {track.lessons.map((lesson) => (
                           <div key={lesson.id} className="flex items-center justify-between group">
@@ -263,11 +263,11 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
                               {lesson.publishedAt ? (
                                 <Play className="h-3 w-3 text-green-500" />
                               ) : (
-                                <Lock className="h-3 w-3 text-slate-400" />
+                                <Lock className="h-3 w-3 text-[var(--text-muted)]" />
                               )}
                               <Link 
                                 href={`/admin/learn/tracks/${track.id}/lessons/${lesson.id}/edit`}
-                                className={lesson.publishedAt ? 'text-slate-700 hover:text-gold-600' : 'text-slate-400'}
+                                className={lesson.publishedAt ? 'text-[var(--text-strong)] hover:text-gold-600' : 'text-[var(--text-muted)]'}
                               >
                                 {lesson.title}
                               </Link>
@@ -297,16 +297,16 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">Total Lessons</span>
+                    <BookOpen className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-strong)]">Total Lessons</span>
                   </div>
                   <span className="font-medium">{totalLessons}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">Published</span>
+                    <CheckCircle className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-strong)]">Published</span>
                   </div>
                   <span className="font-medium">{publishedLessons}</span>
                 </div>

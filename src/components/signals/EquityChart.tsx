@@ -27,8 +27,8 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="text-center py-8 text-slate-500">
-            <TrendingUp className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+          <div className="text-center py-8 text-[var(--text-muted)]">
+            <TrendingUp className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
             <p>No equity data available</p>
             <p className="text-sm">Create some trades to see the equity curve</p>
           </div>
@@ -87,20 +87,20 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
-              <p className="text-sm text-slate-600">Starting Capital</p>
-              <p className="text-lg font-semibold text-slate-800">
+              <p className="text-sm text-[var(--text-muted)]">Starting Capital</p>
+              <p className="text-lg font-semibold text-[var(--text-strong)]">
                 {formatCurrency(baseCapital)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-600">Current Equity</p>
-              <p className="text-lg font-semibold text-slate-800">
+              <p className="text-sm text-[var(--text-muted)]">Current Equity</p>
+              <p className="text-lg font-semibold text-[var(--text-strong)]">
                 {formatCurrency(equityPoints[equityPoints.length - 1].equity)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-600">Total Return</p>
-              <p className={`text-lg font-semibold ${totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className="text-sm text-[var(--text-muted)]">Total Return</p>
+              <p className={`text-lg font-semibold ${totalReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
                 {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
               </p>
             </div>
@@ -111,7 +111,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
             <svg
               width={chartWidth}
               height={chartHeight}
-              className="border border-slate-200 rounded-lg"
+              className="border border-[var(--border-subtle)] rounded-lg"
             >
               {/* Grid lines */}
               {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
@@ -124,7 +124,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                       y1={y}
                       x2={chartWidth - margin.right}
                       y2={y}
-                      stroke="#e2e8f0"
+                      stroke="#2a2520"
                       strokeWidth={1}
                     />
                     <text
@@ -132,7 +132,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                       y={y + 4}
                       textAnchor="end"
                       fontSize="12"
-                      fill="#64748b"
+                      fill="#8a7d6b"
                     >
                       {formatCurrency(value, 0)}
                     </text>
@@ -171,7 +171,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                 y1={chartHeight - margin.bottom}
                 x2={chartWidth - margin.right}
                 y2={chartHeight - margin.bottom}
-                stroke="#374151"
+                stroke="#f5f0e8"
                 strokeWidth={2}
               />
               <line
@@ -179,7 +179,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                 y1={margin.top}
                 x2={margin.left}
                 y2={chartHeight - margin.bottom}
-                stroke="#374151"
+                stroke="#f5f0e8"
                 strokeWidth={2}
               />
 
@@ -193,7 +193,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                     y={chartHeight - margin.bottom + 20}
                     textAnchor="middle"
                     fontSize="12"
-                    fill="#64748b"
+                    fill="#8a7d6b"
                   >
                     {formatDate(point.date, 'short')}
                   </text>
@@ -203,7 +203,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 text-sm text-slate-600">
+          <div className="flex items-center justify-center gap-6 text-sm text-[var(--text-muted)]">
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 bg-blue-500"></div>
               <span>Equity Curve</span>

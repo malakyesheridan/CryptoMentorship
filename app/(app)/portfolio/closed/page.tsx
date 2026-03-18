@@ -85,7 +85,7 @@ export default async function ClosedTradesPage() {
     closedTrades.reduce((sum, trade) => sum + (trade.rMultiple || 0), 0) / totalTrades : 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
@@ -122,55 +122,55 @@ export default async function ClosedTradesPage() {
 
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-slate-200 transition-colors">
-              <TrendingDown className="h-6 w-6 text-slate-600" />
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
+            <div className="w-12 h-12 bg-[#1a1815] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#2a2520] transition-colors">
+              <TrendingDown className="h-6 w-6 text-[var(--text-strong)]" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Total Trades</h3>
-            <p className="text-2xl font-bold text-slate-900 mb-1">{totalTrades}</p>
-            <p className="text-sm text-slate-600">Completed</p>
+            <h3 className="font-semibold text-[var(--text-strong)] mb-2">Total Trades</h3>
+            <p className="text-2xl font-bold text-[var(--text-strong)] mb-1">{totalTrades}</p>
+            <p className="text-sm text-[var(--text-strong)]">Completed</p>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
-              <span className="text-green-600 text-lg font-bold">✓</span>
+
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
+            <div className="w-12 h-12 bg-[#1a2e1a] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#1a2e1a] transition-colors">
+              <span className="text-[#4a7c3f] text-lg font-bold">✓</span>
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Win Rate</h3>
-            <p className="text-2xl font-bold text-green-600 mb-1">{winRate}%</p>
-            <p className="text-sm text-slate-600">{winningTrades} wins</p>
+            <h3 className="font-semibold text-[var(--text-strong)] mb-2">Win Rate</h3>
+            <p className="text-2xl font-bold text-[#4a7c3f] mb-1">{winRate}%</p>
+            <p className="text-sm text-[var(--text-strong)]">{winningTrades} wins</p>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-              <span className="text-blue-600 text-lg font-bold">R</span>
+
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
+            <div className="w-12 h-12 bg-[#1a1e2e] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#1a1e2e] transition-colors">
+              <span className="text-blue-400 text-lg font-bold">R</span>
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Avg R-Multiple</h3>
-            <p className="text-2xl font-bold text-blue-600 mb-1">{avgRMultiple.toFixed(2)}</p>
-            <p className="text-sm text-slate-600">Risk-adjusted</p>
+            <h3 className="font-semibold text-[var(--text-strong)] mb-2">Avg R-Multiple</h3>
+            <p className="text-2xl font-bold text-blue-400 mb-1">{avgRMultiple.toFixed(2)}</p>
+            <p className="text-sm text-[var(--text-strong)]">Risk-adjusted</p>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
-              <span className="text-purple-600 text-lg font-bold">$</span>
+
+          <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
+            <div className="w-12 h-12 bg-[#1a1e2e] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#1a1e2e] transition-colors">
+              <span className="text-purple-400 text-lg font-bold">$</span>
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Total P&L</h3>
-            <p className={`text-2xl font-bold mb-1 ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <h3 className="font-semibold text-[var(--text-strong)] mb-2">Total P&L</h3>
+            <p className={`text-2xl font-bold mb-1 ${totalPnL >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
               {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString()}
             </p>
-            <p className="text-sm text-slate-600">Realized</p>
+            <p className="text-sm text-[var(--text-strong)]">Realized</p>
           </div>
         </div>
 
         {/* Disclaimer */}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-12">
+        <div className="bg-[#2a2418] border border-[var(--border-subtle)] rounded-2xl p-6 mb-12">
           <div className="flex items-start gap-4">
             <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
               <span className="text-white text-sm font-bold">!</span>
             </div>
             <div>
-              <h4 className="font-semibold text-amber-800 mb-2 text-lg">Important Disclaimer</h4>
-              <p className="text-amber-700">
-                This is not financial advice. Past performance does not guarantee future results. 
+              <h4 className="font-semibold text-[var(--text-strong)] mb-2 text-lg">Important Disclaimer</h4>
+              <p className="text-[var(--text-muted)]">
+                This is not financial advice. Past performance does not guarantee future results.
                 All investing involves risk. Please do your own research before making any investment decisions.
               </p>
             </div>
@@ -191,47 +191,47 @@ export default async function ClosedTradesPage() {
       </Suspense>
 
         {/* Performance Analysis */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-8">
           <div className="flex items-center gap-3 mb-6">
-            <Filter className="h-6 w-6 text-slate-600" />
-            <h3 className="text-xl font-semibold text-slate-900">Performance Analysis</h3>
+            <Filter className="h-6 w-6 text-[var(--text-strong)]" />
+            <h3 className="text-xl font-semibold text-[var(--text-strong)]">Performance Analysis</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h4 className="font-semibold text-slate-900 mb-4">Trade Distribution</h4>
+              <h4 className="font-semibold text-[var(--text-strong)] mb-4">Trade Distribution</h4>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Winning Trades:</span>
-                  <span className="font-medium text-green-600">{winningTrades} ({winRate}%)</span>
+                  <span className="text-[var(--text-muted)]">Winning Trades:</span>
+                  <span className="font-medium text-[#4a7c3f]">{winningTrades} ({winRate}%)</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Losing Trades:</span>
-                  <span className="font-medium text-red-600">{losingTrades} ({100 - winRate}%)</span>
+                  <span className="text-[var(--text-muted)]">Losing Trades:</span>
+                  <span className="font-medium text-[#c03030]">{losingTrades} ({100 - winRate}%)</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Break-even Trades:</span>
-                  <span className="font-medium text-slate-600">
+                  <span className="text-[var(--text-muted)]">Break-even Trades:</span>
+                  <span className="font-medium text-[var(--text-muted)]">
                     {totalTrades - winningTrades - losingTrades} (0%)
                   </span>
                 </div>
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-slate-900 mb-4">Risk Metrics</h4>
+              <h4 className="font-semibold text-[var(--text-strong)] mb-4">Risk Metrics</h4>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Average R-Multiple:</span>
+                  <span className="text-[var(--text-muted)]">Average R-Multiple:</span>
                   <span className="font-medium">{avgRMultiple.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Best Trade:</span>
-                  <span className="font-medium text-green-600">
+                  <span className="text-[var(--text-muted)]">Best Trade:</span>
+                  <span className="font-medium text-[#4a7c3f]">
                     {Math.max(...closedTrades.map(t => t.rMultiple || 0)).toFixed(2)}R
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Worst Trade:</span>
-                  <span className="font-medium text-red-600">
+                  <span className="text-[var(--text-muted)]">Worst Trade:</span>
+                  <span className="font-medium text-[#c03030]">
                     {Math.min(...closedTrades.map(t => t.rMultiple || 0)).toFixed(2)}R
                   </span>
                 </div>

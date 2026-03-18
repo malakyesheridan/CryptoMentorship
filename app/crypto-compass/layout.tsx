@@ -6,7 +6,7 @@ interface CryptoCompassLayoutProps {
 
 export default function CryptoCompassLayout({ children }: CryptoCompassLayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       {children}
     </div>
   )

@@ -55,7 +55,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
   const isClosed = !!signal.exitPrice
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <Link href="/admin/signals">
@@ -96,12 +96,12 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">Symbol</h4>
-                    <p className="text-slate-600">{signal.symbol}</p>
+                    <h4 className="font-medium text-[var(--text-strong)] mb-2">Symbol</h4>
+                    <p className="text-[var(--text-strong)]">{signal.symbol}</p>
                   </div>
                   
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">Direction</h4>
+                    <h4 className="font-medium text-[var(--text-strong)] mb-2">Direction</h4>
                     <Badge variant={isLong ? 'default' : 'destructive'}>
                       {isLong ? (
                         <>
@@ -118,29 +118,29 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                   </div>
                   
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-2">Entry Price</h4>
-                    <p className="text-slate-600">${signal.entryPrice.toString()}</p>
+                    <h4 className="font-medium text-[var(--text-strong)] mb-2">Entry Price</h4>
+                    <p className="text-[var(--text-strong)]">${signal.entryPrice.toString()}</p>
                   </div>
                   
                   
                   {signal.stopLoss && (
                     <div>
-                      <h4 className="font-medium text-slate-900 mb-2">Stop Loss</h4>
-                      <p className="text-slate-600">${signal.stopLoss.toString()}</p>
+                      <h4 className="font-medium text-[var(--text-strong)] mb-2">Stop Loss</h4>
+                      <p className="text-[var(--text-strong)]">${signal.stopLoss.toString()}</p>
                     </div>
                   )}
                   
                   {signal.takeProfit && (
                     <div>
-                      <h4 className="font-medium text-slate-900 mb-2">Take Profit</h4>
-                      <p className="text-slate-600">${signal.takeProfit.toString()}</p>
+                      <h4 className="font-medium text-[var(--text-strong)] mb-2">Take Profit</h4>
+                      <p className="text-[var(--text-strong)]">${signal.takeProfit.toString()}</p>
                     </div>
                   )}
                   
                   {signal.riskPct && (
                     <div>
-                      <h4 className="font-medium text-slate-900 mb-2">Risk %</h4>
-                      <p className="text-slate-600">{signal.riskPct.toString()}%</p>
+                      <h4 className="font-medium text-[var(--text-strong)] mb-2">Risk %</h4>
+                      <p className="text-[var(--text-strong)]">{signal.riskPct.toString()}%</p>
                     </div>
                   )}
                 </div>
@@ -162,13 +162,13 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-medium text-slate-900 mb-2">Exit Price</h4>
-                      <p className="text-slate-600">${signal.exitPrice?.toString()}</p>
+                      <h4 className="font-medium text-[var(--text-strong)] mb-2">Exit Price</h4>
+                      <p className="text-[var(--text-strong)]">${signal.exitPrice?.toString()}</p>
                     </div>
                     
                     <div>
-                      <h4 className="font-medium text-slate-900 mb-2">Exit Date</h4>
-                      <p className="text-slate-600">
+                      <h4 className="font-medium text-[var(--text-strong)] mb-2">Exit Date</h4>
+                      <p className="text-[var(--text-strong)]">
                         {signal.exitTime ? formatDate(signal.exitTime) : 'N/A'}
                       </p>
                     </div>
@@ -186,7 +186,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                   <CardTitle>Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600">{signal.notes}</p>
+                  <p className="text-[var(--text-strong)]">{signal.notes}</p>
                 </CardContent>
               </Card>
             )}
@@ -201,14 +201,14 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Status</span>
+                  <span className="text-sm text-[var(--text-strong)]">Status</span>
                   <Badge variant={isClosed ? 'default' : 'secondary'}>
                     {isClosed ? 'Closed' : 'Open'}
                   </Badge>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Entry Date</span>
+                  <span className="text-sm text-[var(--text-strong)]">Entry Date</span>
                   <span className="text-sm font-medium">
                     {formatDate(signal.createdAt)}
                   </span>
@@ -216,7 +216,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
                 
                 {isClosed && signal.exitTime && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Exit Date</span>
+                    <span className="text-sm text-[var(--text-strong)]">Exit Date</span>
                     <span className="text-sm font-medium">
                       {formatDate(signal.exitTime)}
                     </span>

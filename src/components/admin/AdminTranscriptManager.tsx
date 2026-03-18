@@ -122,15 +122,15 @@ export function AdminTranscriptManager({
     <div className="space-y-4">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800 text-sm whitespace-pre-line">{error}</p>
+        <div className="bg-[#2e1a1a] border border-[#c03030] rounded-lg p-4">
+          <p className="text-[#c03030] text-sm whitespace-pre-line">{error}</p>
         </div>
       )}
 
       {/* Upload Section */}
       {!transcript && (
-        <div className="border border-slate-200 rounded-lg p-4 space-y-4">
-          <h4 className="font-medium text-slate-800">Upload Transcript</h4>
+        <div className="border border-[var(--border-subtle)] rounded-lg p-4 space-y-4">
+          <h4 className="font-medium text-[var(--text-strong)]">Upload Transcript</h4>
           
           {/* Upload Mode Toggle */}
           <div className="flex gap-2">
@@ -156,7 +156,7 @@ export function AdminTranscriptManager({
           {uploadMode === 'file' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Upload VTT or SRT file
                 </label>
                 <input
@@ -164,10 +164,10 @@ export function AdminTranscriptManager({
                   accept=".vtt,.srt"
                   onChange={handleFileUpload}
                   disabled={isUploading}
-                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gold-50 file:text-gold-700 hover:file:bg-gold-100"
+                  className="block w-full text-sm text-[var(--text-muted)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gold-50 file:text-gold-700 hover:file:bg-gold-100"
                 />
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-muted)]">
                 Supported formats: WebVTT (.vtt) and SubRip (.srt)
               </p>
             </div>
@@ -177,7 +177,7 @@ export function AdminTranscriptManager({
           {uploadMode === 'paste' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                   Paste transcript with timestamps
                 </label>
                 <Textarea
@@ -188,7 +188,7 @@ export function AdminTranscriptManager({
                 />
               </div>
               <div className="flex justify-between items-center">
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--text-muted)]">
                   Format: MM:SS text content (one per line)
                 </p>
                 <Button
@@ -213,7 +213,7 @@ export function AdminTranscriptManager({
               <Badge variant="outline" className="capitalize">
                 {transcript.source}
               </Badge>
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-[var(--text-strong)]">
                 {transcript.segments.length} segments
               </span>
             </div>
@@ -227,18 +227,18 @@ export function AdminTranscriptManager({
           </div>
 
           {/* Segments List */}
-          <div className="max-h-96 overflow-y-auto space-y-1 border border-slate-200 rounded-lg p-4">
+          <div className="max-h-96 overflow-y-auto space-y-1 border border-[var(--border-subtle)] rounded-lg p-4">
             {transcript.segments.map((segment) => (
               <button
                 key={segment.id}
                 onClick={() => handleSeekToSegment(segment.startMs)}
-                className="w-full text-left p-2 rounded hover:bg-slate-50 transition-colors"
+                className="w-full text-left p-2 rounded hover:bg-[#1a1815] transition-colors"
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-xs text-slate-500 font-mono min-w-[50px]">
+                  <span className="text-xs text-[var(--text-muted)] font-mono min-w-[50px]">
                     {formatTime(segment.startMs)}
                   </span>
-                  <span className="text-sm text-slate-800 flex-1">
+                  <span className="text-sm text-[var(--text-strong)] flex-1">
                     {segment.text}
                   </span>
                 </div>
@@ -249,9 +249,9 @@ export function AdminTranscriptManager({
           {/* Preview Player */}
           {recordingUrl && (
             <div className="mt-6">
-              <h4 className="font-medium text-slate-800 mb-3">Preview</h4>
-              <div className="bg-slate-100 rounded-lg p-4">
-                <p className="text-sm text-slate-600 mb-2">
+              <h4 className="font-medium text-[var(--text-strong)] mb-3">Preview</h4>
+              <div className="bg-[#1a1815] rounded-lg p-4">
+                <p className="text-sm text-[var(--text-strong)] mb-2">
                   Click on transcript segments to test seeking functionality
                 </p>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -259,21 +259,21 @@ export function AdminTranscriptManager({
                     <button
                       key={segment.id}
                       onClick={() => handleSeekToSegment(segment.startMs)}
-                      className="w-full text-left p-2 rounded border border-slate-200 hover:border-gold-300 hover:bg-gold-50 transition-colors"
+                      className="w-full text-left p-2 rounded border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-gold-50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <Play className="h-3 w-3 text-slate-400" />
-                        <span className="text-xs text-slate-500 font-mono min-w-[50px]">
+                        <Play className="h-3 w-3 text-[var(--text-muted)]" />
+                        <span className="text-xs text-[var(--text-muted)] font-mono min-w-[50px]">
                           {formatTime(segment.startMs)}
                         </span>
-                        <span className="text-sm text-slate-800 flex-1 truncate">
+                        <span className="text-sm text-[var(--text-strong)] flex-1 truncate">
                           {segment.text}
                         </span>
                       </div>
                     </button>
                   ))}
                   {transcript.segments.length > 10 && (
-                    <p className="text-xs text-slate-500 text-center py-2">
+                    <p className="text-xs text-[var(--text-muted)] text-center py-2">
                       ... and {transcript.segments.length - 10} more segments
                     </p>
                   )}
@@ -286,8 +286,8 @@ export function AdminTranscriptManager({
 
       {/* No Transcript State */}
       {!transcript && (
-        <div className="text-center py-8 text-slate-500">
-          <FileText className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+        <div className="text-center py-8 text-[var(--text-muted)]">
+          <FileText className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
           <p>No transcript uploaded yet</p>
           <p className="text-sm">Upload a transcript to enable searchable playback</p>
         </div>

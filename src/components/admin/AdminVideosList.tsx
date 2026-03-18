@@ -107,7 +107,7 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] w-4 h-4" />
                 <Input
                   placeholder="Search videos..."
                   value={searchTerm}
@@ -122,7 +122,7 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
               <select 
                 value={statusFilter} 
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-32 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-32 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="ready">Ready</option>
@@ -133,7 +133,7 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
               <select 
                 value={visibilityFilter} 
                 onChange={(e) => setVisibilityFilter(e.target.value)}
-                className="w-32 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-32 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Visibility</option>
                 <option value="public">Public</option>
@@ -144,7 +144,7 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
               <select 
                 value={sortBy} 
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-40 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-40 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -173,9 +173,9 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
         <CardContent>
           {filteredVideos.length === 0 ? (
             <div className="text-center py-12">
-              <Video className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-800 mb-2">No videos found</h3>
-              <p className="text-slate-600 mb-4">
+              <Video className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">No videos found</h3>
+              <p className="text-[var(--text-strong)] mb-4">
                 {searchTerm || statusFilter !== 'all' || visibilityFilter !== 'all' 
                   ? 'Try adjusting your filters' 
                   : 'Upload your first video to get started'
@@ -193,21 +193,21 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
           ) : (
             <div className="space-y-4">
               {filteredVideos.map((video) => (
-                <div key={video.id} className="flex items-center space-x-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50">
-                  <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center">
-                    <Video className="w-8 h-8 text-slate-400" />
+                <div key={video.id} className="flex items-center space-x-4 p-4 border border-[var(--border-subtle)] rounded-lg hover:bg-[#1a1815]">
+                  <div className="w-16 h-16 bg-[#1a1815] rounded-lg flex items-center justify-center">
+                    <Video className="w-8 h-8 text-[var(--text-muted)]" />
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-slate-800 truncate">
+                    <h3 className="text-lg font-semibold text-[var(--text-strong)] truncate">
                       {video.title}
                     </h3>
                     {video.description && (
-                      <p className="text-sm text-slate-600 truncate">
+                      <p className="text-sm text-[var(--text-strong)] truncate">
                         {video.description}
                       </p>
                     )}
-                    <div className="flex items-center space-x-4 mt-2 text-xs text-slate-500">
+                    <div className="flex items-center space-x-4 mt-2 text-xs text-[var(--text-muted)]">
                       <span>Uploaded by {video.uploadedBy}</span>
                       <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
                       <span>{formatFileSize(video.fileSize)}</span>
@@ -222,7 +222,7 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
                     <Badge variant="outline">
                       {video.visibility}
                     </Badge>
-                    <div className="flex items-center space-x-1 text-sm text-slate-500">
+                    <div className="flex items-center space-x-1 text-sm text-[var(--text-muted)]">
                       <Eye className="w-4 h-4" />
                       <span>{video.viewCount}</span>
                     </div>
@@ -241,7 +241,7 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
                       variant="ghost" 
                       size="sm"
                       onClick={() => handleDelete(video.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-[#c03030] hover:text-[#c03030] hover:bg-[#2e1a1a]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

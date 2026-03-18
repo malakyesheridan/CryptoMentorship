@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/kyesh/CryptoMentorship/app -type d -path \"*\\(app\\)*\")",
+      "Bash(ls -la /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/)",
+      "Bash(grep -l \"worker\\\\|sync\\\\|cron\\\\|scheduler\" \"C:\\\\Users\\\\kyesh\\\\Downloads\\\\Claude Malakye\\\\Claude\\\\.claude\\\\worktrees\\\\exciting-lichterman\\\\sdca\"/*.py)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(sed -i -e 's/bg-slate-50/bg-[#1a1815]/g' -e 's/bg-slate-200/bg-[#2a2520]/g' -e 's/text-slate-900/text-[var\\(--text-strong\\)]/g' -e 's/text-slate-800/text-[var\\(--text-strong\\)]/g' -e 's/text-slate-700/text-[var\\(--text-strong\\)]/g' -e 's/text-slate-600/text-[var\\(--text-strong\\)]/g' -e 's/text-slate-500/text-[var\\(--text-muted\\)]/g' -e 's/text-slate-400/text-[var\\(--text-muted\\)]/g' -e 's/border-slate-300/border-[var\\(--border-subtle\\)]/g' -e 's/border-slate-200/border-[var\\(--border-subtle\\)]/g' -e 's/border-slate-100/border-[var\\(--border-subtle\\)]/g' -e 's/text-red-800/text-[#c03030]/g' -e 's/text-red-700/text-[#c03030]/g' -e 's/border-red-200/border-[#c03030]/g' -e 's/bg-red-50/bg-[#2e1a1a]/g' -e 's/text-green-600/text-[#4a7c3f]/g' -e 's/text-yellow-600/text-[#c9a227]/g' -e 's/hover:bg-slate-50/hover:bg-[#1a1815]/g' \"$f\")",
+      "Bash(echo \"Updated: $f\")",
+      "Bash(done)",
+      "Bash(ls src/components/learning/*.tsx)",
+      "Bash(bash dark-theme-fix.sh)",
+      "Bash(bash dark-theme-fix2.sh)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

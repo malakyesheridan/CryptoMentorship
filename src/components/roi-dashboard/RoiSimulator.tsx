@@ -57,7 +57,7 @@ export function RoiSimulator({
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="text-sm font-medium text-slate-700">Starting Capital</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Starting Capital</label>
             <Input
               type="number"
               min="0"
@@ -66,18 +66,18 @@ export function RoiSimulator({
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Start Date</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Start Date</label>
             <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
           </div>
           <div className="flex items-end gap-2">
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-[var(--text-strong)]">
               <Switch checked={includeContributions} onChange={(event) => setIncludeContributions(event.target.checked)} />
               Monthly Contributions
             </label>
           </div>
           {includeContributions && (
             <div>
-              <label className="text-sm font-medium text-slate-700">Contribution Amount</label>
+              <label className="text-sm font-medium text-[var(--text-strong)]">Contribution Amount</label>
               <Input
                 type="number"
                 min="0"
@@ -90,26 +90,26 @@ export function RoiSimulator({
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-xs text-slate-500">Current Balance</p>
-            <p className="text-lg font-semibold text-slate-900">
+            <p className="text-xs text-[var(--text-muted)]">Current Balance</p>
+            <p className="text-lg font-semibold text-[var(--text-strong)]">
               {formatCurrency(simulation.finalBalance)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500">Profit</p>
-            <p className={simulation.profit >= 0 ? 'text-lg font-semibold text-green-600' : 'text-lg font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">Profit</p>
+            <p className={simulation.profit >= 0 ? 'text-lg font-semibold text-[#4a7c3f]' : 'text-lg font-semibold text-[#c03030]'}>
               {formatCurrency(simulation.profit)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500">ROI</p>
-            <p className={simulation.roiPct >= 0 ? 'text-lg font-semibold text-green-600' : 'text-lg font-semibold text-red-600'}>
+            <p className="text-xs text-[var(--text-muted)]">ROI</p>
+            <p className={simulation.roiPct >= 0 ? 'text-lg font-semibold text-[#4a7c3f]' : 'text-lg font-semibold text-[#c03030]'}>
               {simulation.roiPct.toFixed(2)}%
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500">Worst Drawdown</p>
-            <p className="text-lg font-semibold text-red-600">
+            <p className="text-xs text-[var(--text-muted)]">Worst Drawdown</p>
+            <p className="text-lg font-semibold text-[#c03030]">
               {simulation.maxDrawdownPct.toFixed(2)}% ({formatCurrency(simulation.maxDrawdownAmount)})
             </p>
           </div>
@@ -118,28 +118,28 @@ export function RoiSimulator({
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={simulation.series} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(value) => format(parseDate(value), 'MMM d')}
-                stroke="#64748b"
+                stroke="#8a7d6b"
                 fontSize={12}
               />
               <YAxis
                 tickFormatter={(value) => formatCurrency(value)}
-                stroke="#64748b"
+                stroke="#8a7d6b"
                 fontSize={12}
               />
               <Tooltip
                 formatter={(value: number) => formatCurrency(value)}
                 labelFormatter={(label) => format(parseDate(label), 'MMM dd, yyyy')}
               />
-              <Area type="monotone" dataKey="balance" stroke="#10b981" fill="#bbf7d0" strokeWidth={2} />
+              <Area type="monotone" dataKey="balance" stroke="#10b981" fill="#1a2e1a" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <p className="text-xs text-slate-500">{disclaimerText}</p>
+        <p className="text-xs text-[var(--text-muted)]">{disclaimerText}</p>
       </CardContent>
     </Card>
   )

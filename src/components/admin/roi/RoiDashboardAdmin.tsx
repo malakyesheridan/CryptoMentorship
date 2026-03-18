@@ -129,52 +129,52 @@ function PreviewPanel() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-xs text-slate-500">ROI Since Tracking Started</p>
-                <p className={cn('text-lg font-semibold', preview.metrics.roiSinceInceptionPct >= 0 ? 'text-green-600' : 'text-red-600')}>
+                <p className="text-xs text-[var(--text-muted)]">ROI Since Tracking Started</p>
+                <p className={cn('text-lg font-semibold', preview.metrics.roiSinceInceptionPct >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]')}>
                   {formatPercent(preview.metrics.roiSinceInceptionPct)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">ROI (last 30 days)</p>
-                <p className={cn('text-lg font-semibold', preview.metrics.roiLast30DaysPct >= 0 ? 'text-green-600' : 'text-red-600')}>
+                <p className="text-xs text-[var(--text-muted)]">ROI (last 30 days)</p>
+                <p className={cn('text-lg font-semibold', preview.metrics.roiLast30DaysPct >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]')}>
                   {formatPercent(preview.metrics.roiLast30DaysPct)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Max Drawdown</p>
-                <p className="text-lg font-semibold text-red-600">
+                <p className="text-xs text-[var(--text-muted)]">Max Drawdown</p>
+                <p className="text-lg font-semibold text-[#c03030]">
                   {formatPercent(preview.metrics.maxDrawdownPct)}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-xs text-slate-500">Invested vs Cash</p>
-                <p className="text-sm text-slate-700">
+                <p className="text-xs text-[var(--text-muted)]">Invested vs Cash</p>
+                <p className="text-sm text-[var(--text-strong)]">
                   {preview.metrics.investedPct.toFixed(1)}% invested / {preview.metrics.cashPct.toFixed(1)}% cash
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">As Of</p>
-                <p className="text-sm text-slate-700">{preview.metrics.asOfDate ?? '--'}</p>
+                <p className="text-xs text-[var(--text-muted)]">As Of</p>
+                <p className="text-sm text-[var(--text-strong)]">{preview.metrics.asOfDate ?? '--'}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Series Counts</p>
-                <p className="text-sm text-slate-700">
+                <p className="text-xs text-[var(--text-muted)]">Series Counts</p>
+                <p className="text-sm text-[var(--text-strong)]">
                   Model {preview.counts.model} | BTC {preview.counts.btc} | ETH {preview.counts.eth}
                 </p>
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-900 mb-2">Validation</p>
+              <p className="text-sm font-medium text-[var(--text-strong)] mb-2">Validation</p>
               {preview.validation.errors.length === 0 && preview.validation.warnings.length === 0 ? (
                 <p className="text-sm text-emerald-600">No validation issues detected.</p>
               ) : (
                 <div className="space-y-2">
                   {preview.validation.errors.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-red-600">Errors</p>
-                      <ul className="text-sm text-red-600 list-disc list-inside">
+                      <p className="text-xs font-semibold text-[#c03030]">Errors</p>
+                      <ul className="text-sm text-[#c03030] list-disc list-inside">
                         {preview.validation.errors.map((error) => (
                           <li key={error}>{error}</li>
                         ))}
@@ -196,7 +196,7 @@ function PreviewPanel() {
             </div>
           </>
         ) : (
-          <p className="text-sm text-slate-500">Loading preview...</p>
+          <p className="text-sm text-[var(--text-muted)]">Loading preview...</p>
         )}
       </CardContent>
     </Card>
@@ -246,7 +246,7 @@ function SettingsTab() {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading settings...</p>
+    return <p className="text-sm text-[var(--text-muted)]">Loading settings...</p>
   }
 
   return (
@@ -257,7 +257,7 @@ function SettingsTab() {
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-slate-700">Inception Date</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Inception Date</label>
             <Input
               type="date"
               value={settings.inceptionDate}
@@ -267,7 +267,7 @@ function SettingsTab() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-700">Disclaimer Text</label>
+          <label className="text-sm font-medium text-[var(--text-strong)]">Disclaimer Text</label>
           <Textarea
             rows={4}
             value={settings.disclaimerText}
@@ -277,35 +277,35 @@ function SettingsTab() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="flex items-center justify-between border rounded-lg p-3">
-            <span className="text-sm text-slate-700">Show BTC Benchmark</span>
+            <span className="text-sm text-[var(--text-strong)]">Show BTC Benchmark</span>
             <Switch
               checked={settings.showBtcBenchmark}
               onChange={(event) => setSettings((prev) => ({ ...prev, showBtcBenchmark: event.target.checked }))}
             />
           </label>
           <label className="flex items-center justify-between border rounded-lg p-3">
-            <span className="text-sm text-slate-700">Show ETH Benchmark</span>
+            <span className="text-sm text-[var(--text-strong)]">Show ETH Benchmark</span>
             <Switch
               checked={settings.showEthBenchmark}
               onChange={(event) => setSettings((prev) => ({ ...prev, showEthBenchmark: event.target.checked }))}
             />
           </label>
           <label className="flex items-center justify-between border rounded-lg p-3">
-            <span className="text-sm text-slate-700">Show Simulator</span>
+            <span className="text-sm text-[var(--text-strong)]">Show Simulator</span>
             <Switch
               checked={settings.showSimulator}
               onChange={(event) => setSettings((prev) => ({ ...prev, showSimulator: event.target.checked }))}
             />
           </label>
           <label className="flex items-center justify-between border rounded-lg p-3">
-            <span className="text-sm text-slate-700">Show Change Log</span>
+            <span className="text-sm text-[var(--text-strong)]">Show Change Log</span>
             <Switch
               checked={settings.showChangeLog}
               onChange={(event) => setSettings((prev) => ({ ...prev, showChangeLog: event.target.checked }))}
             />
           </label>
           <label className="flex items-center justify-between border rounded-lg p-3">
-            <span className="text-sm text-slate-700">Show Allocation</span>
+            <span className="text-sm text-[var(--text-strong)]">Show Allocation</span>
             <Switch
               checked={settings.showAllocation}
               onChange={(event) => setSettings((prev) => ({ ...prev, showAllocation: event.target.checked }))}
@@ -431,12 +431,12 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
     <Card className="card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <p className="text-sm text-slate-500">{description}</p>
+        <p className="text-sm text-[var(--text-muted)]">{description}</p>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="text-sm font-medium text-slate-700">Date</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Date</label>
             <Input
               type="date"
               value={form.date}
@@ -444,7 +444,7 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Value</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Value</label>
             <Input
               type="number"
               step="0.0001"
@@ -463,7 +463,7 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
         </div>
 
         <div className="border rounded-lg p-4 space-y-3">
-          <p className="text-sm font-medium text-slate-700">CSV Import (date,value)</p>
+          <p className="text-sm font-medium text-[var(--text-strong)]">CSV Import (date,value)</p>
           <Textarea
             rows={4}
             placeholder="2024-01-01,100\n2024-01-02,101.2"
@@ -471,7 +471,7 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
             onChange={(event) => setCsvText(event.target.value)}
           />
           <label className="flex items-center justify-between border rounded-lg p-3">
-            <span className="text-sm text-slate-700">Replace existing series before import</span>
+            <span className="text-sm text-[var(--text-strong)]">Replace existing series before import</span>
             <Switch checked={replaceExisting} onChange={(event) => setReplaceExisting(event.target.checked)} />
           </label>
           <Button onClick={handleImport} disabled={importing}>
@@ -481,8 +481,8 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
 
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-slate-700">Series Points</p>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
+            <p className="text-sm font-medium text-[var(--text-strong)]">Series Points</p>
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
               <Button
                 variant="outline"
                 size="sm"
@@ -505,9 +505,9 @@ function SeriesManager({ seriesType, title, description }: { seriesType: 'MODEL'
             </div>
           </div>
           {loading ? (
-            <p className="text-sm text-slate-500">Loading series...</p>
+            <p className="text-sm text-[var(--text-muted)]">Loading series...</p>
           ) : rows.length === 0 ? (
-            <p className="text-sm text-slate-500">No data yet.</p>
+            <p className="text-sm text-[var(--text-muted)]">No data yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -626,7 +626,7 @@ function AllocationTab() {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading allocation...</p>
+    return <p className="text-sm text-[var(--text-muted)]">Loading allocation...</p>
   }
 
   return (
@@ -637,7 +637,7 @@ function AllocationTab() {
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-slate-700">As Of Date</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">As Of Date</label>
             <Input
               type="date"
               value={form.asOfDate}
@@ -645,7 +645,7 @@ function AllocationTab() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Cash Weight</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Cash Weight</label>
             <Input
               type="number"
               step="0.001"
@@ -659,13 +659,13 @@ function AllocationTab() {
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-700">Asset Weights</p>
+            <p className="text-sm font-medium text-[var(--text-strong)]">Asset Weights</p>
             <Button variant="outline" size="sm" onClick={addItem}>
               Add Asset
             </Button>
           </div>
           {form.items.length === 0 ? (
-            <p className="text-sm text-slate-500">No assets added yet.</p>
+            <p className="text-sm text-[var(--text-muted)]">No assets added yet.</p>
           ) : (
             <div className="space-y-2">
               {form.items.map((item, index) => (
@@ -792,19 +792,19 @@ function ChangeLogTab() {
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-slate-700">Date</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Date</label>
             <Input type="date" value={form.date} onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))} />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Title</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Title</label>
             <Input value={form.title} onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))} />
           </div>
           <div className="md:col-span-2">
-            <label className="text-sm font-medium text-slate-700">Summary</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Summary</label>
             <Textarea rows={3} value={form.summary} onChange={(event) => setForm((prev) => ({ ...prev, summary: event.target.value }))} />
           </div>
           <div className="md:col-span-2">
-            <label className="text-sm font-medium text-slate-700">Optional Link</label>
+            <label className="text-sm font-medium text-[var(--text-strong)]">Optional Link</label>
             <Input value={form.linkUrl} onChange={(event) => setForm((prev) => ({ ...prev, linkUrl: event.target.value }))} placeholder="https://..." />
           </div>
           <div className="md:col-span-2 flex justify-end gap-2">
@@ -818,21 +818,21 @@ function ChangeLogTab() {
         </div>
 
         <div>
-          <p className="text-sm font-medium text-slate-700 mb-3">Recent Events</p>
+          <p className="text-sm font-medium text-[var(--text-strong)] mb-3">Recent Events</p>
           {loading ? (
-            <p className="text-sm text-slate-500">Loading events...</p>
+            <p className="text-sm text-[var(--text-muted)]">Loading events...</p>
           ) : events.length === 0 ? (
-            <p className="text-sm text-slate-500">No events yet.</p>
+            <p className="text-sm text-[var(--text-muted)]">No events yet.</p>
           ) : (
             <div className="space-y-3">
               {events.map((event) => (
                 <div key={event.id} className="border rounded-lg p-3 flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs text-slate-500">{event.date}</p>
-                    <p className="text-sm font-semibold text-slate-800">{event.title}</p>
-                    <p className="text-sm text-slate-600">{event.summary}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{event.date}</p>
+                    <p className="text-sm font-semibold text-[var(--text-strong)]">{event.title}</p>
+                    <p className="text-sm text-[var(--text-strong)]">{event.summary}</p>
                     {event.linkUrl && (
-                      <a className="text-xs text-blue-600 underline" href={event.linkUrl} target="_blank" rel="noreferrer">
+                      <a className="text-xs text-[#4a7cc3] underline" href={event.linkUrl} target="_blank" rel="noreferrer">
                         {event.linkUrl}
                       </a>
                     )}

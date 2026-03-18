@@ -122,7 +122,7 @@ export function TradeTable({
 
 
   const getStatusColor = (status: 'open' | 'closed') => {
-    return status === 'open' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-800'
+    return status === 'open' ? 'bg-blue-900/30 text-blue-300' : 'bg-[#1a1815] text-[var(--text-strong)]'
   }
 
 
@@ -147,10 +147,10 @@ export function TradeTable({
       <CardContent className="p-0">
         {/* Filters */}
         {showFilters && (
-          <div className="p-6 border-b border-slate-200 bg-slate-50">
+          <div className="p-6 border-b border-[var(--border-subtle)] bg-[#1a1815]">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-1">
                   Symbol
                 </label>
                 <input
@@ -158,17 +158,17 @@ export function TradeTable({
                   value={filters.symbol}
                   onChange={(e) => setFilters(prev => ({ ...prev, symbol: e.target.value }))}
                   placeholder="BTC, ETH..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-1">
                   Status
                 </label>
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm"
                 >
                   <option value="">All</option>
                   <option value="open">Open</option>
@@ -176,7 +176,7 @@ export function TradeTable({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-1">
                   Tags
                 </label>
                 <input
@@ -184,29 +184,29 @@ export function TradeTable({
                   value={filters.tags}
                   onChange={(e) => setFilters(prev => ({ ...prev, tags: e.target.value }))}
                   placeholder="DeFi, Layer 2..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-1">
                   From Date
                 </label>
                 <input
                   type="date"
                   value={filters.dateFrom}
                   onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-strong)] mb-1">
                   To Date
                 </label>
                 <input
                   type="date"
                   value={filters.dateTo}
                   onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-sm"
                 />
               </div>
             </div>
@@ -216,47 +216,47 @@ export function TradeTable({
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-[#1a1815] border-b border-[var(--border-subtle)]">
               <tr>
                 <th 
-                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100`}
+                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[#1a1815]`}
                   onClick={() => handleSort('symbol')}
                 >
                   Symbol {getSortIcon('symbol')}
                 </th>
                 <th 
-                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100`}
+                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[#1a1815]`}
                   onClick={() => handleSort('entryTime')}
                 >
                   Entry Date {getSortIcon('entryTime')}
                 </th>
                 <th 
-                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-100`}
+                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[#1a1815]`}
                   onClick={() => handleSort('status')}
                 >
                   Status {getSortIcon('status')}
                 </th>
-                <th className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-slate-500 uppercase tracking-wider`}>
+                <th className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider`}>
                   R-Multiple
                 </th>
                 {!compact && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Tags
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
+            <tbody className="bg-[var(--bg-panel)] divide-y divide-[var(--border-subtle)]">
               {paginatedTrades.map((trade) => (
                 <tr 
                   key={trade.id}
-                  className="hover:bg-slate-50 cursor-pointer"
+                  className="hover:bg-[#1a1815] cursor-pointer"
                   onClick={() => handleTradeClick(trade)}
                 >
-                  <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm font-medium text-slate-900`}>
+                  <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm font-medium text-[var(--text-strong)]`}>
                     {trade.symbol}
                   </td>
-                  <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm text-slate-500`}>
+                  <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm text-[var(--text-muted)]`}>
                     {formatDate(trade.entryTime, 'short')}
                   </td>
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap`}>
@@ -266,7 +266,7 @@ export function TradeTable({
                   </td>
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm`}>
                     {trade.rMultiple !== null && trade.rMultiple !== undefined ? (
-                      <span className={trade.rMultiple > 0 ? 'text-green-600' : 'text-red-600'}>
+                      <span className={trade.rMultiple > 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}>
                         {formatNumber(trade.rMultiple, 2)}
                       </span>
                     ) : '—'}
@@ -295,9 +295,9 @@ export function TradeTable({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-200 bg-slate-50">
+          <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[#1a1815]">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-700">
+              <div className="text-sm text-[var(--text-strong)]">
                 Showing {startIndex + 1} to {Math.min(startIndex + pageSize, sortedTrades.length)} of {sortedTrades.length} trades
               </div>
               <div className="flex items-center gap-2">
@@ -309,7 +309,7 @@ export function TradeTable({
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm text-slate-700">
+                <span className="text-sm text-[var(--text-strong)]">
                   Page {currentPage} of {totalPages}
                 </span>
                 <Button

@@ -38,7 +38,7 @@ export default function MessageInput({ onSend, disabled }: MessageInputProps) {
           onChange={(event) => setText(event.target.value)}
           placeholder={disabled ? 'Select a channel…' : 'Type a message…'}
           disabled={disabled || busy}
-          className="flex-1 rounded-xl border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+          className="flex-1 rounded-xl border border-[var(--border-subtle)] px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
         />
         <button
           type="submit"

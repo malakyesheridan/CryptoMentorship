@@ -166,7 +166,7 @@ export default function ReferralsPage() {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-gold-500" />
-        <p className="ml-3 text-slate-600">Loading affiliate data...</p>
+        <p className="ml-3 text-[var(--text-muted)]">Loading affiliate data...</p>
       </div>
     )
   }
@@ -185,7 +185,7 @@ export default function ReferralsPage() {
   if (!summary) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <p className="text-slate-600">No affiliate data available</p>
+        <p className="text-[var(--text-muted)]">No affiliate data available</p>
       </div>
     )
   }
@@ -204,15 +204,15 @@ export default function ReferralsPage() {
         <CardContent>
           <div className="space-y-4">
             {!isEditingSlug ? (
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg border">
+              <div className="flex items-center gap-3 p-4 bg-[#1a1815] rounded-lg border">
                 <div className="flex-1">
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">
+                  <label className="text-sm font-medium text-[var(--text-strong)] mb-1 block">
                     Current Slug
                   </label>
-                  <code className="text-lg font-mono text-slate-900">
+                  <code className="text-lg font-mono text-[var(--text-strong)]">
                     {currentSlug || summary.referralCode}
                   </code>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     Your referral link: {summary.shortLink}
                   </p>
                 </div>
@@ -226,9 +226,9 @@ export default function ReferralsPage() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3 p-4 bg-slate-50 rounded-lg border">
+              <div className="space-y-3 p-4 bg-[#1a1815] rounded-lg border">
                 <div>
-                  <label className="text-sm font-medium text-slate-700 mb-2 block">
+                  <label className="text-sm font-medium text-[var(--text-strong)] mb-2 block">
                     Custom Slug
                   </label>
                   <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ export default function ReferralsPage() {
                       value={newSlug}
                       onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                       placeholder="example"
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent font-mono"
+                      className="flex-1 px-3 py-2 border border-[var(--border-subtle)] rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent font-mono"
                       disabled={isSavingSlug}
                     />
                     <Button
@@ -267,7 +267,7 @@ export default function ReferralsPage() {
                       )}
                     </Button>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
+                  <p className="text-xs text-[var(--text-muted)] mt-2">
                     Only lowercase letters, numbers, and hyphens. 3-50 characters.
                   </p>
                 </div>
@@ -284,8 +284,8 @@ export default function ReferralsPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Your Referral Link</label>
-              <div className="flex items-center gap-2 p-4 bg-slate-50 rounded-lg border">
+              <label className="text-sm font-medium text-[var(--text-strong)]">Your Referral Link</label>
+              <div className="flex items-center gap-2 p-4 bg-[#1a1815] rounded-lg border">
                 <code className="flex-1 text-sm break-all">{summary.shortLink}</code>
                 <Button
                   variant="outline"
@@ -328,7 +328,7 @@ export default function ReferralsPage() {
               </div>
             </div>
 
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[var(--text-muted)]">
               Share this link with others. You&apos;ll see their signup and payout status here once they register.
             </p>
           </div>
@@ -340,7 +340,7 @@ export default function ReferralsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Total Signups</p>
+                <p className="text-sm font-medium text-[var(--text-muted)]">Total Signups</p>
                 <p className="text-3xl font-bold mt-2">{summary.stats.totalSignups}</p>
               </div>
               <Users className="h-8 w-8 text-gold-500" />
@@ -352,7 +352,7 @@ export default function ReferralsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Qualified</p>
+                <p className="text-sm font-medium text-[var(--text-muted)]">Qualified</p>
                 <p className="text-3xl font-bold mt-2">{summary.stats.qualified}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-blue-500" />
@@ -364,7 +364,7 @@ export default function ReferralsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Payable</p>
+                <p className="text-sm font-medium text-[var(--text-muted)]">Payable</p>
                 <p className="text-3xl font-bold mt-2">{summary.stats.payable}</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-500" />
@@ -376,7 +376,7 @@ export default function ReferralsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Paid Total</p>
+                <p className="text-sm font-medium text-[var(--text-muted)]">Paid Total</p>
                 <p className="text-3xl font-bold mt-2">
                   ${(summary.stats.paidTotalCents / 100).toFixed(2)}
                 </p>
@@ -394,11 +394,11 @@ export default function ReferralsPage() {
         <CardContent>
           {isLoadingReferrals ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <Loader2 className="h-6 w-6 animate-spin text-[var(--text-muted)]" />
             </div>
           ) : referrals.length === 0 ? (
-            <div className="text-center py-12 text-slate-600">
-              <Users className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+            <div className="text-center py-12 text-[var(--text-muted)]">
+              <Users className="h-16 w-16 mx-auto mb-4 text-[var(--text-muted)]" />
               <p className="text-lg font-semibold mb-2">No referrals yet</p>
               <p className="text-sm max-w-md mx-auto">
                 Share your referral link to start tracking signups and commissions.
@@ -408,7 +408,7 @@ export default function ReferralsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-slate-600">
+                  <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-[var(--text-muted)]">
                     <th className="py-3 px-4">Referred</th>
                     <th className="py-3 px-4">Signed Up</th>
                     <th className="py-3 px-4">Status</th>
@@ -423,13 +423,13 @@ export default function ReferralsPage() {
                       <tr key={referral.id} className="border-b border-[color:var(--border-subtle)]">
                         <td className="py-4 px-4">
                           <div>
-                            <p className="font-medium text-slate-800">{displayName}</p>
+                            <p className="font-medium text-[var(--text-strong)]">{displayName}</p>
                             {referral.referredEmail && (
-                              <p className="text-sm text-slate-500">{referral.referredEmail}</p>
+                              <p className="text-sm text-[var(--text-muted)]">{referral.referredEmail}</p>
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-sm text-slate-600">
+                        <td className="py-4 px-4 text-sm text-[var(--text-muted)]">
                           {referral.signedUpAt
                             ? format(new Date(referral.signedUpAt), 'MMM d, yyyy')
                             : '--'}
@@ -449,12 +449,12 @@ export default function ReferralsPage() {
                             {referral.status}
                           </Badge>
                         </td>
-                        <td className="py-4 px-4 text-sm text-slate-600">
+                        <td className="py-4 px-4 text-sm text-[var(--text-muted)]">
                           {referral.payableAt
                             ? format(new Date(referral.payableAt), 'MMM d, yyyy')
                             : '--'}
                         </td>
-                        <td className="py-4 px-4 text-sm text-slate-600">
+                        <td className="py-4 px-4 text-sm text-[var(--text-muted)]">
                           {referral.commissionAmountCents !== null
                             ? `$${(referral.commissionAmountCents / 100).toFixed(2)}`
                             : '--'}

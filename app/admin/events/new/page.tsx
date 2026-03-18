@@ -193,7 +193,7 @@ function AdminEventForm({ event, isEdit = false }: AdminEventFormProps) {
                     placeholder="event-url-slug"
                     required
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     URL: /events/{formData.slug}
                   </p>
                 </div>
@@ -432,7 +432,7 @@ function AdminEventForm({ event, isEdit = false }: AdminEventFormProps) {
 
                     <Button 
                       variant="outline" 
-                      className="w-full text-red-600 hover:text-red-700"
+                      className="w-full text-[#c03030] hover:text-[#c03030]"
                       onClick={handleDelete}
                       disabled={loading}
                     >

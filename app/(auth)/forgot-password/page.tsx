@@ -43,17 +43,17 @@ export default function ForgotPasswordPage() {
     <BeamsBackground intensity="medium">
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full relative z-20">
-          <div className="bg-[#FFFDF7] rounded-2xl p-8 shadow-2xl border border-slate-200/50 backdrop-blur-sm">
+          <div className="bg-[var(--bg-panel)] rounded-2xl p-8 shadow-2xl border border-[var(--border-subtle)] backdrop-blur-sm">
           <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
             <h1 style={{ 
               fontSize: '2rem', 
               fontWeight: 'bold', 
               marginBottom: '0.5rem',
-              color: '#1e293b'
+              color: 'var(--text-strong)'
             }}>
               Reset Password
             </h1>
-            <p style={{ color: '#64748b', fontSize: '1rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
               Enter your email to receive a reset link
             </p>
           </div>
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
               }}>
                 ✓
               </div>
-              <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
                 If an account exists with this email, a password reset link has been sent.
               </p>
               <Link 
@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
                   display: 'block', 
                   fontSize: '0.875rem', 
                   fontWeight: '500',
-                  color: '#1e293b',
+                  color: 'var(--text-strong)',
                   marginBottom: '0.5rem'
                 }}>
                   Email
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
                     padding: '0.75rem',
                     fontSize: '1rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #cbd5e1',
+                    border: '1px solid var(--border-subtle)',
                     outline: 'none',
                   }}
                 />
@@ -118,8 +118,8 @@ export default function ForgotPasswordPage() {
               {error && (
                 <div style={{
                   padding: '0.75rem',
-                  background: '#fee2e2',
-                  border: '1px solid #fca5a5',
+                  background: '#2e1a1a',
+                  border: '1px solid #c03030',
                   borderRadius: '0.5rem',
                   color: '#dc2626',
                   fontSize: '0.875rem'
@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
 
               <p style={{ 
                 fontSize: '0.875rem', 
-                color: '#64748b', 
+                color: 'var(--text-muted)', 
                 textAlign: 'center',
                 marginTop: '0.5rem'
               }}>

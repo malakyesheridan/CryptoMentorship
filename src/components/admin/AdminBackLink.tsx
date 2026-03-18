@@ -17,7 +17,7 @@ export function AdminBackLink({ href, label = 'Back', className }: AdminBackLink
       asChild
       variant="ghost"
       size="sm"
-      className={cn('gap-2 text-slate-600 hover:text-slate-900', className)}
+      className={cn('gap-2 text-[var(--text-strong)] hover:text-[var(--text-strong)]', className)}
     >
       <Link href={href}>
         <ArrowLeft className="h-4 w-4" />

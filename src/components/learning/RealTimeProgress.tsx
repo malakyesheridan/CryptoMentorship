@@ -103,7 +103,7 @@ export function RealTimeProgress({
       case 'certificate_earned':
         return <Award className="h-5 w-5 text-blue-500" />
       default:
-        return <Target className="h-5 w-5 text-gray-500" />
+        return <Target className="h-5 w-5 text-[var(--text-muted)]" />
     }
   }
 
@@ -114,7 +114,7 @@ export function RealTimeProgress({
       {isLoading ? (
         <Card>
           <CardContent className="p-4">
-            <div className="text-sm text-slate-500">Loading progress...</div>
+            <div className="text-sm text-[var(--text-muted)]">Loading progress...</div>
           </CardContent>
         </Card>
       ) : progress.progressPct !== undefined && (
@@ -137,7 +137,7 @@ export function RealTimeProgress({
                 <Progress value={progress.progressPct} className="h-2" />
                 
                 {progress.completedLessons !== undefined && progress.totalLessons !== undefined && (
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-[var(--text-muted)]">
                     {progress.completedLessons} of {progress.totalLessons} lessons completed
                   </div>
                 )}
@@ -155,7 +155,7 @@ export function RealTimeProgress({
               <Flame className="h-6 w-6 text-orange-500" />
               <div>
                 <div className="font-semibold text-sm">{streak} Day Streak</div>
-                <div className="text-xs text-slate-500">Keep it up!</div>
+                <div className="text-xs text-[var(--text-muted)]">Keep it up!</div>
               </div>
             </div>
           </CardContent>
@@ -169,11 +169,11 @@ export function RealTimeProgress({
             <h3 className="font-semibold text-sm mb-3">Recent Achievements</h3>
             <div className="space-y-2">
               {achievements.map((achievement, index) => (
-                <div key={index} className="flex items-start gap-3 p-2 rounded-lg bg-slate-50">
+                <div key={index} className="flex items-start gap-3 p-2 rounded-lg bg-[#1a1815]">
                   {getAchievementIcon(achievement.type)}
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{achievement.title}</div>
-                    <div className="text-xs text-slate-600">{achievement.description}</div>
+                    <div className="text-xs text-[var(--text-strong)]">{achievement.description}</div>
                   </div>
                 </div>
               ))}

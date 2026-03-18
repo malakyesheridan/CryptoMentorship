@@ -46,7 +46,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "flex items-center gap-2 rounded-xl px-4 py-2 font-medium transition-all duration-200",
-          selectedDate && "bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+          selectedDate && "bg-[#2a2418] border-yellow-700 text-yellow-500 hover:bg-[#2a2418]"
         )}
       >
         <Calendar className="h-4 w-4" />
@@ -55,7 +55,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
           : 'Select Date'}
         {selectedDate && (
           <X 
-            className="h-3 w-3 ml-1 hover:bg-yellow-200 rounded p-0.5" 
+            className="h-3 w-3 ml-1 hover:bg-[#2a2418] rounded p-0.5" 
             onClick={(e) => {
               e.stopPropagation()
               handleClear()
@@ -73,9 +73,9 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
           />
           
           {/* Calendar Popup */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-20 bg-white rounded-lg shadow-xl border border-slate-200 p-4 min-w-[280px]">
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-20 bg-[var(--bg-panel)] rounded-lg shadow-xl border border-[var(--border-subtle)] p-4 min-w-[280px]">
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                 Select Date
               </label>
               <input
@@ -88,7 +88,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
                   }
                 }}
                 max={todayString}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-lg bg-[#1a1815] text-[var(--text-strong)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               />
             </div>
             
@@ -106,7 +106,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
                   variant="outline"
                   size="sm"
                   onClick={handleClear}
-                  className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="flex-1 text-[#c03030] hover:text-[#c03030] hover:bg-[#2e1a1a]"
                 >
                   Clear
                 </Button>

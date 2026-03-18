@@ -341,7 +341,7 @@ export default function CommunityPage() {
   const activeChannel = channels.find((channel) => channel.id === activeChannelId)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
@@ -388,18 +388,18 @@ export default function CommunityPage() {
       <div className="container mx-auto px-4 py-12">
 
         {/* Chat Interface */}
-        <div className="flex flex-col md:flex-row min-h-[520px] md:h-[700px] bg-white rounded-2xl shadow-lg md:overflow-hidden border border-slate-200">
+        <div className="flex flex-col md:flex-row min-h-[520px] md:h-[700px] bg-[var(--bg-panel)] rounded-2xl shadow-lg md:overflow-hidden border border-[var(--border-subtle)]">
           {/* Mobile toggle */}
-          <div className="md:hidden border-b border-slate-200 bg-white">
+          <div className="md:hidden border-b border-[var(--border-subtle)] bg-[var(--bg-panel)]">
             <div className="flex">
               <button
-                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'channels' ? 'text-slate-900 border-b-2 border-yellow-500' : 'text-slate-500'}`}
+                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'channels' ? 'text-[var(--text-strong)] border-b-2 border-yellow-500' : 'text-[var(--text-muted)]'}`}
                 onClick={() => setMobileView('channels')}
               >
                 Channels
               </button>
               <button
-                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'chat' ? 'text-slate-900 border-b-2 border-yellow-500' : 'text-slate-500'}`}
+                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'chat' ? 'text-[var(--text-strong)] border-b-2 border-yellow-500' : 'text-[var(--text-muted)]'}`}
                 onClick={() => setMobileView('chat')}
               >
                 Chat
@@ -407,14 +407,14 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          <aside className={`w-full md:w-80 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-4 md:p-6 overflow-y-auto flex-shrink-0 md:max-h-none ${mobileView === 'channels' ? 'block' : 'hidden md:block'}`}>
+          <aside className={`w-full md:w-80 bg-[#1a1815] border-b md:border-b-0 md:border-r border-[var(--border-subtle)] p-4 md:p-6 overflow-y-auto flex-shrink-0 md:max-h-none ${mobileView === 'channels' ? 'block' : 'hidden md:block'}`}>
             <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h3 className="text-base md:text-lg font-semibold text-slate-900">Channels</h3>
+              <h3 className="text-base md:text-lg font-semibold text-[var(--text-strong)]">Channels</h3>
               <div className="flex items-center gap-2">
                 {activeChannelId ? (
                   <>
                     <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[var(--text-muted)]">
                       {isConnected ? 'Connected' : connectionError || 'Connecting...'}
                     </span>
                     {!isConnected && connectionError && (
@@ -430,7 +430,7 @@ export default function CommunityPage() {
                 ) : (
                   <>
                     <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                    <span className="text-xs text-slate-500">Select a channel</span>
+                    <span className="text-xs text-[var(--text-muted)]">Select a channel</span>
                   </>
                 )}
               </div>
@@ -448,7 +448,7 @@ export default function CommunityPage() {
             
             <div className="space-y-2">
               {channelsError ? (
-                <div className="text-sm text-red-500 text-center py-4 bg-red-50 rounded-lg">
+                <div className="text-sm text-[#c03030] text-center py-4 bg-[#2e1a1a] rounded-lg">
                   Error loading channels: {channelsError.message || 'Unknown error'}
                 </div>
               ) : channelsLoading ? (
@@ -457,7 +457,7 @@ export default function CommunityPage() {
                   Loading channels...
                 </div>
               ) : channels.length === 0 ? (
-                <div className="text-sm text-slate-500 text-center py-4 bg-slate-100 rounded-lg">No channels yet.</div>
+                <div className="text-sm text-[var(--text-muted)] text-center py-4 bg-[#1a1815] rounded-lg">No channels yet.</div>
               ) : (
                 channels.map((channel: Channel) => {
                   const unreadCount = unreadCounts[channel.id] || 0
@@ -472,7 +472,7 @@ export default function CommunityPage() {
                       className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative ${
                         activeChannelId === channel.id
                           ? 'bg-yellow-500 text-white shadow-md'
-                          : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
+                          : 'text-[var(--text-muted)] hover:bg-[var(--bg-panel)] hover:text-[var(--text-strong)] hover:shadow-sm'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -505,20 +505,20 @@ export default function CommunityPage() {
           </aside>
 
           <section className={`flex-1 flex flex-col min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
-            <div className="border-b border-slate-200 p-4 md:p-6 bg-white">
+            <div className="border-b border-[var(--border-subtle)] p-4 md:p-6 bg-[var(--bg-panel)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg md:text-xl font-semibold text-slate-900">
+                  <h3 className="text-lg md:text-xl font-semibold text-[var(--text-strong)]">
                     {activeChannel?.name ? `# ${activeChannel.name}` : 'Select a channel'}
                   </h3>
                   {activeChannel?.description && (
-                    <p className="text-xs md:text-sm text-slate-600 mt-1 line-clamp-2">{activeChannel.description}</p>
+                    <p className="text-xs md:text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{activeChannel.description}</p>
                   )}
                 </div>
               </div>
               {/* Typing indicator */}
               {typingText && (
-                <div className="mt-3 text-sm text-slate-500 italic bg-slate-50 px-3 py-2 rounded-lg">
+                <div className="mt-3 text-sm text-[var(--text-muted)] italic bg-[#1a1815] px-3 py-2 rounded-lg">
                   {typingText}
                 </div>
               )}
@@ -526,7 +526,7 @@ export default function CommunityPage() {
 
             <div 
               id="messages-container"
-              className="flex-1 overflow-y-auto bg-slate-50"
+              className="flex-1 overflow-y-auto bg-[#1a1815]"
             >
               <MessageList 
                 messages={mergedMessages} 
@@ -538,7 +538,7 @@ export default function CommunityPage() {
               />
             </div>
 
-            <div className="border-t border-slate-200 bg-white">
+            <div className="border-t border-[var(--border-subtle)] bg-[var(--bg-panel)]">
               <MessageInput 
                 onSend={handleSend} 
                 disabled={!activeChannelId}

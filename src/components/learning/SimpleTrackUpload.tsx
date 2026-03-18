@@ -228,15 +228,15 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
   }
 
   return (
-    <Card className="bg-white rounded-2xl shadow-lg border border-slate-200">
-      <CardHeader className="border-b border-slate-200 pb-4">
+    <Card className="bg-[var(--bg-panel)] rounded-2xl shadow-lg border border-[var(--border-subtle)]">
+      <CardHeader className="border-b border-[var(--border-subtle)] pb-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <CardTitle className="flex items-center space-x-2 text-xl">
               <BookOpen className="w-5 h-5 text-yellow-500" />
               <span>Create New Learning Track</span>
             </CardTitle>
-            <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 px-2 py-1 text-xs">
+            <Badge className="bg-[#2a2418] text-yellow-700 border-[#2a2418] px-2 py-1 text-xs">
               <Shield className="w-3 h-3 mr-1" />
               Admin Only
             </Badge>
@@ -265,14 +265,14 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
             />
             {generatedSlug && (
               <div className="text-xs">
-                {slugStatus === 'available' && <span className="text-green-700">Slug available: {generatedSlug}</span>}
-                {slugStatus === 'checking' && <span className="text-slate-500">Checking slug...</span>}
+                {slugStatus === 'available' && <span className="text-[#4a7c3f]">Slug available: {generatedSlug}</span>}
+                {slugStatus === 'checking' && <span className="text-[var(--text-muted)]">Checking slug...</span>}
                 {slugStatus === 'taken' && (
-                  <span className="text-red-700">
+                  <span className="text-[#c03030]">
                     Slug taken. Suggested: {slugSuggestion || `${generatedSlug}-2`}
                   </span>
                 )}
-                {slugStatus === 'error' && <span className="text-slate-500">Could not validate slug right now.</span>}
+                {slugStatus === 'error' && <span className="text-[var(--text-muted)]">Could not validate slug right now.</span>}
               </div>
             )}
           </div>
@@ -298,13 +298,13 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
                 htmlFor="cover-image"
                 className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                   formData.coverImage
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-slate-300 hover:border-yellow-500 hover:bg-yellow-50'
+                    ? 'border-green-500 bg-[#1a2e1a]'
+                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
                 } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex flex-col items-center gap-2">
-                  <Upload className="w-5 h-5 text-slate-600" />
-                  <span className="text-sm text-slate-600">
+                  <Upload className="w-5 h-5 text-[var(--text-strong)]" />
+                  <span className="text-sm text-[var(--text-strong)]">
                     {formData.coverImage ? formData.coverImage.name : 'Select cover image'}
                   </span>
                 </div>
@@ -338,7 +338,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
                 />
               </label>
               {coverImagePreview && (
-                <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-slate-300">
+                <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={coverImagePreview}
@@ -348,7 +348,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
                 </div>
               )}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Upload a cover image from your computer (JPG, PNG, WebP up to 10MB)
             </p>
           </div>
@@ -363,22 +363,22 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-[#2e1a1a] border border-[#2e1a1a] rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-[#c03030] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-900">Error</p>
-                <p className="text-sm text-red-700 mt-1">{errorMessage}</p>
+                <p className="text-sm font-medium text-[#c03030]">Error</p>
+                <p className="text-sm text-[#c03030] mt-1">{errorMessage}</p>
               </div>
             </div>
           )}
 
           {/* Success Message */}
           {uploadStatus === 'success' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-[#1a2e1a] border border-[#1a2e1a] rounded-lg p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-[#4a7c3f] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-green-900">Success!</p>
-                <p className="text-sm text-green-700 mt-1">Track created successfully. You can now upload videos to it.</p>
+                <p className="text-sm font-medium text-[#4a7c3f]">Success!</p>
+                <p className="text-sm text-[#4a7c3f] mt-1">Track created successfully. You can now upload videos to it.</p>
               </div>
             </div>
           )}
@@ -386,7 +386,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-6 text-base"
+            className="w-full bg-gold-500 hover:bg-gold-600 text-white font-medium py-6 text-base"
             disabled={isUploading || !formData.title || slugStatus === 'checking'}
           >
             {isUploading ? (

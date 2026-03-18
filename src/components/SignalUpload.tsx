@@ -128,7 +128,7 @@ export default function SignalUpload() {
               disabled={isUploading}
               maxLength={10}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               The cryptocurrency or asset symbol
             </p>
           </div>
@@ -147,7 +147,7 @@ export default function SignalUpload() {
               required
               disabled={isUploading}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               The entry price for this position
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function SignalUpload() {
               placeholder="e.g., Bitcoin, Technical Analysis, Breakout (comma-separated)"
               disabled={isUploading}
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               Separate multiple tags with commas. These will be used for filtering and categorization.
             </p>
           </div>
@@ -192,14 +192,14 @@ export default function SignalUpload() {
 
           {/* Status Messages */}
           {uploadStatus === 'success' && (
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-[#4a7c3f]">
               <CheckCircle className="w-5 h-5" />
               <span>Signal created successfully!</span>
             </div>
           )}
 
           {uploadStatus === 'error' && (
-            <div className="flex items-center space-x-2 text-red-600">
+            <div className="flex items-center space-x-2 text-[#c03030]">
               <AlertCircle className="w-5 h-5" />
               <span>{errorMessage}</span>
             </div>
@@ -208,7 +208,7 @@ export default function SignalUpload() {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+            className="w-full bg-gold-500 hover:bg-gold-600 text-white"
             disabled={isUploading || !formData.symbol || !formData.entryPrice}
           >
             {isUploading ? 'Creating Signal...' : 'Create Investment Signal'}

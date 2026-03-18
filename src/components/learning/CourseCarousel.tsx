@@ -43,9 +43,9 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
       <div className={cn('text-center py-12 px-6', className)}>
         <div className="max-w-md mx-auto">
           <div className="mb-6">
-            <BookOpen className="h-16 w-16 text-slate-400 mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Start Your Learning Journey</h3>
-            <p className="text-slate-600 mb-6">Discover structured courses designed to help you master new skills and advance your knowledge.</p>
+            <BookOpen className="h-16 w-16 text-[var(--text-muted)] mx-auto mb-4 group-hover:scale-110 transition-transform duration-300" />
+            <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">Start Your Learning Journey</h3>
+            <p className="text-[var(--text-strong)] mb-6">Discover structured courses designed to help you master new skills and advance your knowledge.</p>
           </div>
           
           <div className="space-y-3">
@@ -56,7 +56,7 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
               </Link>
             </Button>
             
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-[var(--text-muted)]">
               <p>✨ Free courses available</p>
               <p>🎯 Self-paced learning</p>
               <p>📜 Certificates upon completion</p>
@@ -86,21 +86,21 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
   const getStatusBadge = (course: CourseData) => {
     if (course.completedAt) {
       return (
-        <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+        <Badge variant="default" className="bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]">
           <CheckCircle className="h-3 w-3 mr-1" />
           Completed
         </Badge>
       )
     } else if (course.progressPct > 0) {
       return (
-        <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">
+        <Badge variant="default" className="bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]">
           <Clock className="h-3 w-3 mr-1" />
           In Progress
         </Badge>
       )
     } else {
       return (
-        <Badge variant="outline" className="text-slate-600">
+        <Badge variant="outline" className="text-[var(--text-strong)]">
           <BookOpen className="h-3 w-3 mr-1" />
           New
         </Badge>
@@ -147,14 +147,14 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
           <button
             onClick={scrollLeft}
             disabled={!canScrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--bg-panel)] rounded-full p-2 shadow-lg border border-[var(--border-subtle)] hover:bg-[#1a1815] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={scrollRight}
             disabled={!canScrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--bg-panel)] rounded-full p-2 shadow-lg border border-[var(--border-subtle)] hover:bg-[#1a1815] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -177,7 +177,7 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
                     className="w-full h-32 object-cover rounded-lg group-hover:brightness-110 transition-all duration-300"
                   />
                 ) : (
-                  <div className="w-full h-32 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
+                  <div className="w-full h-32 bg-gradient-to-br from-[#1a1d2e] to-[#1a1a2e] rounded-lg flex items-center justify-center group-hover:from-[#1a1d2e] group-hover:to-[#1a1a2e] transition-all duration-300">
                     <BookOpen className="h-12 w-12 text-blue-600 group-hover:scale-110 transition-transform duration-300" />
                   </div>
                 )}
@@ -200,7 +200,7 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
               {/* Course info */}
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-slate-900 text-sm line-clamp-2 flex-1 mr-2 group-hover:text-blue-700 transition-colors duration-300">
+                  <h3 className="font-semibold text-[var(--text-strong)] text-sm line-clamp-2 flex-1 mr-2 group-hover:text-[#5b8dd9] transition-colors duration-300">
                     {course.title}
                   </h3>
                   <div className="group-hover:scale-105 transition-transform duration-300">
@@ -209,13 +209,13 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
                 </div>
 
                 {course.summary && (
-                  <p className="text-xs text-slate-600 line-clamp-2 group-hover:text-slate-700 transition-colors duration-300">
+                  <p className="text-xs text-[var(--text-strong)] line-clamp-2 group-hover:text-[var(--text-strong)] transition-colors duration-300">
                     {course.summary}
                   </p>
                 )}
 
                 {/* Progress info */}
-                <div className="flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-600 transition-colors duration-300">
+                <div className="flex items-center justify-between text-xs text-[var(--text-muted)] group-hover:text-[var(--text-strong)] transition-colors duration-300">
                   <span>
                     {course.completedLessons} of {course.totalLessons} lessons
                   </span>
@@ -247,7 +247,7 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
                 'w-2 h-2 rounded-full transition-all',
                 Math.floor(currentIndex / 3) === index
                   ? 'bg-blue-600'
-                  : 'bg-slate-300 hover:bg-slate-400'
+                  : 'bg-[#2a2520] hover:bg-[#3a3530]'
               )}
             />
           ))}

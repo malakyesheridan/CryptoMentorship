@@ -31,7 +31,7 @@ export function PortfolioTabs({ activeTab, onTabChange, stats }: PortfolioTabsPr
 
   return (
     <div className="flex justify-center mb-8">
-      <div className="bg-white rounded-2xl shadow-lg p-2 flex flex-wrap gap-2">
+      <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <Button
             key={tab.id}
@@ -41,7 +41,7 @@ export function PortfolioTabs({ activeTab, onTabChange, stats }: PortfolioTabsPr
               'rounded-xl px-6 py-3 font-medium transition-all duration-200',
               activeTab === tab.id
                 ? 'bg-gold-500 text-white shadow-md hover:bg-gold-600'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
             )}
           >
             <tab.icon className="h-4 w-4 mr-2" />

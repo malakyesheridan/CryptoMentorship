@@ -136,39 +136,39 @@ export function RoiEquityChart({
       color?: string
     }>
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-md">
-        <div className="text-xs font-semibold text-slate-700">
+      <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-3 shadow-md">
+        <div className="text-xs font-semibold text-[var(--text-strong)]">
           {format(parseDate(label as string), 'dd-MM-yyyy')}
         </div>
-        <div className="mt-2 space-y-1 text-xs text-slate-600">
+        <div className="mt-2 space-y-1 text-xs text-[var(--text-muted)]">
           {entries.map((entry) => (
             <div key={`${entry.dataKey ?? entry.name ?? 'series'}`} className="flex items-center justify-between gap-4">
               <span className="uppercase" style={{ color: entry.color }}>
                 {entry.name ?? entry.dataKey}
               </span>
-              <span className="text-slate-700">
+              <span className="text-[var(--text-strong)]">
                 {formatCurrency(Number(entry.value ?? 0))}
               </span>
             </div>
           ))}
           {modelReturn !== null ? (
-            <div className="flex items-center justify-between gap-4 text-slate-500">
+            <div className="flex items-center justify-between gap-4 text-[var(--text-muted)]">
               <span>Daily return</span>
-              <span className={modelReturn >= 0 ? 'text-green-600' : 'text-red-600'}>
+              <span className={modelReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}>
                 {formatPercent(modelReturn)}
               </span>
             </div>
           ) : null}
           {primary ? (
-            <div className="pt-1 text-slate-500">Primary: {primary}</div>
+            <div className="pt-1 text-[var(--text-muted)]">Primary: {primary}</div>
           ) : null}
           {primaryPrice !== null ? (
-            <div className="text-slate-500">Primary close: {formatPrice(primaryPrice)}</div>
+            <div className="text-[var(--text-muted)]">Primary close: {formatPrice(primaryPrice)}</div>
           ) : null}
           {primaryChange !== null ? (
-            <div className="flex items-center justify-between gap-4 text-slate-500">
+            <div className="flex items-center justify-between gap-4 text-[var(--text-muted)]">
               <span>Primary change</span>
-              <span className={primaryChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+              <span className={primaryChange >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}>
                 {formatCurrencySigned(primaryChange)} ({formatPercent(primaryChangePct)})
               </span>
             </div>
@@ -196,7 +196,7 @@ export function RoiEquityChart({
             ))}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
           {allowBtc && (
             <label className="flex items-center gap-2">
               <Switch checked={showBtc} onChange={(event) => setShowBtc(event.target.checked)} />
@@ -215,16 +215,16 @@ export function RoiEquityChart({
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={filteredSeries} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(value) => format(parseDate(value), 'MMM d')}
-                stroke="#64748b"
+                stroke="#8a7d6b"
                 fontSize={12}
               />
               <YAxis
                 tickFormatter={(value) => formatCurrency(value)}
-                stroke="#64748b"
+                stroke="#8a7d6b"
                 fontSize={12}
               />
               <Tooltip content={renderTooltip} />

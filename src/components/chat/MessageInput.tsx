@@ -122,25 +122,25 @@ export default function MessageInput({
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-[var(--bg-panel)]">
       {/* Reply indicator */}
       {replyTo && (
-        <div className="px-4 sm:px-6 py-3 bg-yellow-50 border-b border-yellow-200">
+        <div className="px-4 sm:px-6 py-3 bg-[#2a2418] border-b border-[var(--gold-400)]/30">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-xs sm:text-sm min-w-0 flex-1">
-              <span className="text-slate-600 whitespace-nowrap">Replying to</span>
-              <span className="font-medium text-slate-800 truncate">{replyTo.author}</span>
+              <span className="text-[var(--text-strong)] whitespace-nowrap">Replying to</span>
+              <span className="font-medium text-[var(--text-strong)] truncate">{replyTo.author}</span>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={onCancelReply}
-              className="h-8 sm:h-6 px-2 sm:px-2 text-slate-500 hover:text-slate-700 flex-shrink-0 min-h-[44px] sm:min-h-0"
+              className="h-8 sm:h-6 px-2 sm:px-2 text-[var(--text-muted)] hover:text-[var(--text-strong)] flex-shrink-0 min-h-[44px] sm:min-h-0"
             >
               Cancel
             </Button>
           </div>
-          <p className="text-xs text-slate-600 mt-1 truncate">{replyTo.body}</p>
+          <p className="text-xs text-[var(--text-strong)] mt-1 truncate">{replyTo.body}</p>
         </div>
       )}
 
@@ -154,14 +154,14 @@ export default function MessageInput({
             onKeyDown={handleKeyDown}
             disabled={disabled || busy}
             placeholder={disabled ? 'Select a channel…' : placeholder}
-            className="min-h-[44px] max-h-[120px] resize-none border-slate-200 focus:border-yellow-500 focus:ring-yellow-500 rounded-lg text-sm sm:text-base"
+            className="min-h-[44px] max-h-[120px] resize-none border-[var(--border-subtle)] focus:border-yellow-500 focus:ring-yellow-500 rounded-lg text-sm sm:text-base"
             rows={1}
           />
         </div>
         <Button
           type="submit"
           disabled={disabled || busy || !text.trim()}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white h-11 w-11 sm:w-auto sm:px-4 rounded-lg flex-shrink-0"
+          className="bg-gold-500 hover:bg-gold-600 text-white h-11 w-11 sm:w-auto sm:px-4 rounded-lg flex-shrink-0"
           aria-label="Send message"
         >
           <Send className="w-4 h-4" />
@@ -172,7 +172,7 @@ export default function MessageInput({
       {/* Character count */}
       {text.length > 0 && (
         <div className="px-6 pb-3">
-          <div className="text-xs text-slate-500 text-right">
+          <div className="text-xs text-[var(--text-muted)] text-right">
             {text.length}/5000
           </div>
         </div>

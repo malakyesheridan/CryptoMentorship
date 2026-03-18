@@ -69,7 +69,7 @@ export function ProgressTimeline({
         description: `Started ${enrollment.track.title} learning track`,
         date: toDate(enrollment.startedAt),
         icon: <BookOpen className="h-4 w-4" />,
-        color: 'bg-blue-500',
+        color: 'bg-indigo-500',
         link: `/learn/${enrollment.track.slug}`
       })
 
@@ -98,7 +98,7 @@ export function ProgressTimeline({
         description: `Received certificate for ${certificate.track.title}`,
         date: toDate(certificate.issuedAt),
         icon: <Award className="h-4 w-4" />,
-        color: 'bg-yellow-500',
+        color: 'bg-gold-500',
         badge: 'Certificate',
         link: `/learn/cert/${certificate.code}`
       })
@@ -154,7 +154,7 @@ export function ProgressTimeline({
         description: 'Completed 50 lessons - you\'re on fire!',
         date: new Date(), // Approximate date
         icon: <Star className="h-4 w-4" />,
-        color: 'bg-indigo-500',
+        color: 'bg-blue-500',
         badge: 'Master'
       })
     }
@@ -181,34 +181,34 @@ export function ProgressTimeline({
 
   const getMilestoneColor = (type: string) => {
     switch (type) {
-      case 'enrollment': return 'bg-blue-500'
+      case 'enrollment': return 'bg-indigo-500'
       case 'completion': return 'bg-green-500'
-      case 'certificate': return 'bg-yellow-500'
+      case 'certificate': return 'bg-gold-500'
       case 'streak': return 'bg-orange-500'
       case 'achievement': return 'bg-purple-500'
-      default: return 'bg-slate-500'
+      default: return 'bg-[#3a3530]'
     }
   }
 
   const getBadgeColor = (badge: string) => {
     switch (badge) {
-      case 'Completed': return 'bg-green-100 text-green-800 border-green-200'
-      case 'Certificate': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'Streak': return 'bg-orange-100 text-orange-800 border-orange-200'
-      case 'Legendary': return 'bg-red-100 text-red-800 border-red-200'
-      case 'Achievement': return 'bg-purple-100 text-purple-800 border-purple-200'
-      case 'Master': return 'bg-indigo-100 text-indigo-800 border-indigo-200'
-      default: return 'bg-slate-100 text-slate-800 border-slate-200'
+      case 'Completed': return 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]'
+      case 'Certificate': return 'bg-[#2a2418] text-[#c9a227] border-[#2a2418]'
+      case 'Streak': return 'bg-[#2a2018] text-[#d97706] border-[#2a2018]'
+      case 'Legendary': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
+      case 'Achievement': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
+      case 'Master': return 'bg-[#1a1a2e] text-[#818cf8] border-[#1a1a2e]'
+      default: return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
   if (milestones.length === 0) {
     return (
-      <Card className={cn('bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200', className)}>
+      <Card className={cn('bg-gradient-to-r from-[#1a1815] to-[#1a1815] border-[var(--border-subtle)]', className)}>
         <CardContent className="p-8 text-center">
-          <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Start Your Learning Journey</h3>
-          <p className="text-slate-600 mb-4">Complete your first lesson to see your progress timeline</p>
+          <Calendar className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">Start Your Learning Journey</h3>
+          <p className="text-[var(--text-strong)] mb-4">Complete your first lesson to see your progress timeline</p>
           <Button asChild>
             <Link href="/learning">Browse Courses</Link>
           </Button>
@@ -218,13 +218,13 @@ export function ProgressTimeline({
   }
 
   return (
-    <Card className={cn('bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200', className)}>
+    <Card className={cn('bg-gradient-to-r from-[#1a1d2e] to-[#1a1a2e] border-[#1a1d2e]', className)}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-900">
+        <CardTitle className="flex items-center gap-2 text-[#5b8dd9]">
           <Calendar className="h-6 w-6" />
           Learning Timeline
         </CardTitle>
-        <p className="text-blue-700 text-sm">
+        <p className="text-[#5b8dd9] text-sm">
           Your learning journey and achievements
         </p>
       </CardHeader>
@@ -238,13 +238,13 @@ export function ProgressTimeline({
               <div key={milestone.id} className="relative">
                 {/* Timeline line */}
                 {!isLast && (
-                  <div className="absolute left-6 top-12 w-0.5 h-8 bg-slate-300"></div>
+                  <div className="absolute left-6 top-12 w-0.5 h-8 bg-[#2a2520]"></div>
                 )}
                 
                 <div 
                   className={cn(
                     'flex items-start gap-4 p-4 rounded-lg transition-all duration-300 cursor-pointer group',
-                    isSelected ? 'bg-blue-100 shadow-md' : 'hover:bg-blue-50'
+                    isSelected ? 'bg-[#1a1d2e] shadow-md' : 'hover:bg-[#1a1d2e]'
                   )}
                   onClick={() => setSelectedMilestone(isSelected ? null : milestone.id)}
                 >
@@ -259,7 +259,7 @@ export function ProgressTimeline({
                   {/* Content */}
                   <div className="flex-grow min-w-0">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors duration-300">
+                      <h3 className="font-semibold text-[var(--text-strong)] group-hover:text-[#5b8dd9] transition-colors duration-300">
                         {milestone.title}
                       </h3>
                       {milestone.badge && (
@@ -272,11 +272,11 @@ export function ProgressTimeline({
                       )}
                     </div>
                     
-                    <p className="text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-300 mb-2">
+                    <p className="text-sm text-[var(--text-strong)] group-hover:text-[var(--text-strong)] transition-colors duration-300 mb-2">
                       {milestone.description}
                     </p>
                     
-                    <div className="flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {format(milestone.date, 'MMM d, yyyy')}
@@ -284,7 +284,7 @@ export function ProgressTimeline({
                       {milestone.link && (
                         <Link 
                           href={milestone.link}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors group-hover:scale-105 transform-gpu"
+                          className="flex items-center gap-1 text-blue-600 hover:text-[#5b8dd9] transition-colors group-hover:scale-105 transform-gpu"
                         >
                           <span>View</span>
                           <ArrowRight className="h-3 w-3" />

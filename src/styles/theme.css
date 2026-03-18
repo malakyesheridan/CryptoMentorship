@@ -6,18 +6,20 @@
 
 @layer base {
   body {
-    background-color: var(--bg-ivory);
+    background-color: var(--bg-page);
     color: var(--text-strong);
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white/90 backdrop-blur border border-[color:var(--border-subtle)] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.06)];
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    @apply rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.3)];
   }
 
   .btn-gold {
-    @apply bg-gradient-to-r from-[var(--gold-400)] to-[var(--gold-600)] text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:brightness-95;
+    @apply bg-gradient-to-r from-[var(--gold-400)] to-[var(--gold-600)] text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:brightness-110;
   }
 
   .badge-preview {
@@ -25,7 +27,9 @@
   }
 
   .badge-locked {
-    @apply bg-slate-500 text-white px-3 py-1 rounded-full text-xs font-medium;
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+    background-color: #3a3530;
+    color: var(--text-muted);
   }
 
   .heading-two-tone {

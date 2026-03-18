@@ -47,21 +47,21 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
       title: 'Max Drawdown',
       value: formatMaxDrawdown(stats.maxDrawdown),
       icon: TrendingDown,
-      color: 'text-red-600',
+      color: 'text-[#c03030]',
       description: 'Peak to trough'
     },
     {
       title: 'Success Rate',
       value: formatWinRate(stats.winRate),
       icon: Target,
-      color: stats.winRate >= 50 ? 'text-green-600' : 'text-red-600',
+      color: stats.winRate >= 50 ? 'text-[#4a7c3f]' : 'text-[#c03030]',
       description: 'Profitable investments'
     },
     {
       title: 'Profit Factor',
       value: formatProfitFactor(stats.profitFactor),
       icon: BarChart3,
-      color: stats.profitFactor >= 1 ? 'text-green-600' : 'text-red-600',
+      color: stats.profitFactor >= 1 ? 'text-[#4a7c3f]' : 'text-[#c03030]',
       description: 'Gross profit / loss'
     },
     {
@@ -75,7 +75,7 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
       title: 'Total Investments',
       value: formatTradeCount(stats.totalTrades),
       icon: BarChart3,
-      color: 'text-slate-600',
+      color: 'text-[var(--text-muted)]',
       description: `Avg hold: ${formatDuration(stats.avgHoldDays)}`
     }
   ]
@@ -102,18 +102,18 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-600 mb-1">
+                  <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
                     {kpi.title}
                   </p>
                   <p className={`text-2xl font-bold ${kpi.color}`}>
                     {kpi.value}
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     {kpi.description}
                   </p>
                 </div>
                 <div className="flex-shrink-0">
-                  <kpi.icon className="h-8 w-8 text-slate-400" />
+                  <kpi.icon className="h-8 w-8 text-[var(--text-muted)]" />
                 </div>
               </div>
             </CardContent>
@@ -124,17 +124,17 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
       {/* Advanced KPIs */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Advanced Metrics</h3>
+          <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-4">Advanced Metrics</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {advancedKpis.map((kpi, index) => (
               <div key={index} className="text-center">
-                <p className="text-sm font-medium text-slate-600 mb-1">
+                <p className="text-sm font-medium text-[var(--text-muted)] mb-1">
                   {kpi.title}
                 </p>
-                <p className="text-xl font-bold text-slate-800">
+                <p className="text-xl font-bold text-[var(--text-strong)]">
                   {kpi.value}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   {kpi.description}
                 </p>
               </div>
@@ -147,7 +147,7 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-800">Performance Summary</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-strong)]">Performance Summary</h3>
             <Badge variant="outline" className="capitalize">
               {timeRange}
             </Badge>
@@ -155,50 +155,50 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
           
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Total Return</span>
+              <span className="text-sm text-[var(--text-muted)]">Total Return</span>
               <span className={`font-medium ${getReturnColorClass(stats.totalReturn)}`}>
                 {formatPercentage(stats.totalReturn)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Max Drawdown</span>
-              <span className="font-medium text-red-600">
+              <span className="text-sm text-[var(--text-muted)]">Max Drawdown</span>
+              <span className="font-medium text-[#c03030]">
                 {formatMaxDrawdown(stats.maxDrawdown)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Success Rate</span>
-              <span className={`font-medium ${stats.winRate >= 50 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className="text-sm text-[var(--text-muted)]">Success Rate</span>
+              <span className={`font-medium ${stats.winRate >= 50 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
                 {formatWinRate(stats.winRate)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Profit Factor</span>
-              <span className={`font-medium ${stats.profitFactor >= 1 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className="text-sm text-[var(--text-muted)]">Profit Factor</span>
+              <span className={`font-medium ${stats.profitFactor >= 1 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
                 {formatProfitFactor(stats.profitFactor)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Avg R-Multiple</span>
+              <span className="text-sm text-[var(--text-muted)]">Avg R-Multiple</span>
               <span className={`font-medium ${getReturnColorClass(stats.avgRMultiple * 100)}`}>
                 {formatNumber(stats.avgRMultiple, 2)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Total Investments</span>
-              <span className="font-medium text-slate-800">
+              <span className="text-sm text-[var(--text-muted)]">Total Investments</span>
+              <span className="font-medium text-[var(--text-strong)]">
                 {formatTradeCount(stats.totalTrades)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-slate-600">Avg Hold Time</span>
-              <span className="font-medium text-slate-800">
+              <span className="text-sm text-[var(--text-muted)]">Avg Hold Time</span>
+              <span className="font-medium text-[var(--text-strong)]">
                 {formatDuration(stats.avgHoldDays)}
               </span>
             </div>

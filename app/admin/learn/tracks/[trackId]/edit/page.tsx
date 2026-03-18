@@ -105,14 +105,14 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
 
   if (isLoadingTrack) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-[#1a1815]">
         <div className="flex">
           <AdminSidebar />
           <div className="flex-1 p-8">
             <div className="max-w-4xl mx-auto">
               <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-                <div className="h-64 bg-slate-200 rounded"></div>
+                <div className="h-8 bg-[#2a2520] rounded w-1/4"></div>
+                <div className="h-64 bg-[#2a2520] rounded"></div>
               </div>
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#1a1815]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -137,8 +137,8 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900">Edit Track</h1>
-                  <p className="text-slate-600 mt-2">
+                  <h1 className="text-3xl font-bold text-[var(--text-strong)]">Edit Track</h1>
+                  <p className="text-[var(--text-strong)] mt-2">
                     Update track information and settings
                   </p>
                 </div>
@@ -159,7 +159,7 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Track Title *
                     </label>
                     <Input
@@ -171,7 +171,7 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       URL Slug *
                     </label>
                     <Input
@@ -180,26 +180,26 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                       placeholder="e.g., crypto-trading-foundations"
                       required
                     />
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
                       This will be the URL: /learn/{formData.slug || 'track-slug'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Summary
                     </label>
                     <textarea
                       value={formData.summary}
                       onChange={(e) => handleInputChange('summary', e.target.value)}
                       placeholder="Brief description of what students will learn..."
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                       rows={3}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Cover Image URL
                     </label>
                     <Input
@@ -246,26 +246,26 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Minimum Tier Required
                     </label>
                     <select
                       value={formData.minTier}
                       onChange={(e) => handleInputChange('minTier', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                     >
                       <option value="guest">Guest</option>
                       <option value="member">Member</option>
                       <option value="editor">Editor</option>
                       <option value="admin">Admin</option>
                     </select>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
                       Users must have at least this tier to access the track
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
                       Publish Date
                     </label>
                     <Input
@@ -273,7 +273,7 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                       onChange={(e) => handleInputChange('publishedAt', e.target.value)}
                       type="datetime-local"
                     />
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
                       Leave empty to save as draft. Set a future date to schedule publishing.
                     </p>
                   </div>
@@ -308,14 +308,14 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
                   </Button>
                 </div>
 
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-[var(--text-muted)]">
                   {formData.publishedAt ? (
-                    <span className="flex items-center gap-1 text-green-600">
+                    <span className="flex items-center gap-1 text-[#4a7c3f]">
                       <Eye className="h-4 w-4" />
                       Will be published
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-yellow-600">
+                    <span className="flex items-center gap-1 text-[#c9a227]">
                       <EyeOff className="h-4 w-4" />
                       Will be saved as draft
                     </span>

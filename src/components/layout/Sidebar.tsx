@@ -5,11 +5,11 @@ import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { 
-  LayoutDashboard, 
-  Play, 
-  TrendingUp, 
-  MessageSquare, 
+import {
+  LayoutDashboard,
+  Play,
+  TrendingUp,
+  MessageSquare,
   User,
   GraduationCap,
   Shield,
@@ -29,9 +29,9 @@ const navigation: NavigationItem[] = [
   { name: 'My Portfolio', href: '/portfolio', icon: TrendingUp },
   { name: 'Learning Hub', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
-  { 
-    name: 'Account', 
-    href: '/account', 
+  {
+    name: 'Account',
+    href: '/account',
     icon: User,
     children: [
       { name: 'Subscription', href: '/account/subscription' },
@@ -44,7 +44,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const [accountOpen, setAccountOpen] = useState(false)
-  
+
   // Check if user has admin or editor role
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
   const isAccountActive = pathname === '/account' || pathname?.startsWith('/account/')
@@ -55,20 +55,20 @@ export function Sidebar() {
       setAccountOpen(true)
     }
   }, [isAccountActive])
-  
+
   // Add admin link if user is admin/editor
-  const allNavigation: NavigationItem[] = isAdmin 
+  const allNavigation: NavigationItem[] = isAdmin
     ? [...navigation, { name: 'Admin', href: '/admin', icon: Shield }]
     : navigation
 
   return (
-    <div className="flex flex-col w-full md:w-64 bg-transparent md:bg-white/90 backdrop-blur border-r-0 md:border-r border-[color:var(--border-subtle)] h-full">
-      <div className="hidden md:block p-6 border-b border-[color:var(--border-subtle)]">
-        <span className="logo-type text-[15px] md:text-[16px] text-slate-800">
+    <div className="flex flex-col w-full md:w-64 h-full" style={{ backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-subtle)' }}>
+      <div className="hidden md:block p-6" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <span className="logo-type text-[15px] md:text-[16px]" style={{ color: 'var(--text-strong)' }}>
           STEWART & CO
         </span>
       </div>
-      
+
       <nav className="flex-1 p-4 space-y-2">
         {allNavigation.map((item) => {
           const isActive = pathname === item.href || (item.href === '/admin' && pathname?.startsWith('/admin'))
@@ -85,8 +85,8 @@ export function Sidebar() {
                     className={cn(
                       'flex flex-1 items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
                       isAccountActive
-                        ? 'bg-gold-500 text-white shadow-lg'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        ? 'bg-[var(--gold-400)] text-white shadow-lg'
+                        : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
                     )}
                   >
                     <item.icon className="mr-3 h-5 w-5" />
@@ -96,8 +96,8 @@ export function Sidebar() {
                     type="button"
                     aria-label="Toggle account submenu"
                     className={cn(
-                      'md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors',
-                      isAccountOpen && 'text-slate-900'
+                      'md:hidden p-2 rounded-lg transition-colors',
+                      isAccountOpen ? 'text-[var(--text-strong)]' : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
                     )}
                     onClick={(event) => {
                       event.preventDefault()
@@ -121,8 +121,8 @@ export function Sidebar() {
                         className={cn(
                           'flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                           isChildActive
-                            ? 'bg-gold-100 text-slate-900'
-                            : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                            ? 'bg-[#2a2418] text-[var(--gold-400)]'
+                            : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
                         )}
                       >
                         {child.name}
@@ -142,8 +142,8 @@ export function Sidebar() {
               className={cn(
                 'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-gold-500 text-white shadow-lg'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-[var(--gold-400)] text-white shadow-lg'
+                  : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
               )}
             >
               <item.icon className="mr-3 h-5 w-5" />

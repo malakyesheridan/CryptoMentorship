@@ -111,14 +111,14 @@ export function AdminChaptersManager({
     <div className="space-y-4">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800 text-sm">{error}</p>
+        <div className="bg-[#2e1a1a] border border-[#c03030] rounded-lg p-4">
+          <p className="text-[#c03030] text-sm">{error}</p>
         </div>
       )}
 
       {/* Add New Chapter */}
-      <div className="border border-slate-200 rounded-lg p-4 space-y-3">
-        <h4 className="font-medium text-slate-800">Add New Chapter</h4>
+      <div className="border border-[var(--border-subtle)] rounded-lg p-4 space-y-3">
+        <h4 className="font-medium text-[var(--text-strong)]">Add New Chapter</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="md:col-span-2">
             <Input
@@ -151,15 +151,15 @@ export function AdminChaptersManager({
       {/* Chapters List */}
       <div className="space-y-2">
         {chapters.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
-            <Clock className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+          <div className="text-center py-8 text-[var(--text-muted)]">
+            <Clock className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
             <p>No chapters yet. Add your first chapter above.</p>
           </div>
         ) : (
           chapters.map((chapter) => (
             <div
               key={chapter.id}
-              className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg"
+              className="flex items-center gap-3 p-3 border border-[var(--border-subtle)] rounded-lg"
             >
               {editingChapter === chapter.id ? (
                 <>
@@ -208,9 +208,9 @@ export function AdminChaptersManager({
               ) : (
                 <>
                   <div className="flex-1">
-                    <span className="font-medium text-slate-800">{chapter.title}</span>
+                    <span className="font-medium text-[var(--text-strong)]">{chapter.title}</span>
                   </div>
-                  <Badge variant="outline" className="text-slate-600">
+                  <Badge variant="outline" className="text-[var(--text-strong)]">
                     {msToTime(chapter.startMs)}
                   </Badge>
                   <Button
@@ -224,7 +224,7 @@ export function AdminChaptersManager({
                     size="sm"
                     variant="outline"
                     onClick={() => handleDeleteChapter(chapter.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-[#c03030] hover:text-[#c03030]"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -238,9 +238,9 @@ export function AdminChaptersManager({
       {/* Preview Player */}
       {recordingUrl && chapters.length > 0 && (
         <div className="mt-6">
-          <h4 className="font-medium text-slate-800 mb-3">Preview</h4>
-          <div className="bg-slate-100 rounded-lg p-4">
-            <p className="text-sm text-slate-600 mb-2">
+          <h4 className="font-medium text-[var(--text-strong)] mb-3">Preview</h4>
+          <div className="bg-[#1a1815] rounded-lg p-4">
+            <p className="text-sm text-[var(--text-strong)] mb-2">
               Click on chapters to test seeking functionality
             </p>
             <div className="space-y-1">
@@ -251,11 +251,11 @@ export function AdminChaptersManager({
                     // This would seek the player in a real implementation
                     console.log(`Seek to ${msToTime(chapter.startMs)}`)
                   }}
-                  className="w-full text-left p-2 rounded border border-slate-200 hover:border-gold-300 hover:bg-gold-50 transition-colors"
+                  className="w-full text-left p-2 rounded border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-gold-50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{chapter.title}</span>
-                    <span className="text-xs text-slate-500">{msToTime(chapter.startMs)}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{msToTime(chapter.startMs)}</span>
                   </div>
                 </button>
               ))}

@@ -132,11 +132,11 @@ export default async function AdminPage() {
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Users</CardTitle>
-            <Users className="h-4 w-4 text-slate-500" />
+            <Users className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userCount}</div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               {activeUsers} active (30d)
             </p>
           </CardContent>
@@ -150,11 +150,11 @@ export default async function AdminPage() {
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Active Subscriptions</CardTitle>
-              <CreditCard className="h-4 w-4 text-slate-500" />
+              <CreditCard className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{activeSubscriptions}</div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-muted)]">
                 {subscriptionBreakdown.active} active, {subscriptionBreakdown.trial} trial
               </p>
             </CardContent>
@@ -163,13 +163,13 @@ export default async function AdminPage() {
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Membership Tiers</CardTitle>
-              <BarChart3 className="h-4 w-4 text-slate-500" />
+              <BarChart3 className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {membershipByTier.reduce((sum, t) => sum + t._count.tier, 0)}
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-muted)]">
                 {membershipByTier.map(t => `${t._count.tier} ${t.tier}`).join(', ')}
               </p>
             </CardContent>
@@ -178,22 +178,22 @@ export default async function AdminPage() {
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Trial Members</CardTitle>
-              <Clock className="h-4 w-4 text-slate-500" />
+              <Clock className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{subscriptionBreakdown.trial}</div>
-              <p className="text-xs text-slate-500">On trial period</p>
+              <p className="text-xs text-[var(--text-muted)]">On trial period</p>
             </CardContent>
           </Card>
 
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Paused</CardTitle>
-              <Activity className="h-4 w-4 text-slate-500" />
+              <Activity className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{subscriptionBreakdown.paused}</div>
-              <p className="text-xs text-slate-500">Paused subscriptions</p>
+              <p className="text-xs text-[var(--text-muted)]">Paused subscriptions</p>
             </CardContent>
           </Card>
         </div>
@@ -206,22 +206,22 @@ export default async function AdminPage() {
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Learning Tracks</CardTitle>
-              <BookOpen className="h-4 w-4 text-slate-500" />
+              <BookOpen className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{trackCount}</div>
-              <p className="text-xs text-slate-500">Total tracks</p>
+              <p className="text-xs text-[var(--text-muted)]">Total tracks</p>
             </CardContent>
           </Card>
 
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Enrollments</CardTitle>
-              <GraduationCap className="h-4 w-4 text-slate-500" />
+              <GraduationCap className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{enrollmentCount}</div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-muted)]">
                 {completedEnrollments} completed
               </p>
             </CardContent>
@@ -230,18 +230,18 @@ export default async function AdminPage() {
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Certificates</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-slate-500" />
+              <CheckCircle2 className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{certificateCount}</div>
-              <p className="text-xs text-slate-500">Issued certificates</p>
+              <p className="text-xs text-[var(--text-muted)]">Issued certificates</p>
             </CardContent>
           </Card>
 
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Completion Rate</CardTitle>
-              <BarChart3 className="h-4 w-4 text-slate-500" />
+              <BarChart3 className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -249,7 +249,7 @@ export default async function AdminPage() {
                   ? Math.round((completedEnrollments / enrollmentCount) * 100)
                   : 0}%
               </div>
-              <p className="text-xs text-slate-500">Track completion</p>
+              <p className="text-xs text-[var(--text-muted)]">Track completion</p>
             </CardContent>
           </Card>
         </div>
@@ -262,35 +262,35 @@ export default async function AdminPage() {
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Total Signals</CardTitle>
-              <TrendingUp className="h-4 w-4 text-slate-500" />
+              <TrendingUp className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalDailySignals}</div>
-              <p className="text-xs text-slate-500">All-time daily signals</p>
+              <p className="text-xs text-[var(--text-muted)]">All-time daily signals</p>
             </CardContent>
           </Card>
 
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">Today&apos;s Signals</CardTitle>
-              <Activity className="h-4 w-4 text-slate-500" />
+              <Activity className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{todayDailySignals}</div>
-              <p className="text-xs text-slate-500">Published today</p>
+              <p className="text-xs text-[var(--text-muted)]">Published today</p>
             </CardContent>
           </Card>
 
           <Card className="card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="heading-2 text-sm">By Tier</CardTitle>
-              <BarChart3 className="h-4 w-4 text-slate-500" />
+              <BarChart3 className="h-4 w-4 text-[var(--text-muted)]" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {dailySignalsBreakdown.T1 + dailySignalsBreakdown.T2 + dailySignalsBreakdown.T3}
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-muted)]">
                 T1: {dailySignalsBreakdown.T1}, T2: {dailySignalsBreakdown.T2}, T3: {dailySignalsBreakdown.T3}
               </p>
             </CardContent>
@@ -321,19 +321,19 @@ export default async function AdminPage() {
                         </Badge>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[var(--text-muted)]">
                       {formatDate(user.createdAt, 'MMM d')}
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-500">No users yet</p>
+                <p className="text-sm text-[var(--text-muted)]">No users yet</p>
               )}
             </div>
-            <div className="mt-4 pt-4 border-t border-slate-200">
+            <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
               <Link 
                 href="/admin/users"
-                className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+                className="text-sm text-[var(--text-strong)] hover:text-[var(--text-strong)] font-medium"
               >
                 View All Users →
               </Link>
@@ -358,17 +358,17 @@ export default async function AdminPage() {
                       <p className="font-medium text-sm">
                         {audit.actor.name} {audit.action}d {audit.subjectType}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[var(--text-muted)]">
                         {audit.subjectId && `ID: ${audit.subjectId}`}
                       </p>
                     </div>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[var(--text-muted)]">
                       {formatDate(audit.createdAt, 'MMM d')}
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-500">No activity yet</p>
+                <p className="text-sm text-[var(--text-muted)]">No activity yet</p>
               )}
             </div>
           </CardContent>

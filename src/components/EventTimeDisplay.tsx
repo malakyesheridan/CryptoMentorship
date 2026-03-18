@@ -33,12 +33,12 @@ export function EventTimeDisplay({
     // Server-side fallback
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <Clock className="h-4 w-4 text-slate-400" />
+        <Clock className="h-4 w-4 text-[var(--text-muted)]" />
         <div>
-          <p className="text-sm font-medium text-slate-800">
+          <p className="text-sm font-medium text-[var(--text-strong)]">
             {formatEventTime(startAt, timezone, 'PPp')}
           </p>
-          <p className="text-xs text-slate-500">Loading...</p>
+          <p className="text-xs text-[var(--text-muted)]">Loading...</p>
         </div>
       </div>
     )
@@ -53,12 +53,12 @@ export function EventTimeDisplay({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <Clock className="h-4 w-4 text-slate-400" />
+      <Clock className="h-4 w-4 text-[var(--text-muted)]" />
       <div>
-        <p className="text-sm font-medium text-slate-800">
+        <p className="text-sm font-medium text-[var(--text-strong)]">
           {eventStart}
         </p>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-[var(--text-muted)]">
           <span>{timezone} time</span>
           {userStart && (
             <span className="ml-2">
@@ -66,7 +66,7 @@ export function EventTimeDisplay({
             </span>
           )}
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-[var(--text-muted)]">
           Duration: {Math.round((endAt.getTime() - startAt.getTime()) / (1000 * 60))} minutes
         </p>
       </div>

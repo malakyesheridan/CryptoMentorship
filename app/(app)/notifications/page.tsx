@@ -133,7 +133,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         <div className="space-y-4">
           {items.map((notification) => (
             <Card key={notification.id} className={`transition-colors ${
-              !notification.readAt ? 'bg-blue-50/50 border-blue-200' : ''
+              !notification.readAt ? 'bg-[#1a1e2e] border-[var(--border-subtle)]' : ''
             }`}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
@@ -171,7 +171,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
                           <Badge variant="outline" className="text-xs">
                             {notification.type.replace('_', ' ')}
                           </Badge>
-                          <span className="text-sm text-slate-500">
+                          <span className="text-sm text-[var(--text-muted)]">
                             {formatDate(notification.createdAt, 'MMM d, yyyy h:mm a')}
                           </span>
                           {!notification.readAt && (
@@ -201,7 +201,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         </div>
       ) : (
         <EmptyState
-          icon={<Bell className="w-16 h-16 text-slate-400 mx-auto mb-4" />}
+          icon={<Bell className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />}
           title="No notifications yet"
           description={
             filter === 'unread' 

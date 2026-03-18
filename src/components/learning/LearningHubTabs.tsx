@@ -34,7 +34,7 @@ export function LearningHubTabs({ activeTab, onTabChange, stats }: LearningHubTa
   return (
     <div
       data-tour="learning-tabs"
-      className="bg-white rounded-2xl shadow-lg p-2 mb-8 border border-slate-200"
+      className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 mb-8 border border-[var(--border-subtle)]"
     >
       <div className="flex gap-2 overflow-x-auto">
         {tabs.map((tab) => {
@@ -48,8 +48,8 @@ export function LearningHubTabs({ activeTab, onTabChange, stats }: LearningHubTa
               className={cn(
                 'flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 whitespace-nowrap',
                 isActive
-                  ? 'bg-yellow-500 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-gold-500 text-white shadow-md'
+                  : 'text-[var(--text-strong)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
               )}
             >
               <Icon className="h-5 w-5" />
@@ -59,7 +59,7 @@ export function LearningHubTabs({ activeTab, onTabChange, stats }: LearningHubTa
                   'text-xs px-2 py-0.5 rounded-full',
                   isActive
                     ? 'bg-white/20 text-white'
-                    : 'bg-slate-200 text-slate-600'
+                    : 'bg-[#2a2520] text-[var(--text-strong)]'
                 )}>
                   {tab.description}
                 </span>

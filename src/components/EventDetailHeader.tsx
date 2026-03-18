@@ -141,48 +141,48 @@ export function EventDetailHeader({
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-slate-400" />
+              <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
               <div>
-                <p className="font-medium text-slate-800">
+                <p className="font-medium text-[var(--text-strong)]">
                   {formatDate(event.startAt, 'PPP')}
                 </p>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-[var(--text-strong)]">
                   {formatTime(event.startAt)} - {formatTime(event.endAt)}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   {getTimeUntilStart()}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-slate-400" />
+              <MapPin className="h-5 w-5 text-[var(--text-muted)]" />
               <div>
-                <p className="font-medium text-slate-800">
+                <p className="font-medium text-[var(--text-strong)]">
                   {event.locationType === 'online' ? 'Online Event' : 'In Person'}
                 </p>
                 {event.locationText && (
-                  <p className="text-sm text-slate-600">{event.locationText}</p>
+                  <p className="text-sm text-[var(--text-strong)]">{event.locationText}</p>
                 )}
               </div>
             </div>
 
             {event.host && (
               <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-slate-400" />
+                <User className="h-5 w-5 text-[var(--text-muted)]" />
                 <div>
-                  <p className="font-medium text-slate-800">Host</p>
-                  <p className="text-sm text-slate-600">{event.host.name}</p>
+                  <p className="font-medium text-[var(--text-strong)]">Host</p>
+                  <p className="text-sm text-[var(--text-strong)]">{event.host.name}</p>
                 </div>
               </div>
             )}
 
             {event.capacity && (
               <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-slate-400" />
+                <Users className="h-5 w-5 text-[var(--text-muted)]" />
                 <div>
-                  <p className="font-medium text-slate-800">Capacity</p>
-                  <p className={`text-sm ${getCapacityText() === 'Full' ? 'text-red-600' : 'text-slate-600'}`}>
+                  <p className="font-medium text-[var(--text-strong)]">Capacity</p>
+                  <p className={`text-sm ${getCapacityText() === 'Full' ? 'text-[#c03030]' : 'text-[var(--text-strong)]'}`}>
                     {getCapacityText()}
                   </p>
                 </div>
@@ -199,7 +199,7 @@ export function EventDetailHeader({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="heading-2 text-lg mb-2">RSVP</h3>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-[var(--text-strong)]">
                   Let us know if you&apos;ll be attending this event
                 </p>
               </div>
@@ -239,12 +239,12 @@ export function EventDetailHeader({
 
       {/* Join Live Button */}
       {canJoinLive() && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-[#4a7c3f]/30 bg-[#1a2e1a]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="heading-2 text-lg mb-2 text-green-800">🔴 Live Now</h3>
-                <p className="text-sm text-green-700">
+                <h3 className="heading-2 text-lg mb-2 text-[#4a7c3f]">🔴 Live Now</h3>
+                <p className="text-sm text-[#4a7c3f]">
                   This event is currently live. Click below to join the session.
                 </p>
               </div>

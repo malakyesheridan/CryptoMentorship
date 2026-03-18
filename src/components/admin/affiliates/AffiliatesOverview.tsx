@@ -216,7 +216,7 @@ export function AffiliatesOverview() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--text-muted)]" />
       </div>
     )
   }
@@ -241,33 +241,33 @@ export function AffiliatesOverview() {
                 placeholder="Search by name or email"
               />
               {selectedMember && (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--text-muted)]">
                   Selected: {selectedMember.name || selectedMember.email}
                 </p>
               )}
               {memberQuery.trim().length >= 2 && memberResults.length > 0 && (
-                <div className="border border-[color:var(--border-subtle)] rounded-md bg-white shadow-sm max-h-56 overflow-auto">
+                <div className="border border-[color:var(--border-subtle)] rounded-md bg-[var(--bg-panel)] shadow-sm max-h-56 overflow-auto">
                   {memberResults.map((user) => (
                     <button
                       key={user.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                      className="w-full text-left px-3 py-2 hover:bg-[#1a1815]"
                       onClick={() => {
                         setSelectedMember(user)
                         setMemberQuery(user.name || user.email)
                         setMemberResults([])
                       }}
                     >
-                      <div className="text-sm font-medium text-slate-800">
+                      <div className="text-sm font-medium text-[var(--text-strong)]">
                         {user.name || user.email}
                       </div>
-                      <div className="text-xs text-slate-500">{user.email}</div>
+                      <div className="text-xs text-[var(--text-muted)]">{user.email}</div>
                     </button>
                   ))}
                 </div>
               )}
               {memberQuery.trim().length >= 2 && memberResults.length === 0 && !isSearchingMembers && (
-                <p className="text-xs text-slate-500">No users found.</p>
+                <p className="text-xs text-[var(--text-muted)]">No users found.</p>
               )}
             </div>
 
@@ -283,40 +283,40 @@ export function AffiliatesOverview() {
                 placeholder="Search by name or email"
               />
               {selectedReferrer && (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--text-muted)]">
                   Selected: {selectedReferrer.name || selectedReferrer.email}
                 </p>
               )}
               {referrerQuery.trim().length >= 2 && referrerResults.length > 0 && (
-                <div className="border border-[color:var(--border-subtle)] rounded-md bg-white shadow-sm max-h-56 overflow-auto">
+                <div className="border border-[color:var(--border-subtle)] rounded-md bg-[var(--bg-panel)] shadow-sm max-h-56 overflow-auto">
                   {referrerResults.map((user) => (
                     <button
                       key={user.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50"
+                      className="w-full text-left px-3 py-2 hover:bg-[#1a1815]"
                       onClick={() => {
                         setSelectedReferrer(user)
                         setReferrerQuery(user.name || user.email)
                         setReferrerResults([])
                       }}
                     >
-                      <div className="text-sm font-medium text-slate-800">
+                      <div className="text-sm font-medium text-[var(--text-strong)]">
                         {user.name || user.email}
                       </div>
-                      <div className="text-xs text-slate-500">{user.email}</div>
+                      <div className="text-xs text-[var(--text-muted)]">{user.email}</div>
                     </button>
                   ))}
                 </div>
               )}
               {referrerQuery.trim().length >= 2 && referrerResults.length === 0 && !isSearchingReferrers && (
-                <p className="text-xs text-slate-500">No users found.</p>
+                <p className="text-xs text-[var(--text-muted)]">No users found.</p>
               )}
             </div>
 
             <div className="space-y-2">
               <Label>Referral Date</Label>
               <Input readOnly value={referralDateLabel} placeholder="Select a member" />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--text-muted)]">
                 Uses the member&apos;s sign-up date.
               </p>
             </div>
@@ -354,41 +354,41 @@ export function AffiliatesOverview() {
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Affiliates</CardTitle>
-            <Users className="h-4 w-4 text-slate-500" />
+            <Users className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totals.affiliates}</div>
-            <p className="text-xs text-slate-500">Active referrers</p>
+            <p className="text-xs text-[var(--text-muted)]">Active referrers</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Total Signups</CardTitle>
-            <CheckCircle className="h-4 w-4 text-slate-500" />
+            <CheckCircle className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totals.signups}</div>
-            <p className="text-xs text-slate-500">Referred users</p>
+            <p className="text-xs text-[var(--text-muted)]">Referred users</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Payable</CardTitle>
-            <Clock className="h-4 w-4 text-slate-500" />
+            <Clock className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totals.payable}</div>
-            <p className="text-xs text-slate-500">Referrals ready to pay</p>
+            <p className="text-xs text-[var(--text-muted)]">Referrals ready to pay</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Paid Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-slate-500" />
+            <DollarSign className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${(totals.paidTotalCents / 100).toFixed(2)}</div>
-            <p className="text-xs text-slate-500">Paid commissions</p>
+            <p className="text-xs text-[var(--text-muted)]">Paid commissions</p>
           </CardContent>
         </Card>
       </div>
@@ -401,7 +401,7 @@ export function AffiliatesOverview() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-slate-600">
+                <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-[var(--text-strong)]">
                   <th className="py-3 px-4">Affiliate</th>
                   <th className="py-3 px-4">Signups</th>
                   <th className="py-3 px-4">Qualified</th>
@@ -415,8 +415,8 @@ export function AffiliatesOverview() {
                   <tr key={row.referrer.id} className="border-b border-[color:var(--border-subtle)]">
                     <td className="py-4 px-4">
                       <div>
-                        <p className="font-medium text-slate-800">{row.referrer.name || 'Unnamed'}</p>
-                        <p className="text-sm text-slate-500">{row.referrer.email || '--'}</p>
+                        <p className="font-medium text-[var(--text-strong)]">{row.referrer.name || 'Unnamed'}</p>
+                        <p className="text-sm text-[var(--text-muted)]">{row.referrer.email || '--'}</p>
                       </div>
                     </td>
                     <td className="py-4 px-4">{row.stats.totalSignups}</td>
@@ -438,7 +438,7 @@ export function AffiliatesOverview() {
                 ))}
                 {affiliates.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                    <td colSpan={6} className="py-8 text-center text-sm text-[var(--text-muted)]">
                       No affiliates found.
                     </td>
                   </tr>
@@ -457,7 +457,7 @@ export function AffiliatesOverview() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-slate-600">
+                <tr className="border-b border-[color:var(--border-subtle)] text-left text-sm text-[var(--text-strong)]">
                   <th className="py-3 px-4">Referrer</th>
                   <th className="py-3 px-4">Referred</th>
                   <th className="py-3 px-4">Status</th>
@@ -470,29 +470,29 @@ export function AffiliatesOverview() {
                 {allReferrals.map((referral) => (
                   <tr key={referral.id} className="border-b border-[color:var(--border-subtle)]">
                     <td className="py-4 px-4">
-                      <p className="font-medium text-slate-800">
+                      <p className="font-medium text-[var(--text-strong)]">
                         {referral.referrer.name || referral.referrer.email || 'Unknown'}
                       </p>
-                      <p className="text-sm text-slate-500">{referral.referrer.email || '--'}</p>
+                      <p className="text-sm text-[var(--text-muted)]">{referral.referrer.email || '--'}</p>
                     </td>
                     <td className="py-4 px-4">
-                      <p className="font-medium text-slate-800">
+                      <p className="font-medium text-[var(--text-strong)]">
                         {referral.referredName || referral.referredEmail || 'Pending'}
                       </p>
-                      <p className="text-sm text-slate-500">{referral.referredEmail || '--'}</p>
+                      <p className="text-sm text-[var(--text-muted)]">{referral.referredEmail || '--'}</p>
                     </td>
                     <td className="py-4 px-4">
                       <Badge variant={referral.status === 'PAID' ? 'default' : 'secondary'}>
                         {referral.status}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.signedUpAt ? referral.signedUpAt.split('T')[0] : '--'}
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.payableAt ? referral.payableAt.split('T')[0] : '--'}
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="py-4 px-4 text-sm text-[var(--text-strong)]">
                       {referral.commissionAmountCents !== null
                         ? `$${(referral.commissionAmountCents / 100).toFixed(2)}`
                         : '--'}
@@ -501,7 +501,7 @@ export function AffiliatesOverview() {
                 ))}
                 {allReferrals.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                    <td colSpan={6} className="py-8 text-center text-sm text-[var(--text-muted)]">
                       No referral deals found.
                     </td>
                   </tr>

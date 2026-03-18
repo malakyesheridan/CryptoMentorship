@@ -21,10 +21,10 @@ export function AuthGate({ children, requireAuth = true }: AuthGateProps) {
 
   if (requireAuth && status === 'loading') {
     return (
-      <div className="min-h-screen bg-ivory flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-500 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
+          <p className="text-[var(--text-strong)]">Loading...</p>
         </div>
       </div>
     )

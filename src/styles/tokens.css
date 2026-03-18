@@ -1,10 +1,12 @@
 :root {
-  --bg-ivory: #FBF9F3;
-  --gold-400: #F2C94C;
-  --gold-600: #D4A017;
-  --text-strong: #1F2937;      /* slate-800 */
-  --text-muted: #6B7280;       /* slate-500 */
-  --border-subtle: #00000014;
-  --success: #10B981;
-  --danger: #EF4444;
+  --bg-page:       #0a0a0a;       /* dark background */
+  --bg-panel:      #141210;       /* slightly lighter panels */
+  --bg-sidebar:    #0a0a0a;       /* sidebar background */
+  --border-subtle: #2a2520;       /* warm brown borders */
+  --text-strong:   #f5f0e8;       /* cream text */
+  --text-muted:    #8a7d6b;       /* warm muted text */
+  --gold-400:      #c9a227;       /* Stewart & Co. gold accent */
+  --gold-600:      #a07d10;       /* darker gold for hover */
+  --success:       #4a7c3f;       /* muted green */
+  --danger:        #c03030;       /* warm red */
 }

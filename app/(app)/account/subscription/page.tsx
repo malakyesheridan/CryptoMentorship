@@ -110,7 +110,7 @@ export default function SubscriptionPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--text-muted)]" />
         </div>
       </div>
     )
@@ -123,8 +123,8 @@ export default function SubscriptionPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
-              <CreditCard className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-600 mb-4">You don&apos;t have an active subscription.</p>
+              <CreditCard className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
+              <p className="text-[var(--text-muted)] mb-4">You don&apos;t have an active subscription.</p>
               <Button onClick={() => router.push('/subscribe')}>
                 Subscribe Now
               </Button>
@@ -149,9 +149,9 @@ export default function SubscriptionPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold text-lg">Tier: {subscription.tier}</p>
-                <p className="text-sm text-slate-600 mt-1">
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                   Status:{' '}
-                  <Badge className={subscription.status === 'active' ? 'bg-green-100 text-green-800' : ''}>
+                  <Badge className={subscription.status === 'active' ? 'bg-green-100 text-[#4a7c3f]' : ''}>
                     {subscription.status}
                   </Badge>
                 </p>
@@ -159,9 +159,9 @@ export default function SubscriptionPage() {
             </div>
             
             <div className="flex items-center gap-4">
-              <Calendar className="h-5 w-5 text-slate-400" />
+              <Calendar className="h-5 w-5 text-[var(--text-muted)]" />
               <div>
-                <p className="text-sm text-slate-600">Current Period</p>
+                <p className="text-sm text-[var(--text-muted)]">Current Period</p>
                 <p className="font-medium">
                   {format(new Date(subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
                   {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
@@ -170,18 +170,18 @@ export default function SubscriptionPage() {
             </div>
             
             {subscription.cancelAtPeriodEnd && (
-              <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-yellow-800">
+              <div className="flex items-start gap-2 p-3 bg-[#2a2418] border border-[var(--border-subtle)] rounded-lg">
+                <AlertCircle className="h-5 w-5 text-[var(--text-strong)] flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-[var(--text-strong)]">
                   Your subscription will cancel at the end of the billing period ({format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}).
                 </p>
               </div>
             )}
             
             {!subscription.cancelAtPeriodEnd && subscription.status === 'active' && (
-              <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-green-800">
+              <div className="flex items-start gap-2 p-3 bg-[#1a2e1a] border border-[#4a7c3f] rounded-lg">
+                <CheckCircle className="h-5 w-5 text-[#4a7c3f] flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-[#4a7c3f]">
                   Your subscription is active and will renew automatically.
                 </p>
               </div>
@@ -225,12 +225,12 @@ export default function SubscriptionPage() {
           <CardContent>
             <div className="space-y-2">
               {membership.payments.map((payment: Payment) => (
-                <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50">
+                <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-[#1a1815]">
                   <div>
                     <p className="font-medium">
                       ${payment.amount.toFixed(2)} {payment.currency.toUpperCase()}
                     </p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-[var(--text-muted)]">
                       {format(new Date(payment.createdAt), 'MMM d, yyyy')}
                     </p>
                   </div>

@@ -86,7 +86,7 @@ export default async function ContentPage({
   })
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <ViewTracker entityType="content" entityId={content.id} disabled={!user.id} />
         {/* Header */}
@@ -115,9 +115,9 @@ export default async function ContentPage({
           
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-slate-900 mb-2">{content.title}</h1>
+              <h1 className="text-4xl font-bold text-[var(--text-strong)] mb-2">{content.title}</h1>
               {content.excerpt && (
-                <p className="text-xl text-slate-600">{content.excerpt}</p>
+                <p className="text-xl text-[var(--text-muted)]">{content.excerpt}</p>
               )}
             </div>
             <BookmarkButton
@@ -128,7 +128,7 @@ export default async function ContentPage({
             />
           </div>
 
-          <div className="flex items-center gap-6 text-sm text-slate-500">
+          <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               {formatDate(content.publishedAt, 'PPP')}
@@ -141,7 +141,7 @@ export default async function ContentPage({
 
           {tags.length > 0 && (
             <div className="flex items-center gap-2 mt-4">
-              <Tag className="h-4 w-4 text-slate-400" />
+              <Tag className="h-4 w-4 text-[var(--text-muted)]" />
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag: string) => (
                   <Badge key={tag} variant="outline" className="text-xs">
@@ -159,12 +159,12 @@ export default async function ContentPage({
             {mdx ? (
               <MDXRenderer source={mdx.source} slug={content.slug} hash={mdx.hash} />
             ) : content.body ? (
-              <div className="prose prose-slate max-w-none whitespace-pre-wrap">
+              <div className="prose prose-invert max-w-none whitespace-pre-wrap">
                 {content.body}
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-slate-500">No content available.</p>
+                <p className="text-[var(--text-muted)]">No content available.</p>
               </div>
             )}
           </CardContent>

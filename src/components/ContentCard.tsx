@@ -59,20 +59,20 @@ export function ContentCard({ id, title, excerpt, publishedAt, locked, kind, tag
             <FollowTagButton key={tag} tag={tag} size="sm" />
           ))}
           {tags.length > 3 && (
-            <span className="text-xs text-slate-500 px-2 py-1">
+            <span className="text-xs text-[var(--text-muted)] px-2 py-1">
               +{tags.length - 3} more
             </span>
           )}
         </div>
       )}
       
-      <div className="flex items-center justify-between text-sm text-slate-400">
+      <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
         <span className="capitalize">{kind}</span>
         <span>{formatDate(publishedAt)}</span>
       </div>
       
       {locked && !canAccess && (
-        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+        <div className="mt-4 p-4 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]">
           <p className="subhead text-sm mb-2">
             This content is available to members only.
           </p>

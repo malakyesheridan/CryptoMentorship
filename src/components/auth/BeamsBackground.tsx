@@ -39,7 +39,7 @@ function createBeam(width: number, height: number): Beam {
     angle: angle,
     speed: 0.6 + Math.random() * 1.2,
     opacity: 0.12 + Math.random() * 0.16,
-    hue: 190 + Math.random() * 70,
+    hue: 35 + Math.random() * 20,
     pulse: Math.random() * Math.PI * 2,
     pulseSpeed: 0.02 + Math.random() * 0.03,
   };
@@ -92,7 +92,7 @@ export function BeamsBackground({
         (Math.random() - 0.5) * spacing * 0.5;
       beam.width = 100 + Math.random() * 100;
       beam.speed = 0.5 + Math.random() * 0.4;
-      beam.hue = 190 + (index * 70) / totalBeams;
+      beam.hue = 35 + (index * 20) / totalBeams;
       beam.opacity = 0.2 + Math.random() * 0.1;
       return beam;
     }
@@ -174,7 +174,7 @@ export function BeamsBackground({
   return (
     <div
       className={cn(
-        "relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
+        "relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#141210] to-[#0a0a0a]",
         className
       )}
     >
@@ -185,7 +185,7 @@ export function BeamsBackground({
       />
 
       <motion.div
-        className="absolute inset-0 bg-slate-900/5"
+        className="absolute inset-0 bg-[#0a0a0a]/5"
         animate={{
           opacity: [0.05, 0.15, 0.05],
         }}

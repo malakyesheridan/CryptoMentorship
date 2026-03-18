@@ -14,6 +14,10 @@ type JobContext = {
   targetDateKey: string
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function startOfUtcDay(date: Date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
 }
@@ -50,6 +54,55 @@ function computeWindow(now: Date) {
   }
 }
 
+function isMissingRoiSnapshotTableError(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const prismaError = error as { code?: string; message?: string }
+  const message = prismaError.message || ''
+
+  return message.includes('RoiDashboardSnapshot')
+    && (prismaError.code === 'P2021' || message.toLowerCase().includes('does not exist'))
+}
+
+async function sendDigestWithRetry(input: {
+  entries: Array<{
+    membershipId: string
+    userId: string
+    name: string | null
+    email: string
+    tier: string
+    trialEnd: Date
+    joinedAt: Date
+  }>
+  totalCount: number
+  runDate: string
+  appUrl: string
+}) {
+  const maxAttempts = 3
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await sendTrialReminderDigestEmail(input)
+      return attempt
+    } catch (error) {
+      const normalizedError = error instanceof Error ? error : new Error(String(error))
+      lastError = normalizedError
+      logger.warn('Trial reminder digest email send attempt failed', {
+        attempt,
+        maxAttempts,
+        runDate: input.runDate,
+        error: normalizedError.message,
+      })
+
+      if (attempt < maxAttempts) {
+        await sleep(attempt * 1000)
+      }
+    }
+  }
+
+  throw lastError || new Error('Trial reminder digest email failed after retries')
+}
+
 async function acquireDigestLock(context: JobContext) {
   const now = new Date()
   const holder = process.env.VERCEL_REGION || process.env.HOSTNAME || 'local'
@@ -79,6 +132,15 @@ async function acquireDigestLock(context: JobContext) {
     })
     return { acquired: true }
   } catch (error: any) {
+    if (isMissingRoiSnapshotTableError(error)) {
+      logger.warn('Trial reminder digest lock table unavailable; continuing without lock', {
+        runId: context.runId,
+        targetDate: context.targetDateKey,
+        reason: 'RoiDashboardSnapshot table missing',
+      })
+      return { acquired: true, reason: 'lockless' as const }
+    }
+
     if (error?.code !== 'P2002') {
       logger.error('Failed to acquire trial reminder digest lock', error instanceof Error ? error : new Error(String(error)))
       return { acquired: false, reason: 'error' }
@@ -138,17 +200,27 @@ async function updateDigestStatus(params: {
   targetDateKey: string
   payload: Record<string, unknown>
 }) {
-  await prisma.roiDashboardSnapshot.update({
-    where: {
-      scope_portfolioKey: {
-        scope: JOB_LOCK_SCOPE,
-        portfolioKey: params.targetDateKey
+  try {
+    await prisma.roiDashboardSnapshot.update({
+      where: {
+        scope_portfolioKey: {
+          scope: JOB_LOCK_SCOPE,
+          portfolioKey: params.targetDateKey
+        }
+      },
+      data: {
+        payload: JSON.stringify(params.payload)
       }
-    },
-    data: {
-      payload: JSON.stringify(params.payload)
+    })
+  } catch (error) {
+    if (isMissingRoiSnapshotTableError(error)) {
+      logger.warn('Skipping trial reminder digest status update because lock table is unavailable', {
+        targetDate: params.targetDateKey,
+      })
+      return
     }
-  })
+    throw error
+  }
 }
 
 export async function runTrialReminder7DayDigest(options: { trigger?: string; now?: Date } = {}) {
@@ -263,8 +335,7 @@ export async function runTrialReminder7DayDigest(options: { trigger?: string; no
       joinedAt: membership.user?.createdAt ?? membership.createdAt
     }))
 
-    await sendTrialReminderDigestEmail({
-      to: env.COEN_ALERT_EMAIL || 'coen@stewartandco.org',
+    const emailAttempts = await sendDigestWithRetry({
       entries: digestEntries,
       totalCount: eligible.length,
       runDate: window.targetDateKey,
@@ -296,6 +367,7 @@ export async function runTrialReminder7DayDigest(options: { trigger?: string; no
         status: logError ? 'sent_log_failed' : 'sent',
         found: memberships.length,
         emailed: eligible.length,
+        emailAttempts,
         logged: loggedCount,
         logError,
         endedAt: new Date().toISOString()
@@ -305,13 +377,15 @@ export async function runTrialReminder7DayDigest(options: { trigger?: string; no
     logger.info('Trial reminder digest sent', {
       runId: context.runId,
       found: memberships.length,
-      emailed: eligible.length
+      emailed: eligible.length,
+      emailAttempts,
     })
 
     return {
       processed: eligible.length,
       found: memberships.length,
       emailed: eligible.length,
+      emailAttempts,
       logged: loggedCount,
       logError,
       runId: context.runId

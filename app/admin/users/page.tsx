@@ -55,11 +55,11 @@ export default async function UsersPage() {
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-slate-500" />
+            <Users className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userStats.total}</div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               {userStats.active} active
             </p>
           </CardContent>
@@ -68,13 +68,13 @@ export default async function UsersPage() {
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Roles</CardTitle>
-            <Shield className="h-4 w-4 text-slate-500" />
+            <Shield className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {userStats.admins + userStats.editors}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               {userStats.admins} admin, {userStats.editors} editor
             </p>
           </CardContent>
@@ -83,11 +83,11 @@ export default async function UsersPage() {
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Members</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-slate-500" />
+            <CheckCircle2 className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userStats.members}</div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--text-muted)]">
               {userStats.withMembership} with membership
             </p>
           </CardContent>
@@ -96,11 +96,11 @@ export default async function UsersPage() {
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="heading-2 text-sm">Guests</CardTitle>
-            <XCircle className="h-4 w-4 text-slate-500" />
+            <XCircle className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userStats.guests}</div>
-            <p className="text-xs text-slate-500">Unregistered users</p>
+            <p className="text-xs text-[var(--text-muted)]">Unregistered users</p>
           </CardContent>
         </Card>
       </div>
