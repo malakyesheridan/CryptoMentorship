@@ -21,7 +21,10 @@
       "Bash(dir /b C:UserskyeshCryptoMentorship.env*)",
       "Bash(ls \"C:/Users/kyesh/CryptoMentorship/app/api/community/posts/\"*/route.ts \"C:/Users/kyesh/CryptoMentorship/app/api/community/comments/\"*/route.ts)",
       "Bash(node -e \"console.log\\(require\\(''next/package.json''\\).version\\)\")",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
+      "Bash(ls -la \"/c/Users/kyesh/CryptoMentorship/app/\\(app\\)/account/\")",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")"
     ]
   }
 }

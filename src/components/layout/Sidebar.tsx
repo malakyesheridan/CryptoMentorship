@@ -31,15 +31,7 @@ const navigation: NavigationItem[] = [
   { name: 'Tools', href: '/tools', icon: Wrench },
   { name: 'Learning Hub', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
-  {
-    name: 'Account',
-    href: '/account',
-    icon: User,
-    children: [
-      { name: 'Subscription', href: '/account/subscription' },
-      { name: 'Referrals', href: '/account/referrals' }
-    ]
-  },
+  { name: 'Account', href: '/account', icon: User },
 ]
 
 export function Sidebar() {
