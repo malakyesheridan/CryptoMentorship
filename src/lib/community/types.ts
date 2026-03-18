@@ -1,60 +1,33 @@
-export type Channel = {
-  id: string
-  name: string
-  description?: string | null
-  order?: number
-  createdAt: string
-}
+import { PostCategory, ReactionType } from '@prisma/client'
 
-export type ChatAuthor = {
+export interface PostAuthor {
   id: string
   name: string | null
   image: string | null
+  role: string
+  createdAt: Date
 }
 
-export type ChatMessage = {
+export interface PostWithDetails {
   id: string
-  channelId: string
-  userId: string
+  authorId: string
+  category: PostCategory
   body: string
-  createdAt: string
-  author: ChatAuthor
+  imageUrl: string | null
+  isPinned: boolean
+  isShadowHidden: boolean
+  commentCount: number
+  reactionCount: number
+  createdAt: Date
+  updatedAt: Date
+  editedAt: Date | null
+  author: PostAuthor
+  userReactions: ReactionType[]
 }
 
-export type ListChannelsResponse = {
-  ok: true
-  items: Channel[]
-}
-
-export type ListMessagesResponse = {
-  ok: true
-  items: ChatMessage[]
-}
-
-export type CreateMessageBody = {
-  channelId: string
-  body: string
-  replyToMessageId?: string
-  mentionedUserIds?: string[]
-}
-
-export type CreateMessageResponse = {
-  ok: true
-  item: ChatMessage
-}
-
-export type CreateChannelBody = {
-  name: string
-  description?: string
-}
-
-export type CreateChannelResponse = {
-  ok: true
-  item: Channel
-}
-
-export type ApiError = {
-  ok: false
-  code: string
-  message: string
+export interface PaginatedPosts {
+  pinnedPosts: PostWithDetails[]
+  posts: PostWithDetails[]
+  hasNextPage: boolean
+  nextCursor?: string
 }

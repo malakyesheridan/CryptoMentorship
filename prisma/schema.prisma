@@ -119,6 +119,14 @@ model User {
   memberships            Membership[]
   messages               Message[]
   channelReads           ChannelRead[]
+  posts                  Post[]
+  comments               Comment[]
+  postReactions          PostReaction[]
+  commentReactions       CommentReaction[]
+  reportsMade            Report[]           @relation("ReportsMade")
+  reportsReviewed        Report[]           @relation("ReportsReviewed")
+  moderations            UserModeration[]   @relation("ModeratedUser")
+  moderatorActions       UserModeration[]   @relation("ModeratorActions")
   audits                 Audit[]
   media                  Media[]
   revisions              Revision[]
@@ -1379,4 +1387,157 @@ model StrategyUpdate {
   @@index([strategyId, date])
   @@index([createdAt])
   @@index([notify, createdAt])
+}
+
+// ── Community Feed ──────────────────────────────────────────────
+
+enum PostCategory {
+  ANNOUNCEMENTS
+  GENERAL
+  ANALYSIS
+  QUESTIONS
+  SHOWCASE
+}
+
+enum ReactionType {
+  LIKE
+  BULLISH
+  BEARISH
+  INSIGHTFUL
+  FIRE
+}
+
+enum ModerationAction {
+  REPORT
+  MUTE
+  BAN
+  SHADOW_HIDE
+  WARN
+  DISMISS
+}
+
+enum ModerationStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+model Post {
+  id             String       @id @default(cuid())
+  authorId       String
+  category       PostCategory @default(GENERAL)
+  body           String       @db.Text
+  imageUrl       String?
+  isPinned       Boolean      @default(false)
+  isShadowHidden Boolean      @default(false)
+  commentCount   Int          @default(0)
+  reactionCount  Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  editedAt       DateTime?
+
+  author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  reactions PostReaction[]
+  reports   Report[]       @relation("PostReports")
+
+  @@index([category, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@index([isPinned, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Comment {
+  id             String   @id @default(cuid())
+  postId         String
+  authorId       String
+  parentId       String?
+  body           String   @db.Text
+  imageUrl       String?
+  isShadowHidden Boolean  @default(false)
+  depth          Int      @default(0)
+  reactionCount  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  editedAt       DateTime?
+
+  post      Post              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent    Comment?          @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]         @relation("CommentReplies")
+  reactions CommentReaction[]
+  reports   Report[]          @relation("CommentReports")
+
+  @@index([postId, createdAt])
+  @@index([parentId])
+  @@index([authorId])
+}
+
+model PostReaction {
+  id        String       @id @default(cuid())
+  postId    String
+  userId    String
+  type      ReactionType
+  createdAt DateTime     @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId, type])
+  @@index([postId])
+}
+
+model CommentReaction {
+  id        String       @id @default(cuid())
+  commentId String
+  userId    String
+  type      ReactionType
+  createdAt DateTime     @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId, type])
+  @@index([commentId])
+}
+
+model Report {
+  id          String            @id @default(cuid())
+  reporterId  String
+  postId      String?
+  commentId   String?
+  reason      String            @db.Text
+  status      ModerationStatus  @default(PENDING)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  actionTaken ModerationAction?
+  notes       String?           @db.Text
+  createdAt   DateTime          @default(now())
+
+  reporter User     @relation("ReportsMade", fields: [reporterId], references: [id])
+  post     Post?    @relation("PostReports", fields: [postId], references: [id], onDelete: Cascade)
+  comment  Comment? @relation("CommentReports", fields: [commentId], references: [id], onDelete: Cascade)
+  reviewer User?    @relation("ReportsReviewed", fields: [reviewedBy], references: [id])
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([postId])
+  @@index([commentId])
+}
+
+model UserModeration {
+  id          String           @id @default(cuid())
+  userId      String
+  action      ModerationAction
+  reason      String?          @db.Text
+  moderatorId String
+  expiresAt   DateTime?
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+
+  user      User @relation("ModeratedUser", fields: [userId], references: [id])
+  moderator User @relation("ModeratorActions", fields: [moderatorId], references: [id])
+
+  @@index([userId, isActive])
+  @@index([action, isActive])
 }

@@ -45,22 +45,33 @@ const navigation: NavigationItem[] = [
 export function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
-  const [accountOpen, setAccountOpen] = useState(false)
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
 
   // Check if user has admin or editor role
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
-  const isAccountActive = pathname === '/account' || pathname?.startsWith('/account/')
-  const isAccountOpen = isAccountActive || accountOpen
 
+  // Track which parent items should be open (auto-open when child is active)
   useEffect(() => {
-    if (isAccountActive) {
-      setAccountOpen(true)
-    }
-  }, [isAccountActive])
+    const isAccountActive = pathname === '/account' || pathname?.startsWith('/account/')
+    const isAdminActive = pathname === '/admin' || pathname?.startsWith('/admin/')
+    setOpenMenus((prev) => ({
+      ...prev,
+      ...(isAccountActive && { Account: true }),
+      ...(isAdminActive && { Admin: true }),
+    }))
+  }, [pathname])
 
   // Add admin link if user is admin/editor
   const allNavigation: NavigationItem[] = isAdmin
-    ? [...navigation, { name: 'Admin', href: '/admin', icon: Shield }]
+    ? [...navigation, {
+        name: 'Admin',
+        href: '/admin',
+        icon: Shield,
+        children: [
+          { name: 'Community', href: '/admin/community' },
+          { name: 'Strategies', href: '/admin/strategies' },
+        ]
+      }]
     : navigation
 
   return (
@@ -75,9 +86,11 @@ export function Sidebar() {
         {allNavigation.map((item) => {
           const isActive = pathname === item.href || (item.href === '/admin' && pathname?.startsWith('/admin'))
           const hasChildren = Boolean(item.children?.length)
-          const isAccount = item.href === '/account'
 
-          if (hasChildren && isAccount) {
+          if (hasChildren) {
+            const isParentActive = pathname === item.href || pathname?.startsWith(item.href + '/')
+            const isMenuOpen = openMenus[item.name] || isParentActive
+
             return (
               <div key={item.name} className="group relative">
                 <div className="flex items-center gap-2">
@@ -86,7 +99,7 @@ export function Sidebar() {
                     prefetch={true}
                     className={cn(
                       'flex flex-1 items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
-                      isAccountActive
+                      isParentActive
                         ? 'bg-[var(--gold-400)] text-white shadow-lg'
                         : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
                     )}
@@ -96,23 +109,23 @@ export function Sidebar() {
                   </Link>
                   <button
                     type="button"
-                    aria-label="Toggle account submenu"
+                    aria-label={`Toggle ${item.name} submenu`}
                     className={cn(
                       'md:hidden p-2 rounded-lg transition-colors',
-                      isAccountOpen ? 'text-[var(--text-strong)]' : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
+                      isMenuOpen ? 'text-[var(--text-strong)]' : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
                     )}
                     onClick={(event) => {
                       event.preventDefault()
                       event.stopPropagation()
-                      setAccountOpen((prev) => !prev)
+                      setOpenMenus((prev) => ({ ...prev, [item.name]: !prev[item.name] }))
                     }}
                   >
-                    <ChevronRight className={cn('h-4 w-4 transition-transform', isAccountOpen && 'rotate-90')} />
+                    <ChevronRight className={cn('h-4 w-4 transition-transform', isMenuOpen && 'rotate-90')} />
                   </button>
                 </div>
 
                 {/* Inline submenu */}
-                <div className={cn('mt-2 ml-10 space-y-1', isAccountOpen ? 'block' : 'hidden')}>
+                <div className={cn('mt-2 ml-10 space-y-1', isMenuOpen ? 'block' : 'hidden')}>
                   {item.children?.map((child) => {
                     const isChildActive = pathname === child.href
                     return (

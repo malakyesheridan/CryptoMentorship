@@ -1,570 +1,138 @@
 'use client'
 
-import React, { useCallback, useMemo, useRef, useState } from 'react'
-
-// Client component - no server-side caching needed
-import useSWR from 'swr'
+import { useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-
-import MessageList from '@/components/chat/MessageList'
-import MessageInput from '@/components/chat/MessageInput'
-import { ChannelAdminControls } from '@/components/community/ChannelAdminControls'
-import { json } from '@/lib/http'
-import { useSSE, useTypingIndicator } from '@/hooks/useSSE'
+import useSWR from 'swr'
+import useSWRInfinite from 'swr/infinite'
+import { PostCategory, ReactionType } from '@prisma/client'
+import { FeedLayout } from '@/components/community/FeedLayout'
+import { CategoryTabs } from '@/components/community/CategoryTabs'
+import { PostComposer } from '@/components/community/PostComposer'
+import { PostCard } from '@/components/community/PostCard'
+import { NewPostsBanner } from '@/components/community/NewPostsBanner'
 import { toast } from 'sonner'
-import type {
-  Channel,
-  ChatMessage,
-  ListChannelsResponse,
-  ListMessagesResponse,
-  CreateMessageResponse,
-} from '@/lib/community/types'
 
-const channelsKey = '/api/channels-minimal'
-const messagesKey = (channelId: string | null) =>
-  channelId ? `/api/community/messages?channelId=${encodeURIComponent(channelId)}` : null
-const unreadKey = '/api/community/unread'
-
-function useChannels() {
-  const { data, error, isLoading, mutate } = useSWR<ListChannelsResponse>(channelsKey, (key) => json<ListChannelsResponse>(key), {
-    revalidateOnFocus: false, // Channels don't change frequently
-    revalidateOnReconnect: true,
-    shouldRetryOnError: true,
-    dedupingInterval: 0, // No deduping - always fetch fresh data when requested
-    refreshInterval: 0, // No auto-refresh
-  })
-
-  // Enhanced refresh function that forces revalidation
-  const refresh = React.useCallback(async () => {
-    await mutate(undefined, { revalidate: true })
-  }, [mutate])
-
-  return {
-    channels: data?.items ?? [],
-    error,
-    isLoading,
-    refresh,
-  }
-}
-
-function useChannelMessages(channelId: string | null) {
-  const key = messagesKey(channelId)
-  const { data, error, isLoading, mutate } = useSWR<ListMessagesResponse>(
-    key,
-    key ? (url) => json<ListMessagesResponse>(url) : null,
-    {
-      revalidateOnFocus: false, // Disable - SSE handles real-time updates
-      revalidateOnReconnect: false, // Disable - SSE handles reconnection
-      refreshInterval: 0, // Disable polling - SSE handles real-time updates
-      keepPreviousData: true,
-      shouldRetryOnError: true,
-      dedupingInterval: 5000, // Increase deduping to prevent spam
-    },
-  )
-
-  return {
-    items: data?.items ?? [],
-    error,
-    isLoading,
-    mutate,
-  }
-}
-
-function useUnreadCounts() {
-  const { data, error, mutate } = useSWR<{ ok: true; unreadCounts: Record<string, number> }>(
-    unreadKey,
-    (url) => json<{ ok: true; unreadCounts: Record<string, number> }>(url),
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 30000, // Refresh every 30 seconds
-    }
-  )
-
-  return {
-    unreadCounts: data?.unreadCounts ?? {},
-    error,
-    mutate,
-  }
-}
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function CommunityPage() {
   const { data: session } = useSession()
-  const { channels, isLoading: channelsLoading, error: channelsError, refresh: refreshChannels } = useChannels()
-  const { unreadCounts, mutate: refreshUnreadCounts } = useUnreadCounts()
-  const [activeChannelId, setActiveChannelId] = useState<string | null>(channels[0]?.id ?? null)
-  const [mobileView, setMobileView] = useState<'channels' | 'chat'>('chat')
-  const [replyTo, setReplyTo] = useState<{ messageId: string; author: string; body: string } | null>(null)
+  const [category, setCategory] = useState<PostCategory | null>(null)
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
 
-  React.useEffect(() => {
-    if (!activeChannelId && channels.length > 0) {
-      setActiveChannelId(channels[0].id)
+  const getKey = (pageIndex: number, previousPageData: any) => {
+    if (previousPageData && !previousPageData.hasNextPage) return null
+    const params = new URLSearchParams()
+    if (category) params.set('category', category)
+    params.set('limit', '20')
+    if (pageIndex > 0 && previousPageData?.nextCursor) {
+      params.set('cursor', previousPageData.nextCursor)
     }
-  }, [channels, activeChannelId])
+    return `/api/community/posts?${params.toString()}`
+  }
 
-  const { items, isLoading, mutate } = useChannelMessages(activeChannelId)
-
-  const optimisticMessages = useRef<Record<string, ChatMessage[]>>({})
-  const lastReadUpdateRef = useRef<Record<string, number>>({})
-
-  // Mark channel as read when viewing
-  const markChannelAsRead = useCallback(async (channelId: string) => {
-    if (!session?.user?.id) return
-    
-    try {
-      await json('/api/community/mark-read', {
-        method: 'POST',
-        body: JSON.stringify({ channelId })
-      })
-      // Refresh unread counts
-      refreshUnreadCounts()
-    } catch (error) {
-      // Silently fail - not critical
-      console.error('Failed to mark channel as read:', error)
-    }
-  }, [session?.user?.id, refreshUnreadCounts])
-
-  // Real-time messaging with SSE - use stable callback
-  const handleNewMessage = useCallback((message: ChatMessage) => {
-    // Remove from optimistic messages if it exists
-    if (optimisticMessages.current[message.channelId]) {
-      optimisticMessages.current[message.channelId] = optimisticMessages.current[message.channelId].filter(
-        m => m.id !== message.id
-      )
-    }
-    
-    // Update the messages list immediately (optimistic update)
-    mutate((current) => {
-      if (!current) {
-        // If no current data, create initial state
-        return { ok: true, items: [message] }
-      }
-      
-      // Check if message already exists (prevent duplicates)
-      const exists = current.items.some(m => m.id === message.id)
-      if (exists) return current
-      
-      return {
-        ...current,
-        items: [...current.items, message]
-      }
-    }, { revalidate: false })
-
-    const isOwnMessage = message.userId === session?.user?.id
-
-    if (!isOwnMessage && message.channelId === activeChannelId) {
-      const now = Date.now()
-      const lastUpdate = lastReadUpdateRef.current[message.channelId] || 0
-      if (now - lastUpdate > 5000) {
-        lastReadUpdateRef.current[message.channelId] = now
-        markChannelAsRead(message.channelId)
-      }
-      return
-    }
-
-    // If message is not from current user and not in active channel, refresh unread count
-    if (!isOwnMessage) {
-      refreshUnreadCounts()
-    }
-  }, [mutate, session?.user?.id, activeChannelId, refreshUnreadCounts, markChannelAsRead])
-
-  const { isConnected, connectionError, reconnect } = useSSE({
-    channelId: activeChannelId,
-    onMessage: handleNewMessage,
-    onTyping: (userId, userName, isTyping) => {
-      handleTyping(userId, userName, isTyping)
-    },
-    onConnected: () => {
-      // Connection established - no logging needed
-    }
+  const { data, size, setSize, mutate, isLoading } = useSWRInfinite(getKey, fetcher, {
+    revalidateOnFocus: false,
+    revalidateFirstPage: true,
   })
 
-  // Typing indicators
-  const { typingText, handleTyping } = useTypingIndicator(activeChannelId)
+  const pinnedPosts = data?.[0]?.pinnedPosts ?? []
+  const allPosts = data ? data.flatMap((page: any) => page.posts ?? []) : []
+  const hasMore = data ? data[data.length - 1]?.hasNextPage : false
 
-  const mergedMessages = useMemo(() => {
-    if (!activeChannelId) return []
-    const optimistic = optimisticMessages.current[activeChannelId] ?? []
-    const merged = [...items, ...optimistic]
-    merged.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-    return merged
-  }, [activeChannelId, items])
-
-  const resolveMentionedUserIds = useCallback((rawText: string) => {
-    const tokens = rawText.match(/@([a-zA-Z0-9_.-]{2,40})/g) ?? []
-    if (tokens.length === 0) return []
-
-    const uniqueNames = Array.from(new Set(tokens.map((token) => token.slice(1).toLowerCase())))
-    const candidates = new Map<string, string>()
-    for (const message of mergedMessages) {
-      const authorName = message.author?.name?.toLowerCase()
-      const authorId = message.author?.id
-      if (authorName && authorId && !candidates.has(authorName)) {
-        candidates.set(authorName, authorId)
-      }
-    }
-
-    return uniqueNames
-      .map((name) => candidates.get(name))
-      .filter((id): id is string => Boolean(id))
-      .filter((id) => id !== session?.user?.id)
-  }, [mergedMessages, session?.user?.id])
-
-  // Auto-scroll to bottom when channel changes (initial load) and mark as read
-  const prevChannelRef = React.useRef<string | null>(null)
-  React.useEffect(() => {
-    const container = document.getElementById('messages-container')
-    const channelChanged = prevChannelRef.current !== activeChannelId
-    
-    // Always update the ref to track current channel, regardless of container existence
-    prevChannelRef.current = activeChannelId
-    
-    if (channelChanged) {
-      // Mark channel as read when switching to it
-      if (activeChannelId) {
-        markChannelAsRead(activeChannelId)
-      }
-      
-      // Scroll to bottom when switching channels
-      if (container) {
-        setTimeout(() => {
-          container.scrollTop = container.scrollHeight
-        }, 150)
-      }
-    }
-  }, [activeChannelId, markChannelAsRead])
-
-  const handleSend = useCallback(
-    async (text: string) => {
-      if (!activeChannelId) return
-
-      // Add reply context if replying
-      const messageText = replyTo
-        ? `Replying to ${replyTo.author}: ${replyTo.body}\n\n${text}`
-        : text
-      const mentionedUserIds = resolveMentionedUserIds(messageText)
-
-      const temp: ChatMessage = {
-        id: `tmp:${crypto.randomUUID()}`,
-        channelId: activeChannelId,
-        userId: session?.user?.id ?? 'unknown',
-        body: messageText,
-        createdAt: new Date().toISOString(),
-        author: {
-          id: session?.user?.id ?? 'unknown',
-          name: session?.user?.name ?? 'You',
-          image: session?.user?.image ?? null,
-        },
-      }
-
-      optimisticMessages.current[activeChannelId] = [
-        ...(optimisticMessages.current[activeChannelId] ?? []),
-        temp,
-      ]
-
-      await mutate((current) => current, { revalidate: false })
-
-      try {
-        const response = await json<CreateMessageResponse>('/api/community/messages', {
-          method: 'POST',
-          body: JSON.stringify({
-            channelId: activeChannelId,
-            body: messageText,
-            replyToMessageId: replyTo?.messageId,
-            mentionedUserIds,
-          }),
-        })
-
-        // Remove optimistic message
-        optimisticMessages.current[activeChannelId] = (
-          optimisticMessages.current[activeChannelId] ?? []
-        ).filter((message) => message.id !== temp.id)
-
-        // If SSE is working, it will update via handleNewMessage
-        // If SSE is not working, manually add the message from response
-        if (response?.item) {
-          handleNewMessage(response.item)
-        }
-        
-        // Clear reply after sending
-        setReplyTo(null)
-      } catch (error) {
-        // Remove optimistic message on error
-        optimisticMessages.current[activeChannelId] = (
-          optimisticMessages.current[activeChannelId] ?? []
-        ).filter((message) => message.id !== temp.id)
-
-        // Trigger UI update to remove failed message
-        mutate((current) => current, { revalidate: false })
-        throw error
-      }
-    },
-    [activeChannelId, mutate, replyTo, resolveMentionedUserIds, handleNewMessage, session?.user?.id, session?.user?.image, session?.user?.name],
-  )
-
-  const handleReply = useCallback((message: ChatMessage) => {
-    setReplyTo({
-      messageId: message.id,
-      author: message.author?.name ?? 'Anonymous',
-      body: message.body,
+  const handleCreatePost = useCallback(async (postData: { body: string; category: PostCategory; imageUrl?: string }) => {
+    const res = await fetch('/api/community/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData),
     })
-  }, [])
-
-  const handleCancelReply = useCallback(() => {
-    setReplyTo(null)
-  }, [])
-
-  const handleDeleteMessage = useCallback(async (message: ChatMessage) => {
-    if (!confirm('Are you sure you want to delete this message?')) {
-      return
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to create post')
     }
+    mutate()
+  }, [mutate])
 
-    try {
-      // json helper throws on error, so if it returns, it succeeded
-      await json(`/api/community/messages/${message.id}`, {
-        method: 'DELETE',
-      })
-
-      toast.success('Message deleted')
-      mutate() // Refresh messages
-    } catch (error) {
-      toast.error('Failed to delete message')
+  const handleDelete = useCallback(async (postId: string) => {
+    if (!confirm('Delete this post?')) return
+    const res = await fetch(`/api/community/posts/${postId}`, { method: 'DELETE' })
+    if (res.ok) {
+      toast.success('Post deleted')
+      mutate()
+    } else {
+      toast.error('Failed to delete')
     }
   }, [mutate])
 
-  const handleChannelsReorder = useCallback((newOrder: string[]) => {
-    // Optimistic update - refresh channels to get new order
-    refreshChannels()
-  }, [refreshChannels])
-
-  const activeChannel = channels.find((channel) => channel.id === activeChannelId)
+  const handleReact = useCallback(async (postId: string, type: ReactionType) => {
+    const res = await fetch(`/api/community/posts/${postId}/reactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type }),
+    })
+    if (res.ok) mutate()
+  }, [mutate])
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-[#0a0a0a]">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
-        <div className="relative container mx-auto px-4 py-20 text-center">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6">
-              <span className="text-white">Crypto</span>
-              <span className="text-yellow-400 ml-2 sm:ml-4">Community</span>
-            </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-slate-300 mb-8 px-4">
-              Connect with fellow long-term investors and share insights in real-time
-            </p>
-            <div className="flex items-center justify-center gap-4 sm:gap-6 text-slate-400 flex-wrap px-4">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                </svg>
-                <span className="text-sm sm:text-base font-medium">{channels.length} Investment Channels</span>
-              </div>
-              <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-                <span className="text-sm sm:text-base font-medium">Active Members</span>
-              </div>
-              <div className="w-1 h-1 bg-slate-400 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="text-sm sm:text-base font-medium">Real-time Chat</span>
-              </div>
-            </div>
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-6 text-sm text-slate-500">
-                Debug: Session {session ? 'authenticated' : 'not authenticated'} | Channels: {channels.length}
-              </div>
-            )}
-          </div>
+      <FeedLayout>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[var(--text-strong)]">Community</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Share insights and connect with fellow investors</p>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-12">
+        <PostComposer onSubmit={handleCreatePost} isAdmin={isAdmin} />
+        <CategoryTabs active={category} onChange={setCategory} />
+        <NewPostsBanner onRefresh={() => mutate()} />
 
-        {/* Chat Interface */}
-        <div className="flex flex-col md:flex-row min-h-[520px] md:h-[700px] bg-[var(--bg-panel)] rounded-2xl shadow-lg md:overflow-hidden border border-[var(--border-subtle)]">
-          {/* Mobile toggle */}
-          <div className="md:hidden border-b border-[var(--border-subtle)] bg-[var(--bg-panel)]">
-            <div className="flex">
-              <button
-                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'channels' ? 'text-[var(--text-strong)] border-b-2 border-yellow-500' : 'text-[var(--text-muted)]'}`}
-                onClick={() => setMobileView('channels')}
-              >
-                Channels
-              </button>
-              <button
-                className={`flex-1 py-3 text-sm font-semibold ${mobileView === 'chat' ? 'text-[var(--text-strong)] border-b-2 border-yellow-500' : 'text-[var(--text-muted)]'}`}
-                onClick={() => setMobileView('chat')}
-              >
-                Chat
-              </button>
-            </div>
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-2 border-[var(--gold-400)] border-t-transparent rounded-full animate-spin" />
           </div>
+        )}
 
-          <aside className={`w-full md:w-80 bg-[#1a1815] border-b md:border-b-0 md:border-r border-[var(--border-subtle)] p-4 md:p-6 overflow-y-auto flex-shrink-0 md:max-h-none ${mobileView === 'channels' ? 'block' : 'hidden md:block'}`}>
-            <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h3 className="text-base md:text-lg font-semibold text-[var(--text-strong)]">Channels</h3>
-              <div className="flex items-center gap-2">
-                {activeChannelId ? (
-                  <>
-                    <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {isConnected ? 'Connected' : connectionError || 'Connecting...'}
-                    </span>
-                    {!isConnected && connectionError && (
-                      <button
-                        onClick={() => reconnect()}
-                        className="text-xs text-yellow-600 hover:text-yellow-700 underline"
-                        title="Reconnect"
-                      >
-                        Reconnect
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                    <span className="text-xs text-[var(--text-muted)]">Select a channel</span>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            {/* Admin Controls */}
-            {isAdmin && (
-              <ChannelAdminControls
-                channels={channels}
-                isAdmin={isAdmin}
-                onChannelChange={refreshChannels}
-                onChannelsReorder={handleChannelsReorder}
-              />
-            )}
-            
-            <div className="space-y-2">
-              {channelsError ? (
-                <div className="text-sm text-[#c03030] text-center py-4 bg-[#2e1a1a] rounded-lg">
-                  Error loading channels: {channelsError.message || 'Unknown error'}
-                </div>
-              ) : channelsLoading ? (
-                <div className="text-sm text-slate-500 text-center py-4">
-                  <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  Loading channels...
-                </div>
-              ) : channels.length === 0 ? (
-                <div className="text-sm text-[var(--text-muted)] text-center py-4 bg-[#1a1815] rounded-lg">No channels yet.</div>
-              ) : (
-                channels.map((channel: Channel) => {
-                  const unreadCount = unreadCounts[channel.id] || 0
-                  return (
-                    <button
-                      key={channel.id}
-                      onClick={() => {
-                        setActiveChannelId(channel.id)
-                        setReplyTo(null) // Clear reply when switching channels
-                        setMobileView('chat')
-                      }}
-                      className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative ${
-                        activeChannelId === channel.id
-                          ? 'bg-yellow-500 text-white shadow-md'
-                          : 'text-[var(--text-muted)] hover:bg-[var(--bg-panel)] hover:text-[var(--text-strong)] hover:shadow-sm'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className={activeChannelId === channel.id ? 'text-yellow-100' : 'text-slate-400'}>#</span>
-                          <span className="truncate">{channel.name}</span>
-                        </div>
-                        {unreadCount > 0 && (
-                          <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                            activeChannelId === channel.id
-                              ? 'bg-white text-yellow-600'
-                              : 'bg-red-500 text-white'
-                          }`}>
-                            {unreadCount > 99 ? '99+' : unreadCount}
-                          </span>
-                        )}
-                      </div>
-                      {channel.description && (
-                        <p className={`text-xs mt-1 line-clamp-1 ${
-                          activeChannelId === channel.id ? 'text-yellow-100' : 'text-slate-400'
-                        }`}>
-                          {channel.description}
-                        </p>
-                      )}
-                    </button>
-                  )
-                })
-              )}
-            </div>
-          </aside>
-
-          <section className={`flex-1 flex flex-col min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
-            <div className="border-b border-[var(--border-subtle)] p-4 md:p-6 bg-[var(--bg-panel)]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg md:text-xl font-semibold text-[var(--text-strong)]">
-                    {activeChannel?.name ? `# ${activeChannel.name}` : 'Select a channel'}
-                  </h3>
-                  {activeChannel?.description && (
-                    <p className="text-xs md:text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{activeChannel.description}</p>
-                  )}
-                </div>
-              </div>
-              {/* Typing indicator */}
-              {typingText && (
-                <div className="mt-3 text-sm text-[var(--text-muted)] italic bg-[#1a1815] px-3 py-2 rounded-lg">
-                  {typingText}
-                </div>
-              )}
-            </div>
-
-            <div 
-              id="messages-container"
-              className="flex-1 overflow-y-auto bg-[#1a1815]"
-            >
-              <MessageList 
-                messages={mergedMessages} 
-                isLoading={isLoading}
+        {/* Posts */}
+        {!isLoading && (
+          <div className="border border-[var(--border-subtle)] rounded-xl bg-[var(--bg-panel)] overflow-hidden">
+            {pinnedPosts.map((post: any) => (
+              <PostCard
+                key={post.id}
+                post={post}
                 currentUserId={session?.user?.id}
                 isAdmin={isAdmin}
-                onReply={handleReply}
-                onDelete={handleDeleteMessage}
+                onDelete={handleDelete}
+                onReact={handleReact}
               />
-            </div>
+            ))}
+            {allPosts.map((post: any) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUserId={session?.user?.id}
+                isAdmin={isAdmin}
+                onDelete={handleDelete}
+                onReact={handleReact}
+              />
+            ))}
+            {pinnedPosts.length === 0 && allPosts.length === 0 && (
+              <div className="px-4 py-12 text-center text-[var(--text-muted)] text-sm">
+                No posts yet. Be the first to share!
+              </div>
+            )}
+          </div>
+        )}
 
-            <div className="border-t border-[var(--border-subtle)] bg-[var(--bg-panel)]">
-              <MessageInput 
-                onSend={handleSend} 
-                disabled={!activeChannelId}
-                replyTo={replyTo}
-                onCancelReply={handleCancelReply}
-                onTyping={async (isTyping) => {
-                  if (!activeChannelId || !session?.user?.id) return
-                  
-                  // Silently fail - typing indicators are not critical
-                  try {
-                    await json('/api/community/typing', {
-                      method: 'POST',
-                      body: JSON.stringify({
-                        channelId: activeChannelId,
-                        isTyping,
-                      }),
-                    })
-                  } catch (error) {
-                    // Silently fail - typing indicators are not critical
-                  }
-                }}
-              />
-            </div>
-          </section>
-        </div>
-      </div>
+        {/* Load more */}
+        {hasMore && (
+          <button
+            onClick={() => setSize(size + 1)}
+            className="w-full py-3 mt-4 text-sm text-[var(--gold-400)] hover:underline"
+          >
+            Load more posts
+          </button>
+        )}
+      </FeedLayout>
     </div>
   )
 }
