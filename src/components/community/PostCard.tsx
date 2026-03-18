@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { PostContent } from './PostContent'
 import { PostActions } from './PostActions'
-import { CATEGORY_LABELS, CATEGORY_COLORS, REACTION_EMOJI } from '@/lib/community/constants'
-import { MessageCircle, Pin } from 'lucide-react'
+import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/community/constants'
+import { MessageCircle, Pin, ThumbsUp, ThumbsDown } from 'lucide-react'
 import type { PostCategory, ReactionType } from '@prisma/client'
 
 interface PostAuthor {
@@ -105,26 +105,31 @@ export function PostCard({ post, currentUserId, isAdmin, onDelete, onReact }: Po
           </Link>
 
           {/* Reactions + Comments */}
-          <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-[var(--border-subtle)]">
-            {(Object.keys(REACTION_EMOJI) as ReactionType[]).map((type) => {
-              const isActive = post.userReactions?.includes(type)
-              const count = post.reactionCounts?.[type] || 0
-              return (
-                <button
-                  key={type}
-                  onClick={(e) => { e.preventDefault(); onReact?.(post.id, type) }}
-                  className={`flex items-center gap-1 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-[var(--gold-400)]/15 text-[var(--gold-400)] ring-1 ring-[var(--gold-400)]/30'
-                      : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
-                  }`}
-                  title={type.charAt(0) + type.slice(1).toLowerCase()}
-                >
-                  <span className="text-base">{REACTION_EMOJI[type]}</span>
-                  {count > 0 && <span className="text-xs font-medium">{count}</span>}
-                </button>
-              )
-            })}
+          <div className="flex items-center gap-1 mt-4 pt-3 border-t border-[var(--border-subtle)]">
+            <button
+              onClick={(e) => { e.preventDefault(); onReact?.(post.id, 'LIKE' as ReactionType) }}
+              className={`flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
+                post.userReactions?.includes('LIKE' as ReactionType)
+                  ? 'bg-emerald-500/15 text-emerald-400'
+                  : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-emerald-400'
+              }`}
+              title="Like"
+            >
+              <ThumbsUp className={`w-4 h-4 ${post.userReactions?.includes('LIKE' as ReactionType) ? 'fill-current' : ''}`} />
+              {(post.reactionCounts?.LIKE || 0) > 0 && <span className="text-xs font-medium">{post.reactionCounts?.LIKE}</span>}
+            </button>
+            <button
+              onClick={(e) => { e.preventDefault(); onReact?.(post.id, 'DISLIKE' as ReactionType) }}
+              className={`flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
+                post.userReactions?.includes('DISLIKE' as ReactionType)
+                  ? 'bg-red-500/15 text-red-400'
+                  : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-red-400'
+              }`}
+              title="Dislike"
+            >
+              <ThumbsDown className={`w-4 h-4 ${post.userReactions?.includes('DISLIKE' as ReactionType) ? 'fill-current' : ''}`} />
+              {(post.reactionCounts?.DISLIKE || 0) > 0 && <span className="text-xs font-medium">{post.reactionCounts?.DISLIKE}</span>}
+            </button>
             <Link
               href={`/community/${post.id}`}
               className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] ml-auto px-2.5 py-1.5 rounded-lg hover:bg-[#1a1815] transition-colors"

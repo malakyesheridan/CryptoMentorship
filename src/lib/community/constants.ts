@@ -23,18 +23,12 @@ export const CATEGORY_LIST = Object.entries(CATEGORY_LABELS).map(([value, label]
 
 export const REACTION_EMOJI: Record<ReactionType, string> = {
   LIKE: '\u{1F44D}',
-  BULLISH: '\u{1F402}',
-  BEARISH: '\u{1F4C9}',
-  INSIGHTFUL: '\u{1F4A1}',
-  FIRE: '\u{1F525}',
+  DISLIKE: '\u{1F44E}',
 }
 
 export const REACTION_LABELS: Record<ReactionType, string> = {
   LIKE: 'Like',
-  BULLISH: 'Bullish',
-  BEARISH: 'Bearish',
-  INSIGHTFUL: 'Insightful',
-  FIRE: 'Fire',
+  DISLIKE: 'Dislike',
 }
 
 export const POST_BODY_MAX_LENGTH = 5000

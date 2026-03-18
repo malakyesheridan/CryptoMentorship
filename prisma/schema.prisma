@@ -1401,10 +1401,7 @@ enum PostCategory {
 
 enum ReactionType {
   LIKE
-  BULLISH
-  BEARISH
-  INSIGHTFUL
-  FIRE
+  DISLIKE
 }
 
 enum ModerationAction {

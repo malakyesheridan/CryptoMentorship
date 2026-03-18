@@ -30,6 +30,35 @@ function timeAgo(date: string) {
   return `${days}d ago`
 }
 
+// Helper: toggle reaction on a post/comment object
+function toggleReaction(obj: any, type: ReactionType) {
+  const userReactions: ReactionType[] = obj.userReactions ?? []
+  const reactionCounts = { ...obj.reactionCounts }
+  const wasActive = userReactions.includes(type)
+  return {
+    ...obj,
+    userReactions: wasActive
+      ? userReactions.filter((r: ReactionType) => r !== type)
+      : [...userReactions, type],
+    reactionCounts: {
+      ...reactionCounts,
+      [type]: Math.max(0, (reactionCounts[type] || 0) + (wasActive ? -1 : 1)),
+    },
+    reactionCount: (obj.reactionCount ?? 0) + (wasActive ? -1 : 1),
+  }
+}
+
+// Helper: recursively find and transform a comment by ID across nested replies
+function mapComment(comments: any[], commentId: string, transform: (c: any) => any): any[] {
+  return comments.map((c: any) => {
+    if (c.id === commentId) return transform(c)
+    if (c.replies?.length > 0) {
+      return { ...c, replies: mapComment(c.replies, commentId, transform) }
+    }
+    return c
+  })
+}
+
 export default function PostDetailPage({ params }: { params: { postId: string } }) {
   const { postId } = params
   const { data: session } = useSession()
@@ -59,40 +88,136 @@ export default function PostDetailPage({ params }: { params: { postId: string } 
   const hasMoreComments = commentPages ? commentPages[commentPages.length - 1]?.hasNextPage : false
 
   const handleReactPost = useCallback(async (type: ReactionType) => {
-    const res = await fetch(`/api/community/posts/${postId}/reactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type }),
-    })
-    if (res.ok) mutatePost()
-  }, [postId, mutatePost])
+    if (!post) return
+
+    // Optimistic update
+    const optimistic = toggleReaction(post, type)
+    mutatePost(optimistic, { revalidate: false })
+
+    try {
+      const res = await fetch(`/api/community/posts/${postId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      })
+      if (!res.ok) mutatePost()
+    } catch {
+      mutatePost() // rollback
+    }
+  }, [postId, mutatePost, post])
 
   const handleAddComment = useCallback(async (body: string, parentId?: string) => {
-    const res = await fetch(`/api/community/posts/${postId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body, parentId }),
-    })
-    if (!res.ok) {
-      const err = await res.json()
-      toast.error(err.error || 'Failed to add comment')
-      return
+    // Optimistic: create temp comment
+    const tempComment = {
+      id: `temp-${Date.now()}`,
+      postId,
+      body,
+      depth: parentId ? 1 : 0,
+      createdAt: new Date().toISOString(),
+      editedAt: null,
+      replyCount: 0,
+      reactionCount: 0,
+      reactionCounts: {},
+      userReactions: [],
+      author: {
+        id: session?.user?.id ?? '',
+        name: session?.user?.name ?? null,
+        image: session?.user?.image ?? null,
+        role: session?.user?.role ?? 'member',
+      },
+      replies: [],
     }
-    mutateComments()
-    mutatePost()
-  }, [postId, mutateComments, mutatePost])
+
+    if (parentId && commentPages) {
+      // Optimistic: add as nested reply
+      const optimisticPages = commentPages.map((page: any) => ({
+        ...page,
+        comments: mapComment(page.comments ?? [], parentId, (c: any) => ({
+          ...c,
+          replies: [...(c.replies ?? []), tempComment],
+          replyCount: (c.replyCount ?? 0) + 1,
+        })),
+      }))
+      mutateComments(optimisticPages, { revalidate: false })
+    } else if (commentPages) {
+      // Optimistic: add to top of first page
+      const optimisticPages = commentPages.map((page: any, i: number) =>
+        i === 0 ? { ...page, comments: [tempComment, ...(page.comments ?? [])] } : page
+      )
+      mutateComments(optimisticPages, { revalidate: false })
+    }
+
+    // Optimistic: increment comment count on post
+    if (post) {
+      mutatePost({ ...post, commentCount: (post.commentCount ?? 0) + 1 }, { revalidate: false })
+    }
+
+    try {
+      const res = await fetch(`/api/community/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body, parentId }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to add comment')
+        mutateComments()
+        mutatePost()
+        return
+      }
+      // Revalidate to get real IDs
+      mutateComments()
+      mutatePost()
+    } catch {
+      mutateComments()
+      mutatePost()
+    }
+  }, [postId, mutateComments, mutatePost, commentPages, post, session])
 
   const handleReactComment = useCallback(async (commentId: string, type: ReactionType) => {
-    const res = await fetch(`/api/community/comments/${commentId}/reactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type }),
-    })
-    if (res.ok) mutateComments()
-  }, [mutateComments])
+    if (!commentPages) return
+
+    // Optimistic: toggle reaction on specific comment
+    const optimisticPages = commentPages.map((page: any) => ({
+      ...page,
+      comments: mapComment(page.comments ?? [], commentId, (c: any) => toggleReaction(c, type)),
+    }))
+    mutateComments(optimisticPages, { revalidate: false })
+
+    try {
+      const res = await fetch(`/api/community/comments/${commentId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      })
+      if (!res.ok) mutateComments()
+    } catch {
+      mutateComments() // rollback
+    }
+  }, [mutateComments, commentPages])
 
   const handleDeleteComment = useCallback(async (commentId: string) => {
     if (!confirm('Delete this comment?')) return
+
+    // Optimistic: remove comment
+    if (commentPages) {
+      const filterComments = (comments: any[]): any[] =>
+        comments.filter((c: any) => c.id !== commentId).map((c: any) => ({
+          ...c,
+          replies: c.replies ? filterComments(c.replies) : [],
+        }))
+
+      const optimisticPages = commentPages.map((page: any) => ({
+        ...page,
+        comments: filterComments(page.comments ?? []),
+      }))
+      mutateComments(optimisticPages, { revalidate: false })
+    }
+
+    if (post) {
+      mutatePost({ ...post, commentCount: Math.max(0, (post.commentCount ?? 0) - 1) }, { revalidate: false })
+    }
+
     const res = await fetch(`/api/community/comments/${commentId}`, { method: 'DELETE' })
     if (res.ok) {
       toast.success('Comment deleted')
@@ -100,8 +225,10 @@ export default function PostDetailPage({ params }: { params: { postId: string } 
       mutatePost()
     } else {
       toast.error('Failed to delete comment')
+      mutateComments()
+      mutatePost()
     }
-  }, [mutateComments, mutatePost])
+  }, [mutateComments, mutatePost, commentPages, post])
 
   const handleDeletePost = useCallback(async () => {
     if (!confirm('Delete this post?')) return

@@ -13,6 +13,34 @@ import { toast } from 'sonner'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+// Helper: toggle a reaction in a post object (returns new post)
+function togglePostReaction(post: any, type: ReactionType, userId: string) {
+  const userReactions: ReactionType[] = post.userReactions ?? []
+  const reactionCounts = { ...post.reactionCounts }
+  const wasActive = userReactions.includes(type)
+
+  return {
+    ...post,
+    userReactions: wasActive
+      ? userReactions.filter((r: ReactionType) => r !== type)
+      : [...userReactions, type],
+    reactionCounts: {
+      ...reactionCounts,
+      [type]: Math.max(0, (reactionCounts[type] || 0) + (wasActive ? -1 : 1)),
+    },
+    reactionCount: post.reactionCount + (wasActive ? -1 : 1),
+  }
+}
+
+// Helper: apply a transform to a specific post across all SWR pages
+function mapPostInPages(pages: any[], postId: string, transform: (post: any) => any) {
+  return pages.map((page: any) => ({
+    ...page,
+    pinnedPosts: (page.pinnedPosts ?? []).map((p: any) => p.id === postId ? transform(p) : p),
+    posts: (page.posts ?? []).map((p: any) => p.id === postId ? transform(p) : p),
+  }))
+}
+
 export default function CommunityPage() {
   const { data: session } = useSession()
   const [category, setCategory] = useState<PostCategory | null>(null)
@@ -39,37 +67,94 @@ export default function CommunityPage() {
   const hasMore = data ? data[data.length - 1]?.hasNextPage : false
 
   const handleCreatePost = useCallback(async (postData: { body: string; category: PostCategory; imageUrl?: string }) => {
-    const res = await fetch('/api/community/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(postData),
-    })
-    if (!res.ok) {
-      const err = await res.json()
-      throw new Error(err.error || 'Failed to create post')
+    // Optimistic: insert temp post at top of first page
+    const tempPost = {
+      id: `temp-${Date.now()}`,
+      body: postData.body,
+      category: postData.category,
+      imageUrl: postData.imageUrl ?? null,
+      isPinned: false,
+      commentCount: 0,
+      reactionCount: 0,
+      reactionCounts: {},
+      createdAt: new Date().toISOString(),
+      editedAt: null,
+      author: {
+        id: session?.user?.id ?? '',
+        name: session?.user?.name ?? null,
+        image: session?.user?.image ?? null,
+        role: session?.user?.role ?? 'member',
+      },
+      userReactions: [],
     }
-    mutate()
-  }, [mutate])
+
+    const optimistic = data ? data.map((page: any, i: number) =>
+      i === 0 ? { ...page, posts: [tempPost, ...(page.posts ?? [])] } : page
+    ) : [{ pinnedPosts: [], posts: [tempPost], hasNextPage: false }]
+
+    mutate(optimistic, { revalidate: false })
+
+    try {
+      const res = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed to create post')
+      }
+      // Revalidate to get real ID from server
+      mutate()
+    } catch (err) {
+      mutate() // rollback
+      throw err
+    }
+  }, [mutate, data, session])
 
   const handleDelete = useCallback(async (postId: string) => {
     if (!confirm('Delete this post?')) return
+
+    // Optimistic: remove post from all pages
+    if (data) {
+      const optimistic = data.map((page: any) => ({
+        ...page,
+        pinnedPosts: (page.pinnedPosts ?? []).filter((p: any) => p.id !== postId),
+        posts: (page.posts ?? []).filter((p: any) => p.id !== postId),
+      }))
+      mutate(optimistic, { revalidate: false })
+    }
+
     const res = await fetch(`/api/community/posts/${postId}`, { method: 'DELETE' })
     if (res.ok) {
       toast.success('Post deleted')
-      mutate()
+      mutate() // confirm with server
     } else {
       toast.error('Failed to delete')
+      mutate() // rollback
     }
-  }, [mutate])
+  }, [mutate, data])
 
   const handleReact = useCallback(async (postId: string, type: ReactionType) => {
-    const res = await fetch(`/api/community/posts/${postId}/reactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type }),
-    })
-    if (res.ok) mutate()
-  }, [mutate])
+    const userId = session?.user?.id
+    if (!userId || !data) return
+
+    // Optimistic: toggle reaction in cache
+    const optimistic = mapPostInPages(data, postId, (post) => togglePostReaction(post, type, userId))
+    mutate(optimistic, { revalidate: false })
+
+    // Fire API in background
+    try {
+      const res = await fetch(`/api/community/posts/${postId}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      })
+      if (!res.ok) mutate() // rollback on error
+    } catch {
+      mutate() // rollback on network error
+    }
+  }, [mutate, data, session])
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
