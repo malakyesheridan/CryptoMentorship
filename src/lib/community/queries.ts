@@ -12,10 +12,8 @@ const postAuthorSelect = {
 
 const postWithDetailsInclude = (currentUserId?: string) => ({
   author: { select: postAuthorSelect },
-  reactions: currentUserId
-    ? { where: { userId: currentUserId }, select: { type: true } }
-    : false,
-  _count: { select: { comments: true, reactions: true } },
+  reactions: { select: { type: true, userId: true } },
+  _count: { select: { comments: true } },
 }) satisfies Prisma.PostInclude
 
 export async function getPosts({
@@ -63,8 +61,8 @@ export async function getPosts({
   const nextCursor = hasNextPage ? items[items.length - 1]?.id : undefined
 
   return {
-    pinnedPosts: pinnedPosts.map(formatPost),
-    posts: items.map(formatPost),
+    pinnedPosts: pinnedPosts.map((p) => formatPost(p, currentUserId)),
+    posts: items.map((p) => formatPost(p, currentUserId)),
     hasNextPage,
     nextCursor,
   }
@@ -76,7 +74,7 @@ export async function getPostById(postId: string, currentUserId?: string) {
     include: postWithDetailsInclude(currentUserId),
   })
   if (!post) return null
-  return formatPost(post)
+  return formatPost(post, currentUserId)
 }
 
 export async function createPost({
@@ -95,7 +93,7 @@ export async function createPost({
       data: { authorId, category, body, imageUrl },
       include: postWithDetailsInclude(authorId),
     })
-    .then(formatPost)
+    .then((p) => formatPost(p, authorId))
 }
 
 export async function updatePost(postId: string, data: { body?: string; imageUrl?: string }) {
@@ -109,12 +107,23 @@ export async function deletePost(postId: string) {
   return prisma.post.delete({ where: { id: postId } })
 }
 
-function formatPost(post: any) {
+function formatPost(post: any, currentUserId?: string) {
+  const allReactions = post.reactions ?? []
+  const reactionCounts: Record<string, number> = {}
+  for (const r of allReactions) {
+    reactionCounts[r.type] = (reactionCounts[r.type] || 0) + 1
+  }
+  const totalReactions = allReactions.length
+  const userReactions = currentUserId
+    ? allReactions.filter((r: any) => r.userId === currentUserId).map((r: any) => r.type)
+    : []
+
   return {
     ...post,
     commentCount: post._count?.comments ?? post.commentCount ?? 0,
-    reactionCount: post._count?.reactions ?? post.reactionCount ?? 0,
-    userReactions: (post.reactions ?? []).map((r: any) => r.type),
+    reactionCount: totalReactions,
+    reactionCounts,
+    userReactions,
     _count: undefined,
     reactions: undefined,
   }

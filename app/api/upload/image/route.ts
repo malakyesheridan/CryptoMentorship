@@ -8,11 +8,11 @@ export const maxDuration = 300
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_CONTENT_TYPES = ['image/*']
-const ALLOWED_FOLDER = 'covers'
+const ALLOWED_FOLDERS = ['covers', 'community']
 
 function assertValidPathname(pathname: string) {
   const parts = pathname.split('/').filter(Boolean)
-  if (parts.length !== 2 || parts[0] !== ALLOWED_FOLDER) {
+  if (parts.length !== 2 || !ALLOWED_FOLDERS.includes(parts[0])) {
     throw new Error('Invalid upload path')
   }
 
@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as HandleUploadBody
 
     if (body.type === 'blob.generate-client-token') {
-      const auth = await requireUploadRole(request, ['admin', 'editor'])
+      // Allow members to upload community images, admin/editor for all
+      const auth = await requireUploadRole(request, ['admin', 'editor', 'member'])
       if (auth instanceof NextResponse) {
         return auth
       }

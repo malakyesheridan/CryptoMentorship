@@ -18,6 +18,7 @@ export interface PostWithDetails {
   isShadowHidden: boolean
   commentCount: number
   reactionCount: number
+  reactionCounts: Partial<Record<ReactionType, number>>
   createdAt: Date
   updatedAt: Date
   editedAt: Date | null

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { PostContent } from './PostContent'
 import { PostActions } from './PostActions'
-import { CATEGORY_LABELS, REACTION_EMOJI } from '@/lib/community/constants'
+import { CATEGORY_LABELS, CATEGORY_COLORS, REACTION_EMOJI } from '@/lib/community/constants'
 import { MessageCircle, Pin } from 'lucide-react'
 import type { PostCategory, ReactionType } from '@prisma/client'
 
@@ -23,6 +23,7 @@ interface PostCardProps {
     isPinned: boolean
     commentCount: number
     reactionCount: number
+    reactionCounts?: Partial<Record<ReactionType, number>>
     createdAt: string
     editedAt: string | null
     author: PostAuthor
@@ -48,44 +49,44 @@ function timeAgo(date: string) {
 
 export function PostCard({ post, currentUserId, isAdmin, onDelete, onReact }: PostCardProps) {
   const isAuthor = currentUserId === post.author.id
+  const categoryColor = CATEGORY_COLORS[post.category]
 
   return (
-    <div className="border-b border-[var(--border-subtle)] px-4 py-4 hover:bg-[#1a1815]/50 transition-colors">
+    <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-[var(--border-subtle)]/80 transition-all">
       {post.isPinned && (
-        <div className="flex items-center gap-1.5 text-[var(--text-muted)] text-xs mb-2 ml-10">
+        <div className="flex items-center gap-1.5 text-[var(--gold-400)] text-xs px-5 pt-3 font-medium">
           <Pin className="w-3 h-3" />
           Pinned
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="flex gap-3.5 p-5 pt-4">
         {/* Avatar */}
-        <div className="shrink-0">
+        <Link href={`/community/${post.id}`} className="shrink-0">
           {post.author.image ? (
-            <img src={post.author.image} alt="" className="w-10 h-10 rounded-full" />
+            <img src={post.author.image} alt="" className="w-12 h-12 rounded-full ring-2 ring-[var(--border-subtle)]" />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-[#2a2520] flex items-center justify-center text-sm font-medium text-[var(--text-muted)]">
+            <div className="w-12 h-12 rounded-full bg-[#2a2520] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-base font-semibold text-[var(--text-muted)]">
               {(post.author.name?.[0] ?? '?').toUpperCase()}
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="flex-1 min-w-0">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm font-semibold text-[var(--text-strong)] truncate">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+              <span className="text-[15px] font-semibold text-[var(--text-strong)] truncate">
                 {post.author.name ?? 'Anonymous'}
               </span>
               {(post.author.role === 'admin' || post.author.role === 'editor') && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--gold-400)]/20 text-[var(--gold-400)] font-medium">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--gold-400)]/20 text-[var(--gold-400)] font-semibold uppercase tracking-wide">
                   {post.author.role === 'admin' ? 'Admin' : 'Editor'}
                 </span>
               )}
-              <span className="text-xs text-[var(--text-muted)]">·</span>
               <span className="text-xs text-[var(--text-muted)]">{timeAgo(post.createdAt)}</span>
-              {post.editedAt && <span className="text-xs text-[var(--text-muted)]">(edited)</span>}
-              <span className="text-xs text-[var(--text-muted)] px-1.5 py-0.5 rounded-full border border-[var(--border-subtle)]">
+              {post.editedAt && <span className="text-xs text-[var(--text-muted)] italic">(edited)</span>}
+              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${categoryColor.bg} ${categoryColor.text}`}>
                 {CATEGORY_LABELS[post.category]}
               </span>
             </div>
@@ -99,34 +100,37 @@ export function PostCard({ post, currentUserId, isAdmin, onDelete, onReact }: Po
           </div>
 
           {/* Body */}
-          <Link href={`/community/${post.id}`} className="block mt-1">
+          <Link href={`/community/${post.id}`} className="block mt-2">
             <PostContent body={post.body} imageUrl={post.imageUrl} />
           </Link>
 
           {/* Reactions + Comments */}
-          <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-[var(--border-subtle)]">
             {(Object.keys(REACTION_EMOJI) as ReactionType[]).map((type) => {
               const isActive = post.userReactions?.includes(type)
+              const count = post.reactionCounts?.[type] || 0
               return (
                 <button
                   key={type}
                   onClick={(e) => { e.preventDefault(); onReact?.(post.id, type) }}
-                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                  className={`flex items-center gap-1 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-[var(--gold-400)]/20 text-[var(--gold-400)]'
+                      ? 'bg-[var(--gold-400)]/15 text-[var(--gold-400)] ring-1 ring-[var(--gold-400)]/30'
                       : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
                   }`}
+                  title={type.charAt(0) + type.slice(1).toLowerCase()}
                 >
-                  {REACTION_EMOJI[type]}
+                  <span className="text-base">{REACTION_EMOJI[type]}</span>
+                  {count > 0 && <span className="text-xs font-medium">{count}</span>}
                 </button>
               )
             })}
             <Link
               href={`/community/${post.id}`}
-              className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-strong)] ml-auto"
+              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] ml-auto px-2.5 py-1.5 rounded-lg hover:bg-[#1a1815] transition-colors"
             >
-              <MessageCircle className="w-3.5 h-3.5" />
-              {post.commentCount > 0 && post.commentCount}
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-xs font-medium">{post.commentCount > 0 ? post.commentCount : ''}</span>
             </Link>
           </div>
         </div>

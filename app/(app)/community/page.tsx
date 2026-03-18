@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { PostCategory, ReactionType } from '@prisma/client'
 import { FeedLayout } from '@/components/community/FeedLayout'
@@ -81,57 +80,68 @@ export default function CommunityPage() {
           <p className="text-sm text-[var(--text-muted)] mt-1">Share insights and connect with fellow investors</p>
         </div>
 
-        <PostComposer onSubmit={handleCreatePost} isAdmin={isAdmin} />
-        <CategoryTabs active={category} onChange={setCategory} />
-        <NewPostsBanner onRefresh={() => mutate()} />
+        <div className="space-y-4">
+          <PostComposer
+            onSubmit={handleCreatePost}
+            isAdmin={isAdmin}
+            userImage={session?.user?.image}
+            userName={session?.user?.name}
+          />
 
-        {/* Loading state */}
-        {isLoading && (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-2 border-[var(--gold-400)] border-t-transparent rounded-full animate-spin" />
+          <div className="sticky top-0 z-10 bg-[var(--bg-page)] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6">
+            <CategoryTabs active={category} onChange={setCategory} />
           </div>
-        )}
 
-        {/* Posts */}
-        {!isLoading && (
-          <div className="border border-[var(--border-subtle)] rounded-xl bg-[var(--bg-panel)] overflow-hidden">
-            {pinnedPosts.map((post: any) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                currentUserId={session?.user?.id}
-                isAdmin={isAdmin}
-                onDelete={handleDelete}
-                onReact={handleReact}
-              />
-            ))}
-            {allPosts.map((post: any) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                currentUserId={session?.user?.id}
-                isAdmin={isAdmin}
-                onDelete={handleDelete}
-                onReact={handleReact}
-              />
-            ))}
-            {pinnedPosts.length === 0 && allPosts.length === 0 && (
-              <div className="px-4 py-12 text-center text-[var(--text-muted)] text-sm">
-                No posts yet. Be the first to share!
-              </div>
-            )}
-          </div>
-        )}
+          <NewPostsBanner onRefresh={() => mutate()} />
 
-        {/* Load more */}
-        {hasMore && (
-          <button
-            onClick={() => setSize(size + 1)}
-            className="w-full py-3 mt-4 text-sm text-[var(--gold-400)] hover:underline"
-          >
-            Load more posts
-          </button>
-        )}
+          {/* Loading state */}
+          {isLoading && (
+            <div className="flex justify-center py-12">
+              <div className="w-8 h-8 border-2 border-[var(--gold-400)] border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+
+          {/* Posts */}
+          {!isLoading && (
+            <div className="space-y-4">
+              {pinnedPosts.map((post: any) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  currentUserId={session?.user?.id}
+                  isAdmin={isAdmin}
+                  onDelete={handleDelete}
+                  onReact={handleReact}
+                />
+              ))}
+              {allPosts.map((post: any) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  currentUserId={session?.user?.id}
+                  isAdmin={isAdmin}
+                  onDelete={handleDelete}
+                  onReact={handleReact}
+                />
+              ))}
+              {pinnedPosts.length === 0 && allPosts.length === 0 && (
+                <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] px-4 py-12 text-center text-[var(--text-muted)] text-sm">
+                  No posts yet. Be the first to share!
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Load more */}
+          {hasMore && (
+            <button
+              onClick={() => setSize(size + 1)}
+              className="w-full py-3 text-sm text-[var(--gold-400)] hover:underline"
+            >
+              Load more posts
+            </button>
+          )}
+        </div>
       </FeedLayout>
     </div>
   )

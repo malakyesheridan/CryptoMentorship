@@ -11,10 +11,11 @@ import { PostContent } from '@/components/community/PostContent'
 import { PostActions } from '@/components/community/PostActions'
 import { ReactionBar } from '@/components/community/ReactionBar'
 import { CommentThread } from '@/components/community/CommentThread'
-import { CATEGORY_LABELS } from '@/lib/community/constants'
+import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/community/constants'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import type { PostCategory } from '@prisma/client'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -129,48 +130,52 @@ export default function PostDetailPage({ params }: { params: Promise<{ postId: s
     )
   }
 
+  const categoryColor = CATEGORY_COLORS[post.category as PostCategory]
+
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
       <FeedLayout>
         {/* Back link */}
         <Link
           href="/community"
-          className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] mb-4"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Community
         </Link>
 
         {/* Post */}
-        <div className="border border-[var(--border-subtle)] rounded-xl bg-[var(--bg-panel)] overflow-hidden">
-          <div className="px-4 py-4">
+        <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] overflow-hidden">
+          <div className="p-5">
             {/* Author */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
                 {post.author.image ? (
-                  <img src={post.author.image} alt="" className="w-10 h-10 rounded-full" />
+                  <img src={post.author.image} alt="" className="w-12 h-12 rounded-full ring-2 ring-[var(--border-subtle)]" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#2a2520] flex items-center justify-center text-sm font-medium text-[var(--text-muted)]">
+                  <div className="w-12 h-12 rounded-full bg-[#2a2520] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-base font-semibold text-[var(--text-muted)]">
                     {(post.author.name?.[0] ?? '?').toUpperCase()}
                   </div>
                 )}
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-[var(--text-strong)]">
+                    <span className="text-[15px] font-semibold text-[var(--text-strong)]">
                       {post.author.name ?? 'Anonymous'}
                     </span>
                     {(post.author.role === 'admin' || post.author.role === 'editor') && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--gold-400)]/20 text-[var(--gold-400)] font-medium">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--gold-400)]/20 text-[var(--gold-400)] font-semibold uppercase tracking-wide">
                         {post.author.role === 'admin' ? 'Admin' : 'Editor'}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mt-0.5">
                     <span>{timeAgo(post.createdAt)}</span>
-                    {post.editedAt && <span>(edited)</span>}
-                    <span className="px-1.5 py-0.5 rounded-full border border-[var(--border-subtle)]">
-                      {CATEGORY_LABELS[post.category as keyof typeof CATEGORY_LABELS]}
-                    </span>
+                    {post.editedAt && <span className="italic">(edited)</span>}
+                    {categoryColor && (
+                      <span className={`px-2 py-0.5 rounded-full font-medium ${categoryColor.bg} ${categoryColor.text}`}>
+                        {CATEGORY_LABELS[post.category as keyof typeof CATEGORY_LABELS]}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -184,15 +189,16 @@ export default function PostDetailPage({ params }: { params: Promise<{ postId: s
             </div>
 
             {/* Body */}
-            <div className="mt-3">
+            <div className="mt-4">
               <PostContent body={post.body} imageUrl={post.imageUrl} truncate={false} />
             </div>
 
             {/* Reactions */}
-            <div className="mt-4 pt-3 border-t border-[var(--border-subtle)]">
+            <div className="mt-5 pt-4 border-t border-[var(--border-subtle)]">
               <ReactionBar
                 userReactions={post.userReactions ?? []}
                 reactionCount={post.reactionCount ?? 0}
+                reactionCounts={post.reactionCounts}
                 onReact={handleReactPost}
               />
             </div>
@@ -200,9 +206,9 @@ export default function PostDetailPage({ params }: { params: Promise<{ postId: s
 
           {/* Comments section */}
           <div className="border-t border-[var(--border-subtle)]">
-            <div className="px-4 py-3 flex items-center gap-2">
+            <div className="px-5 py-3 flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-[var(--text-muted)]" />
-              <span className="text-sm font-medium text-[var(--text-strong)]">
+              <span className="text-sm font-semibold text-[var(--text-strong)]">
                 {post.commentCount ?? 0} Comments
               </span>
             </div>

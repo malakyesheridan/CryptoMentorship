@@ -8,6 +8,14 @@ export const CATEGORY_LABELS: Record<PostCategory, string> = {
   SHOWCASE: 'Showcase',
 }
 
+export const CATEGORY_COLORS: Record<PostCategory, { bg: string; text: string }> = {
+  ANNOUNCEMENTS: { bg: 'bg-amber-500/15', text: 'text-amber-400' },
+  GENERAL: { bg: 'bg-blue-500/15', text: 'text-blue-400' },
+  ANALYSIS: { bg: 'bg-emerald-500/15', text: 'text-emerald-400' },
+  QUESTIONS: { bg: 'bg-purple-500/15', text: 'text-purple-400' },
+  SHOWCASE: { bg: 'bg-pink-500/15', text: 'text-pink-400' },
+}
+
 export const CATEGORY_LIST = Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
   value: value as PostCategory,
   label,

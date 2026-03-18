@@ -8,7 +8,7 @@ interface PostContentProps {
   truncate?: boolean
 }
 
-const MAX_CHARS = 400
+const MAX_CHARS = 600
 
 export function PostContent({ body, imageUrl, truncate = true }: PostContentProps) {
   const [expanded, setExpanded] = useState(false)
@@ -18,23 +18,25 @@ export function PostContent({ body, imageUrl, truncate = true }: PostContentProp
 
   return (
     <div>
-      <p className="text-sm text-[var(--text-strong)] whitespace-pre-wrap break-words">
+      <p className="text-base text-[var(--text-strong)] whitespace-pre-wrap break-words leading-relaxed">
         {displayText}
       </p>
       {shouldTruncate && !expanded && (
         <button
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded(true) }}
-          className="text-xs text-[var(--gold-400)] mt-1 hover:underline"
+          className="text-sm text-[var(--gold-400)] mt-1.5 hover:underline font-medium"
         >
           Show more
         </button>
       )}
       {imageUrl && (
-        <img
-          src={imageUrl}
-          alt="Post image"
-          className="mt-3 rounded-lg max-h-80 object-cover w-full"
-        />
+        <div className="mt-3 rounded-xl overflow-hidden border border-[var(--border-subtle)]">
+          <img
+            src={imageUrl}
+            alt="Post image"
+            className="max-h-[500px] object-contain w-full bg-[#0a0a0a]"
+          />
+        </div>
       )}
     </div>
   )
