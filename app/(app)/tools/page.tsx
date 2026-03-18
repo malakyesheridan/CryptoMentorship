@@ -7,16 +7,6 @@ export default function ToolsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)] flex flex-col">
-      {/* Header */}
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-strong)]">
-          Analytics Tools
-        </h1>
-        <p className="text-[var(--text-muted)] mt-1">
-          Interactive dashboards and analytics powered by Stewart &amp; Co.
-        </p>
-      </div>
-
       {/* Iframe Container */}
       <div className="flex-1 relative px-4 pb-4">
         {isLoading && (
@@ -30,7 +20,7 @@ export default function ToolsPage() {
         <iframe
           src="https://stewart-and-co.onrender.com"
           title="Analytics Tools"
-          className="w-full h-full min-h-[calc(100vh-160px)] rounded-2xl border border-[var(--border-subtle)]"
+          className="w-full h-full min-h-[calc(100vh-32px)] rounded-2xl border border-[var(--border-subtle)]"
           style={{ backgroundColor: 'var(--bg-panel)' }}
           onLoad={() => setIsLoading(false)}
           allow="fullscreen"

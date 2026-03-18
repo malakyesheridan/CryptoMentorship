@@ -70,7 +70,7 @@ export default async function CryptoCompassPage({
     return (
       <div className="min-h-screen bg-[var(--bg-page)]">
         {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="relative overflow-hidden bg-[#0a0a0a]">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
           <div className="relative container mx-auto px-4 py-20 text-center">
             <div className="max-w-4xl mx-auto">
