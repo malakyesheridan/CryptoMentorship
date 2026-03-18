@@ -9,6 +9,8 @@ import {
   LayoutDashboard,
   Play,
   TrendingUp,
+  BarChart3,
+  Wrench,
   MessageSquare,
   User,
   GraduationCap,
@@ -27,6 +29,8 @@ const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Crypto Compass', href: '/crypto-compass', icon: Play },
   { name: 'My Portfolio', href: '/portfolio', icon: TrendingUp },
+  { name: 'Strategies', href: '/strategies', icon: BarChart3 },
+  { name: 'Tools', href: '/tools', icon: Wrench },
   { name: 'Learning Hub', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
   {

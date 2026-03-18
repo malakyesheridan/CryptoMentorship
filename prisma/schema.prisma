@@ -54,6 +54,7 @@ enum EmailType {
   NOTIFICATION_LEARNING_HUB
   NOTIFICATION_COMMUNITY_MENTION
   NOTIFICATION_COMMUNITY_REPLY
+  NOTIFICATION_STRATEGY_UPDATE
 }
 
 enum OnboardingStatus {
@@ -1306,4 +1307,76 @@ model Commission {
   @@index([referralId])
   @@index([createdAt])
   @@index([referrerId, status])
+}
+
+// ─── Strategy Models ───────────────────────────────────────────────
+
+model Strategy {
+  id          String   @id @default(cuid())
+  name        String                        // "MARS Rotation" | "SDCA Buy System" | "Combined"
+  slug        String   @unique              // "mars" | "sdca" | "combined"
+  description String?
+  type        String                        // "rotation" | "buy_system" | "combined"
+  configJson  String?                       // JSON: engine parameters
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  snapshots   StrategySnapshot[]
+  equityCurve EquityCurvePoint[]
+  updates     StrategyUpdate[]
+
+  @@index([slug])
+  @@index([isActive, sortOrder])
+}
+
+model StrategySnapshot {
+  id              String   @id @default(cuid())
+  strategyId      String
+  date            DateTime @db.Date
+  holdingsJson    String                    // JSON: [{asset, allocationPct, price}]
+  performanceJson String                    // JSON: {netReturn, sharpe, sortino, maxDd, calmar, omega, winRate}
+  equityValue     Decimal
+  dominantAsset   String?                   // "BTC" | "ETH" | "USD" etc.
+  createdAt       DateTime @default(now())
+
+  strategy Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@unique([strategyId, date])
+  @@index([strategyId, date])
+}
+
+model EquityCurvePoint {
+  id            String   @id @default(cuid())
+  strategyId    String
+  date          DateTime @db.Date
+  equityValue   Decimal
+  dominantAsset String?
+  dailyReturn   Decimal?
+  createdAt     DateTime @default(now())
+
+  strategy Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@unique([strategyId, date])
+  @@index([strategyId, date])
+}
+
+model StrategyUpdate {
+  id             String   @id @default(cuid())
+  strategyId     String
+  date           DateTime @db.Date
+  updateType     String                     // "rotation" | "sdca_buy" | "commentary" | "rebalance"
+  fromState      String?                    // JSON: previous state
+  toState        String?                    // JSON: new state
+  commentaryText String?
+  metadataJson   String?                    // JSON: extra data
+  notify         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  strategy Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+
+  @@index([strategyId, date])
+  @@index([createdAt])
+  @@index([notify, createdAt])
 }

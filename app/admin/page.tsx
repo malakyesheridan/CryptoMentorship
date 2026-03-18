@@ -4,7 +4,7 @@ import { formatDate } from '@/lib/dates'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { 
+import {
   Users,
   Activity,
   CreditCard,
@@ -13,7 +13,8 @@ import {
   BookOpen,
   GraduationCap,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  LineChart
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +36,9 @@ export default async function AdminPage() {
     totalDailySignals,
     todayDailySignals,
     dailySignalsByTier,
+    // Strategy stats
+    strategyCount,
+    activeStrategyCount,
     // User activity
     recentUsers,
     activeUsers
@@ -75,6 +79,9 @@ export default async function AdminPage() {
       by: ['tier'],
       _count: { tier: true }
     }),
+    // Strategy stats
+    prisma.strategy.count(),
+    prisma.strategy.count({ where: { isActive: true } }),
     // User activity
     prisma.user.findMany({
       take: 5,
@@ -103,16 +110,16 @@ export default async function AdminPage() {
 
   // Calculate subscription breakdown
   const subscriptionBreakdown = {
-    active: membershipStats.find(s => s.status === 'active')?._count.status || 0,
-    trial: membershipStats.find(s => s.status === 'trial')?._count.status || 0,
-    paused: membershipStats.find(s => s.status === 'paused')?._count.status || 0
+    active: membershipStats.find((s: { status: string; _count: { status: number } }) => s.status === 'active')?._count.status || 0,
+    trial: membershipStats.find((s: { status: string; _count: { status: number } }) => s.status === 'trial')?._count.status || 0,
+    paused: membershipStats.find((s: { status: string; _count: { status: number } }) => s.status === 'paused')?._count.status || 0
   }
 
   // Calculate daily signals breakdown
   const dailySignalsBreakdown = {
-    T1: dailySignalsByTier.find(t => t.tier === 'T1')?._count.tier || 0,
-    T2: dailySignalsByTier.find(t => t.tier === 'T2')?._count.tier || 0,
-    T3: dailySignalsByTier.find(t => t.tier === 'T3')?._count.tier || 0,
+    T1: dailySignalsByTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T1')?._count.tier || 0,
+    T2: dailySignalsByTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T2')?._count.tier || 0,
+    T3: dailySignalsByTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T3')?._count.tier || 0,
   }
 
   return (
@@ -298,6 +305,33 @@ export default async function AdminPage() {
         </div>
       </div>
 
+      {/* Strategies */}
+      <div>
+        <h2 className="heading-2 text-xl mb-4">Strategies</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="heading-2 text-sm">Total Strategies</CardTitle>
+              <LineChart className="h-4 w-4 text-[var(--text-muted)]" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{strategyCount}</div>
+              <p className="text-xs text-[var(--text-muted)]">
+                {activeStrategyCount} active
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="mt-4">
+          <Link
+            href="/admin/strategies"
+            className="text-sm text-[var(--gold-400)] hover:underline font-medium"
+          >
+            Manage Strategies →
+          </Link>
+        </div>
+      </div>
+
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Users */}
@@ -311,7 +345,7 @@ export default async function AdminPage() {
           <CardContent>
             <div className="space-y-4">
               {recentUsers.length > 0 ? (
-                recentUsers.map((user) => (
+                recentUsers.map((user: { id: string; name: string | null; email: string; createdAt: Date; role: string }) => (
                   <div key={user.id} className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">{user.name || user.email}</p>
@@ -352,7 +386,7 @@ export default async function AdminPage() {
           <CardContent>
             <div className="space-y-4">
               {recentAudits.length > 0 ? (
-                recentAudits.map((audit) => (
+                recentAudits.map((audit: { id: string; actor: { name: string | null }; action: string; subjectType: string; subjectId: string | null; createdAt: Date }) => (
                   <div key={audit.id} className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">
