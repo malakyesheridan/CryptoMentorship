@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, use } from 'react'
+import { useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
@@ -30,8 +30,8 @@ function timeAgo(date: string) {
   return `${days}d ago`
 }
 
-export default function PostDetailPage({ params }: { params: Promise<{ postId: string }> }) {
-  const { postId } = use(params)
+export default function PostDetailPage({ params }: { params: { postId: string } }) {
+  const { postId } = params
   const { data: session } = useSession()
   const router = useRouter()
   const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'editor'
