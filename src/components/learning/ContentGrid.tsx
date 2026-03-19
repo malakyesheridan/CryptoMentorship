@@ -1,18 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  BookOpen, 
-  FileText, 
-  Clock, 
-  Lock, 
-  Play, 
+import {
+  BookOpen,
+  FileText,
+  Clock,
+  Lock,
+  Play,
   ArrowRight,
   CheckCircle,
-  Award,
   Edit,
   MoreVertical
 } from 'lucide-react'
@@ -59,7 +57,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
           <BookOpen className="w-12 h-12 text-[var(--text-muted)]" />
         </div>
         <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">No content available</h3>
-        <p className="text-[var(--text-strong)]">Check back soon for new content.</p>
+        <p className="text-[var(--text-muted)]">Check back soon for new content.</p>
       </div>
     )
   }
@@ -68,65 +66,73 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
     <div data-tour="learning-track-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((item, index) => {
         const isCourse = item.type === 'course'
-        const isResource = item.type === 'resource'
         const href = item.url || (isCourse ? `/learn/${item.slug || item.id}` : `/content/${item.slug || item.id}`)
         const isFirstCourse = isCourse && index === 0
-        
-        return (
-          <Card 
-            key={item.id} 
-            data-tour={isFirstCourse ? "learning-track-card" : undefined}
-            className="group bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-[var(--border-subtle)] relative overflow-hidden"
-          >
-            {/* Cover Image */}
-            {item.coverUrl && (
-              <div className="aspect-video relative mb-4 rounded-t-2xl overflow-hidden">
-                <Image
-                  src={item.coverUrl}
-                  alt={item.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-            )}
 
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isCourse ? 'bg-[#1a1d2e]' : 'bg-[#231a2e]'
-                  }`}>
+        return (
+          <Link
+            key={item.id}
+            href={href}
+            onClick={() => onItemClick?.(item)}
+            data-tour={isFirstCourse ? "learning-track-card" : undefined}
+          >
+            <article className="group bg-[var(--bg-panel)] rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-[var(--border-subtle)] overflow-hidden hover:-translate-y-0.5">
+              {/* Cover Image */}
+              <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-[#1a1815] to-[#2a2520]">
+                {item.coverUrl ? (
+                  <Image
+                    src={item.coverUrl}
+                    alt={item.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
                     {isCourse ? (
-                      <BookOpen className="w-5 h-5 text-blue-600" />
+                      <BookOpen className="w-12 h-12 text-white/40" />
                     ) : (
-                      <FileText className="w-5 h-5 text-purple-600" />
+                      <FileText className="w-12 h-12 text-white/40" />
                     )}
                   </div>
-                  <Badge className={`text-xs px-2 py-1 ${
-                    item.locked 
-                      ? 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]' 
+                )}
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                {/* Type badge top-left */}
+                <div className="absolute top-3 left-3">
+                  <Badge className={`text-xs px-2 py-0.5 font-medium ${
+                    item.locked
+                      ? 'bg-blue-600 text-white border-blue-700'
                       : 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]'
                   }`}>
                     {item.locked ? 'Member' : 'Public'}
                   </Badge>
                 </div>
-                {isAdmin && isCourse && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                        }}
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                      {onEditTrack && (
+                {/* Lesson count badge bottom-right */}
+                {isCourse && item.totalLessons && item.totalLessons > 0 && (
+                  <div className="absolute bottom-3 right-3">
+                    <span className="bg-black/80 text-white text-xs px-2 py-1 rounded font-medium">
+                      {item.totalLessons} {item.totalLessons === 1 ? 'lesson' : 'lessons'}
+                    </span>
+                  </div>
+                )}
+                {/* Admin dropdown */}
+                {isAdmin && isCourse && onEditTrack && (
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="bg-black/50 hover:bg-black/70 text-white h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                          }}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.preventDefault()
@@ -137,116 +143,88 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Track
                         </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
-
-              <CardTitle className="text-xl font-semibold mb-2 text-[var(--text-strong)] group-hover:text-yellow-600 transition-colors line-clamp-2">
-                {item.title}
-              </CardTitle>
-              <CardDescription className="text-sm text-[var(--text-strong)] line-clamp-2">
-                {item.description || 'No description available.'}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="pt-0">
-              {/* Progress Bar (for courses) */}
-              {showProgress && isCourse && item.progressPct !== undefined && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-[var(--text-strong)]">Progress</span>
-                    <span className="font-medium">{item.progressPct}%</span>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <div className="w-full bg-[#2a2520] rounded-full h-2">
-                    <div 
-                      className="bg-gold-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${item.progressPct}%` }}
-                    />
+                )}
+                {/* Play icon on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <Play className="w-6 h-6 text-white ml-0.5" />
                   </div>
                 </div>
-              )}
-
-              {/* Metadata */}
-              <div className="flex items-center gap-4 text-sm text-[var(--text-strong)] mb-4">
-                {isCourse && item.totalLessons && (
-                  <div className="flex items-center gap-1">
-                    <BookOpen className="h-4 w-4" />
-                    <span>{item.totalLessons} lessons</span>
-                  </div>
-                )}
-                {item.durationMin && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{Math.round(item.durationMin / 60)}h {item.durationMin % 60}m</span>
-                  </div>
-                )}
-                {item.publishedAt && (
-                  <div className="flex items-center gap-1">
-                    <span>{formatContentDate(item.publishedAt)}</span>
-                  </div>
-                )}
               </div>
 
-              {/* Status Badge */}
-              {isCourse && item.progressPct !== undefined && (
-                <div className="mb-4">
-                  <Badge 
-                    variant={item.progressPct === 100 ? 'default' : 'secondary'}
-                    className={item.progressPct === 100 ? 'bg-green-600' : ''}
-                  >
-                    {item.progressPct === 100 ? (
-                      <>
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Completed
-                      </>
-                    ) : (
-                      'In Progress'
-                    )}
-                  </Badge>
-                </div>
-              )}
+              {/* Content */}
+              <div className="p-4">
+                <h3 className="text-base font-semibold text-[var(--text-strong)] mb-2 line-clamp-2 group-hover:text-yellow-500 transition-colors leading-snug">
+                  {item.title}
+                </h3>
+                {item.description && (
+                  <p className="text-sm text-[var(--text-muted)] mb-3 line-clamp-2 leading-relaxed">
+                    {item.description}
+                  </p>
+                )}
 
-              {/* Action Button */}
-              <Link href={href} className="block" onClick={() => onItemClick?.(item)}>
-                <Button
-                  className="w-full bg-gold-500 hover:bg-gold-600 text-white"
-                  data-tour={isFirstCourse ? "learning-track-cta" : undefined}
-                >
-                  {isCourse && item.progressPct === 100 ? (
-                    <>
-                      <Play className="h-4 w-4 mr-2" />
-                      Watch Again
-                    </>
-                  ) : isCourse ? (
-                    <>
-                      <Play className="h-4 w-4 mr-2" />
-                      {item.progressPct && item.progressPct > 0 ? 'Continue Learning' : 'Start Learning'}
-                    </>
-                  ) : (
-                    <>
-                      <ArrowRight className="h-4 w-4 mr-2" />
-                      View Resource
-                    </>
+                {/* Progress Bar */}
+                {showProgress && isCourse && item.progressPct !== undefined && item.progressPct > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-[var(--text-muted)]">
+                        {item.progressPct === 100 ? (
+                          <span className="flex items-center gap-1 text-[#4a7c3f]">
+                            <CheckCircle className="h-3 w-3" />
+                            Completed
+                          </span>
+                        ) : (
+                          'In Progress'
+                        )}
+                      </span>
+                      <span className="font-medium text-[var(--text-strong)]">{item.progressPct}%</span>
+                    </div>
+                    <div className="w-full bg-[#2a2520] rounded-full h-1.5">
+                      <div
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          item.progressPct === 100 ? 'bg-[#4a7c3f]' : 'bg-gold-500'
+                        }`}
+                        style={{ width: `${item.progressPct}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Metadata */}
+                <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                  {item.durationMin && item.durationMin > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>
+                        {item.durationMin >= 60
+                          ? `${Math.floor(item.durationMin / 60)}h ${item.durationMin % 60}m`
+                          : `${item.durationMin}m`
+                        }
+                      </span>
+                    </div>
                   )}
-                </Button>
-              </Link>
-            </CardContent>
-
-            {/* Lock Overlay */}
-            {item.locked && (
-              <div className="absolute inset-0 bg-[#141210]/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <div className="text-center">
-                  <Lock className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
-                  <p className="text-sm font-medium text-[var(--text-strong)]">Member Only</p>
+                  {item.publishedAt && (
+                    <span>{formatContentDate(item.publishedAt)}</span>
+                  )}
                 </div>
               </div>
-            )}
-          </Card>
+
+              {/* Lock Overlay */}
+              {item.locked && (
+                <div className="absolute inset-0 bg-[#141210]/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <div className="text-center">
+                    <Lock className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
+                    <p className="text-sm font-medium text-[var(--text-strong)]">Member Only</p>
+                  </div>
+                </div>
+              )}
+            </article>
+          </Link>
         )
       })}
     </div>
   )
 }
-

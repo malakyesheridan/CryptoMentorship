@@ -5,11 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { 
-  BookOpen, 
-  Save, 
-  Eye, 
+import {
+  BookOpen,
+  Save,
+  Eye,
   EyeOff,
   Calendar,
   Users,
@@ -20,12 +19,13 @@ import {
   Video,
   Upload
 } from 'lucide-react'
-import { updateTrack, deleteTrack } from '@/lib/actions/learning'
+import { updateTrack, deleteTrack, deleteSection, deleteLesson } from '@/lib/actions/learning'
 import { toast } from 'sonner'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LessonVideoUpload } from './LessonVideoUpload'
 import { PdfAttachmentsField } from './PdfAttachmentsField'
+import { SectionFormModal } from './SectionFormModal'
+import { LessonFormModal } from './LessonFormModal'
 import type { PdfResource } from '@/lib/learning/resources'
 import { normalizePdfResources } from '@/lib/learning/resources'
 import { IMAGE_MAX_SIZE_BYTES, formatBytes } from '@/lib/upload-config'
@@ -40,9 +40,9 @@ interface TrackEditModalProps {
 
 type TabType = 'basic' | 'videos' | 'structure' | 'settings'
 
-export function TrackEditModal({ 
-  trackId, 
-  open, 
+export function TrackEditModal({
+  trackId,
+  open,
   onOpenChange,
   onTrackUpdated,
   onTrackDeleted
@@ -57,7 +57,7 @@ export function TrackEditModal({
     slug: '',
     summary: '',
     coverImage: null as File | null,
-    coverUrl: '', // Existing cover URL
+    coverUrl: '',
     pdfResources: [] as PdfResource[],
     minTier: 'member' as 'guest' | 'member' | 'editor' | 'admin',
     publishedAt: '',
@@ -67,9 +67,16 @@ export function TrackEditModal({
   const [trackData, setTrackData] = useState<any>(null)
   const [shouldRefreshTrack, setShouldRefreshTrack] = useState(false)
 
+  // Inline modal state
+  const [sectionModalOpen, setSectionModalOpen] = useState(false)
+  const [editingSection, setEditingSection] = useState<any>(null)
+  const [lessonModalOpen, setLessonModalOpen] = useState(false)
+  const [editingLesson, setEditingLesson] = useState<any>(null)
+  const [lessonSectionId, setLessonSectionId] = useState<string | undefined>()
+
   const fetchTrack = useCallback(async () => {
     if (!trackId) return
-    
+
     setIsLoadingTrack(true)
     try {
       const res = await fetch(`/api/admin/learn/tracks/${trackId}`)
@@ -103,7 +110,6 @@ export function TrackEditModal({
     }
   }, [open, trackId, fetchTrack, isDeleting])
 
-  // Handle track refresh after video upload
   useEffect(() => {
     if (shouldRefreshTrack) {
       setShouldRefreshTrack(false)
@@ -116,7 +122,6 @@ export function TrackEditModal({
     setFormData(prev => ({
       ...prev,
       [field]: value,
-      // Auto-generate slug from title if slug is empty
       ...(field === 'title' && !prev.slug && { slug: value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') })
     }))
   }
@@ -126,7 +131,6 @@ export function TrackEditModal({
     setIsLoading(true)
 
     try {
-      // Upload cover image if a new one was selected
       let coverUrl = formData.coverUrl
       if (formData.coverImage) {
         setCoverUploadProgress(0)
@@ -159,7 +163,6 @@ export function TrackEditModal({
 
       if (result.success) {
         toast.success('Track updated successfully')
-        // Refresh track data
         await fetchTrack()
         onTrackUpdated?.()
       }
@@ -178,16 +181,13 @@ export function TrackEditModal({
     }
 
     setIsDeleting(true)
-    // Close modal immediately to prevent any fetch attempts
     onOpenChange(false)
-    
+
     try {
       const result = await deleteTrack(trackId)
       if (result.success) {
         toast.success('Track deleted successfully')
-        // Navigate away immediately
         router.push('/learning')
-        // Defer callback to avoid state updates during render
         setTimeout(() => {
           onTrackDeleted?.()
         }, 200)
@@ -196,9 +196,42 @@ export function TrackEditModal({
       console.error('Error deleting track:', error)
       toast.error(error.message || 'Failed to delete track')
       setIsDeleting(false)
-      // Re-open modal if deletion failed
       onOpenChange(true)
     }
+  }
+
+  const handleDeleteSection = async (sectionId: string, sectionTitle: string) => {
+    if (!confirm(`Delete section "${sectionTitle}" and all its lessons? This cannot be undone.`)) {
+      return
+    }
+    try {
+      await deleteSection(sectionId)
+      toast.success('Section deleted')
+      fetchTrack()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete section')
+    }
+  }
+
+  const handleDeleteLesson = async (lessonId: string, lessonTitle: string) => {
+    if (!confirm(`Delete lesson "${lessonTitle}"? This cannot be undone.`)) {
+      return
+    }
+    try {
+      await deleteLesson(lessonId)
+      toast.success('Lesson deleted')
+      fetchTrack()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete lesson')
+    }
+  }
+
+  const handleSectionSuccess = () => {
+    fetchTrack()
+  }
+
+  const handleLessonSuccess = () => {
+    fetchTrack()
   }
 
   const tabs: Array<{ id: TabType; label: string; icon: any }> = [
@@ -207,6 +240,8 @@ export function TrackEditModal({
     { id: 'structure', label: 'Structure', icon: Settings },
     { id: 'settings', label: 'Settings', icon: Users },
   ]
+
+  const trackSections = trackData?.sections?.map((s: any) => ({ id: s.id, title: s.title })) || []
 
   if (isLoadingTrack) {
     return (
@@ -222,374 +257,470 @@ export function TrackEditModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Edit Track: {formData.title || 'Loading...'}</DialogTitle>
-          <DialogDescription>
-            Update track information and settings
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-5xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Edit Track: {formData.title || 'Loading...'}</DialogTitle>
+            <DialogDescription>
+              Update track information and settings
+            </DialogDescription>
+          </DialogHeader>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-[var(--border-subtle)]">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors border-b-2 ${
-                  isActive
-                    ? 'border-yellow-500 text-yellow-600'
-                    : 'border-transparent text-[var(--text-strong)] hover:text-[var(--text-strong)]'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6 border-b border-[var(--border-subtle)]">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors border-b-2 ${
+                    isActive
+                      ? 'border-yellow-500 text-yellow-600'
+                      : 'border-transparent text-[var(--text-strong)] hover:text-[var(--text-strong)]'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
 
-        <div className="space-y-6">
-          {/* Basic Info Tab */}
-          {activeTab === 'basic' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
-                  Track Title *
-                </label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  placeholder="e.g., Foundations of Cryptocurrency Trading"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
-                  URL Slug *
-                </label>
-                <Input
-                  value={formData.slug}
-                  onChange={(e) => handleInputChange('slug', e.target.value)}
-                  placeholder="e.g., crypto-trading-foundations"
-                  required
-                />
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                  This will be the URL: /learn/{formData.slug || 'track-slug'}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
-                  Summary
-                </label>
-                <textarea
-                  value={formData.summary}
-                  onChange={(e) => handleInputChange('summary', e.target.value)}
-                  placeholder="Brief description of what students will learn..."
-                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-[var(--text-strong)] bg-[var(--bg-panel)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
-                  Cover Image
-                </label>
-                <div className="flex items-center gap-4">
-                  <label
-                    htmlFor="cover-image-edit"
-                    className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      formData.coverImage
-                        ? 'border-green-500 bg-[#1a2e1a]'
-                        : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
-                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <Upload className="w-5 h-5 text-[var(--text-strong)]" />
-                      <span className="text-sm text-[var(--text-strong)]">
-                        {formData.coverImage ? formData.coverImage.name : 'Select new cover image'}
-                      </span>
-                    </div>
-                    <input
-                      type="file"
-                      id="cover-image-edit"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          // Validate file type
-                          if (!file.type.startsWith('image/')) {
-                            toast.error('Please select an image file')
-                            return
-                          }
-                          // Validate file size (10MB limit)
-                          if (file.size > IMAGE_MAX_SIZE_BYTES) {
-                            toast.error(`Image too large. Maximum size is ${formatBytes(IMAGE_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
-                            return
-                          }
-                          setFormData({ ...formData, coverImage: file })
-                          setCoverImagePreview(URL.createObjectURL(file))
-                        }
-                      }}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
+          <div className="space-y-6">
+            {/* Basic Info Tab */}
+            {activeTab === 'basic' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
+                    Track Title *
                   </label>
-                  {coverImagePreview && (
-                    <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={coverImagePreview}
-                        alt="Cover preview"
-                        className="w-full h-full object-cover"
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    placeholder="e.g., Foundations of Cryptocurrency Trading"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
+                    URL Slug *
+                  </label>
+                  <Input
+                    value={formData.slug}
+                    onChange={(e) => handleInputChange('slug', e.target.value)}
+                    placeholder="e.g., crypto-trading-foundations"
+                    required
+                  />
+                  <p className="text-sm text-[var(--text-muted)] mt-1">
+                    This will be the URL: /learn/{formData.slug || 'track-slug'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
+                    Summary
+                  </label>
+                  <textarea
+                    value={formData.summary}
+                    onChange={(e) => handleInputChange('summary', e.target.value)}
+                    placeholder="Brief description of what students will learn..."
+                    className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-[var(--text-strong)] bg-[var(--bg-panel)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
+                    Cover Image
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label
+                      htmlFor="cover-image-edit"
+                      className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                        formData.coverImage
+                          ? 'border-green-500 bg-[#1a2e1a]'
+                          : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
+                      } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="w-5 h-5 text-[var(--text-strong)]" />
+                        <span className="text-sm text-[var(--text-strong)]">
+                          {formData.coverImage ? formData.coverImage.name : 'Select new cover image'}
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        id="cover-image-edit"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            if (!file.type.startsWith('image/')) {
+                              toast.error('Please select an image file')
+                              return
+                            }
+                            if (file.size > IMAGE_MAX_SIZE_BYTES) {
+                              toast.error(`Image too large. Maximum size is ${formatBytes(IMAGE_MAX_SIZE_BYTES)}. Your file is ${formatBytes(file.size)}.`)
+                              return
+                            }
+                            setFormData({ ...formData, coverImage: file })
+                            setCoverImagePreview(URL.createObjectURL(file))
+                          }
+                        }}
+                        className="hidden"
+                        disabled={isLoading}
                       />
+                    </label>
+                    {coverImagePreview && (
+                      <div className="relative w-32 h-20 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={coverImagePreview}
+                          alt="Cover preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {coverUploadProgress > 0 && coverUploadProgress < 100 && (
+                    <div className="mt-2">
+                      <div className="w-full bg-[#2a2520] rounded-full h-2">
+                        <div
+                          className="bg-gold-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${coverUploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Uploading cover image... {coverUploadProgress}%</p>
                     </div>
                   )}
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    Upload a cover image from your computer (JPG, PNG, WebP up to 10MB). Leave empty to keep existing image.
+                  </p>
                 </div>
-                {coverUploadProgress > 0 && coverUploadProgress < 100 && (
-                  <div className="mt-2">
-                    <div className="w-full bg-[#2a2520] rounded-full h-2">
-                      <div 
-                        className="bg-gold-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${coverUploadProgress}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Uploading cover image... {coverUploadProgress}%</p>
-                  </div>
-                )}
-                <p className="text-xs text-[var(--text-muted)] mt-1">
-                  Upload a cover image from your computer (JPG, PNG, WebP up to 10MB). Leave empty to keep existing image.
-                </p>
-              </div>
 
-              <PdfAttachmentsField
-                label="Track PDFs"
-                helperText="Upload PDFs to share with students on the track page."
-                value={formData.pdfResources}
-                onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
-                folder="learning/track-pdfs"
-              />
-            </div>
-          )}
-
-          {/* Videos Tab */}
-          {activeTab === 'videos' && trackId && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Upload Video Lessons</h3>
-                <p className="text-sm text-[var(--text-strong)] mb-6">
-                  Upload video files to create lessons in this track. Each video will become a lesson that students can watch.
-                </p>
-                <LessonVideoUpload 
-                  trackId={trackId} 
-                  onUploadSuccess={() => {
-                    // Set flag to trigger refresh in useEffect (avoids state updates during render)
-                    setShouldRefreshTrack(true)
-                  }}
+                <PdfAttachmentsField
+                  label="Track PDFs"
+                  helperText="Upload PDFs to share with students on the track page."
+                  value={formData.pdfResources}
+                  onChange={(next) => setFormData(prev => ({ ...prev, pdfResources: next }))}
+                  folder="learning/track-pdfs"
                 />
               </div>
+            )}
 
-              {/* Existing Lessons */}
-              {trackData && trackData.lessons && trackData.lessons.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">Existing Lessons</h3>
-                  <div className="space-y-2">
-                    {trackData.lessons
-                      .filter((lesson: any) => !lesson.sectionId) // Only show lessons without sections
-                      .map((lesson: any) => (
-                        <Card key={lesson.id}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <Video className="h-5 w-5 text-yellow-600" />
-                                <div>
-                                  <p className="font-medium">{lesson.title}</p>
-                                  {lesson.videoUrl && (
-                                    <p className="text-xs text-[var(--text-muted)]">Video: {lesson.videoUrl}</p>
-                                  )}
+            {/* Videos Tab */}
+            {activeTab === 'videos' && trackId && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Upload Video Lessons</h3>
+                  <p className="text-sm text-[var(--text-strong)] mb-6">
+                    Upload video files to create lessons in this track. Each video will become a lesson that students can watch.
+                  </p>
+                  <LessonVideoUpload
+                    trackId={trackId}
+                    onUploadSuccess={() => {
+                      setShouldRefreshTrack(true)
+                    }}
+                  />
+                </div>
+
+                {/* Existing Lessons */}
+                {trackData && trackData.lessons && trackData.lessons.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">Existing Lessons</h3>
+                    <div className="space-y-2">
+                      {trackData.lessons
+                        .filter((lesson: any) => !lesson.sectionId)
+                        .map((lesson: any) => (
+                          <Card key={lesson.id}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Video className="h-5 w-5 text-yellow-600" />
+                                  <div>
+                                    <p className="font-medium">{lesson.title}</p>
+                                    {lesson.videoUrl && (
+                                      <p className="text-xs text-[var(--text-muted)]">Video attached</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingLesson(lesson)
+                                      setLessonSectionId(undefined)
+                                      setLessonModalOpen(true)
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteLesson(lesson.id, lesson.title)}
+                                    className="text-red-500 hover:text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </div>
-                              <Link href={`/admin/learn/tracks/${trackId}/lessons/${lesson.id}/edit`} target="_blank">
-                                <Button type="button" variant="ghost" size="sm">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
 
-          {/* Structure Tab */}
-          {activeTab === 'structure' && trackData && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Sections & Lessons</h3>
-                <div className="flex gap-2">
-                  <Link href={`/admin/learn/tracks/${trackId}/sections/new`} target="_blank">
-                    <Button type="button" size="sm" variant="outline">
+            {/* Structure Tab */}
+            {activeTab === 'structure' && trackData && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Sections & Lessons</h3>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingSection(null)
+                        setSectionModalOpen(true)
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Section
                     </Button>
-                  </Link>
-                  <Link href={`/admin/learn/tracks/${trackId}/lessons/new`} target="_blank">
-                    <Button type="button" size="sm">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        setEditingLesson(null)
+                        setLessonSectionId(undefined)
+                        setLessonModalOpen(true)
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Lesson
                     </Button>
-                  </Link>
+                  </div>
                 </div>
-              </div>
 
-              {trackData.sections && trackData.sections.length > 0 ? (
-                <div className="space-y-4">
-                  {trackData.sections.map((section: any) => (
-                    <Card key={section.id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-base">{section.title}</CardTitle>
-                            {section.summary && (
-                              <CardDescription>{section.summary}</CardDescription>
-                            )}
+                {trackData.sections && trackData.sections.length > 0 ? (
+                  <div className="space-y-4">
+                    {trackData.sections.map((section: any) => (
+                      <Card key={section.id}>
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-base">{section.title}</CardTitle>
+                              {section.summary && (
+                                <CardDescription>{section.summary}</CardDescription>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingSection(section)
+                                  setSectionModalOpen(true)
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteSection(section.id, section.title)}
+                                className="text-red-500 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingLesson(null)
+                                  setLessonSectionId(section.id)
+                                  setLessonModalOpen(true)
+                                }}
+                                title="Add lesson to this section"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <Link href={`/admin/learn/tracks/${trackId}/sections/${section.id}/edit`} target="_blank">
-                            <Button type="button" variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {section.lessons && section.lessons.length > 0 ? (
-                          <div className="space-y-2">
-                            {section.lessons.map((lesson: any) => (
-                              <div key={lesson.id} className="flex items-center justify-between text-sm">
-                                <span>{lesson.title}</span>
-                                <Link href={`/admin/learn/tracks/${trackId}/lessons/${lesson.id}/edit`} target="_blank">
-                                  <Button type="button" variant="ghost" size="sm">
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                </Link>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-[var(--text-muted)]">No lessons in this section</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-[var(--text-muted)] text-center py-8">
-                  No sections yet. Click &quot;Add Section&quot; to create one.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Settings Tab */}
-          {activeTab === 'settings' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
-                  Minimum Tier Required
-                </label>
-                <select
-                  value={formData.minTier}
-                  onChange={(e) => handleInputChange('minTier', e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-[var(--text-strong)] bg-[var(--bg-panel)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                >
-                  <option value="guest">Guest</option>
-                  <option value="member">Member</option>
-                  <option value="editor">Editor</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                  Users must have at least this tier to access the track
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
-                  Publish Date
-                </label>
-                <Input
-                  value={formData.publishedAt}
-                  onChange={(e) => handleInputChange('publishedAt', e.target.value)}
-                  type="datetime-local"
-                />
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                  Leave empty to save as draft. Set a future date to schedule publishing.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                {formData.publishedAt ? (
-                  <span className="flex items-center gap-1 text-[#4a7c3f]">
-                    <Eye className="h-4 w-4" />
-                    Will be published
-                  </span>
+                        </CardHeader>
+                        <CardContent>
+                          {section.lessons && section.lessons.length > 0 ? (
+                            <div className="space-y-2">
+                              {section.lessons.map((lesson: any) => (
+                                <div key={lesson.id} className="flex items-center justify-between text-sm py-1">
+                                  <span className="text-[var(--text-strong)]">{lesson.title}</span>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingLesson(lesson)
+                                        setLessonSectionId(section.id)
+                                        setLessonModalOpen(true)
+                                      }}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteLesson(lesson.id, lesson.title)}
+                                      className="text-red-500 hover:text-red-600"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-[var(--text-muted)]">No lessons in this section</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 ) : (
-                  <span className="flex items-center gap-1 text-yellow-600">
-                    <EyeOff className="h-4 w-4" />
-                    Will be saved as draft
-                  </span>
+                  <p className="text-sm text-[var(--text-muted)] text-center py-8">
+                    No sections yet. Click &quot;Add Section&quot; to create one.
+                  </p>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Actions */}
-          <div className="flex items-center justify-between pt-6 border-t border-[var(--border-subtle)]">
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {isDeleting ? 'Deleting...' : 'Delete Track'}
-            </Button>
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
+                    Minimum Tier Required
+                  </label>
+                  <select
+                    value={formData.minTier}
+                    onChange={(e) => handleInputChange('minTier', e.target.value)}
+                    className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md text-[var(--text-strong)] bg-[var(--bg-panel)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    <option value="guest">Guest</option>
+                    <option value="member">Member</option>
+                    <option value="editor">Editor</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <p className="text-sm text-[var(--text-muted)] mt-1">
+                    Users must have at least this tier to access the track
+                  </p>
+                </div>
 
-            <div className="flex items-center gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-strong)] mb-2">
+                    Publish Date
+                  </label>
+                  <Input
+                    value={formData.publishedAt}
+                    onChange={(e) => handleInputChange('publishedAt', e.target.value)}
+                    type="datetime-local"
+                  />
+                  <p className="text-sm text-[var(--text-muted)] mt-1">
+                    Leave empty to save as draft. Set a future date to schedule publishing.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  {formData.publishedAt ? (
+                    <span className="flex items-center gap-1 text-[#4a7c3f]">
+                      <Eye className="h-4 w-4" />
+                      Will be published
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-yellow-600">
+                      <EyeOff className="h-4 w-4" />
+                      Will be saved as draft
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-6 border-t border-[var(--border-subtle)]">
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => {
-                  setFormData(prev => ({
-                    ...prev,
-                    publishedAt: new Date().toISOString().slice(0, 16)
-                  }))
-                }}
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
               >
-                <Calendar className="h-4 w-4 mr-2" />
-                Publish Now
+                <Trash2 className="h-4 w-4 mr-2" />
+                {isDeleting ? 'Deleting...' : 'Delete Track'}
               </Button>
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={() => handleSubmit()}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </Button>
+
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      publishedAt: new Date().toISOString().slice(0, 16)
+                    }))
+                  }}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Publish Now
+                </Button>
+                <Button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => handleSubmit()}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inline Section Modal */}
+      <SectionFormModal
+        open={sectionModalOpen}
+        onOpenChange={setSectionModalOpen}
+        trackId={trackId}
+        section={editingSection}
+        onSuccess={handleSectionSuccess}
+      />
+
+      {/* Inline Lesson Modal */}
+      <LessonFormModal
+        open={lessonModalOpen}
+        onOpenChange={setLessonModalOpen}
+        trackId={trackId}
+        sectionId={lessonSectionId}
+        lesson={editingLesson}
+        sections={trackSections}
+        onSuccess={handleLessonSuccess}
+      />
+    </>
   )
 }
-

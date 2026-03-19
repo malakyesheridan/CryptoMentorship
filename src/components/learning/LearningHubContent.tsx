@@ -1,104 +1,61 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { LearningHubTabs } from './LearningHubTabs'
 import { ContentGrid } from './ContentGrid'
 import { TrackEditModal } from './TrackEditModal'
 import { UploadModal } from './UploadModal'
-import { EnhancedStats } from './EnhancedStats'
 import { ProgressTimeline } from './ProgressTimeline'
-import { RealTimeProgress } from './RealTimeProgress'
-import { LearningAnalytics } from './LearningAnalytics'
-import { Suspense } from 'react'
 import { Input } from '@/components/ui/input'
-import { Search, Flame, BarChart3, Award, Upload } from 'lucide-react'
+import { Search, Flame, Upload, BookOpen, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { BookOpen, Video } from 'lucide-react'
-import Link from 'next/link'
-import { formatDate } from '@/lib/dates'
-
-type TabType = 'discover' | 'progress'
 
 interface LearningHubContentProps {
-  // Data
   enrollments: any[]
   progress: any[]
   certificates: any[]
-  learningActivity: any[]
   allCourses: any[]
-  enhancedMetrics: any
-  resources: any[]
   streak: number
-  
-  // User info
   userId: string
   userRole: string
   userTier: string | null
-}
-
-// Transform enrollments to content items
-function transformEnrollmentsToContent(enrollments: any[]) {
-  return enrollments.map((enrollment) => {
-    const track = enrollment.track
-    const totalLessons = track.lessons?.length || 0
-    const totalDuration = track.lessons?.reduce((sum: number, lesson: any) => sum + (lesson.durationMin || 0), 0) || 0
-    
-    return {
-      id: track.id,
-      slug: track.slug,
-      title: track.title,
-      description: track.summary,
-      coverUrl: track.coverUrl,
-      type: 'course' as const,
-      locked: false,
-      progressPct: enrollment.progressPct,
-      publishedAt: track.publishedAt,
-      durationMin: totalDuration,
-      totalLessons,
-    }
-  })
-}
-
-// Transform resources to content items
-function transformResourcesToContent(resources: any[], userRole: string, userTier: string | null) {
-  return resources.map((resource) => ({
-    id: resource.id,
-    slug: resource.slug,
-    title: resource.title,
-    description: resource.description,
-    coverUrl: resource.coverUrl,
-    type: 'resource' as const,
-    locked: resource.locked,
-    publishedAt: resource.publishedAt,
-    tags: resource.tags,
-    url: `/content/${resource.slug || resource.id}`,
-  }))
 }
 
 export function LearningHubContent({
   enrollments,
   progress,
   certificates,
-  learningActivity,
   allCourses,
-  enhancedMetrics,
-  resources,
   streak,
   userId,
   userRole,
   userTier
 }: LearningHubContentProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<TabType>('discover')
   const [searchQuery, setSearchQuery] = useState('')
-  const [contentFilter, setContentFilter] = useState<'all' | 'courses' | 'resources'>('all')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  
+  const [showProgress, setShowProgress] = useState(false)
+  const debounceRef = useRef<NodeJS.Timeout>()
+  const isAdmin = userRole === 'admin' || userRole === 'editor'
 
-  // Build a unified track list for all users (enrolled + available)
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value)
+    }, 400)
+  }
+
+  // Build unified track list
   const allTracks = useMemo(() => {
     const enrollmentMap = new Map(enrollments.map((e: any) => [e.trackId, e]))
     return allCourses.map((course: any) => {
@@ -121,152 +78,131 @@ export function LearningHubContent({
     })
   }, [allCourses, enrollments])
 
-  // Filter content based on search
+  // Filter by debounced search
   const filteredTracks = useMemo(() => {
-    let filtered = allTracks
-    
-    // Apply search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(item => 
-        item.title.toLowerCase().includes(query) ||
-        item.description?.toLowerCase().includes(query)
-      )
-    }
-    
-    return filtered
-  }, [allTracks, searchQuery])
+    if (!debouncedSearch) return allTracks
+    const query = debouncedSearch.toLowerCase()
+    return allTracks.filter(item =>
+      item.title.toLowerCase().includes(query) ||
+      item.description?.toLowerCase().includes(query)
+    )
+  }, [allTracks, debouncedSearch])
 
-  // Stats for tabs
-  const tabStats = {
-    courses: allTracks.length,
-    resources: 0
-  }
+  const hasProgress = enrollments.length > 0 || certificates.length > 0
 
   return (
-    <div className="space-y-8">
-      {/* Learning Streak */}
+    <div className="space-y-6">
+      {/* Compact Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--text-strong)]">Learning Hub</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">
+            Browse tracks, continue learning, and track your progress
+          </p>
+        </div>
+        {isAdmin && (
+          <Button
+            onClick={() => setUploadModalOpen(true)}
+            className="bg-gold-500 hover:bg-gold-600 text-white font-medium shrink-0"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Create Track
+          </Button>
+        )}
+      </div>
+
+      {/* Streak Banner */}
       {streak > 0 && (
-        <div className="bg-gradient-to-r from-[#2a2418] to-[#2a2418] border border-[#2a2418] rounded-2xl p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 bg-gold-500 rounded-xl flex items-center justify-center">
-              <Flame className="h-6 w-6 text-white" />
+        <div className="bg-gradient-to-r from-[#2a2418] to-[#2a2418] border border-[#2a2418] rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-gold-500 rounded-lg flex items-center justify-center shrink-0">
+              <Flame className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-[var(--text-strong)]">Learning Streak</h3>
-              <p className="text-[var(--text-strong)]">
-                {streak} day{streak !== 1 ? 's' : ''} in a row! Keep it up!
+              <p className="text-sm font-semibold text-[var(--text-strong)]">
+                {streak} day{streak !== 1 ? 's' : ''} learning streak!
               </p>
+              <p className="text-xs text-[var(--text-muted)]">Keep it up!</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Admin Quick Actions */}
-      {(userRole === 'admin' || userRole === 'editor') && (
-        <div className="bg-[var(--bg-panel)] rounded-lg shadow-sm border border-[var(--border-subtle)] p-6">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h2 className="text-xl font-bold text-[var(--text-strong)] mb-2">Admin Quick Actions</h2>
-              <p className="text-sm text-[var(--text-strong)]">
-                Manage learning tracks, sections, and lessons
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Link href="/admin/learn/tracks">
-                <Button variant="outline">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Manage Tracks
-                </Button>
-              </Link>
-              <Button
-                onClick={() => setUploadModalOpen(true)}
-                className="bg-gold-500 hover:bg-gold-600 text-white"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload
-              </Button>
-            </div>
-          </div>
+      {/* Search */}
+      <div className="relative">
+        <Input
+          type="text"
+          placeholder="Search learning tracks..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className="pl-10 pr-4 py-2 rounded-lg border border-[var(--border-subtle)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+        />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+      </div>
+
+      {/* Track Count */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-[var(--text-muted)]">
+          {filteredTracks.length} {filteredTracks.length === 1 ? 'track' : 'tracks'} available
+        </p>
+      </div>
+
+      {/* Tracks Grid */}
+      {filteredTracks.length > 0 ? (
+        <ContentGrid
+          items={filteredTracks}
+          showProgress={true}
+          userRole={userRole}
+          onEditTrack={(trackId) => setEditingTrackId(trackId)}
+        />
+      ) : (
+        <div className="bg-[var(--bg-panel)] rounded-xl shadow-md border border-[var(--border-subtle)] p-12 text-center">
+          <BookOpen className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
+          <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">
+            {debouncedSearch ? 'No tracks found' : 'No Learning Tracks'}
+          </h3>
+          <p className="text-sm text-[var(--text-muted)]">
+            {debouncedSearch
+              ? `No tracks match "${debouncedSearch}". Try a different search.`
+              : 'Check back soon for new learning content!'
+            }
+          </p>
+          {debouncedSearch && (
+            <button
+              onClick={() => {
+                setSearchQuery('')
+                setDebouncedSearch('')
+              }}
+              className="mt-3 text-yellow-500 hover:text-yellow-400 font-medium text-sm"
+            >
+              Clear search
+            </button>
+          )}
         </div>
       )}
 
-      {/* Tab Navigation */}
-      <LearningHubTabs 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab}
-        stats={tabStats}
-      />
-
-      {/* Search (for Discover tab) */}
-      {activeTab === 'discover' && (
-        <div
-          data-tour="learning-search"
-          className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-4 border border-[var(--border-subtle)]"
-        >
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--text-muted)]" />
-            <Input
-              type="text"
-              placeholder="Search learning tracks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Tab Content */}
-      {activeTab === 'discover' && (
-        <div className="space-y-8">
-          {/* All Learning Tracks */}
-          <div>
-            <h2 className="text-2xl font-bold text-[var(--text-strong)] mb-6">
-              {filteredTracks.length === 0 ? 'No Learning Tracks' : 'Learning Tracks'}
-            </h2>
-            {filteredTracks.length > 0 ? (
-              <ContentGrid 
-                items={filteredTracks}
-                showProgress={true}
-                userRole={userRole}
-                onEditTrack={(trackId) => setEditingTrackId(trackId)}
-              />
+      {/* Progress Section (collapsible) */}
+      {hasProgress && (
+        <div className="border-t border-[var(--border-subtle)] pt-6">
+          <button
+            onClick={() => setShowProgress(!showProgress)}
+            className="flex items-center gap-2 text-[var(--text-strong)] hover:text-yellow-500 transition-colors mb-4"
+          >
+            <h2 className="text-xl font-bold">Your Progress</h2>
+            {showProgress ? (
+              <ChevronUp className="w-5 h-5" />
             ) : (
-              <div className="text-center py-12 text-[var(--text-muted)]">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
-                <p>No learning tracks found.</p>
-                {(userRole === 'admin' || userRole === 'editor') && (
-                  <p className="text-sm mt-2">Create your first track above!</p>
-                )}
-              </div>
+              <ChevronDown className="w-5 h-5" />
             )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'progress' && (
-        <div className="space-y-8">
-          {/* Progress Timeline */}
-          <ProgressTimeline 
-            enrollments={enrollments}
-            progress={progress}
-            certificates={certificates}
-            streak={streak}
-          />
-
-          {/* Real-Time Progress */}
-          <RealTimeProgress 
-            userId={userId}
-            showAchievements={true}
-            showStreak={true}
-          />
-
-          {/* Analytics Section */}
-          <Suspense fallback={<div className="text-center py-8">Loading analytics...</div>}>
-            <LearningAnalytics />
-          </Suspense>
-
+          </button>
+          {showProgress && (
+            <ProgressTimeline
+              enrollments={enrollments}
+              progress={progress}
+              certificates={certificates}
+              streak={streak}
+            />
+          )}
         </div>
       )}
 
@@ -279,15 +215,11 @@ export function LearningHubContent({
             if (!open) setEditingTrackId(null)
           }}
           onTrackUpdated={async () => {
-            // Close the modal
             setEditingTrackId(null)
-            // Refresh server-side data (will revalidate cache)
             router.refresh()
           }}
           onTrackDeleted={() => {
-            // Close modal and refresh - but defer to avoid React errors
             setEditingTrackId(null)
-            // Defer refresh to avoid state updates during render
             requestAnimationFrame(() => {
               setTimeout(() => {
                 router.refresh()
@@ -298,20 +230,16 @@ export function LearningHubContent({
       )}
 
       {/* Upload Modal */}
-      {(userRole === 'admin' || userRole === 'editor') && (
+      {isAdmin && (
         <UploadModal
           open={uploadModalOpen}
           onOpenChange={setUploadModalOpen}
           tracks={allTracks.map(t => ({ id: t.id, title: t.title }))}
           onTrackCreated={() => {
-            // Close modal and refresh tracks list
             setUploadModalOpen(false)
-            // Refresh server-side data (will revalidate cache)
             router.refresh()
           }}
           onVideoUploaded={() => {
-            // Keep modal open for multiple uploads, just refresh tracks
-            // Refresh server-side data (will revalidate cache)
             router.refresh()
           }}
         />
@@ -319,4 +247,3 @@ export function LearningHubContent({
     </div>
   )
 }
-
