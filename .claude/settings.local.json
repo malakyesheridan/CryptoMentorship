@@ -45,7 +45,11 @@
       "Bash(wc -l /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/page.tsx /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/lesson/[lessonSlug]/page.tsx)",
       "Bash(ls C:/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/)",
       "Bash(ls C:/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/lesson/[lessonSlug]/)",
-      "Bash(ls C:/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learning/)"
+      "Bash(ls C:/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learning/)",
+      "Bash(find /c/Users/kyesh/CryptoMentorship/app -type d -path \"*\\(app\\)*crypto-compass\")",
+      "Bash(find \"/c/Users/kyesh/CryptoMentorship/app/\\(app\\)/crypto-compass\" -type f)",
+      "Bash(grep -n \"Promise.all\\\\|await\\\\|getEpisodeById\\\\|findFirst\\\\|findMany\\\\|requireActiveSubscription\" /c/Users/kyesh/CryptoMentorship/app/crypto-compass/[slug]/page.tsx)",
+      "Bash(grep -n \"generateMetadata\\\\|getEpisodeById\" /c/Users/kyesh/CryptoMentorship/app/crypto-compass/[slug]/page.tsx)"
     ]
   }
 }

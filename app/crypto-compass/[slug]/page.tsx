@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, Play, Edit, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { unstable_cache } from 'next/cache'
 
 export const revalidate = 300
 
@@ -21,9 +22,18 @@ interface EpisodePageProps {
   }
 }
 
+const getCachedEpisode = (slug: string) =>
+  unstable_cache(
+    () => getEpisodeById(slug),
+    [`episode-${slug}`],
+    { revalidate: 300, tags: [`episode-${slug}`] }
+  )()
+
 export default async function EpisodePage({ params }: EpisodePageProps) {
-  const user = await requireActiveSubscription()
-  const episode = await getEpisodeById(params.slug)
+  const [user, episode] = await Promise.all([
+    requireActiveSubscription(),
+    getCachedEpisode(params.slug),
+  ])
 
   if (!episode) {
     notFound()
@@ -204,7 +214,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
 }
 
 export async function generateMetadata({ params }: EpisodePageProps) {
-  const episode = await getEpisodeById(params.slug)
+  const episode = await getCachedEpisode(params.slug)
 
   if (!episode) {
     return {
