@@ -1,108 +1,87 @@
-import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { withDbRetry } from '@/lib/db/retry'
 import { isDbUnreachableError } from '@/lib/db/errors'
-import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { DbHealthBanner } from '@/components/admin/learning/DbHealthBanner'
 import { AdminTracksUploadButton } from '@/components/admin/learning/AdminTracksUploadButton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  BookOpen, 
+import {
+  BookOpen,
   Plus,
-  Edit, 
-  Trash2, 
-  Eye, 
+  Edit,
+  Trash2,
+  Eye,
   EyeOff,
   Users,
-  Clock,
-  Calendar,
-  TrendingUp
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatDate } from '@/lib/dates'
 
-export const dynamic = 'force-dynamic'
-
-async function getTracks() {
-  try {
-    const tracks = await withDbRetry(
-      () =>
-        prisma.track.findMany({
-          include: {
-            sections: {
-              include: {
-                lessons: {
-                  select: { id: true, durationMin: true },
+const getCachedTracks = unstable_cache(
+  async () => {
+    try {
+      const tracks = await withDbRetry(
+        () =>
+          prisma.track.findMany({
+            include: {
+              sections: {
+                select: {
+                  id: true,
+                  _count: { select: { lessons: true } },
+                },
+              },
+              lessons: {
+                select: { id: true, durationMin: true },
+              },
+              _count: {
+                select: {
+                  enrollments: true,
                 },
               },
             },
-            lessons: {
-              select: { id: true, durationMin: true },
-            },
-            enrollments: {
-              select: { id: true },
-            },
-            _count: {
-              select: {
-                enrollments: true,
-              },
-            },
-          },
-          orderBy: [
-            { order: 'asc' },
-            { createdAt: 'desc' },
-          ],
-        }),
-      { mode: 'read', operationName: 'admin_tracks_page_list' }
-    )
+            orderBy: [
+              { order: 'asc' },
+              { createdAt: 'desc' },
+            ],
+          }),
+        { mode: 'read', operationName: 'admin_tracks_page_list' }
+      )
 
-    return { tracks, error: null as string | null }
-  } catch (error) {
-    if (isDbUnreachableError(error)) {
-      return {
-        tracks: [],
-        error: 'Database temporarily unreachable. Track data cannot be loaded right now. Try again in 30 seconds.',
+      return { tracks, error: null as string | null }
+    } catch (error) {
+      if (isDbUnreachableError(error)) {
+        return {
+          tracks: [],
+          error: 'Database temporarily unreachable. Track data cannot be loaded right now. Try again in 30 seconds.',
+        }
       }
+      throw error
     }
-    throw error
-  }
-}
+  },
+  ['admin-tracks'],
+  { revalidate: 60, tags: ['admin-tracks'] }
+)
 
 export default async function AdminTracksPage() {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user || !['editor', 'admin'].includes(session.user.role)) {
-    redirect('/login')
-  }
-
-  const { tracks, error } = await getTracks()
+  const { tracks, error } = await getCachedTracks()
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
-      <div className="flex">
-        <AdminSidebar />
-        <div className="flex-1 p-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-[var(--text-strong)]">Learning Tracks</h1>
-                  <p className="text-[var(--text-strong)] mt-2">
-                    Manage structured learning paths and educational content
-                  </p>
-                </div>
-                <AdminTracksUploadButton
-                  tracks={tracks.map((track) => ({ id: track.id, title: track.title }))}
-                />
-              </div>
-            </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--text-strong)]">Learning Tracks</h1>
+          <p className="text-[var(--text-strong)] mt-2">
+            Manage structured learning paths and educational content
+          </p>
+        </div>
+        <AdminTracksUploadButton
+          tracks={tracks.map((track) => ({ id: track.id, title: track.title }))}
+        />
+      </div>
 
             <DbHealthBanner />
             {error && (
@@ -321,9 +300,6 @@ export default async function AdminTracksPage() {
                 )}
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

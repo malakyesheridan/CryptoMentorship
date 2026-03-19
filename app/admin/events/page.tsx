@@ -1,7 +1,5 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -9,7 +7,7 @@ import { SectionHeader } from '@/components/SectionHeader'
 import { EmptyState } from '@/components/EmptyState'
 import { Calendar, Plus, Search, Users, Clock, MapPin, Eye, Edit, Trash2 } from 'lucide-react'
 import Link from 'next/link'
-import { formatDate, formatTime, timeago } from '@/lib/dates'
+import { formatDate, formatTime } from '@/lib/dates'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,20 +22,6 @@ interface AdminEventsPageProps {
 }
 
 export default async function AdminEventsPage({ searchParams }: AdminEventsPageProps) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user?.id || !['admin', 'editor'].includes(session.user.role)) {
-    return (
-      <div className="container-main section-padding">
-        <EmptyState
-          icon={<Calendar />}
-          title="Access Denied"
-          description="You need admin or editor permissions to manage events."
-        />
-      </div>
-    )
-  }
-
   const search = searchParams.search
   const scope = searchParams.scope || 'upcoming'
   const visibility = searchParams.visibility
@@ -47,7 +31,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
 
   // Build where clause
   const where: any = {}
-  
+
   if (search) {
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },
@@ -70,56 +54,45 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
     where.locationType = locationType
   }
 
-  // Get events
-  const events = await prisma.event.findMany({
-    where,
-    include: {
-      host: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        }
-      },
-      _count: {
-        select: {
-          rsvps: {
-            where: { status: 'going' }
+  // Parallelize ALL queries
+  const [events, totalCount, upcomingCount, pastCount, totalRSVPs] = await Promise.all([
+    prisma.event.findMany({
+      where,
+      include: {
+        host: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
+        _count: {
+          select: {
+            rsvps: {
+              where: { status: 'going' }
+            }
           }
         }
-      }
-    },
-    orderBy: scope === 'upcoming' ? { startAt: 'asc' } : { startAt: 'desc' },
-    take: limit + 1,
-    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
-  })
+      },
+      orderBy: scope === 'upcoming' ? { startAt: 'asc' as const } : { startAt: 'desc' as const },
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    }),
+    prisma.event.count(),
+    prisma.event.count({ where: { startAt: { gte: new Date() } } }),
+    prisma.event.count({ where: { startAt: { lt: new Date() } } }),
+    prisma.rSVP.count(),
+  ])
 
   const hasNextPage = events.length > limit
   const items = hasNextPage ? events.slice(0, -1) : events
   const nextCursor = hasNextPage ? items[items.length - 1]?.id : null
 
-  // Get stats
-  const stats = await prisma.event.aggregate({
-    _count: {
-      id: true
-    }
-  })
-
-  const upcomingCount = await prisma.event.count({
-    where: { startAt: { gte: new Date() } }
-  })
-
-  const pastCount = await prisma.event.count({
-    where: { startAt: { lt: new Date() } }
-  })
-
-  const totalRSVPs = await prisma.rSVP.count()
-
   return (
     <div className="container-main section-padding">
       {/* Header */}
-      <SectionHeader 
-        title="Event Management" 
+      <SectionHeader
+        title="Event Management"
         subtitle="Create and manage live sessions and events"
       />
 
@@ -130,7 +103,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--text-strong)]">Total Events</p>
-                <p className="text-2xl font-bold text-[var(--text-strong)]">{stats._count.id}</p>
+                <p className="text-2xl font-bold text-[var(--text-strong)]">{totalCount}</p>
               </div>
               <Calendar className="h-8 w-8 text-[var(--text-muted)]" />
             </div>
@@ -268,13 +241,13 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                         <Badge variant="outline">Past</Badge>
                       )}
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-[var(--text-strong)]">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         <span>{formatDate(event.startAt, 'PPP')} at {formatTime(event.startAt)}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
                         <span>
@@ -282,7 +255,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                           {event.locationText && ` • ${event.locationText}`}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
                         <span>{event._count.rsvps} RSVPs</span>
@@ -311,11 +284,9 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                         <Users className="h-4 w-4" />
                       </Link>
                     </Button>
-                    {['admin', 'editor'].includes(session.user.role) && (
-                      <Button variant="outline" size="sm" className="text-[#c03030] hover:text-[#c03030]">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button variant="outline" size="sm" className="text-[#c03030] hover:text-[#c03030]">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>

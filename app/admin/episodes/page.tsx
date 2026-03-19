@@ -1,41 +1,49 @@
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { SectionHeader } from '@/components/SectionHeader'
 import { EmptyState } from '@/components/EmptyState'
-import { Video, Plus, Eye, Edit, Trash2, Clock } from 'lucide-react'
+import { Video, Plus, Eye, Edit, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 
-export const dynamic = 'force-dynamic'
-
-export default async function AdminEpisodesPage() {
-  const [episodes, totalCount, publishedCount, draftCount] = await Promise.all([
-    prisma.episode.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        category: true,
-        publishedAt: true,
-        publishAt: true,
-        createdAt: true,
-        videoUrl: true,
-        _count: {
-          select: {
-            bookmarks: true,
+const getEpisodesData = unstable_cache(
+  async () => {
+    const [episodes, totalCount, publishedCount, draftCount] = await Promise.all([
+      prisma.episode.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          excerpt: true,
+          category: true,
+          publishedAt: true,
+          publishAt: true,
+          createdAt: true,
+          videoUrl: true,
+          _count: {
+            select: {
+              bookmarks: true,
+            },
           },
         },
-      },
-      take: 50,
-    }),
-    prisma.episode.count(),
-    prisma.episode.count({ where: { publishedAt: { lte: new Date() } } }),
-    prisma.episode.count({ where: { publishedAt: { gt: new Date() } } }),
-  ])
+        take: 50,
+      }),
+      prisma.episode.count(),
+      prisma.episode.count({ where: { publishedAt: { lte: new Date() } } }),
+      prisma.episode.count({ where: { publishedAt: { gt: new Date() } } }),
+    ])
+    return { episodes, totalCount, publishedCount, draftCount }
+  },
+  ['admin-episodes'],
+  { revalidate: 60, tags: ['admin-episodes'] }
+)
+
+export default async function AdminEpisodesPage() {
+  const { episodes, totalCount, publishedCount, draftCount } = await getEpisodesData()
 
   return (
     <div className="container-main section-padding">

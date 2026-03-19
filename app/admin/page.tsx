@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { getAuditLogs } from '@/lib/audit'
 import { formatDate } from '@/lib/dates'
@@ -15,48 +16,57 @@ import {
   Megaphone,
 } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+const getDashboardData = unstable_cache(
+  async () => {
+    const [
+      userCount,
+      activeUsers,
+      activeSubscriptions,
+      trialMembers,
+      recentUsers,
+      recentAudits,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({
+        where: {
+          lastLoginAt: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          },
+        },
+      }),
+      prisma.membership.count({
+        where: {
+          status: 'active',
+          OR: [
+            { currentPeriodEnd: null },
+            { currentPeriodEnd: { gte: new Date() } },
+          ],
+        },
+      }),
+      prisma.membership.count({ where: { status: 'trial' } }),
+      prisma.user.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          role: true,
+        },
+      }),
+      getAuditLogs(10),
+    ])
+
+    return { userCount, activeUsers, activeSubscriptions, trialMembers, recentUsers, recentAudits }
+  },
+  ['admin-dashboard'],
+  { revalidate: 60, tags: ['admin-dashboard'] }
+)
 
 export default async function AdminPage() {
-  const [
-    userCount,
-    activeUsers,
-    activeSubscriptions,
-    trialMembers,
-    recentUsers,
-    recentAudits,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({
-      where: {
-        lastLoginAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        },
-      },
-    }),
-    prisma.membership.count({
-      where: {
-        status: 'active',
-        OR: [
-          { currentPeriodEnd: null },
-          { currentPeriodEnd: { gte: new Date() } },
-        ],
-      },
-    }),
-    prisma.membership.count({ where: { status: 'trial' } }),
-    prisma.user.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        role: true,
-      },
-    }),
-    getAuditLogs(10),
-  ])
+  const { userCount, activeUsers, activeSubscriptions, trialMembers, recentUsers, recentAudits } =
+    await getDashboardData()
 
   return (
     <div className="space-y-8">

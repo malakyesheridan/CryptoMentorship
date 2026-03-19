@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,45 +9,47 @@ import { TrendingUp, Plus, BarChart3, Activity, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 
-export const dynamic = 'force-dynamic'
+const getSignalsData = unstable_cache(
+  async () => {
+    const [signals, totalCount, todayCount, byTier] = await Promise.all([
+      prisma.portfolioDailySignal.findMany({
+        orderBy: { publishedAt: 'desc' },
+        select: {
+          id: true,
+          tier: true,
+          category: true,
+          riskProfile: true,
+          signal: true,
+          executiveSummary: true,
+          publishedAt: true,
+          createdAt: true,
+          createdBy: {
+            select: { name: true },
+          },
+        },
+        take: 50,
+      }),
+      prisma.portfolioDailySignal.count(),
+      prisma.portfolioDailySignal.count({
+        where: {
+          publishedAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
+      }),
+      prisma.portfolioDailySignal.groupBy({
+        by: ['tier'],
+        _count: { tier: true },
+      }),
+    ])
+    return { signals, totalCount, todayCount, byTier }
+  },
+  ['admin-signals'],
+  { revalidate: 60, tags: ['admin-signals'] }
+)
 
 export default async function AdminSignalsPage() {
-  const [
-    signals,
-    totalCount,
-    todayCount,
-    byTier,
-  ] = await Promise.all([
-    prisma.portfolioDailySignal.findMany({
-      orderBy: { publishedAt: 'desc' },
-      select: {
-        id: true,
-        tier: true,
-        category: true,
-        riskProfile: true,
-        signal: true,
-        executiveSummary: true,
-        publishedAt: true,
-        createdAt: true,
-        createdBy: {
-          select: { name: true },
-        },
-      },
-      take: 50,
-    }),
-    prisma.portfolioDailySignal.count(),
-    prisma.portfolioDailySignal.count({
-      where: {
-        publishedAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        },
-      },
-    }),
-    prisma.portfolioDailySignal.groupBy({
-      by: ['tier'],
-      _count: { tier: true },
-    }),
-  ])
+  const { signals, totalCount, todayCount, byTier } = await getSignalsData()
 
   const tierBreakdown = {
     T1: byTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T1')?._count.tier || 0,

@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import Link from 'next/link'
 import { getAllStrategies } from '@/lib/strategies/queries'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -5,10 +6,14 @@ import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/dates'
 import { TrendingUp } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+const getCachedStrategies = unstable_cache(
+  async () => getAllStrategies(),
+  ['admin-strategies'],
+  { revalidate: 60, tags: ['admin-strategies'] }
+)
 
 export default async function AdminStrategiesPage() {
-  const strategies = await getAllStrategies()
+  const strategies = await getCachedStrategies()
 
   return (
     <div className="space-y-8">
