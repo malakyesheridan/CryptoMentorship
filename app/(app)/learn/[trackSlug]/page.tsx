@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { requireAuth } from '@/lib/access'
-import { prisma } from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -16,41 +15,52 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 import { normalizePdfResources } from '@/lib/learning/resources'
+import { unstable_cache } from 'next/cache'
+import { prisma } from '@/lib/prisma'
 
 export const revalidate = 300
 
 async function getTrack(slug: string) {
-  const track = await prisma.track.findUnique({
-    where: { slug },
-    include: {
-      sections: {
+  const getCached = unstable_cache(
+    async () => {
+      const { prisma } = await import('@/lib/prisma')
+      return await prisma.track.findUnique({
+        where: { slug },
         include: {
+          sections: {
+            include: {
+              lessons: {
+                where: { publishedAt: { not: null } },
+                orderBy: { order: 'asc' },
+                select: {
+                  id: true,
+                  slug: true,
+                  title: true,
+                  durationMin: true,
+                  quiz: { select: { id: true } },
+                },
+              },
+            },
+            orderBy: { order: 'asc' },
+          },
           lessons: {
             where: { publishedAt: { not: null } },
             orderBy: { order: 'asc' },
-            include: {
-              quiz: true,
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              durationMin: true,
+              quiz: { select: { id: true } },
             },
           },
         },
-        orderBy: { order: 'asc' },
-      },
-      lessons: {
-        where: { publishedAt: { not: null } },
-        orderBy: { order: 'asc' },
-        include: {
-          quiz: true,
-        },
-      },
-      _count: {
-        select: {
-          enrollments: true,
-        },
-      },
+      })
     },
-  })
-
-  return track
+    [`track-detail-${slug}`],
+    { revalidate: 300, tags: [`track-${slug}`] }
+  )
+  return getCached()
 }
 
 async function getUserEnrollment(userId: string, trackId: string) {
@@ -87,8 +97,11 @@ export default async function TrackPage({
 }: {
   params: { trackSlug: string }
 }) {
-  const user = await requireAuth()
-  const track = await getTrack(params.trackSlug)
+  // Parallelize auth + track fetch (track doesn't need user ID)
+  const [user, track] = await Promise.all([
+    requireAuth(),
+    getTrack(params.trackSlug),
+  ])
 
   if (!track || !track.publishedAt) {
     redirect('/learning')
@@ -330,7 +343,7 @@ function LessonRow({
   isCompleted,
   isNext,
 }: {
-  lesson: { id: string; slug: string; title: string; durationMin: number | null; quiz: any }
+  lesson: { id: string; slug: string; title: string; durationMin: number | null; quiz: { id: string } | null }
   trackSlug: string
   isCompleted: boolean
   isNext: boolean

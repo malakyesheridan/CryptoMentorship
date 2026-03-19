@@ -23,8 +23,6 @@ import Link from 'next/link'
 import { QuizComponent } from '@/components/learning/QuizComponent'
 import { formatRelativeTime } from '@/lib/cohorts'
 import { completeLesson, submitQuiz, enrollInTrack } from '@/lib/actions/learning'
-import { RealTimeProgress } from '@/components/learning/RealTimeProgress'
-import { useSession } from 'next-auth/react'
 import VideoPlayer from '@/components/VideoPlayer'
 import { LessonMDXRenderer } from '@/components/learning/LessonMDXRenderer'
 import { toast } from 'sonner'
@@ -95,7 +93,7 @@ export function LessonPlayer({
   userProgress,
   accessInfo
 }: LessonPlayerProps) {
-  const { data: session } = useSession()
+
   const router = useRouter()
   const [isCompleting, setIsCompleting] = useState(false)
   
@@ -305,16 +303,6 @@ export function LessonPlayer({
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Real-Time Progress */}
-            {session?.user?.id && (
-              <RealTimeProgress 
-                userId={session.user.id}
-                trackId={track.id}
-                showAchievements={true}
-                showStreak={true}
-              />
-            )}
-            
             <Card className="sticky top-8" data-tour="lesson-sidebar">
               <CardHeader>
                 <div className="flex items-center gap-2 mb-4">

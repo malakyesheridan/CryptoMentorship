@@ -39,7 +39,13 @@
       "Bash(grep -n \"prisma\\\\|Promise.all\\\\|Promise.allSettled\" /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/page.tsx)",
       "Bash(grep -n \"prisma\\\\|Promise.all\\\\|Promise.allSettled\" /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/lesson/[lessonSlug]/page.tsx)",
       "Bash(/tmp/analysis.txt:*)",
-      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); lines=[d[''''text''''] for d in data[-20:]]; print\\(''''\\\\n''''.join\\(lines\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); lines=[d[''''text''''] for d in data[-20:]]; print\\(''''\\\\n''''.join\\(lines\\)\\)\")",
+      "Bash(grep -r track-progress /c/Users/kyesh/CryptoMentorship/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -n \"revalidate\\\\|draftMode\\\\|dynamicParams\" /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/page.tsx /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/lesson/[lessonSlug]/page.tsx)",
+      "Bash(wc -l /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/page.tsx /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/lesson/[lessonSlug]/page.tsx)",
+      "Bash(ls C:/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/)",
+      "Bash(ls C:/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/lesson/[lessonSlug]/)",
+      "Bash(ls C:/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learning/)"
     ]
   }
 }
