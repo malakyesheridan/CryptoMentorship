@@ -18,22 +18,6 @@ async function getUserEnrollments(userId: string) {
               id: true,
               slug: true,
               title: true,
-              summary: true,
-              coverUrl: true,
-              minTier: true,
-              publishedAt: true,
-              sections: {
-                include: {
-                  lessons: {
-                    where: { publishedAt: { not: null } },
-                    select: { id: true, durationMin: true },
-                  },
-                },
-              },
-              lessons: {
-                where: { publishedAt: { not: null } },
-                select: { id: true, durationMin: true },
-              },
             },
           },
         },
@@ -56,21 +40,16 @@ async function getUserProgress(userId: string) {
       return await prisma.lessonProgress.findMany({
         where: { userId },
         take: 100,
-        include: {
-          lesson: {
-            select: {
-              id: true,
-              trackId: true,
-              title: true,
-              durationMin: true,
-            },
-          },
+        select: {
+          id: true,
+          completedAt: true,
+          lessonId: true,
         },
         orderBy: { completedAt: 'desc' },
       })
     },
     [`user-progress-${userId}`],
-    { revalidate: 300 }
+    { revalidate: 300, tags: [`user-progress-${userId}`] }
   )
   return getCachedProgress()
 }
@@ -116,6 +95,9 @@ async function getAllCourses(userId: string) {
             summary: true,
             coverUrl: true,
             publishedAt: true,
+            _count: {
+              select: { lessons: { where: { publishedAt: { not: null } } } }
+            },
           },
           orderBy: { publishedAt: 'desc' }
         }),
@@ -137,6 +119,7 @@ async function getAllCourses(userId: string) {
         description: track.summary,
         coverUrl: track.coverUrl,
         publishedAt: track.publishedAt,
+        totalLessons: track._count.lessons,
         isEnrolled: enrollmentMap.has(track.id),
         progressPct: enrollmentMap.get(track.id) || 0
       }))

@@ -137,11 +137,9 @@ export async function completeLesson(input: unknown) {
   // Check for achievements
   await checkAndBroadcastAchievements(user.id, lesson.track.id, trackProgress)
 
-  // Revalidate paths to ensure UI updates
-  revalidatePath('/learning')
-  revalidatePath('/learning')
-  revalidatePath(`/learn/${lesson.track.slug}`)
-  revalidatePath(`/learn/${lesson.track.slug}/lesson`)
+  // Targeted cache invalidation (avoid cascading full page rebuilds)
+  revalidateTag(`user-enrollments-${user.id}`)
+  revalidateTag(`user-progress-${user.id}`)
 
   return { 
     ok: true, 
@@ -272,13 +270,8 @@ export async function updateTrack(trackId: string, input: unknown) {
     }
   })
 
-  // Immediately revalidate all learning-related caches
-  revalidatePath('/learning')
-  revalidatePath(`/learn/${track.slug}`)
-  revalidatePath(`/learn/${existingTrack.slug}`) // Also revalidate old slug if changed
-  revalidateTag('learning-resources')
-  revalidateTag(`all-courses-*`) // Invalidate all user caches for courses
-  revalidateTag(`user-enrollments-*`) // Invalidate all user enrollment caches
+  // Targeted cache invalidation
+  revalidateTag('all-courses-*')
 
   return { 
     success: true, 
@@ -317,10 +310,7 @@ export async function deleteTrack(trackId: string) {
   // Immediately revalidate all learning-related caches
   // Use try-catch to prevent revalidation errors from breaking the delete operation
   try {
-    revalidatePath('/learning')
-    revalidatePath(`/learn/${trackSlug}`)
-    revalidateTag('learning-resources')
-    // Note: revalidateTag with wildcards doesn't work in Next.js
+    revalidateTag('all-courses-*')
     // We'll revalidate paths instead which is more reliable
   } catch (error) {
     // Log but don't fail the delete operation if revalidation fails

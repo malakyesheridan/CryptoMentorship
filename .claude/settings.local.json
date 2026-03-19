@@ -35,7 +35,11 @@
       "Bash(find /c/Users/kyesh/CryptoMentorship/app/api/admin/learn -type f -name *.ts)",
       "Bash(find /c/Users/kyesh/CryptoMentorship -path *lib/actions/learning* -o -path *api/progress* -o -path *api/learning*)",
       "Bash(ls -la /c/Users/kyesh/CryptoMentorship/app/admin/learn/tracks/[trackId]/)",
-      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(x[''''text''''][:200]\\) for x in data[-20:]]\")"
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(x[''''text''''][:200]\\) for x in data[-20:]]\")",
+      "Bash(grep -n \"prisma\\\\|Promise.all\\\\|Promise.allSettled\" /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/page.tsx)",
+      "Bash(grep -n \"prisma\\\\|Promise.all\\\\|Promise.allSettled\" /c/Users/kyesh/CryptoMentorship/app/\\\\\\(app\\\\\\)/learn/[trackSlug]/lesson/[lessonSlug]/page.tsx)",
+      "Bash(/tmp/analysis.txt:*)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); lines=[d[''''text''''] for d in data[-20:]]; print\\(''''\\\\n''''.join\\(lines\\)\\)\")"
     ]
   }
 }

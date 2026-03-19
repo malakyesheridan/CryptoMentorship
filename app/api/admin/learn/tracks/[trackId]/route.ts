@@ -5,8 +5,6 @@ import { prisma } from '@/lib/prisma'
 import { withDbRetry } from '@/lib/db/retry'
 import { toPrismaRouteErrorResponse } from '@/lib/db/errors'
 
-export const dynamic = 'force-dynamic'
-
 // GET /api/admin/learn/tracks/[trackId] - Get track details
 export async function GET(
   _request: NextRequest,
@@ -51,7 +49,11 @@ export async function GET(
       return NextResponse.json({ error: 'Track not found' }, { status: 404 })
     }
 
-    return NextResponse.json(track)
+    return NextResponse.json(track, {
+      headers: {
+        'Cache-Control': 'private, s-maxage=60, stale-while-revalidate=120',
+      },
+    })
   } catch (error) {
     return toPrismaRouteErrorResponse(error, 'Failed to fetch track.')
   }

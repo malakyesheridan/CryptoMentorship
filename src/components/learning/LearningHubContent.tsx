@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ContentGrid } from './ContentGrid'
 import { TrackEditModal } from './TrackEditModal'
@@ -32,6 +32,7 @@ export function LearningHubContent({
   userTier
 }: LearningHubContentProps) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
@@ -60,8 +61,6 @@ export function LearningHubContent({
     const enrollmentMap = new Map(enrollments.map((e: any) => [e.trackId, e]))
     return allCourses.map((course: any) => {
       const enrollment = enrollmentMap.get(course.id)
-      const totalLessons = enrollment?.track?.lessons?.length || 0
-      const totalDuration = enrollment?.track?.lessons?.reduce((sum: number, lesson: any) => sum + (lesson.durationMin || 0), 0) || 0
       return {
         id: course.id,
         slug: course.slug,
@@ -72,8 +71,7 @@ export function LearningHubContent({
         locked: false,
         progressPct: enrollment ? enrollment.progressPct : undefined,
         publishedAt: course.publishedAt,
-        durationMin: enrollment ? totalDuration : undefined,
-        totalLessons: enrollment ? totalLessons : undefined,
+        totalLessons: course.totalLessons,
       }
     })
   }, [allCourses, enrollments])
@@ -214,17 +212,13 @@ export function LearningHubContent({
           onOpenChange={(open) => {
             if (!open) setEditingTrackId(null)
           }}
-          onTrackUpdated={async () => {
+          onTrackUpdated={() => {
             setEditingTrackId(null)
-            router.refresh()
+            startTransition(() => router.refresh())
           }}
           onTrackDeleted={() => {
             setEditingTrackId(null)
-            requestAnimationFrame(() => {
-              setTimeout(() => {
-                router.refresh()
-              }, 100)
-            })
+            startTransition(() => router.refresh())
           }}
         />
       )}
@@ -237,10 +231,10 @@ export function LearningHubContent({
           tracks={allTracks.map(t => ({ id: t.id, title: t.title }))}
           onTrackCreated={() => {
             setUploadModalOpen(false)
-            router.refresh()
+            startTransition(() => router.refresh())
           }}
           onVideoUploaded={() => {
-            router.refresh()
+            startTransition(() => router.refresh())
           }}
         />
       )}

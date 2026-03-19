@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useTransition } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,6 +66,9 @@ export function TrackEditModal({
   const [coverUploadProgress, setCoverUploadProgress] = useState(0)
   const [trackData, setTrackData] = useState<any>(null)
   const [shouldRefreshTrack, setShouldRefreshTrack] = useState(false)
+
+  // Track whether mutations happened so we can refresh on close
+  const [hasChanges, setHasChanges] = useState(false)
 
   // Inline modal state
   const [sectionModalOpen, setSectionModalOpen] = useState(false)
@@ -163,8 +166,8 @@ export function TrackEditModal({
 
       if (result.success) {
         toast.success('Track updated successfully')
-        await fetchTrack()
-        onTrackUpdated?.()
+        setHasChanges(true)
+        fetchTrack()
       }
     } catch (error: any) {
       console.error('Error updating track:', error)
@@ -207,6 +210,7 @@ export function TrackEditModal({
     try {
       await deleteSection(sectionId)
       toast.success('Section deleted')
+      setHasChanges(true)
       fetchTrack()
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete section')
@@ -220,6 +224,7 @@ export function TrackEditModal({
     try {
       await deleteLesson(lessonId)
       toast.success('Lesson deleted')
+      setHasChanges(true)
       fetchTrack()
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete lesson')
@@ -227,10 +232,12 @@ export function TrackEditModal({
   }
 
   const handleSectionSuccess = () => {
+    setHasChanges(true)
     fetchTrack()
   }
 
   const handleLessonSuccess = () => {
+    setHasChanges(true)
     fetchTrack()
   }
 
@@ -243,9 +250,17 @@ export function TrackEditModal({
 
   const trackSections = trackData?.sections?.map((s: any) => ({ id: s.id, title: s.title })) || []
 
+  const handleClose = (isOpen: boolean) => {
+    onOpenChange(isOpen)
+    if (!isOpen && hasChanges) {
+      setHasChanges(false)
+      onTrackUpdated?.()
+    }
+  }
+
   if (isLoadingTrack) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-4xl">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-[#2a2520] rounded w-1/4"></div>
@@ -258,7 +273,7 @@ export function TrackEditModal({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-5xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Edit Track: {formData.title || 'Loading...'}</DialogTitle>
