@@ -8,81 +8,42 @@ import {
   Users,
   Activity,
   CreditCard,
-  BarChart3,
   Clock,
-  BookOpen,
-  GraduationCap,
-  CheckCircle2,
+  Video,
   TrendingUp,
-  LineChart
+  Calendar,
+  Megaphone,
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
-  // Get all counts and data in parallel
   const [
     userCount,
-    recentAudits,
-    // Subscription stats
-    membershipStats,
+    activeUsers,
     activeSubscriptions,
-    // Learning stats
-    trackCount,
-    enrollmentCount,
-    completedEnrollments,
-    certificateCount,
-    // Portfolio stats - Daily Signals
-    totalDailySignals,
-    todayDailySignals,
-    dailySignalsByTier,
-    // Strategy stats
-    strategyCount,
-    activeStrategyCount,
-    // User activity
+    trialMembers,
     recentUsers,
-    activeUsers
+    recentAudits,
   ] = await Promise.all([
     prisma.user.count(),
-    getAuditLogs(10),
-    // Subscription stats
-    prisma.membership.groupBy({
-      by: ['status'],
-      _count: { status: true }
+    prisma.user.count({
+      where: {
+        lastLoginAt: {
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        },
+      },
     }),
     prisma.membership.count({
       where: {
         status: 'active',
         OR: [
           { currentPeriodEnd: null },
-          { currentPeriodEnd: { gte: new Date() } }
-        ]
-      }
+          { currentPeriodEnd: { gte: new Date() } },
+        ],
+      },
     }),
-    // Learning stats
-    prisma.track.count(),
-    prisma.enrollment.count(),
-    prisma.enrollment.count({
-      where: { completedAt: { not: null } }
-    }),
-    prisma.certificate.count(),
-    // Portfolio stats - Daily Signals
-    prisma.portfolioDailySignal.count(),
-    prisma.portfolioDailySignal.count({
-      where: {
-        publishedAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0))
-        }
-      }
-    }),
-    prisma.portfolioDailySignal.groupBy({
-      by: ['tier'],
-      _count: { tier: true }
-    }),
-    // Strategy stats
-    prisma.strategy.count(),
-    prisma.strategy.count({ where: { isActive: true } }),
-    // User activity
+    prisma.membership.count({ where: { status: 'trial' } }),
     prisma.user.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -91,243 +52,107 @@ export default async function AdminPage() {
         name: true,
         email: true,
         createdAt: true,
-        role: true
-      }
+        role: true,
+      },
     }),
-    prisma.user.count({
-      where: {
-        lastLoginAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-        }
-      }
-    })
+    getAuditLogs(10),
   ])
-
-  const membershipByTier = await prisma.membership.groupBy({
-    by: ['tier'],
-    _count: { tier: true }
-  })
-
-  // Calculate subscription breakdown
-  const subscriptionBreakdown = {
-    active: membershipStats.find((s: { status: string; _count: { status: number } }) => s.status === 'active')?._count.status || 0,
-    trial: membershipStats.find((s: { status: string; _count: { status: number } }) => s.status === 'trial')?._count.status || 0,
-    paused: membershipStats.find((s: { status: string; _count: { status: number } }) => s.status === 'paused')?._count.status || 0
-  }
-
-  // Calculate daily signals breakdown
-  const dailySignalsBreakdown = {
-    T1: dailySignalsByTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T1')?._count.tier || 0,
-    T2: dailySignalsByTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T2')?._count.tier || 0,
-    T3: dailySignalsByTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T3')?._count.tier || 0,
-  }
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="heading-hero text-4xl mb-2">
-            <span>Admin</span> <span className="gold">Dashboard</span>
-          </h1>
-          <p className="subhead">Manage users and system settings</p>
-        </div>
+      <div>
+        <h1 className="heading-hero text-4xl mb-2">
+          <span>Admin</span> <span className="gold">Dashboard</span>
+        </h1>
+        <p className="subhead">Overview and quick actions</p>
       </div>
 
-      {/* Stats Grid - Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Key KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="heading-2 text-sm">Users</CardTitle>
+            <CardTitle className="heading-2 text-sm">Total Users</CardTitle>
             <Users className="h-4 w-4 text-[var(--text-muted)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{userCount}</div>
-            <p className="text-xs text-[var(--text-muted)]">
-              {activeUsers} active (30d)
-            </p>
+            <p className="text-xs text-[var(--text-muted)]">{activeUsers} active (30d)</p>
+          </CardContent>
+        </Card>
+
+        <Card className="card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="heading-2 text-sm">Active Subscriptions</CardTitle>
+            <CreditCard className="h-4 w-4 text-[var(--text-muted)]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeSubscriptions}</div>
+            <p className="text-xs text-[var(--text-muted)]">Paid members</p>
+          </CardContent>
+        </Card>
+
+        <Card className="card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="heading-2 text-sm">Trial Members</CardTitle>
+            <Clock className="h-4 w-4 text-[var(--text-muted)]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{trialMembers}</div>
+            <p className="text-xs text-[var(--text-muted)]">On trial period</p>
+          </CardContent>
+        </Card>
+
+        <Card className="card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="heading-2 text-sm">Conversion</CardTitle>
+            <Activity className="h-4 w-4 text-[var(--text-muted)]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {trialMembers + activeSubscriptions > 0
+                ? Math.round((activeSubscriptions / (trialMembers + activeSubscriptions)) * 100)
+                : 0}%
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">Trial → Paid</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Stats Grid - Subscriptions */}
+      {/* Quick Actions */}
       <div>
-        <h2 className="heading-2 text-xl mb-4">Subscriptions & Memberships</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Active Subscriptions</CardTitle>
-              <CreditCard className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeSubscriptions}</div>
-              <p className="text-xs text-[var(--text-muted)]">
-                {subscriptionBreakdown.active} active, {subscriptionBreakdown.trial} trial
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Membership Tiers</CardTitle>
-              <BarChart3 className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {membershipByTier.reduce((sum, t) => sum + t._count.tier, 0)}
-              </div>
-              <p className="text-xs text-[var(--text-muted)]">
-                {membershipByTier.map(t => `${t._count.tier} ${t.tier}`).join(', ')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Trial Members</CardTitle>
-              <Clock className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{subscriptionBreakdown.trial}</div>
-              <p className="text-xs text-[var(--text-muted)]">On trial period</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Paused</CardTitle>
-              <Activity className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{subscriptionBreakdown.paused}</div>
-              <p className="text-xs text-[var(--text-muted)]">Paused subscriptions</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Stats Grid - Learning */}
-      <div>
-        <h2 className="heading-2 text-xl mb-4">Learning Hub</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Learning Tracks</CardTitle>
-              <BookOpen className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{trackCount}</div>
-              <p className="text-xs text-[var(--text-muted)]">Total tracks</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Enrollments</CardTitle>
-              <GraduationCap className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{enrollmentCount}</div>
-              <p className="text-xs text-[var(--text-muted)]">
-                {completedEnrollments} completed
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Certificates</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{certificateCount}</div>
-              <p className="text-xs text-[var(--text-muted)]">Issued certificates</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Completion Rate</CardTitle>
-              <BarChart3 className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {enrollmentCount > 0 
-                  ? Math.round((completedEnrollments / enrollmentCount) * 100)
-                  : 0}%
-              </div>
-              <p className="text-xs text-[var(--text-muted)]">Track completion</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Stats Grid - Portfolio Daily Signals */}
-      <div>
-        <h2 className="heading-2 text-xl mb-4">Portfolio Daily Signals</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Total Signals</CardTitle>
-              <TrendingUp className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalDailySignals}</div>
-              <p className="text-xs text-[var(--text-muted)]">All-time daily signals</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Today&apos;s Signals</CardTitle>
-              <Activity className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todayDailySignals}</div>
-              <p className="text-xs text-[var(--text-muted)]">Published today</p>
-            </CardContent>
-          </Card>
-
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">By Tier</CardTitle>
-              <BarChart3 className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dailySignalsBreakdown.T1 + dailySignalsBreakdown.T2 + dailySignalsBreakdown.T3}
-              </div>
-              <p className="text-xs text-[var(--text-muted)]">
-                T1: {dailySignalsBreakdown.T1}, T2: {dailySignalsBreakdown.T2}, T3: {dailySignalsBreakdown.T3}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Strategies */}
-      <div>
-        <h2 className="heading-2 text-xl mb-4">Strategies</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="heading-2 text-sm">Total Strategies</CardTitle>
-              <LineChart className="h-4 w-4 text-[var(--text-muted)]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{strategyCount}</div>
-              <p className="text-xs text-[var(--text-muted)]">
-                {activeStrategyCount} active
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="mt-4">
+        <h2 className="heading-2 text-lg mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
-            href="/admin/strategies"
-            className="text-sm text-[var(--gold-400)] hover:underline font-medium"
+            href="/admin/episodes/new"
+            className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-gold-500/40 transition-colors"
           >
-            Manage Strategies →
+            <Video className="h-6 w-6 text-[var(--text-muted)] group-hover:text-gold-400 transition-colors" />
+            <span className="text-sm font-medium text-[var(--text-strong)]">Create Episode</span>
+          </Link>
+
+          <Link
+            href="/admin/signals/new"
+            className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-gold-500/40 transition-colors"
+          >
+            <TrendingUp className="h-6 w-6 text-[var(--text-muted)] group-hover:text-gold-400 transition-colors" />
+            <span className="text-sm font-medium text-[var(--text-strong)]">New Signal</span>
+          </Link>
+
+          <Link
+            href="/admin/events/new"
+            className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-gold-500/40 transition-colors"
+          >
+            <Calendar className="h-6 w-6 text-[var(--text-muted)] group-hover:text-gold-400 transition-colors" />
+            <span className="text-sm font-medium text-[var(--text-strong)]">Create Event</span>
+          </Link>
+
+          <Link
+            href="/admin/announce"
+            className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-gold-500/40 transition-colors"
+          >
+            <Megaphone className="h-6 w-6 text-[var(--text-muted)] group-hover:text-gold-400 transition-colors" />
+            <span className="text-sm font-medium text-[var(--text-strong)]">Announcement</span>
           </Link>
         </div>
       </div>
@@ -365,7 +190,7 @@ export default async function AdminPage() {
               )}
             </div>
             <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
-              <Link 
+              <Link
                 href="/admin/users"
                 className="text-sm text-[var(--text-strong)] hover:text-[var(--text-strong)] font-medium"
               >
