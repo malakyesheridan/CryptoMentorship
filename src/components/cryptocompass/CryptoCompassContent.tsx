@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CryptoCompassTabs, CategoryType } from './CryptoCompassTabs'
 import Link from 'next/link'
-import { Play, Lock, Calendar, Clock, ArrowRight, Search } from 'lucide-react'
+import { Play, Calendar, Clock, Search, ArrowUpDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { formatDate } from '@/lib/dates'
 
 interface Episode {
@@ -16,7 +17,7 @@ interface Episode {
   summary: string | null
   coverUrl: string | null
   duration: number | null
-  publishedAt: string // ISO date string
+  publishedAt: string
   locked: boolean
   category: string
 }
@@ -32,134 +33,114 @@ interface CryptoCompassContentProps {
   }
   currentCategory?: string
   currentSearch?: string
+  currentSort?: string
+  categoryCounts?: {
+    all: number
+    dailyUpdate: number
+    analysis: number
+    breakdown: number
+  }
 }
 
-export function CryptoCompassContent({ 
-  episodes, 
-  userRole, 
-  userTier, 
-  pagination, 
-  currentCategory, 
-  currentSearch 
+export function CryptoCompassContent({
+  episodes,
+  userRole,
+  userTier,
+  pagination,
+  currentCategory,
+  currentSearch,
+  currentSort,
+  categoryCounts,
 }: CryptoCompassContentProps) {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState<CategoryType>((currentCategory as CategoryType) || 'all')
   const [searchQuery, setSearchQuery] = useState(currentSearch || '')
-  
-  // Sync with URL params on mount
-  useEffect(() => {
-    if (currentCategory) {
-      setActiveCategory(currentCategory as CategoryType)
-    }
-    if (currentSearch) {
-      setSearchQuery(currentSearch)
-    }
-  }, [currentCategory, currentSearch])
+  const [sort, setSort] = useState(currentSort || 'newest')
+  const debounceRef = useRef<NodeJS.Timeout>()
 
-  // Episodes are already filtered by server, but we can do client-side filtering for instant feedback
-  // Server handles the actual pagination and filtering
-  const filteredEpisodes = useMemo(() => {
-    // Server has already filtered, but we maintain client-side filtering for consistency
-    // This ensures UI matches what server sent
-    return episodes
-  }, [episodes])
-  
+  useEffect(() => {
+    if (currentCategory) setActiveCategory(currentCategory as CategoryType)
+    if (currentSearch) setSearchQuery(currentSearch)
+    if (currentSort) setSort(currentSort)
+  }, [currentCategory, currentSearch, currentSort])
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  const pushParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(window.location.search)
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null || value === '') {
+        params.delete(key)
+      } else {
+        params.set(key, value)
+      }
+    }
+    params.delete('cursor')
+    router.push(`?${params.toString()}`, { scroll: false })
+  }
+
   const handleCategoryChange = (category: CategoryType) => {
     setActiveCategory(category)
-    const newSearchParams = new URLSearchParams(window.location.search)
-    if (category === 'all') {
-      newSearchParams.delete('category')
-    } else {
-      newSearchParams.set('category', category)
-    }
-    newSearchParams.delete('cursor') // Reset cursor on category change
-    router.push(`?${newSearchParams.toString()}`, { scroll: false })
+    pushParams({ category: category === 'all' ? null : category })
   }
-  
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-    const newSearchParams = new URLSearchParams(window.location.search)
-    if (e.target.value.trim() === '') {
-      newSearchParams.delete('search')
-    } else {
-      newSearchParams.set('search', e.target.value)
-    }
-    newSearchParams.delete('cursor') // Reset cursor on search change
-    router.push(`?${newSearchParams.toString()}`, { scroll: false })
+    const value = e.target.value
+    setSearchQuery(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      pushParams({ search: value.trim() || null })
+    }, 400)
   }
-  
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value
+    setSort(value)
+    pushParams({ sort: value === 'newest' ? null : value })
+  }
+
   const handleLoadMore = () => {
     if (pagination?.hasNextPage && pagination.nextCursor) {
-      const newSearchParams = new URLSearchParams(window.location.search)
-      newSearchParams.set('cursor', pagination.nextCursor)
-      newSearchParams.set('limit', String(pagination.limit))
-      router.push(`?${newSearchParams.toString()}`, { scroll: false })
+      const params = new URLSearchParams(window.location.search)
+      params.set('cursor', pagination.nextCursor)
+      params.set('limit', String(pagination.limit))
+      router.push(`?${params.toString()}`, { scroll: false })
     }
   }
 
-  // Calculate counts for each category
-  const categoryCounts = useMemo(() => {
-    return {
-      all: episodes.length,
-      dailyUpdate: episodes.filter(ep => ep.category === 'daily-update').length,
-      analysis: episodes.filter(ep => ep.category === 'analysis').length,
-      breakdown: episodes.filter(ep => ep.category === 'breakdown').length,
-    }
-  }, [episodes])
-
-  // Get category badge color
   const getCategoryBadgeColor = (category: string) => {
     switch (category) {
-      case 'daily-update':
-        return 'bg-blue-500 text-white border-blue-600'
-      case 'analysis':
-        return 'bg-purple-500 text-white border-purple-600'
-      case 'breakdown':
-        return 'bg-green-500 text-white border-green-600'
-      default:
-        return 'bg-[var(--border-subtle)] text-white border-[var(--border-subtle)]'
+      case 'daily-update': return 'bg-blue-600 text-white border-blue-700'
+      case 'analysis': return 'bg-purple-600 text-white border-purple-700'
+      case 'breakdown': return 'bg-green-600 text-white border-green-700'
+      default: return 'bg-[var(--border-subtle)] text-white border-[var(--border-subtle)]'
     }
   }
 
-  // Get category display name
   const getCategoryName = (category: string) => {
     switch (category) {
-      case 'daily-update':
-        return 'Weekly Update'
-      case 'analysis':
-        return 'Analysis'
-      case 'breakdown':
-        return 'Breakdown'
-      default:
-        return category
+      case 'daily-update': return 'Weekly Update'
+      case 'analysis': return 'Analysis'
+      case 'breakdown': return 'Breakdown'
+      default: return category
     }
   }
 
-  // Format duration helper
   const formatDuration = (seconds: number | null): string => {
-    if (!seconds) return 'Duration unknown'
-    
-    if (seconds < 60) {
-      return `${seconds}s`
-    }
-    
+    if (!seconds) return ''
+    if (seconds < 60) return `${seconds}s`
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
-    
     if (minutes < 60) {
-      if (remainingSeconds === 0) {
-        return `${minutes} min`
-      }
-      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+      return remainingSeconds === 0 ? `${minutes} min` : `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
     }
-    
     const hours = Math.floor(minutes / 60)
     const remainingMinutes = minutes % 60
-    
-    if (remainingMinutes === 0) {
-      return `${hours} hr`
-    }
-    return `${hours} hr ${remainingMinutes} min`
+    return remainingMinutes === 0 ? `${hours} hr` : `${hours} hr ${remainingMinutes} min`
   }
 
   const getCoverUrl = (url: string | null) => {
@@ -168,134 +149,124 @@ export function CryptoCompassContent({
   }
 
   return (
-    <div className="space-y-8">
-      {/* Tab Navigation */}
-      <CryptoCompassTabs
-        activeCategory={activeCategory}
-        onCategoryChange={handleCategoryChange}
-        counts={categoryCounts}
-      />
-
-      {/* Search Bar */}
-      <div className="relative mb-8">
-        <Input
-          type="text"
-          placeholder="Search episodes..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--border-subtle)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent shadow-sm"
+    <div className="space-y-6">
+      {/* Filters Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <CryptoCompassTabs
+          activeCategory={activeCategory}
+          onCategoryChange={handleCategoryChange}
+          counts={categoryCounts}
         />
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+      </div>
+
+      {/* Search + Sort Row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Input
+            type="text"
+            placeholder="Search episodes..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-[var(--border-subtle)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
+          <Select
+            value={sort}
+            onChange={handleSortChange}
+            className="bg-[var(--bg-panel)] border-[var(--border-subtle)] text-[var(--text-strong)] text-sm w-[140px]"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="longest">Longest</option>
+            <option value="shortest">Shortest</option>
+          </Select>
+        </div>
       </div>
 
       {/* Episodes Grid */}
-      {filteredEpisodes.length > 0 ? (
-        <div className="space-y-6">
-          {filteredEpisodes.map((episode) => {
-            // All episodes are accessible to everyone
-            const canView = true
-
-            return (
-              <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>
-                <article className="group relative bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 border border-[var(--border-subtle)] overflow-hidden">
-                  <div className="flex flex-col lg:flex-row">
-                    {/* Episode Image */}
-                  <div className="lg:w-80 lg:h-48 h-64 relative overflow-hidden bg-gradient-to-br from-[#1a1815] to-[#2a2520]">
-                      {getCoverUrl(episode.coverUrl) ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={getCoverUrl(episode.coverUrl) as string}
-                            alt={episode.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--gold-400)] to-[var(--gold-600)]">
-                          <Play className="w-16 h-16 text-white opacity-80" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                      <div className="absolute top-4 left-4">
-                        <Badge className={`text-sm px-3 py-1 font-medium ${getCategoryBadgeColor(episode.category)}`}>
-                          {getCategoryName(episode.category)}
-                        </Badge>
-                      </div>
-                      <div className="absolute top-4 right-4">
-                        {!canView && (
-                          <Badge className="bg-red-500 text-white border-red-600 text-sm px-3 py-1 font-medium">
-                            <Lock className="w-3 h-3 mr-1" />
-                            Locked
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="absolute bottom-4 left-4">
-                        <div className="w-12 h-12 bg-[var(--bg-panel)]/90 rounded-full flex items-center justify-center group-hover:bg-[var(--bg-panel)] transition-colors shadow-lg">
-                          <Play className="w-6 h-6 text-[var(--text-strong)] ml-1" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Episode Content */}
-                    <div className="flex-1 p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-3 group-hover:text-yellow-600 transition-colors line-clamp-2">
-                            {episode.title}
-                          </h3>
-                          <p className="text-[var(--text-strong)] leading-relaxed mb-4 line-clamp-3">
-                            {episode.summary || 'No description available.'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>{formatDate(new Date(episode.publishedAt), 'MMM d, yyyy')}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            <span>{episode.duration ? formatDuration(episode.duration) : 'Duration unknown'}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-[var(--text-muted)] group-hover:text-yellow-500 transition-colors">
-                          <span className="font-medium">Watch</span>
-                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Access Control Overlay */}
-                  {!canView && (
-                    <div className="absolute inset-0 bg-[var(--bg-panel)]/80 backdrop-blur-sm flex items-center justify-center">
-                      <div className="text-center">
-                        <Lock className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
-                        <p className="text-sm font-medium text-[var(--text-strong)]">Member Only</p>
-                        <p className="text-xs text-[var(--text-muted)]">Upgrade to access</p>
-                      </div>
+      {episodes.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {episodes.map((episode) => (
+            <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>
+              <article className="group bg-[var(--bg-panel)] rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-[var(--border-subtle)] overflow-hidden hover:-translate-y-0.5">
+                {/* Thumbnail */}
+                <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-[#1a1815] to-[#2a2520]">
+                  {getCoverUrl(episode.coverUrl) ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={getCoverUrl(episode.coverUrl) as string}
+                      alt={episode.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Play className="w-12 h-12 text-white/40" />
                     </div>
                   )}
-                  
-                  {/* Hover effect overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                </article>
-              </Link>
-            )
-          })}
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  {/* Category badge */}
+                  <div className="absolute top-3 left-3">
+                    <Badge className={`text-xs px-2 py-0.5 font-medium ${getCategoryBadgeColor(episode.category)}`}>
+                      {getCategoryName(episode.category)}
+                    </Badge>
+                  </div>
+                  {/* Duration badge */}
+                  {episode.duration && (
+                    <div className="absolute bottom-3 right-3">
+                      <span className="bg-black/80 text-white text-xs px-2 py-1 rounded font-medium">
+                        {formatDuration(episode.duration)}
+                      </span>
+                    </div>
+                  )}
+                  {/* Play icon on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <Play className="w-6 h-6 text-white ml-0.5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-[var(--text-strong)] mb-2 line-clamp-2 group-hover:text-yellow-500 transition-colors leading-snug">
+                    {episode.title}
+                  </h3>
+                  {episode.summary && (
+                    <p className="text-sm text-[var(--text-muted)] mb-3 line-clamp-2 leading-relaxed">
+                      {episode.summary}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatDate(new Date(episode.publishedAt), 'MMM d, yyyy')}</span>
+                    </div>
+                    {episode.duration && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatDuration(episode.duration)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </article>
+            </Link>
+          ))}
         </div>
       ) : (
-        <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg border border-[var(--border-subtle)] p-12 text-center">
-          <div className="w-24 h-24 bg-gradient-to-br from-[#1a1815] to-[#2a2520] rounded-full flex items-center justify-center mx-auto mb-6">
-            <Play className="w-12 h-12 text-[var(--text-muted)]" />
+        <div className="bg-[var(--bg-panel)] rounded-xl shadow-md border border-[var(--border-subtle)] p-12 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#1a1815] to-[#2a2520] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Play className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">
+          <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">
             {searchQuery ? 'No episodes found' : 'No Episodes Yet'}
           </h3>
-          <p className="text-[var(--text-strong)]">
-            {searchQuery 
+          <p className="text-sm text-[var(--text-muted)]">
+            {searchQuery
               ? `No episodes match "${searchQuery}". Try a different search.`
               : activeCategory !== 'all'
               ? `No ${getCategoryName(activeCategory)} episodes available yet.`
@@ -306,11 +277,9 @@ export function CryptoCompassContent({
             <button
               onClick={() => {
                 setSearchQuery('')
-                const newSearchParams = new URLSearchParams(window.location.search)
-                newSearchParams.delete('search')
-                router.push(`?${newSearchParams.toString()}`, { scroll: false })
+                pushParams({ search: null })
               }}
-              className="mt-4 text-yellow-600 hover:text-yellow-700 font-medium"
+              className="mt-3 text-yellow-500 hover:text-yellow-400 font-medium text-sm"
             >
               Clear search
             </button>
@@ -318,12 +287,13 @@ export function CryptoCompassContent({
         </div>
       )}
 
-      {/* Load More Button */}
+      {/* Load More */}
       {pagination?.hasNextPage && (
-        <div className="text-center mt-8">
+        <div className="text-center pt-4">
           <Button
             onClick={handleLoadMore}
-            className="bg-[#2a2520] text-[var(--text-strong)] px-6 py-3 rounded-lg font-medium hover:bg-[#2a2520] transition-colors"
+            variant="outline"
+            className="border-[var(--border-subtle)] text-[var(--text-strong)] px-8"
           >
             Load More Episodes
           </Button>
@@ -332,4 +302,3 @@ export function CryptoCompassContent({
     </div>
   )
 }
-

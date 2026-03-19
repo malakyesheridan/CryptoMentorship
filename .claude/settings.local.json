@@ -24,7 +24,11 @@
       "Bash(npx prisma:*)",
       "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
       "Bash(ls -la \"/c/Users/kyesh/CryptoMentorship/app/\\(app\\)/account/\")",
-      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(find /c/Users/kyesh/CryptoMentorship -type f -name *crypto* -o -name *compass* -o -name *episode*)",
+      "Bash(find /c/Users/kyesh/CryptoMentorship/src/components -type f -name *Episode* -o -name *Admin*)",
+      "Bash(grep -r \"iframe\\\\|<video\\\\|videojs\\\\|react-player\\\\|plyr\" /c/Users/kyesh/CryptoMentorship/src/components --include=*.tsx --include=*.ts)",
+      "Bash(find /c/Users/kyesh/CryptoMentorship/src/lib -type f -name *content* -o -name *prisma*)"
     ]
   }
 }

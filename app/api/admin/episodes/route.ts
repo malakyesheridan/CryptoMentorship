@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
           body: null,
           coverUrl: coverUrl || null,
           duration: duration,
-          category: 'daily-update',
+          category: body.category || 'daily-update',
           locked: false, // Always false - everyone can view
           publishedAt: new Date(),
         }

@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import { getEpisodeById } from '@/lib/content'
 import { requireActiveSubscription } from '@/lib/access'
 import { formatContentDate } from '@/lib/content'
-import { formatDate } from '@/lib/dates'
 import { renderMDX } from '@/lib/mdx'
 import { prisma } from '@/lib/prisma'
 import { MDXRenderer } from '@/components/MDXRenderer'
@@ -10,11 +9,10 @@ import { BookmarkButton } from '@/components/BookmarkButton'
 import { ViewTracker } from '@/components/ViewTracker'
 import VideoPlayer from '@/components/VideoPlayer'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, Lock, Eye, Play, Edit } from 'lucide-react'
+import { ArrowLeft, Calendar, Play, Edit, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
-// Revalidate every 5 minutes - episodes are published content
 export const revalidate = 300
 
 interface EpisodePageProps {
@@ -26,95 +24,92 @@ interface EpisodePageProps {
 export default async function EpisodePage({ params }: EpisodePageProps) {
   const user = await requireActiveSubscription()
   const episode = await getEpisodeById(params.slug)
-  
+
   if (!episode) {
     notFound()
   }
 
   const userRole = user?.role || 'guest'
-  
-  // All episodes are accessible to everyone
-  const canView = true
   const coverUrl =
     episode.coverUrl && (episode.coverUrl.startsWith('http') || episode.coverUrl.startsWith('/'))
       ? episode.coverUrl
       : null
 
-  // Debug: Log video URL for troubleshooting
-  if (episode.videoUrl) {
-    console.log('[Episode Page] Video URL:', episode.videoUrl.substring(0, 100))
-  } else {
-    console.warn('[Episode Page] No video URL found for episode:', episode.slug)
-  }
-  
-  // Process MDX content
-  const mdx = episode.body ? await renderMDX(episode.slug, episode.body) : null
-  const existingBookmark = user?.id
-    ? await prisma.bookmark.findFirst({
-        where: { userId: user.id, episodeId: episode.id },
-        select: { id: true },
-      })
-    : null
+  // Process MDX content and fetch related data in parallel
+  const [mdx, existingBookmark, prevEpisode, nextEpisode] = await Promise.all([
+    episode.body ? renderMDX(episode.slug, episode.body) : null,
+    user?.id
+      ? prisma.bookmark.findFirst({
+          where: { userId: user.id, episodeId: episode.id },
+          select: { id: true },
+        })
+      : null,
+    prisma.episode.findFirst({
+      where: { publishedAt: { lt: episode.publishedAt } },
+      orderBy: { publishedAt: 'desc' },
+      select: { slug: true, title: true },
+    }),
+    prisma.episode.findFirst({
+      where: { publishedAt: { gt: episode.publishedAt } },
+      orderBy: { publishedAt: 'asc' },
+      select: { slug: true, title: true },
+    }),
+  ])
 
   return (
     <div className="container-main section-padding">
       {/* Track view event */}
       <ViewTracker entityType="episode" entityId={episode.id} disabled={!user?.id} />
-      
+
       {/* Breadcrumbs */}
-      <nav className="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-8">
+      <nav className="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-6">
         <Link href="/" className="hover:text-[var(--text-strong)]">Home</Link>
         <span>/</span>
         <Link href="/crypto-compass" className="hover:text-[var(--text-strong)]">Crypto Compass</Link>
         <span>/</span>
-        <span className="text-[var(--text-strong)]">{episode.title}</span>
+        <span className="text-[var(--text-strong)] truncate max-w-[200px]">{episode.title}</span>
       </nav>
 
       {/* Back button and Edit */}
       <div className="flex items-center justify-between mb-6">
         <Link href="/crypto-compass">
-          <Button variant="ghost">
+          <Button variant="ghost" size="sm">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Crypto Compass
+            Back
           </Button>
         </Link>
         {['admin', 'editor'].includes(userRole) && (
           <Link href={`/admin/episodes/${episode.id}/edit`}>
             <Button variant="outline" size="sm" className="flex items-center gap-2">
               <Edit className="h-4 w-4" />
-              Edit Episode
+              Edit
             </Button>
           </Link>
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto">
+      {/* Video Player — wider container */}
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <Badge className="badge-preview">
                 <Play className="w-3 h-3 mr-1" />
                 Episode
               </Badge>
-              {episode.locked && (
-                <Badge className={canView ? "badge-preview" : "badge-locked"}>
-                  {canView ? <Eye className="w-3 h-3 mr-1" /> : <Lock className="w-3 h-3 mr-1" />}
-                  {canView ? 'Preview' : 'Locked'}
-                </Badge>
-              )}
             </div>
-              <BookmarkButton
-                episodeId={episode.id}
-                size="md"
-                isBookmarked={Boolean(existingBookmark)}
-              />
+            <BookmarkButton
+              episodeId={episode.id}
+              size="md"
+              isBookmarked={Boolean(existingBookmark)}
+            />
           </div>
-          
-          <h1 className="heading-hero text-4xl sm:text-5xl mb-4">
+
+          <h1 className="heading-hero text-3xl sm:text-4xl lg:text-5xl mb-3">
             {episode.title}
           </h1>
-          
+
           <div className="flex items-center gap-4 text-[var(--text-muted)] text-sm">
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
@@ -123,31 +118,22 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
           </div>
         </div>
 
-        {/* Video Player */}
-        {episode.videoUrl && canView ? (
+        {/* Video */}
+        {episode.videoUrl && (
           <div className="mb-8">
             <VideoPlayer
               src={episode.videoUrl}
               title={episode.title}
               poster={coverUrl || undefined}
-              className="w-full"
+              className="w-full aspect-video"
             />
           </div>
-        ) : episode.videoUrl && !canView ? (
-          <div className="mb-8">
-            <div className="aspect-video bg-slate-900 rounded-2xl overflow-hidden relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <Lock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">Premium Episode</p>
-                  <p className="text-sm opacity-75">Upgrade to watch this episode</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
+        )}
+      </div>
 
-        {/* Cover Image */}
+      {/* Content — narrower container for readability */}
+      <div className="max-w-4xl mx-auto">
+        {/* Cover Image (if no video) */}
         {!episode.videoUrl && coverUrl && (
           <div className="mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -159,35 +145,57 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
           </div>
         )}
 
-        {/* Content */}
-        {canView ? (
-          <div>
-            {episode.excerpt && (
-              <div className="text-lg text-[var(--text-muted)] mb-6">
-                {episode.excerpt}
-              </div>
-            )}
-            {mdx ? (
-              <MDXRenderer source={mdx.source} slug={episode.slug} hash={mdx.hash} />
-            ) : (
-              <div className="text-[var(--text-muted)] italic">
-                Episode notes coming soon...
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="card p-8 text-center">
-            <Lock className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Premium Episode</h3>
-            <p className="text-[var(--text-muted)] mb-6">{episode.excerpt}</p>
-            <div className="space-y-4">
-              <p className="text-sm text-[var(--text-muted)]">
-                This episode requires premium membership
-              </p>
-              <Button asChild className="btn-gold">
-                <Link href="/apply">Apply for Access</Link>
-              </Button>
+        {/* Episode Content */}
+        <div>
+          {episode.excerpt && (
+            <div className="text-lg text-[var(--text-muted)] mb-6">
+              {episode.excerpt}
             </div>
+          )}
+          {mdx ? (
+            <MDXRenderer source={mdx.source} slug={episode.slug} hash={mdx.hash} />
+          ) : (
+            <div className="text-[var(--text-muted)] italic">
+              Episode notes coming soon...
+            </div>
+          )}
+        </div>
+
+        {/* Previous / Next Navigation */}
+        {(prevEpisode || nextEpisode) && (
+          <div className="flex items-stretch gap-4 mt-12 pt-8 border-t border-[var(--border-subtle)]">
+            {prevEpisode ? (
+              <Link
+                href={`/crypto-compass/${prevEpisode.slug}`}
+                className="flex-1 group bg-[var(--bg-panel)] rounded-xl p-4 border border-[var(--border-subtle)] hover:border-yellow-500/30 transition-colors"
+              >
+                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-1">
+                  <ChevronLeft className="w-3 h-3" />
+                  Previous Episode
+                </div>
+                <p className="text-sm font-medium text-[var(--text-strong)] group-hover:text-yellow-500 transition-colors line-clamp-1">
+                  {prevEpisode.title}
+                </p>
+              </Link>
+            ) : (
+              <div className="flex-1" />
+            )}
+            {nextEpisode ? (
+              <Link
+                href={`/crypto-compass/${nextEpisode.slug}`}
+                className="flex-1 group bg-[var(--bg-panel)] rounded-xl p-4 border border-[var(--border-subtle)] hover:border-yellow-500/30 transition-colors text-right"
+              >
+                <div className="flex items-center justify-end gap-2 text-xs text-[var(--text-muted)] mb-1">
+                  Next Episode
+                  <ChevronRight className="w-3 h-3" />
+                </div>
+                <p className="text-sm font-medium text-[var(--text-strong)] group-hover:text-yellow-500 transition-colors line-clamp-1">
+                  {nextEpisode.title}
+                </p>
+              </Link>
+            ) : (
+              <div className="flex-1" />
+            )}
           </div>
         )}
       </div>
@@ -197,7 +205,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
 
 export async function generateMetadata({ params }: EpisodePageProps) {
   const episode = await getEpisodeById(params.slug)
-  
+
   if (!episode) {
     return {
       title: 'Episode Not Found'
