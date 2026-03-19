@@ -17,8 +17,6 @@ import {
   Video,
   Calendar,
   Megaphone,
-  TrendingUp,
-  BarChart3,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -59,14 +57,6 @@ const navigation: NavItem[] = [
     ],
   },
   { name: 'Learning', href: '/admin/learn/tracks', icon: BookOpen },
-  {
-    label: 'Signals & Strategies',
-    icon: TrendingUp,
-    children: [
-      { name: 'Daily Signals', href: '/admin/signals', icon: BarChart3 },
-      { name: 'Strategies', href: '/admin/strategies', icon: TrendingUp },
-    ],
-  },
   { name: 'Users', href: '/admin/users', icon: Users },
   {
     label: 'Affiliates & Payouts',

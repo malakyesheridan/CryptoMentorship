@@ -142,11 +142,11 @@ export default async function AdminPage() {
           </Link>
 
           <Link
-            href="/admin/signals/new"
+            href="/portfolio"
             className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-gold-500/40 transition-colors"
           >
             <TrendingUp className="h-6 w-6 text-[var(--text-muted)] group-hover:text-gold-400 transition-colors" />
-            <span className="text-sm font-medium text-[var(--text-strong)]">New Signal</span>
+            <span className="text-sm font-medium text-[var(--text-strong)]">New Update</span>
           </Link>
 
           <Link
