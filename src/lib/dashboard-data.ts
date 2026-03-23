@@ -55,29 +55,28 @@ export const getLatestDailyUpdate = unstable_cache(
   { revalidate: 60, tags: ['dashboard-daily-update'] }
 )
 
-export const getRecentEpisodes = unstable_cache(
+export const getLatestSignals = unstable_cache(
   async () => {
-    const episodes = await prisma.episode.findMany({
+    const signals = await prisma.portfolioDailySignal.findMany({
       where: {
         publishedAt: { lte: new Date() },
       },
       select: {
-        slug: true,
-        title: true,
-        excerpt: true,
-        coverUrl: true,
-        duration: true,
-        publishedAt: true,
+        id: true,
+        tier: true,
         category: true,
-        locked: true,
+        riskProfile: true,
+        signal: true,
+        executiveSummary: true,
+        publishedAt: true,
       },
       orderBy: { publishedAt: 'desc' },
       take: 4,
     })
-    return episodes
+    return signals
   },
-  ['dashboard-episodes'],
-  { revalidate: 60, tags: ['dashboard-episodes'] }
+  ['dashboard-signals'],
+  { revalidate: 60, tags: ['dashboard-signals'] }
 )
 
 export const getAnnouncements = unstable_cache(

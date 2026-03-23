@@ -7,6 +7,7 @@ import { sendSignalEmails } from '@/lib/jobs/send-signal-emails'
 import { runPortfolioRoiJob } from '@/lib/jobs/portfolio-roi'
 import { logger } from '@/lib/logger'
 import { formatAllocationSignal, parseAllocationAssets, portfolioAssets } from '@/lib/portfolio-assets'
+import { revalidateDashboardSignals } from '@/lib/revalidate'
 import { deriveAllocations } from '@/lib/portfolio/deriveAllocations'
 import { buildPortfolioKey } from '@/lib/portfolio/portfolio-key'
 
@@ -373,6 +374,8 @@ export async function POST(request: NextRequest) {
       tier: signal.tier,
       category: signal.category,
     })
+
+    await revalidateDashboardSignals()
 
     return NextResponse.json(signal, { status: 201 })
   } catch (error) {

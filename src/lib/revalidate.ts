@@ -9,7 +9,10 @@ export async function revalidateDashboard(userId: string) {
 
 export async function revalidateDashboardEpisodes() {
   revalidateTag('dashboard-daily-update')
-  revalidateTag('dashboard-episodes')
+}
+
+export async function revalidateDashboardSignals() {
+  revalidateTag('dashboard-signals')
 }
 
 export async function revalidateDashboardAnnouncements() {
