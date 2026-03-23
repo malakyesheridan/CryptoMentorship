@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleError } from '@/lib/errors'
 import { triggerNotificationEventDispatch } from '@/lib/events/dispatch'
+import { revalidateDashboardEpisodes } from '@/lib/revalidate'
 import { z } from 'zod'
 
 // Configure route for large file uploads
@@ -119,6 +120,8 @@ export async function POST(request: NextRequest) {
     
     console.log('[Episode Creation] Transaction completed successfully')
 
+    await revalidateDashboardEpisodes()
+
     if (episode.publishedAt && episode.sendNotifications) {
       triggerNotificationEventDispatch({
         source: 'admin-episodes-post',
@@ -198,7 +201,9 @@ export async function PUT(request: NextRequest) {
       
       return updated
     })
-    
+
+    await revalidateDashboardEpisodes()
+
     return NextResponse.json(episode)
   } catch (error) {
     return handleError(error)
@@ -278,6 +283,8 @@ export async function DELETE(request: NextRequest) {
       deleteBlobIfNeeded(existingEpisode.videoUrl),
       deleteBlobIfNeeded(existingEpisode.coverUrl)
     ])
+
+    await revalidateDashboardEpisodes()
 
     return NextResponse.json({ success: true, id: deletedEpisode.id })
   } catch (error) {

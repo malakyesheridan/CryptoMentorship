@@ -1,46 +1,104 @@
-import { requireActiveSubscription } from '@/lib/access'
-import TradingViewWrapper from '@/components/signals/TradingViewWrapper'
+import { Suspense } from 'react'
+import { ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
-// Revalidate every 5 minutes - dashboard is mostly static
-export const revalidate = 300
+import { requireAuth } from '@/lib/access'
+import { getUserMembership } from '@/lib/access'
+import {
+  getDashboardUser,
+  getLatestDailyUpdate,
+  getRecentEpisodes,
+  getAnnouncements,
+} from '@/lib/dashboard-data'
+import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader'
+import { DailyUpdateHero } from '@/components/dashboard/DailyUpdateHero'
+import { RecentEpisodesGrid } from '@/components/dashboard/RecentEpisodesGrid'
+import { AnnouncementsList } from '@/components/dashboard/AnnouncementsList'
+import RecentCommunity from '@/components/dashboard/RecentCommunity'
 
 export default async function DashboardPage() {
-  await requireActiveSubscription()
+  const sessionUser = await requireAuth()
+
+  const [
+    { user, membership },
+    dailyUpdate,
+    episodes,
+    announcements,
+  ] = await Promise.all([
+    getDashboardUser(sessionUser.id),
+    getLatestDailyUpdate(),
+    getRecentEpisodes(),
+    getAnnouncements(),
+  ])
+
+  const membershipInfo = await getUserMembership(sessionUser.id)
+  const hasSubscription = membershipInfo?.isActive ?? false
+
+  // Filter out the daily update from episodes to avoid duplicates
+  const filteredEpisodes = dailyUpdate
+    ? episodes.filter((ep) => ep.slug !== dailyUpdate.slug).slice(0, 3)
+    : episodes.slice(0, 3)
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-[#0a0a0a]">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
-      <div className="relative container mx-auto px-4 py-20 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6">
-            <span className="text-white">Welcome to</span>
-            <span className="text-yellow-400 ml-2 sm:ml-4">STEWART & CO</span>
-          </h1>
-          <p className="text-base sm:text-lg lg:text-xl text-slate-300 mb-8 px-4">
-            Premium cryptocurrency research and analysis platform
-          </p>
-        </div>
+      <div className="container mx-auto px-4 py-8 space-y-10">
+        {/* Personalized welcome */}
+        <WelcomeHeader
+          userName={user?.name ?? sessionUser.name ?? null}
+          userImage={user?.image ?? sessionUser.image ?? null}
+          memberSince={user?.createdAt ?? new Date()}
+          tier={membership?.tier ?? null}
+          status={membership?.status ?? null}
+        />
+
+        {/* Daily Update hero */}
+        <DailyUpdateHero
+          episode={dailyUpdate}
+          hasSubscription={hasSubscription}
+        />
+
+        {/* Recent Crypto Compass episodes */}
+        <RecentEpisodesGrid
+          episodes={filteredEpisodes}
+          hasSubscription={hasSubscription}
+        />
+
+        {/* Announcements */}
+        <AnnouncementsList announcements={announcements} />
+
+        {/* Community highlights */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-[var(--text-strong)]">Community</h2>
+            <Link
+              href="/community"
+              className="flex items-center gap-1 text-sm text-gold-400 hover:text-gold-300 transition-colors"
+            >
+              View All
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <Suspense
+            fallback={
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-[#2a2520] rounded-xl p-4 animate-pulse">
+                    <div className="flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-full bg-[#1a1815] shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-24 bg-[#1a1815] rounded" />
+                        <div className="h-4 w-full bg-[#1a1815] rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            }
+          >
+            <RecentCommunity />
+          </Suspense>
+        </section>
       </div>
     </div>
-
-    <div className="container mx-auto px-4 py-12">
-      {/* TradingView Chart */}
-      <div className="mb-12">
-        <TradingViewWrapper />
-      </div>
-
-      {/* Welcome Message */}
-      <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-8 text-center">
-        <h2 className="text-2xl font-bold text-[var(--text-strong)] mb-4">
-          Welcome to your Dashboard!
-        </h2>
-        <p className="text-[var(--text-strong)] mb-6">
-          You&apos;re successfully logged in. Choose from the options above to get started.
-        </p>
-      </div>
-    </div>
-  </div>
   )
 }
