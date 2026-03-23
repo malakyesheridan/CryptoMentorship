@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notifications/preferences'
 
 const createNotificationSchema = z.object({
   title: z.string().min(1).max(200),

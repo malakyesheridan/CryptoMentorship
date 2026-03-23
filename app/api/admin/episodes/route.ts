@@ -20,6 +20,7 @@ const episodeUpdateSchema = z.object({
   coverUrl: z.string().optional(),
   category: z.enum(['daily-update', 'analysis', 'breakdown']).optional(),
   locked: z.boolean().optional(),
+  sendNotifications: z.boolean().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
           duration: duration,
           category: body.category || 'daily-update',
           locked: false, // Always false - everyone can view
+          sendNotifications: body.sendNotifications !== false,
           publishedAt: new Date(),
         }
       })
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
     
     console.log('[Episode Creation] Transaction completed successfully')
 
-    if (episode.publishedAt) {
+    if (episode.publishedAt && episode.sendNotifications) {
       triggerNotificationEventDispatch({
         source: 'admin-episodes-post',
         origin: request.nextUrl.origin,

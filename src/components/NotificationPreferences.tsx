@@ -12,15 +12,75 @@ interface NotificationPreference {
   userId: string
   inAppEnabled: boolean
   emailEnabled: boolean
+  // per-type email
   portfolioUpdatesEmail: boolean
   cryptoCompassEmail: boolean
   learningHubEmail: boolean
   communityMentionsEmail: boolean
   communityRepliesEmail: boolean
+  // per-type in-app
+  portfolioUpdatesInApp: boolean
+  cryptoCompassInApp: boolean
+  learningHubInApp: boolean
+  communityMentionsInApp: boolean
+  communityRepliesInApp: boolean
+  announcementsInApp: boolean
+  eventRemindersInApp: boolean
+  // digest
   digestEnabled: boolean
   digestFreq: 'daily' | 'weekly'
   digestHourUTC: number
 }
+
+type NotificationTypeRow = {
+  label: string
+  description: string
+  inAppKey?: keyof NotificationPreference
+  emailKey?: keyof NotificationPreference
+}
+
+const NOTIFICATION_TYPES: NotificationTypeRow[] = [
+  {
+    label: 'Portfolio Updates',
+    description: 'Daily portfolio updates and signals',
+    inAppKey: 'portfolioUpdatesInApp',
+    emailKey: 'portfolioUpdatesEmail',
+  },
+  {
+    label: 'Crypto Compass',
+    description: 'New episodes and weekly updates',
+    inAppKey: 'cryptoCompassInApp',
+    emailKey: 'cryptoCompassEmail',
+  },
+  {
+    label: 'Learning Hub',
+    description: 'New tracks, lessons, and resources',
+    inAppKey: 'learningHubInApp',
+    emailKey: 'learningHubEmail',
+  },
+  {
+    label: 'Community Mentions',
+    description: 'When someone mentions you in community',
+    inAppKey: 'communityMentionsInApp',
+    emailKey: 'communityMentionsEmail',
+  },
+  {
+    label: 'Community Replies',
+    description: 'When someone replies to your messages',
+    inAppKey: 'communityRepliesInApp',
+    emailKey: 'communityRepliesEmail',
+  },
+  {
+    label: 'Announcements',
+    description: 'Team announcements and updates',
+    inAppKey: 'announcementsInApp',
+  },
+  {
+    label: 'Event Reminders',
+    description: 'Reminders before events you RSVP to',
+    inAppKey: 'eventRemindersInApp',
+  },
+]
 
 export function NotificationPreferences() {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null)
@@ -89,7 +149,8 @@ export function NotificationPreferences() {
     )
   }
 
-  const emailTypesDisabled = !preferences.emailEnabled
+  const inAppDisabled = !preferences.inAppEnabled
+  const emailDisabled = !preferences.emailEnabled
 
   return (
     <div className="space-y-6">
@@ -142,91 +203,59 @@ export function NotificationPreferences() {
             Notification Types
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
-            <div>
-              <Label htmlFor="onPortfolio" className="text-base font-medium">
-                Portfolio Updates
-              </Label>
-              <p className="text-sm text-[var(--text-strong)]">
-                Daily portfolio updates and signals
-              </p>
-            </div>
-            <Switch
-              id="onPortfolio"
-              checked={preferences.portfolioUpdatesEmail}
-              disabled={emailTypesDisabled}
-              onChange={(event) => updatePreference({ portfolioUpdatesEmail: event.target.checked })}
-            />
+        <CardContent className="space-y-1">
+          {/* Column headers */}
+          <div className="flex items-center justify-end gap-6 pb-2 border-b border-[var(--border-subtle)] mb-3">
+            <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider w-12 text-center">In-App</span>
+            <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider w-12 text-center">Email</span>
           </div>
 
-          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
-            <div>
-              <Label htmlFor="onCryptoCompass" className="text-base font-medium">
-                Crypto Compass
-              </Label>
-              <p className="text-sm text-[var(--text-strong)]">
-                New episodes and weekly updates
-              </p>
-            </div>
-            <Switch
-              id="onCryptoCompass"
-              checked={preferences.cryptoCompassEmail}
-              disabled={emailTypesDisabled}
-              onChange={(event) => updatePreference({ cryptoCompassEmail: event.target.checked })}
-            />
-          </div>
+          {NOTIFICATION_TYPES.map((row) => {
+            const hasInApp = !!row.inAppKey
+            const hasEmail = !!row.emailKey
 
-          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
-            <div>
-              <Label htmlFor="onLearning" className="text-base font-medium">
-                Learning Hub
-              </Label>
-              <p className="text-sm text-[var(--text-strong)]">
-                New tracks, lessons, and resources
-              </p>
-            </div>
-            <Switch
-              id="onLearning"
-              checked={preferences.learningHubEmail}
-              disabled={emailTypesDisabled}
-              onChange={(event) => updatePreference({ learningHubEmail: event.target.checked })}
-            />
-          </div>
-
-          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
-            <div>
-              <Label htmlFor="onMention" className="text-base font-medium">
-                Community Mentions
-              </Label>
-              <p className="text-sm text-[var(--text-strong)]">
-                When someone mentions you in community
-              </p>
-            </div>
-            <Switch
-              id="onMention"
-              checked={preferences.communityMentionsEmail}
-              disabled={emailTypesDisabled}
-              onChange={(event) => updatePreference({ communityMentionsEmail: event.target.checked })}
-            />
-          </div>
-
-          <div className={`flex items-center justify-between ${emailTypesDisabled ? 'opacity-60' : ''}`}>
-            <div>
-              <Label htmlFor="onReply" className="text-base font-medium">
-                Community Replies
-              </Label>
-              <p className="text-sm text-[var(--text-strong)]">
-                When someone replies to your messages
-              </p>
-            </div>
-            <Switch
-              id="onReply"
-              checked={preferences.communityRepliesEmail}
-              disabled={emailTypesDisabled}
-              onChange={(event) => updatePreference({ communityRepliesEmail: event.target.checked })}
-            />
-          </div>
+            return (
+              <div
+                key={row.label}
+                className="flex items-center justify-between py-3"
+              >
+                <div className="flex-1 min-w-0 mr-4">
+                  <Label className="text-base font-medium">{row.label}</Label>
+                  <p className="text-sm text-[var(--text-strong)]">{row.description}</p>
+                </div>
+                <div className="flex items-center gap-6 shrink-0">
+                  {/* In-App toggle */}
+                  <div className={`w-12 flex justify-center ${hasInApp && inAppDisabled ? 'opacity-60' : ''}`}>
+                    {hasInApp ? (
+                      <Switch
+                        checked={preferences[row.inAppKey!] as boolean}
+                        disabled={inAppDisabled}
+                        onChange={(event) =>
+                          updatePreference({ [row.inAppKey!]: event.target.checked })
+                        }
+                      />
+                    ) : (
+                      <span className="text-[var(--text-muted)]">&mdash;</span>
+                    )}
+                  </div>
+                  {/* Email toggle */}
+                  <div className={`w-12 flex justify-center ${hasEmail && emailDisabled ? 'opacity-60' : ''}`}>
+                    {hasEmail ? (
+                      <Switch
+                        checked={preferences[row.emailKey!] as boolean}
+                        disabled={emailDisabled}
+                        onChange={(event) =>
+                          updatePreference({ [row.emailKey!]: event.target.checked })
+                        }
+                      />
+                    ) : (
+                      <span className="text-[var(--text-muted)]">&mdash;</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </CardContent>
       </Card>
 

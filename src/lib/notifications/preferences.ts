@@ -1,17 +1,27 @@
 import { prisma } from '@/lib/prisma'
 import type { NotificationPreference, Prisma } from '@prisma/client'
-import type { NotificationEmailType } from './types'
+import type { NotificationEmailType, NotificationInAppType } from './types'
+import { mapEventTypeToNotificationType } from './types'
 
 type MembershipTier = 'T1' | 'T2'
 
 export type ResolvedNotificationPreferences = {
   inAppEnabled: boolean
   emailEnabled: boolean
+  // per-type email
   portfolioUpdatesEmail: boolean
   cryptoCompassEmail: boolean
   learningHubEmail: boolean
   communityMentionsEmail: boolean
   communityRepliesEmail: boolean
+  // per-type in-app
+  portfolioUpdatesInApp: boolean
+  cryptoCompassInApp: boolean
+  learningHubInApp: boolean
+  communityMentionsInApp: boolean
+  communityRepliesInApp: boolean
+  announcementsInApp: boolean
+  eventRemindersInApp: boolean
 }
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: ResolvedNotificationPreferences = {
@@ -22,6 +32,13 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: ResolvedNotificationPreferences =
   learningHubEmail: true,
   communityMentionsEmail: true,
   communityRepliesEmail: true,
+  portfolioUpdatesInApp: true,
+  cryptoCompassInApp: true,
+  learningHubInApp: true,
+  communityMentionsInApp: true,
+  communityRepliesInApp: true,
+  announcementsInApp: true,
+  eventRemindersInApp: true,
 }
 
 export type ResolvedEmailRecipient = {
@@ -45,13 +62,22 @@ function mapPreferenceRow(preference?: Partial<NotificationPreference> | null): 
   }
 
   return {
-    inAppEnabled: preference.inAppEnabled ?? preference.inApp ?? true,
-    emailEnabled: preference.emailEnabled ?? preference.email ?? true,
-    portfolioUpdatesEmail: preference.portfolioUpdatesEmail ?? preference.onSignal ?? true,
-    cryptoCompassEmail: preference.cryptoCompassEmail ?? preference.onEpisode ?? true,
-    learningHubEmail: preference.learningHubEmail ?? preference.onResearch ?? true,
-    communityMentionsEmail: preference.communityMentionsEmail ?? preference.onMention ?? true,
-    communityRepliesEmail: preference.communityRepliesEmail ?? preference.onReply ?? true,
+    inAppEnabled: preference.inAppEnabled ?? true,
+    emailEnabled: preference.emailEnabled ?? true,
+    // per-type email
+    portfolioUpdatesEmail: preference.portfolioUpdatesEmail ?? true,
+    cryptoCompassEmail: preference.cryptoCompassEmail ?? true,
+    learningHubEmail: preference.learningHubEmail ?? true,
+    communityMentionsEmail: preference.communityMentionsEmail ?? true,
+    communityRepliesEmail: preference.communityRepliesEmail ?? true,
+    // per-type in-app
+    portfolioUpdatesInApp: preference.portfolioUpdatesInApp ?? true,
+    cryptoCompassInApp: preference.cryptoCompassInApp ?? true,
+    learningHubInApp: preference.learningHubInApp ?? true,
+    communityMentionsInApp: preference.communityMentionsInApp ?? true,
+    communityRepliesInApp: preference.communityRepliesInApp ?? true,
+    announcementsInApp: preference.announcementsInApp ?? true,
+    eventRemindersInApp: preference.eventRemindersInApp ?? true,
   }
 }
 
@@ -70,7 +96,7 @@ function isMembershipTierEligible(userTier: MembershipTier, requiredTier: Member
   return tierRank(userTier) >= tierRank(requiredTier)
 }
 
-function isEmailTypeEnabled(type: NotificationEmailType, prefs: ResolvedNotificationPreferences): boolean {
+export function isEmailTypeEnabled(type: NotificationEmailType, prefs: ResolvedNotificationPreferences): boolean {
   if (!prefs.emailEnabled) return false
 
   switch (type) {
@@ -89,6 +115,29 @@ function isEmailTypeEnabled(type: NotificationEmailType, prefs: ResolvedNotifica
   }
 }
 
+export function isInAppTypeEnabled(type: NotificationInAppType, prefs: ResolvedNotificationPreferences): boolean {
+  if (!prefs.inAppEnabled) return false
+
+  switch (type) {
+    case 'portfolio_update':
+      return prefs.portfolioUpdatesInApp
+    case 'crypto_compass':
+      return prefs.cryptoCompassInApp
+    case 'learning_hub':
+      return prefs.learningHubInApp
+    case 'community_mention':
+      return prefs.communityMentionsInApp
+    case 'community_reply':
+      return prefs.communityRepliesInApp
+    case 'announcement':
+      return prefs.announcementsInApp
+    case 'event_reminder':
+      return prefs.eventRemindersInApp
+    default:
+      return false
+  }
+}
+
 function activeMembershipWhere(now: Date): Prisma.MembershipWhereInput {
   return {
     status: { in: ['active', 'trial'] },
@@ -99,10 +148,37 @@ function activeMembershipWhere(now: Date): Prisma.MembershipWhereInput {
   }
 }
 
+/**
+ * Resolve a preference row (or null) into a fully-resolved preferences object.
+ * Also exported as `resolveNotificationPreferences` for backward compatibility.
+ */
 export function resolveNotificationPrefs(
   preference?: Partial<NotificationPreference> | null
 ): ResolvedNotificationPreferences {
   return mapPreferenceRow(preference)
+}
+
+/** Alias for `resolveNotificationPrefs` — used by existing call sites. */
+export const resolveNotificationPreferences = resolveNotificationPrefs
+
+/**
+ * Determine whether an in-app notification should be sent for the given event type.
+ * Checks both the master inAppEnabled toggle and the per-type in-app toggle.
+ *
+ * @param eventType — the raw event type string (e.g. 'episode_published', 'mention')
+ * @param preferences — the user's preference row (or null for defaults)
+ */
+export function shouldSendInAppNotification(
+  eventType: string,
+  preferences?: Partial<NotificationPreference> | null
+): boolean {
+  const resolved = mapPreferenceRow(preferences)
+  const canonicalType = mapEventTypeToNotificationType(eventType)
+  if (!canonicalType) {
+    // Unknown type — fall back to master toggle only
+    return resolved.inAppEnabled
+  }
+  return isInAppTypeEnabled(canonicalType, resolved)
 }
 
 export async function getNotificationPrefs(userId: string): Promise<ResolvedNotificationPreferences> {

@@ -1,6 +1,6 @@
 import { prisma } from '../prisma'
 import { emit } from '../events'
-import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notifications/preferences'
 
 export async function sendEventReminders() {
   const now = new Date()
@@ -72,13 +72,13 @@ export async function sendEventReminders() {
       try {
         // Check if user has notifications enabled
         const prefs = resolveNotificationPreferences(rsvp.user.notificationPreference ?? null)
-        if (!shouldSendInAppNotification('announcement', prefs)) continue
+        if (!shouldSendInAppNotification('event_reminder', prefs)) continue
 
         // Check if we already sent a reminder for this event to this user
         const existingNotification = await prisma.notification.findFirst({
           where: {
             userId: rsvp.user.id,
-            type: 'announcement',
+            type: { in: ['announcement', 'event_reminder'] },
             entityType: 'event',
             entityId: event.id,
             title: { contains: 'Event Reminder' },
@@ -93,7 +93,7 @@ export async function sendEventReminders() {
         await prisma.notification.create({
           data: {
             userId: rsvp.user.id,
-            type: 'announcement',
+            type: 'event_reminder',
             entityType: 'event',
             entityId: event.id,
             title: 'Event Reminder: Tomorrow',
@@ -116,13 +116,13 @@ export async function sendEventReminders() {
       try {
         // Check if user has notifications enabled
         const prefs = resolveNotificationPreferences(rsvp.user.notificationPreference ?? null)
-        if (!shouldSendInAppNotification('announcement', prefs)) continue
+        if (!shouldSendInAppNotification('event_reminder', prefs)) continue
 
         // Check if we already sent a reminder for this event to this user
         const existingNotification = await prisma.notification.findFirst({
           where: {
             userId: rsvp.user.id,
-            type: 'announcement',
+            type: { in: ['announcement', 'event_reminder'] },
             entityType: 'event',
             entityId: event.id,
             title: { contains: 'Starting Soon' },
@@ -137,7 +137,7 @@ export async function sendEventReminders() {
         await prisma.notification.create({
           data: {
             userId: rsvp.user.id,
-            type: 'announcement',
+            type: 'event_reminder',
             entityType: 'event',
             entityId: event.id,
             title: 'Event Starting Soon',

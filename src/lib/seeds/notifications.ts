@@ -74,13 +74,20 @@ export async function seedNotifications() {
       update: {},
       create: {
         userId: user.id,
-        inApp: true,
-        email: true, // Email enabled by default for portfolio updates
-        onResearch: true,
-        onEpisode: true,
-        onSignal: true, // Enabled by default for daily portfolio updates
-        onMention: true,
-        onReply: true,
+        inAppEnabled: true,
+        emailEnabled: true,
+        portfolioUpdatesEmail: true,
+        cryptoCompassEmail: true,
+        learningHubEmail: true,
+        communityMentionsEmail: true,
+        communityRepliesEmail: true,
+        portfolioUpdatesInApp: true,
+        cryptoCompassInApp: true,
+        learningHubInApp: true,
+        communityMentionsInApp: true,
+        communityRepliesInApp: true,
+        announcementsInApp: true,
+        eventRemindersInApp: true,
         digestEnabled: false,
         digestFreq: 'weekly',
         digestHourUTC: 9

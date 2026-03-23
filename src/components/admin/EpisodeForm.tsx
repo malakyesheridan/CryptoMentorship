@@ -20,6 +20,7 @@ interface EpisodeFormProps {
     body?: string
     coverUrl?: string
     locked?: boolean
+    sendNotifications?: boolean
   }
 }
 
@@ -36,6 +37,7 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
     body: initialData?.body || '',
     coverUrl: initialData?.coverUrl || '',
     locked: initialData?.locked || false,
+    sendNotifications: initialData?.sendNotifications ?? !initialData?.id,
   })
 
   const generateSlug = (title: string) => {
@@ -210,6 +212,19 @@ export function EpisodeForm({ initialData }: EpisodeFormProps) {
               id="locked"
               checked={formData.locked}
               onChange={(e) => setFormData(prev => ({ ...prev, locked: e.target.checked }))}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[var(--border-subtle)] rounded"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="sendNotifications">Send Notifications</Label>
+              <p className="text-sm text-[var(--text-muted)]">Notify members about this episode via in-app and email</p>
+            </div>
+            <input
+              type="checkbox"
+              id="sendNotifications"
+              checked={formData.sendNotifications}
+              onChange={(e) => setFormData(prev => ({ ...prev, sendNotifications: e.target.checked }))}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[var(--border-subtle)] rounded"
             />
           </div>

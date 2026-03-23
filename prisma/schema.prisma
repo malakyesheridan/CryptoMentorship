@@ -363,9 +363,10 @@ model Episode {
   category    String    @default("daily-update") // daily-update | analysis | breakdown
   publishedAt DateTime  @default(now())
   publishAt   DateTime?
-  locked      Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  locked            Boolean   @default(false)
+  sendNotifications Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   bookmarks Bookmark[]
 
@@ -515,22 +516,23 @@ model ViewEvent {
 
 model NotificationPreference {
   userId        String  @id
-  // channels
-  inApp         Boolean @default(true)
-  email         Boolean @default(true) // Email enabled by default for portfolio updates
+  // channel master toggles
   inAppEnabled  Boolean @default(true)
   emailEnabled  Boolean @default(true)
-  // events
-  onResearch    Boolean @default(true)
-  onEpisode     Boolean @default(true)
-  onSignal      Boolean @default(true) // Enabled by default for daily portfolio updates
-  onMention     Boolean @default(true)
-  onReply       Boolean @default(true)
+  // per-type email preferences
   portfolioUpdatesEmail   Boolean @default(true)
   cryptoCompassEmail      Boolean @default(true)
   learningHubEmail        Boolean @default(true)
   communityMentionsEmail  Boolean @default(true)
   communityRepliesEmail   Boolean @default(true)
+  // per-type in-app preferences
+  portfolioUpdatesInApp   Boolean @default(true)
+  cryptoCompassInApp      Boolean @default(true)
+  learningHubInApp        Boolean @default(true)
+  communityMentionsInApp  Boolean @default(true)
+  communityRepliesInApp   Boolean @default(true)
+  announcementsInApp      Boolean @default(true)
+  eventRemindersInApp     Boolean @default(true)
   // digest
   digestEnabled Boolean @default(false)
   digestFreq    String  @default("weekly") // 'daily' | 'weekly'

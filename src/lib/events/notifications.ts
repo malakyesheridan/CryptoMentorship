@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notifications/preferences'
 import { enqueueEmail } from '@/lib/email/outbox'
 import { buildNotificationDedupeKey, type NotificationEvent } from '@/lib/notifications/types'
 import { resolveEmailRecipientsForEvent } from '@/lib/notifications/preferences'
@@ -590,7 +590,6 @@ async function handleQuestionAnswered(questionId: string, questionAuthorId: stri
 
   const preferences = await prisma.notificationPreference.findUnique({
     where: { userId: questionAuthorId },
-    select: { onReply: true, inApp: true, inAppEnabled: true }
   })
 
   const resolved = resolveNotificationPreferences(preferences ?? null)

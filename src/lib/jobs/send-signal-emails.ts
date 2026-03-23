@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { enqueueEmail } from '@/lib/email/outbox'
-import { resolveEmailRecipientsForEvent } from '@/lib/notifications/preferences'
+import { resolveEmailRecipientsForEvent, shouldSendInAppNotification } from '@/lib/notifications/preferences'
 import { buildNotificationDedupeKey, type NotificationEvent } from '@/lib/notifications/types'
 
 interface DailySignal {
@@ -164,5 +164,29 @@ export async function sendSignalEmails(signalId: string): Promise<void> {
     queuedCount,
     duplicateCount,
     failedCount,
+  })
+
+  // Create in-app notifications for eligible recipients
+  const inAppNotifications = tierMatchedRecipients
+    .filter((recipient) => shouldSendInAppNotification('portfolio_update', recipient.preferences))
+    .map((recipient) => ({
+      userId: recipient.userId,
+      type: 'portfolio_update' as const,
+      entityType: 'signal' as const,
+      entityId: signalId,
+      title: 'Daily Portfolio Update',
+      body: 'A new portfolio signal has been published.',
+      url: portfolioUrl.replace(baseUrl, ''),
+      channel: 'inapp' as const,
+    }))
+
+  if (inAppNotifications.length > 0) {
+    await prisma.notification.createMany({ data: inAppNotifications })
+  }
+
+  logger.info('Portfolio signal in-app notifications created', {
+    signalId,
+    signalTier,
+    inAppCount: inAppNotifications.length,
   })
 }

@@ -213,9 +213,9 @@ async function getUserNotificationPreferences(userId: string) {
   })
 
   return prefs || {
-    onResearch: true,
-    onEpisode: true,
-    onSignal: true
+    learningHubInApp: true,
+    cryptoCompassInApp: true,
+    portfolioUpdatesInApp: true,
   }
 }
 
@@ -426,13 +426,13 @@ function calculateNotificationScore(item: any, notificationPrefs: any): number {
 
   let score = 0
   
-  if (item.kind === 'research' && notificationPrefs.onResearch) {
+  if (item.kind === 'research' && notificationPrefs.learningHubInApp) {
     score += 5
   }
-  if (item.kind === 'episode' && notificationPrefs.onEpisode) {
+  if (item.kind === 'episode' && notificationPrefs.cryptoCompassInApp) {
     score += 5
   }
-  if (item.kind === 'signal' && notificationPrefs.onSignal) {
+  if (item.kind === 'signal' && notificationPrefs.portfolioUpdatesInApp) {
     score += 5
   }
 

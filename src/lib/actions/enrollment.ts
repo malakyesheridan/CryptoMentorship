@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache'
 import { nanoid } from 'nanoid'
 import { validateQuizQuestions, validateQuizAnswers, serializeQuizAnswers, type QuizAnswer } from '@/lib/schemas/learning'
 import { logAudit } from '@/lib/audit'
-import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notifications/preferences'
 
 // Enrollment schemas
 const EnrollTrackSchema = z.object({

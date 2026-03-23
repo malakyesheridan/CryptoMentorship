@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
-import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notification-preferences'
+import { resolveNotificationPreferences, shouldSendInAppNotification } from '@/lib/notifications/preferences'
 
 // Cohort schemas
 const CreateCohortSchema = z.object({
