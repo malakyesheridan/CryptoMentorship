@@ -15,13 +15,14 @@ function authorizeCronRequest(request: NextRequest): CronAuthResult {
   const cronSecret = process.env.VERCEL_CRON_SECRET || process.env.CRON_SECRET
   const internalDispatchSecret = process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production'
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1'
   const authHeader = request.headers.get('authorization') || ''
   const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice('Bearer '.length).trim() : ''
   const querySecret = request.nextUrl.searchParams.get('secret') || ''
   const internalToken = request.headers.get('x-internal-job-token') || ''
   const validInternalToken = !!internalDispatchSecret && internalToken === internalDispatchSecret
 
-  const authorized = validInternalToken || (!!cronSecret
+  const authorized = isVercelCron || validInternalToken || (!!cronSecret
     ? bearerToken === cronSecret || querySecret === cronSecret
     : !isProduction)
 
