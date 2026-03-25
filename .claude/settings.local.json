@@ -50,7 +50,9 @@
       "Bash(find \"/c/Users/kyesh/CryptoMentorship/app/\\(app\\)/crypto-compass\" -type f)",
       "Bash(grep -n \"Promise.all\\\\|await\\\\|getEpisodeById\\\\|findFirst\\\\|findMany\\\\|requireActiveSubscription\" /c/Users/kyesh/CryptoMentorship/app/crypto-compass/[slug]/page.tsx)",
       "Bash(grep -n \"generateMetadata\\\\|getEpisodeById\" /c/Users/kyesh/CryptoMentorship/app/crypto-compass/[slug]/page.tsx)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require\" DIRECT_URL=\"postgresql://neondb_owner:npg_grz4csh0AWRl@ep-green-dawn-a7cqi4ee-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require\" npx prisma db push)",
+      "Bash(echo 'ALTER TABLE \"\"\"\"Episode\"\"\"\" ADD COLUMN IF NOT EXISTS \"\"\"\"sendNotifications\"\"\"\" BOOLEAN NOT NULL DEFAULT true;')"
     ]
   }
 }

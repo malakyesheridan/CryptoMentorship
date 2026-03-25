@@ -66,41 +66,6 @@ function scheduleImmediatePortfolioRoiRecompute(portfolioKey: string, userId?: s
   })
 }
 
-function triggerSignalEmailDispatch(request: NextRequest, signalId: string) {
-  const origin = request.nextUrl.origin
-  const url = new URL('/api/cron/signal-emails', origin)
-  if (process.env.VERCEL_CRON_SECRET) {
-    url.searchParams.set('secret', process.env.VERCEL_CRON_SECRET)
-  }
-  url.searchParams.set('signalId', signalId)
-  const internalDispatchSecret = process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
-  const headers: Record<string, string> = {}
-  if (internalDispatchSecret) {
-    headers['x-internal-job-token'] = internalDispatchSecret
-  }
-
-  void fetch(url.toString(), {
-    method: 'POST',
-    keepalive: true,
-    headers,
-  })
-    .then((response) => {
-      if (!response.ok) {
-        logger.warn('Signal email dispatch returned non-success response; falling back to direct send', {
-          signalId,
-          status: response.status
-        })
-        void sendSignalEmails(signalId)
-      }
-    })
-    .catch((error) => {
-      logger.warn('Failed to trigger signal email dispatch', {
-        signalId,
-        error: error instanceof Error ? error.message : String(error)
-      })
-      void sendSignalEmails(signalId)
-    })
-}
 
 // PUT /api/admin/portfolio-daily-signals/[id] - Update daily update
 export async function PUT(
@@ -292,13 +257,11 @@ export async function PUT(
       })
     }
 
-    logger.info('Triggering signal email dispatch for updated signal', {
-      signalId: updatedSignal.id,
-      tier: updatedSignal.tier,
-      category: updatedSignal.category,
+    await sendSignalEmails(updatedSignal.id).catch((error) => {
+      logger.error('Failed to send signal emails for updated signal', error instanceof Error ? error : new Error(String(error)), {
+        signalId: updatedSignal.id,
+      })
     })
-
-    triggerSignalEmailDispatch(request, updatedSignal.id)
 
     return NextResponse.json(updatedSignal)
   } catch (error) {
