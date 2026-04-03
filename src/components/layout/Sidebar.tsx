@@ -14,7 +14,8 @@ import {
   User,
   GraduationCap,
   Shield,
-  ChevronRight
+  ChevronRight,
+  BookOpen,
 } from 'lucide-react'
 
 type NavigationItem = {
@@ -31,6 +32,7 @@ const navigation: NavigationItem[] = [
   { name: 'Tools', href: '/tools', icon: Wrench },
   { name: 'Learning Hub', href: '/learning', icon: GraduationCap },
   { name: 'Community', href: '/community', icon: MessageSquare },
+  { name: 'Blog', href: '/blog', icon: BookOpen },
   { name: 'Account', href: '/account', icon: User },
 ]
 

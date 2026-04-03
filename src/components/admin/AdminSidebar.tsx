@@ -17,6 +17,7 @@ import {
   Video,
   Calendar,
   Megaphone,
+  PenLine,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -54,6 +55,7 @@ const navigation: NavItem[] = [
       { name: 'Events', href: '/admin/events', icon: Calendar },
       { name: 'Research', href: '/admin/content/new', icon: FileText },
       { name: 'Announcements', href: '/admin/announce', icon: Megaphone },
+      { name: 'Blog Posts', href: '/admin/blog', icon: PenLine },
     ],
   },
   { name: 'Learning', href: '/admin/learn/tracks', icon: BookOpen },

@@ -104,6 +104,7 @@ export default async function middleware(req: NextRequest) {
     '/api/ticker/test',
     '/api/video-serve',
     '/api/events/calendar.ics',
+    '/blog',
     '/robots.txt',
     '/sitemap.xml',
     '/rss.xml',

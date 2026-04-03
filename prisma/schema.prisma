@@ -169,6 +169,7 @@ model User {
   riskOnboardingConfigsUpdated RiskOnboardingConfig[]
   onboardingResponses      UserOnboardingResponse[]
   riskProfileSnapshot      UserRiskProfile?
+  blogPosts              BlogPost[]
 
   @@index([email])
   @@index([role])
@@ -1539,4 +1540,30 @@ model UserModeration {
 
   @@index([userId, isActive])
   @@index([action, isActive])
+}
+
+model BlogPost {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  subtitle      String?
+  body          String    @db.Text
+  htmlBody      String?   @db.Text
+  excerpt       String?
+  category      String    @default("market-update")
+  tags          String[]  @default([])
+  featuredImage String?
+  status        String    @default("draft")
+  authorId      String
+  readingTime   Int?
+  platformOnly  Boolean   @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([category])
+  @@index([authorId])
 }

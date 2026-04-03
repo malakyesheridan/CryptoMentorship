@@ -30,6 +30,7 @@ export type AuditSubjectType =
   | 'track'
   | 'lesson'
   | 'learning_upload'
+  | 'blog_post'
 
 export interface AuditMetadata {
   [key: string]: any
