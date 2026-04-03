@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { handleError } from '@/lib/errors'
-import openai from '@/lib/openai'
+import { getOpenAI } from '@/lib/openai'
 import { z } from 'zod'
 
 const GenerateSchema = z.object({
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join('\n')
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
