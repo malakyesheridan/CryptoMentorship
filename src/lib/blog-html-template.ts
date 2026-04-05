@@ -140,6 +140,62 @@ function markdownToHtml(md: string): string {
   return html.join('\n')
 }
 
+/**
+ * Preprocess custom MDX components (<LinkCard>, <VideoEmbed>) into
+ * inline-styled HTML for PDF export and newsletter distribution.
+ * Run this on the raw markdown body BEFORE passing to wrapInBrandedHTML.
+ */
+export function preprocessCustomComponents(text: string): string {
+  // Convert <LinkCard> to styled HTML card
+  text = text.replace(
+    /<LinkCard\s+url="([^"]*?)"\s+title="([^"]*?)"\s+description="([^"]*?)"\s+image="([^"]*?)"\s+siteName="([^"]*?)"\s*\/>/g,
+    (_, url, title, description, image, siteName) => {
+      const imageBlock = image
+        ? `<div style="width:100%;height:160px;overflow:hidden;background:#141210;"><img src="${image}" alt="${escapeHtml(title)}" style="width:100%;height:100%;object-fit:cover;" /></div>`
+        : ''
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="display:block;margin:16px 0;border-radius:8px;border:1px solid #2a2520;background:#141210;overflow:hidden;text-decoration:none;color:inherit;">
+        ${imageBlock}
+        <div style="padding:16px;">
+          ${siteName ? `<p style="font-size:11px;color:#8a7d6b;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(siteName)}</p>` : ''}
+          <p style="font-size:14px;font-weight:600;color:#f5f0e8;margin:0 0 4px;">${escapeHtml(title)}</p>
+          ${description ? `<p style="font-size:12px;color:#8a7d6b;margin:0;line-height:1.5;">${escapeHtml(description)}</p>` : ''}
+        </div>
+      </a>`
+    }
+  )
+
+  // Convert <VideoEmbed> to thumbnail with play button
+  text = text.replace(
+    /<VideoEmbed\s+url="([^"]*?)"\s*\/>/g,
+    (_, url) => {
+      const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
+      const thumbnail = ytMatch
+        ? `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`
+        : ''
+
+      if (thumbnail) {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="display:block;margin:16px 0;text-decoration:none;">
+          <div style="position:relative;width:100%;aspect-ratio:16/9;background:#141210;border-radius:8px;overflow:hidden;">
+            <img src="${thumbnail}" alt="Video thumbnail" style="width:100%;height:100%;object-fit:cover;opacity:0.8;" />
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:rgba(201,162,39,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:20px solid #0a0a0a;margin-left:4px;"></div>
+            </div>
+          </div>
+        </a>`
+      }
+
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="display:block;margin:16px 0;text-decoration:none;">
+        <div style="padding:16px;border:1px solid #2a2520;border-radius:8px;background:#141210;">
+          <p style="color:#c9a227;font-size:13px;margin:0;">&#9654; Watch video</p>
+          <p style="color:#8a7d6b;font-size:11px;margin:4px 0 0;">${escapeHtml(url)}</p>
+        </div>
+      </a>`
+    }
+  )
+
+  return text
+}
+
 export function wrapInBrandedHTML(opts: {
   title: string
   subtitle: string | null
@@ -198,7 +254,7 @@ export function wrapInBrandedHTML(opts: {
     <!-- Footer -->
     <div style="margin-top:48px;padding-top:24px;border-top:1px solid #2a2520;text-align:center;">
       <div style="font-family:Georgia,serif;font-size:12px;letter-spacing:2px;color:#8a7d6b;text-transform:uppercase;margin-bottom:12px;">STEWART &amp; CO</div>
-      <a href="https://www.stewartandco.io" style="display:inline-block;padding:12px 32px;background-color:#c9a227;color:#0a0a0a;text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;">Visit the Platform</a>
+      <a href="https://stewartandco.vercel.app/login" style="display:inline-block;padding:12px 32px;background-color:#c9a227;color:#0a0a0a;text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;">Visit the Platform</a>
       <p style="font-size:12px;color:#8a7d6b;margin-top:16px;">This content is proprietary to Stewart &amp; Co. Do not redistribute.</p>
     </div>
   </div>

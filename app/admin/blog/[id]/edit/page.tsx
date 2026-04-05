@@ -2,13 +2,19 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { BlogEditor } from '@/components/admin/BlogEditor'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Save,
   Send,
@@ -16,14 +22,14 @@ import {
   Loader2,
   Copy,
   Eye,
+  FileDown,
+  Globe,
   X,
   Trash2,
   ArrowLeft,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
-
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
 
 const CATEGORIES = [
   { value: 'market-update', label: 'Market Update' },
@@ -55,6 +61,7 @@ export default function EditBlogPostPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [postSlug, setPostSlug] = useState('')
   const [postStatus, setPostStatus] = useState('draft')
+  const [websitePublishedAt, setWebsitePublishedAt] = useState<string | null>(null)
 
   // Form state
   const [title, setTitle] = useState('')
@@ -81,6 +88,13 @@ export default function EditBlogPostPage() {
   // Save state
   const [isSaving, setIsSaving] = useState(false)
 
+  // PDF export state
+  const [exportingPdf, setExportingPdf] = useState(false)
+
+  // Website publish state
+  const [publishingToWebsite, setPublishingToWebsite] = useState(false)
+  const [showWebsiteConfirm, setShowWebsiteConfirm] = useState(false)
+
   // Load existing post data
   useEffect(() => {
     async function load() {
@@ -99,6 +113,7 @@ export default function EditBlogPostPage() {
         setPlatformOnly(post.platformOnly || false)
         setPostSlug(post.slug || '')
         setPostStatus(post.status || 'draft')
+        setWebsitePublishedAt(post.websitePublishedAt || null)
       } catch (err: any) {
         toast.error(err.message || 'Failed to load post')
       } finally {
@@ -235,6 +250,66 @@ export default function EditBlogPostPage() {
       setShowHtmlPreview(true)
     } catch {
       toast.error('Failed to generate HTML preview')
+    }
+  }
+
+  async function handleExportPDF() {
+    if (!body.trim()) {
+      toast.error('Write some content first')
+      return
+    }
+    setExportingPdf(true)
+    try {
+      const res = await fetch('/api/admin/blog/preview-html', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, subtitle, body, category, author: 'Stewart & Co' }),
+      })
+      if (!res.ok) throw new Error('Failed to generate HTML')
+      const { html } = await res.json()
+
+      const container = document.createElement('div')
+      container.style.position = 'absolute'
+      container.style.left = '-9999px'
+      container.style.width = '800px'
+      container.innerHTML = html
+      document.body.appendChild(container)
+
+      const { exportBlogToPDF } = await import('@/lib/blog-pdf-export')
+      await exportBlogToPDF(container, postSlug || 'blog-post')
+      toast.success('PDF exported successfully')
+
+      document.body.removeChild(container)
+    } catch {
+      toast.error('PDF export failed')
+    } finally {
+      setExportingPdf(false)
+    }
+  }
+
+  async function handlePublishToWebsite() {
+    setPublishingToWebsite(true)
+    setShowWebsiteConfirm(false)
+
+    try {
+      const res = await fetch(`/api/admin/blog/${postId}/publish-website`, {
+        method: 'POST',
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || data.error || 'Failed to publish to website')
+      }
+
+      toast.success('Published to website')
+      setWebsitePublishedAt(new Date().toISOString())
+      startTransition(() => {
+        router.refresh()
+      })
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to publish to website')
+    } finally {
+      setPublishingToWebsite(false)
     }
   }
 
@@ -389,13 +464,8 @@ export default function EditBlogPostPage() {
 
           <div>
             <Label>Content (Markdown)</Label>
-            <div className="mt-1" data-color-mode="dark">
-              <MDEditor
-                value={body}
-                onChange={(val) => setBody(val || '')}
-                height={500}
-                preview="edit"
-              />
+            <div className="mt-1">
+              <BlogEditor body={body} setBody={setBody} />
             </div>
           </div>
 
@@ -508,26 +578,69 @@ export default function EditBlogPostPage() {
       </div>
 
       {/* Bottom Save Bar */}
-      <div className="sticky bottom-0 mt-8 -mx-4 px-4 py-4 bg-[var(--bg-panel)] border-t border-[var(--border-subtle)] flex items-center justify-end gap-3 z-10">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleSave('draft')}
-          disabled={isSaving}
-        >
-          {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          Save Draft
-        </Button>
-        <Button
-          type="button"
-          className="btn-gold"
-          onClick={() => handleSave('published')}
-          disabled={isSaving}
-        >
-          {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-          {postStatus === 'published' ? 'Update' : 'Publish'}
-        </Button>
+      <div className="sticky bottom-0 mt-8 -mx-4 px-4 py-4 bg-[var(--bg-panel)] border-t border-[var(--border-subtle)] flex items-center justify-between z-10">
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" onClick={() => handleSave('draft')} disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            Save Draft
+          </Button>
+          <Button type="button" variant="outline" onClick={handleExportPDF} disabled={exportingPdf}>
+            <FileDown className="h-4 w-4 mr-2" />
+            {exportingPdf ? 'Generating...' : 'Export PDF'}
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          {postStatus === 'published' && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowWebsiteConfirm(true)}
+              disabled={publishingToWebsite}
+              className="border-blue-400/30 text-blue-400 hover:bg-blue-400/10"
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              {publishingToWebsite
+                ? 'Publishing...'
+                : websitePublishedAt
+                  ? 'Update on Website'
+                  : 'Push to Website'}
+            </Button>
+          )}
+          <Button type="button" className="btn-gold" onClick={() => handleSave('published')} disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+            {postStatus === 'published' ? 'Update' : 'Publish'}
+          </Button>
+        </div>
       </div>
+
+      {/* Website Publish Confirmation */}
+      <Dialog open={showWebsiteConfirm} onOpenChange={setShowWebsiteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Publish to Website</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-[var(--text-muted)]">
+            This will publish this post to the Stewart & Co website. The branded HTML version will be pushed.
+            {websitePublishedAt && (
+              <span className="block mt-2 text-xs">
+                Last pushed: {new Date(websitePublishedAt).toLocaleDateString()}
+              </span>
+            )}
+          </p>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setShowWebsiteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePublishToWebsite}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              Confirm Publish
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* HTML Preview Modal */}
       {showHtmlPreview && (

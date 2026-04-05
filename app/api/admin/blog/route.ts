@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
@@ -129,6 +130,8 @@ export async function POST(request: NextRequest) {
 
       return created
     })
+
+    revalidateTag('admin-blog-posts')
 
     return NextResponse.json(post, { status: 201 })
   } catch (error) {

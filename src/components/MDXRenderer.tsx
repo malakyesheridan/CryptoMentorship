@@ -7,6 +7,8 @@ import { Note } from './ui/Note'
 import { Quote } from './ui/Quote'
 import { Metric } from './ui/Metric'
 import { ExternalLink } from 'lucide-react'
+import { LinkCard } from '@/components/blog/LinkCard'
+import { VideoEmbed } from '@/components/blog/VideoEmbed'
 
 import type { SerializedMDXSource } from '@/lib/mdx'
 
@@ -15,6 +17,8 @@ const components = {
   Note,
   Quote,
   Metric,
+  LinkCard,
+  VideoEmbed,
   h1: (props: any) => <h1 className="font-playfair font-bold text-4xl mb-6 text-[var(--text-strong)]" {...props} />,
   h2: (props: any) => <h2 className="font-playfair font-bold text-3xl mb-4 mt-8 text-[var(--text-strong)]" {...props} />,
   h3: (props: any) => <h3 className="font-playfair font-bold text-2xl mb-3 mt-6 text-[var(--text-strong)]" {...props} />,

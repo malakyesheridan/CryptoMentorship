@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { BlogEditor } from '@/components/admin/BlogEditor'
 import {
   Save,
   Send,
@@ -16,11 +16,10 @@ import {
   Loader2,
   Copy,
   Eye,
+  FileDown,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
-
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
 
 const CATEGORIES = [
   { value: 'market-update', label: 'Market Update' },
@@ -70,6 +69,10 @@ export default function NewBlogPostPage() {
 
   // Save state
   const [isSaving, setIsSaving] = useState(false)
+
+  // PDF export state
+  const [exportingPdf, setExportingPdf] = useState(false)
+  const pdfContainerRef = useRef<HTMLDivElement>(null)
 
   async function handleGenerate() {
     if (!aiTopic.trim()) {
@@ -182,6 +185,41 @@ export default function NewBlogPostPage() {
       setShowHtmlPreview(true)
     } catch {
       toast.error('Failed to generate HTML preview')
+    }
+  }
+
+  async function handleExportPDF() {
+    if (!body.trim()) {
+      toast.error('Write some content first')
+      return
+    }
+    setExportingPdf(true)
+    try {
+      const res = await fetch('/api/admin/blog/preview-html', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, subtitle, body, category, author: 'Stewart & Co' }),
+      })
+      if (!res.ok) throw new Error('Failed to generate HTML')
+      const { html } = await res.json()
+
+      const container = document.createElement('div')
+      container.style.position = 'absolute'
+      container.style.left = '-9999px'
+      container.style.width = '800px'
+      container.innerHTML = html
+      document.body.appendChild(container)
+
+      const { exportBlogToPDF } = await import('@/lib/blog-pdf-export')
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'blog-post'
+      await exportBlogToPDF(container, slug)
+      toast.success('PDF exported successfully')
+
+      document.body.removeChild(container)
+    } catch {
+      toast.error('PDF export failed')
+    } finally {
+      setExportingPdf(false)
     }
   }
 
@@ -319,13 +357,8 @@ export default function NewBlogPostPage() {
           {/* Markdown Editor */}
           <div>
             <Label>Content (Markdown)</Label>
-            <div className="mt-1" data-color-mode="dark">
-              <MDEditor
-                value={body}
-                onChange={(val) => setBody(val || '')}
-                height={500}
-                preview="edit"
-              />
+            <div className="mt-1">
+              <BlogEditor body={body} setBody={setBody} />
             </div>
           </div>
 
@@ -444,22 +477,18 @@ export default function NewBlogPostPage() {
       </div>
 
       {/* Bottom Save Bar */}
-      <div className="sticky bottom-0 mt-8 -mx-4 px-4 py-4 bg-[var(--bg-panel)] border-t border-[var(--border-subtle)] flex items-center justify-end gap-3 z-10">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleSave('draft')}
-          disabled={isSaving}
-        >
-          {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          Save Draft
-        </Button>
-        <Button
-          type="button"
-          className="btn-gold"
-          onClick={() => handleSave('published')}
-          disabled={isSaving}
-        >
+      <div className="sticky bottom-0 mt-8 -mx-4 px-4 py-4 bg-[var(--bg-panel)] border-t border-[var(--border-subtle)] flex items-center justify-between z-10">
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" onClick={() => handleSave('draft')} disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            Save Draft
+          </Button>
+          <Button type="button" variant="outline" onClick={handleExportPDF} disabled={exportingPdf}>
+            <FileDown className="h-4 w-4 mr-2" />
+            {exportingPdf ? 'Generating...' : 'Export PDF'}
+          </Button>
+        </div>
+        <Button type="button" className="btn-gold" onClick={() => handleSave('published')} disabled={isSaving}>
           {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
           Publish
         </Button>

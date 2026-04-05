@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
@@ -103,6 +104,8 @@ export async function PUT(
       return updated
     })
 
+    revalidateTag('admin-blog-posts')
+
     return NextResponse.json(post)
   } catch (error) {
     return handleError(error)
@@ -132,6 +135,8 @@ export async function DELETE(
         title: existing.title,
       })
     })
+
+    revalidateTag('admin-blog-posts')
 
     return NextResponse.json({ success: true })
   } catch (error) {

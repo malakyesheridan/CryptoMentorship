@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { handleError } from '@/lib/errors'
-import { wrapInBrandedHTML } from '@/lib/blog-html-template'
+import { wrapInBrandedHTML, preprocessCustomComponents } from '@/lib/blog-html-template'
 import { z } from 'zod'
 
 const PreviewSchema = z.object({
@@ -19,10 +19,11 @@ export async function POST(request: NextRequest) {
     const json = await request.json()
     const data = PreviewSchema.parse(json)
 
+    const processedBody = preprocessCustomComponents(data.body)
     const html = wrapInBrandedHTML({
       title: data.title,
       subtitle: data.subtitle || null,
-      body: data.body,
+      body: processedBody,
       publishedAt: new Date(),
       author: data.author || 'Stewart & Co',
       category: data.category,
