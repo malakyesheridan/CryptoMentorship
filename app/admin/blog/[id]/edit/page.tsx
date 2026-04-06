@@ -24,6 +24,7 @@ import {
   Eye,
   FileDown,
   Globe,
+  Upload,
   X,
   Trash2,
   ArrowLeft,
@@ -72,6 +73,7 @@ export default function EditBlogPostPage() {
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [featuredImage, setFeaturedImage] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [platformOnly, setPlatformOnly] = useState(false)
 
   // AI panel state
@@ -313,6 +315,34 @@ export default function EditBlogPostPage() {
     }
   }
 
+  async function handleFeaturedImageUpload(file: File) {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB')
+      return
+    }
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/admin/blog/upload', { method: 'POST', body: formData })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Upload failed')
+      }
+      const { url } = await res.json()
+      setFeaturedImage(url)
+      toast.success('Featured image uploaded')
+    } catch (err: any) {
+      toast.error(err.message || 'Image upload failed')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   function addTag() {
     const tag = tagInput.trim().toLowerCase()
     if (tag && !tags.includes(tag)) {
@@ -439,15 +469,43 @@ export default function EditBlogPostPage() {
             </div>
           </div>
 
+          {/* Featured Image */}
           <div>
-            <Label htmlFor="featuredImage">Featured Image URL</Label>
-            <Input
-              id="featuredImage"
-              value={featuredImage}
-              onChange={(e) => setFeaturedImage(e.target.value)}
-              placeholder="https://..."
-              className="mt-1"
-            />
+            <Label>Featured Image</Label>
+            {featuredImage ? (
+              <div className="mt-1 relative group rounded-lg overflow-hidden border border-[var(--border-subtle)]">
+                <img src={featuredImage} alt="Featured" className="w-full h-40 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setFeaturedImage('')}
+                  className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="mt-1 flex flex-col items-center justify-center h-32 border-2 border-dashed border-[var(--border-subtle)] rounded-lg cursor-pointer hover:border-gold-400/40 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleFeaturedImageUpload(file)
+                  }}
+                  disabled={uploadingImage}
+                />
+                {uploadingImage ? (
+                  <Loader2 className="h-6 w-6 text-[var(--text-muted)] animate-spin" />
+                ) : (
+                  <>
+                    <Upload className="h-6 w-6 text-[var(--text-muted)] mb-2" />
+                    <span className="text-sm text-[var(--text-muted)]">Click to upload featured image</span>
+                    <span className="text-xs text-[var(--text-muted)] mt-1">JPEG, PNG, WebP · Max 5MB</span>
+                  </>
+                )}
+              </label>
+            )}
           </div>
 
           <div>

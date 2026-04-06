@@ -4,6 +4,7 @@ import { requireRoleAPI } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { handleError } from '@/lib/errors'
+import { deleteBlogFromWebsite } from '@/lib/website-sync'
 import { z } from 'zod'
 
 const UpdateBlogSchema = z.object({
@@ -121,7 +122,7 @@ export async function DELETE(
 
     const existing = await prisma.blogPost.findUnique({
       where: { id: params.id },
-      select: { id: true, title: true },
+      select: { id: true, title: true, slug: true, websitePublishedAt: true },
     })
 
     if (!existing) {
@@ -135,6 +136,11 @@ export async function DELETE(
         title: existing.title,
       })
     })
+
+    // If post was pushed to the website, request deletion there too
+    if (existing.websitePublishedAt) {
+      void deleteBlogFromWebsite(existing.slug).catch(() => {})
+    }
 
     revalidateTag('admin-blog-posts')
 
