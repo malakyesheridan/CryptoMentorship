@@ -47,7 +47,7 @@ export default async function middleware(req: NextRequest) {
     }
     
     // Apply CSRF protection for API routes (skip webhook + cron)
-    const skipCsrf = pathname.startsWith('/api/stripe/webhook') || pathname.startsWith('/api/cron/')
+    const skipCsrf = pathname.startsWith('/api/stripe/webhook') || pathname.startsWith('/api/cron/') || pathname.startsWith('/api/webhook/')
     if (!skipCsrf) {
       const csrfResponse = csrfProtection(req)
       if (csrfResponse) {
@@ -104,6 +104,7 @@ export default async function middleware(req: NextRequest) {
     '/api/ticker/test',
     '/api/video-serve',
     '/api/events/calendar.ics',
+    '/api/webhook',
     '/blog',
     '/robots.txt',
     '/sitemap.xml',
