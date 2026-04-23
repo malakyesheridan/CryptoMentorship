@@ -35,7 +35,7 @@ STRUCTURE:
 
 TERMINOLOGY:
 - Use: regime gate, market cycle phase, accumulation zone, distribution zone, risk-adjusted returns, Calmar ratio, Sharpe ratio, drawdown, rotation, relative strength
-- Reference Stewart & Co systems by name where relevant: SDCA (Unified Composite Strategy), MARS (Rotation System), DHRS (Dynamic Hedging & Rotation System), MRSS (Memecoin Relative Strength System), Market Intelligence
+- Reference Stewart & Co systems by name where relevant: SDCA (Unified Composite Strategy), MARS (Rotation System), DHRS (Dynamic Hedging & Rotation System), Market Intelligence
 - Never: guarantee returns, give financial advice, use "to the moon", "HODL", or meme language
 
 Output ONLY the blog post content in Markdown. Start with the title as # heading, subtitle as italic text below, then the body. No preamble, no "here's the blog post", no wrapper text.`

@@ -83,27 +83,9 @@ export interface DhrsSystem {
   recent_rotations: DhrsRotation[];
 }
 
-export interface MrssChain {
-  active: boolean;
-  positions: string[];
-  paper_pnl_pct: number;
-}
-
-export interface MrssSystem {
-  btc_regime: boolean;
-  last_cycle: string;
-  chains: {
-    eth: MrssChain;
-    sol: MrssChain;
-    bnb: MrssChain;
-  };
-  total_paper_pnl_pct: number;
-}
-
 export interface DashboardSnapshot {
   timestamp: string;
   schema_version: string;
   sdca: SdcaSystem;
   dhrs: DhrsSystem;
-  mrss: MrssSystem;
 }

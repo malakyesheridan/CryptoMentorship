@@ -4,24 +4,23 @@ import { useEffect, useState } from "react";
 import type { DashboardSnapshot } from "@/types/dashboard-snapshot";
 import { SdcaSection } from "./sdca/SdcaSection";
 import { DhrsSection } from "./dhrs/DhrsSection";
-import { MrssSection } from "./mrss/MrssSection";
 
-type TabKey = "sdca" | "dhrs" | "mrss";
+type TabKey = "sdca" | "dhrs";
 
 const TABS: { key: TabKey; label: string; subtitle: string }[] = [
   { key: "sdca", label: "SDCA", subtitle: "Bitcoin valuation signal" },
   { key: "dhrs", label: "DHRS", subtitle: "Rotation strategy" },
-  { key: "mrss", label: "MRSS", subtitle: "Meme coin chains" },
 ];
 
 export function SystemsTabs({ snapshot }: { snapshot: DashboardSnapshot }) {
   const [active, setActive] = useState<TabKey>("sdca");
 
-  // Hydrate from URL hash for deep links (#sdca / #dhrs / #mrss).
+  // Hydrate from URL hash for deep links (#sdca / #dhrs). Legacy #mrss links
+  // fall through to the default SDCA tab.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const hash = window.location.hash.replace("#", "") as TabKey;
-    if (hash === "sdca" || hash === "dhrs" || hash === "mrss") {
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "sdca" || hash === "dhrs") {
       setActive(hash);
     }
   }, []);
@@ -87,7 +86,6 @@ export function SystemsTabs({ snapshot }: { snapshot: DashboardSnapshot }) {
       <div>
         {active === "sdca" && <SdcaSection data={snapshot.sdca} />}
         {active === "dhrs" && <DhrsSection data={snapshot.dhrs} />}
-        {active === "mrss" && <MrssSection data={snapshot.mrss} />}
       </div>
     </div>
   );
