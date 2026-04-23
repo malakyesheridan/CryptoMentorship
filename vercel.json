@@ -1,5 +1,6 @@
 {
   "buildCommand": "prisma generate && (prisma migrate deploy || node scripts/fix-database-schema.mjs) && node scripts/ensure-admin.mjs && next build",
+  "regions": ["syd1"],
   "functions": {
     "app/api/admin/episodes/route.ts": {
       "maxDuration": 300
