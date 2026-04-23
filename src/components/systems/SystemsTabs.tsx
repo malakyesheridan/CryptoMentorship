@@ -35,7 +35,7 @@ export function SystemsTabs({ snapshot }: { snapshot: DashboardSnapshot }) {
   return (
     <div>
       <div
-        className="sticky top-0 z-10 -mx-4 mb-6 overflow-x-auto border-b px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+        className="sticky top-0 z-10 -mx-4 mb-6 overflow-x-auto overflow-y-hidden border-b px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         style={{
           borderColor: "var(--border-subtle)",
           background: "color-mix(in srgb, var(--bg-page) 90%, transparent)",
