@@ -21,15 +21,16 @@ const PLANS = [
   {
     tier: 'T2',
     name: 'Founders',
-    description: 'Elite access at the founders rate',
+    description: 'Full platform access at the founders rate',
     icon: Crown,
     features: [
-      'All Tier 1 Features',
+      'Daily portfolio updates',
       'Market Rotation System',
-      'Direct Founder Access',
-      '1-on-1 Mentoring',
-      'Monthly Portfolio Reviews',
-      'Priority Support',
+      'Memecoin signals',
+      'Direct founder access',
+      '1-on-1 mentoring',
+      'Monthly portfolio reviews',
+      'Priority support',
     ],
   },
 ]

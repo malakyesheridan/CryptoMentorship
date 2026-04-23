@@ -16,7 +16,8 @@ interface CreateUserWithTrialModalProps {
 export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithTrialModalProps) {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [tier, setTier] = useState<'T1' | 'T2'>('T2') // Default to T2 (Elite) for all trial accounts
+  // Single-tier model — every new user lands on the unified subscription.
+  const tier = 'T2' as const
   const [durationDays, setDurationDays] = useState(30)
   const [isLoading, setIsLoading] = useState(false)
   const [createdUser, setCreatedUser] = useState<{
@@ -74,7 +75,6 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
     setCreatedUser(null)
     setEmail('')
     setName('')
-    setTier('T2')
     setDurationDays(30)
     onClose()
   }
@@ -182,19 +182,6 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
                 className="mt-1"
                 placeholder="John Doe"
               />
-            </div>
-            
-            <div>
-              <Label htmlFor="tier">Tier</Label>
-              <select
-                id="tier"
-                value={tier}
-                onChange={(e) => setTier(e.target.value as 'T1' | 'T2')}
-                className="w-full mt-1 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="T1">Growth</option>
-                <option value="T2">Elite</option>
-              </select>
             </div>
             
             <div>

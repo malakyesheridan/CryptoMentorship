@@ -23,16 +23,10 @@ interface CreateTrialModalProps {
 }
 
 export function CreateTrialModal({ userId, userName, userEmail, currentMembership, onSuccess, onClose }: CreateTrialModalProps) {
-  const [tier, setTier] = useState<'T1' | 'T2'>('T2') // Default to T2 (Elite) for all trial accounts
+  // Single-tier model — admin always grants the unified subscription.
+  const tier = 'T2' as const
   const [trialEndDate, setTrialEndDate] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  
-  // Set tier from existing membership if available
-  useEffect(() => {
-    if (currentMembership?.tier && (currentMembership.tier === 'T1' || currentMembership.tier === 'T2')) {
-      setTier(currentMembership.tier as 'T1' | 'T2')
-    }
-  }, [currentMembership])
   
   // Check if we're extending an existing trial
   const isExtending = currentMembership?.currentPeriodEnd && new Date(currentMembership.currentPeriodEnd) > new Date()
@@ -123,19 +117,6 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
                 </p>
               </div>
             )}
-            
-            <div>
-              <Label htmlFor="tier">Tier</Label>
-              <select
-                id="tier"
-                value={tier}
-                onChange={(e) => setTier(e.target.value as 'T1' | 'T2')}
-                className="w-full mt-1 px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="T1">Growth</option>
-                <option value="T2">Elite</option>
-              </select>
-            </div>
             
             <div>
               <Label htmlFor="trialEndDate">{isExtending ? 'Extend Trial To' : 'Trial End Date'}</Label>

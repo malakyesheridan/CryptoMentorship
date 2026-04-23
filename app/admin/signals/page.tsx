@@ -9,9 +9,14 @@ import { TrendingUp, Plus, BarChart3, Activity, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { formatDate } from '@/lib/dates'
 
+const CATEGORY_LABELS: Record<string, string> = {
+  majors: 'Market Rotation',
+  memecoins: 'Memecoins',
+}
+
 const getSignalsData = unstable_cache(
   async () => {
-    const [signals, totalCount, todayCount, byTier] = await Promise.all([
+    const [signals, totalCount, todayCount, byCategory] = await Promise.all([
       prisma.portfolioDailySignal.findMany({
         orderBy: { publishedAt: 'desc' },
         select: {
@@ -38,30 +43,29 @@ const getSignalsData = unstable_cache(
         },
       }),
       prisma.portfolioDailySignal.groupBy({
-        by: ['tier'],
-        _count: { tier: true },
+        by: ['category'],
+        _count: { category: true },
       }),
     ])
-    return { signals, totalCount, todayCount, byTier }
+    return { signals, totalCount, todayCount, byCategory }
   },
   ['admin-signals'],
   { revalidate: 60, tags: ['admin-signals'] }
 )
 
 export default async function AdminSignalsPage() {
-  const { signals, totalCount, todayCount, byTier } = await getSignalsData()
+  const { signals, totalCount, todayCount, byCategory } = await getSignalsData()
 
-  const tierBreakdown = {
-    T1: byTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T1')?._count.tier || 0,
-    T2: byTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T2')?._count.tier || 0,
-    T3: byTier.find((t: { tier: string; _count: { tier: number } }) => t.tier === 'T3')?._count.tier || 0,
+  const categoryBreakdown = {
+    majors: byCategory.find((c) => c.category === 'majors')?._count.category || 0,
+    memecoins: byCategory.find((c) => c.category === 'memecoins')?._count.category || 0,
   }
 
   return (
     <div className="container-main section-padding">
       <SectionHeader
         title="Daily Signals"
-        subtitle="Manage portfolio daily signals across all tiers"
+        subtitle="Manage portfolio daily signals across Market Rotation and Memecoins"
       />
 
       {/* Stats Cards */}
@@ -96,10 +100,10 @@ export default async function AdminSignalsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[var(--text-strong)]">By Tier</p>
+                <p className="text-sm text-[var(--text-strong)]">By Category</p>
                 <p className="text-2xl font-bold text-[var(--text-strong)]">{totalCount}</p>
                 <p className="text-xs text-[var(--text-muted)]">
-                  T1: {tierBreakdown.T1}, T2: {tierBreakdown.T2}, T3: {tierBreakdown.T3}
+                  Market Rotation: {categoryBreakdown.majors} · Memecoins: {categoryBreakdown.memecoins}
                 </p>
               </div>
               <BarChart3 className="h-8 w-8 text-[var(--text-muted)]" />
@@ -132,9 +136,8 @@ export default async function AdminSignalsPage() {
               <thead>
                 <tr className="border-b border-[var(--border-subtle)]">
                   <th className="text-left text-sm font-medium text-[var(--text-muted)] px-6 py-3">Signal</th>
-                  <th className="text-left text-sm font-medium text-[var(--text-muted)] px-6 py-3">Tier</th>
-                  <th className="text-left text-sm font-medium text-[var(--text-muted)] px-6 py-3">Risk Profile</th>
                   <th className="text-left text-sm font-medium text-[var(--text-muted)] px-6 py-3">Category</th>
+                  <th className="text-left text-sm font-medium text-[var(--text-muted)] px-6 py-3">Risk Profile</th>
                   <th className="text-left text-sm font-medium text-[var(--text-muted)] px-6 py-3">Published</th>
                   <th className="text-left text-sm font-medium text-[var(--text-muted)] px-6 py-3">By</th>
                 </tr>
@@ -151,15 +154,14 @@ export default async function AdminSignalsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline" className="text-xs">{signal.tier}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {signal.category ? CATEGORY_LABELS[signal.category] ?? signal.category : '—'}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <Badge variant="outline" className="capitalize text-xs">
                         {signal.riskProfile.toLowerCase().replace('_', ' ')}
                       </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-[var(--text-muted)] capitalize">{signal.category || '—'}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-[var(--text-muted)]">{formatDate(signal.publishedAt, 'dd-MM-yyyy')}</span>

@@ -4,109 +4,64 @@ import { requireActiveSubscription } from '@/lib/access'
 
 export const revalidate = 60 // Cache for 1 minute
 
-// GET /api/portfolio-daily-signals - Get all daily updates (with user tier for access control)
+// GET /api/portfolio-daily-signals — single-tier model. Any active subscriber
+// sees both the Market Rotation (majors) and Memecoins feeds; we return the
+// most recent signal per category, optionally filtered by a date.
 export async function GET(request: NextRequest) {
-  const user = await requireActiveSubscription('api')
+  await requireActiveSubscription('api')
   try {
-
-    // Get user's tier (active subscription already enforced)
-    const membership = await prisma.membership.findFirst({
-      where: { userId: user.id },
-      select: { tier: true, status: true, currentPeriodEnd: true }
-    })
-
-    const userTier = membership?.tier || null
-    const isActive = true
-
-    // Check if a date filter is provided
     const { searchParams } = new URL(request.url)
     const dateParam = searchParams.get('date')
-    
+
     let dateFilter: { gte?: Date; lt?: Date } | undefined
     if (dateParam) {
       const tzOffsetParam = searchParams.get('tzOffset')
       const tzOffsetMinutes = tzOffsetParam ? Number(tzOffsetParam) : 0
       const safeOffsetMinutes = Number.isFinite(tzOffsetMinutes) ? tzOffsetMinutes : 0
 
-      // Parse date string (YYYY-MM-DD) and create UTC dates aligned to the user's local day
       const [year, month, day] = dateParam.split('-').map(Number)
-      
-      // Convert local day boundaries to UTC using the user's timezone offset (in minutes)
       const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) + safeOffsetMinutes * 60 * 1000)
       const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999) + safeOffsetMinutes * 60 * 1000)
-      
+
       dateFilter = {
         gte: startOfDay,
-        lt: new Date(endOfDay.getTime() + 1) // Add 1ms to make it exclusive
+        lt: new Date(endOfDay.getTime() + 1),
       }
     }
 
-    // Build where clause
     const whereClause: any = {}
     if (dateFilter) {
       whereClause.publishedAt = dateFilter
     }
 
-    // Get signals - either for a specific date or the most recent for each tier/category
     const allSignals = await prisma.portfolioDailySignal.findMany({
       where: whereClause,
       include: {
         createdBy: {
-          select: {
-            id: true,
-            name: true,
-          }
-        }
+          select: { id: true, name: true },
+        },
       },
-      orderBy: { publishedAt: 'desc' }, // Most recent first
+      orderBy: { publishedAt: 'desc' },
     })
 
-    // Group by tier and category, keeping only the most recent for each combination
-    // When filtering by date, we still deduplicate by tier/category for that date
+    // Keep the most recent signal per category. Signals with a null category
+    // (historical edge cases) roll into the 'majors' feed for backward-compat.
     const signalsMap = new Map<string, typeof allSignals[0]>()
-    
     for (const signal of allSignals) {
-      // Map old tiers to new tiers for display
-      let displayTier = signal.tier
-      if (signal.tier === 'T2' && !signal.category) {
-        // Old T2 (no category) → new T1 (Growth)
-        displayTier = 'T1'
-      } else if (signal.tier === 'T3') {
-        // Old T3 → new T2 (Elite)
-        displayTier = 'T2'
-      } else if (signal.tier === 'T1') {
-        // T1 is now Growth tier - keep as T1 (no longer skipping)
-        displayTier = 'T1'
-      }
-      
-      // Create a unique key: tier + category (or just tier for T1)
-      const key = displayTier === 'T2' && signal.category 
-        ? `${displayTier}-${signal.category}` 
-        : displayTier
-      
-      // Only keep the first (most recent) update for each key
-      // When filtering by date, this will be the most recent for that date
-      if (!signalsMap.has(key)) {
-        // Create a new signal object with mapped tier
-        const mappedSignal = { ...signal, tier: displayTier }
-        signalsMap.set(key, mappedSignal)
+      const categoryKey = signal.category === 'memecoins' ? 'memecoins' : 'majors'
+      if (!signalsMap.has(categoryKey)) {
+        signalsMap.set(categoryKey, signal)
       }
     }
 
-    // Convert map back to array and sort by tier
-    const signals = Array.from(signalsMap.values()).sort((a, b) => {
-      const tierOrder = { 'T1': 1, 'T2': 2 }
-      return (tierOrder[a.tier as keyof typeof tierOrder] || 99) - (tierOrder[b.tier as keyof typeof tierOrder] || 99)
-    })
+    const signals = Array.from(signalsMap.values())
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       signals,
-      userTier,
-      isActive 
+      isActive: true,
     })
   } catch (error) {
     console.error('Error fetching daily updates:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

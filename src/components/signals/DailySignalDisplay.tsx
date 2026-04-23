@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Zap, TrendingUp, AlertCircle, Lock, Edit } from 'lucide-react'
+import { Zap, TrendingUp, AlertCircle, Edit } from 'lucide-react'
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { CalendarDatePicker } from './CalendarDatePicker'
@@ -14,7 +14,7 @@ import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2'
+  tier: string
   category?: 'majors' | 'memecoins' | null
   riskProfile?: 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE' | null
   signal: string
@@ -30,22 +30,19 @@ interface DailySignal {
   } | null
 }
 
-interface DailySignalDisplayProps {
-  userTier: string | null
-  userRole?: string
-}
-
-type Tier = 'T1' | 'T2'
 type RiskProfile = 'AGGRESSIVE' | 'SEMI' | 'CONSERVATIVE'
+type Category = 'majors' | 'memecoins'
 
-const tierLabels: Record<Tier, string> = {
-  T1: 'Growth',
-  T2: 'Elite',
+const CATEGORY_LABELS: Record<Category, string> = {
+  majors: 'Market Rotation',
+  memecoins: 'Memecoins',
 }
 
-const tierColors: Record<Tier, string> = {
-  T1: 'bg-purple-500/10 border-purple-500/30',
-  T2: 'bg-amber-500/10 border-amber-500/30',
+// Category-based colouring — majors get the brand gold, memecoins get a
+// complementary purple accent so the two feeds are visually distinct.
+const CATEGORY_STYLES: Record<Category, string> = {
+  majors: 'bg-amber-500/10 border-amber-500/30',
+  memecoins: 'bg-purple-500/10 border-purple-500/30',
 }
 
 const allocationLabelToProfile: Record<'Aggressive' | 'Semi Aggressive' | 'Conservative', RiskProfile> = {
@@ -54,41 +51,24 @@ const allocationLabelToProfile: Record<'Aggressive' | 'Semi Aggressive' | 'Conse
   Conservative: 'CONSERVATIVE',
 }
 
-// Check if user can access a tier
-function canAccessTier(userTier: string | null, signalTier: Tier, isActive: boolean): boolean {
-  if (!userTier || !isActive) return false
-  
-  const tierHierarchy: Tier[] = ['T1', 'T2']
-  const userTierIndex = tierHierarchy.indexOf(userTier as Tier)
-  const signalTierIndex = tierHierarchy.indexOf(signalTier)
-  
-  return userTierIndex >= signalTierIndex
-}
-
-type Category = 'majors' | 'memecoins'
-
 interface DailySignalDisplayProps {
-  userTier: string | null
   userRole?: string
   onEditSignal?: (signal: DailySignal) => void
 }
 
-export default function DailySignalDisplay({ userTier, userRole, onEditSignal }: DailySignalDisplayProps) {
-  const [activeTier, setActiveTier] = useState<Tier | null>(null)
+export default function DailySignalDisplay({ userRole, onEditSignal }: DailySignalDisplayProps) {
   const [activeCategory, setActiveCategory] = useState<Category>('majors')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [activeAllocationProfile, setActiveAllocationProfile] = useState<RiskProfile | null>(null)
   const hasSetAllocationRef = useRef(false)
   const { data: riskProfileData } = useRiskProfile()
 
-  // Build API URL with date parameter if selected
   const apiUrl = selectedDate
     ? `/api/portfolio-daily-signals?date=${selectedDate}&tzOffset=${new Date().getTimezoneOffset()}`
     : '/api/portfolio-daily-signals'
 
-  const { data, error, isLoading } = useSWR<{ 
+  const { data, error, isLoading } = useSWR<{
     signals: DailySignal[]
-    userTier: string | null
     isActive: boolean
   }>(
     apiUrl,
@@ -96,77 +76,30 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      refreshInterval: selectedDate ? 0 : 60000, // Don't auto-refresh when viewing past dates
+      refreshInterval: selectedDate ? 0 : 60000,
       dedupingInterval: 30000,
     }
   )
 
-  // Group signals by tier (and category for T2/Elite)
-  const signalsByTier = useMemo(() => {
-    const signals = data?.signals || []
-    const grouped: Record<Tier, DailySignal[]> = {
-      T1: [],
-      T2: []
+  // Group signals by category. We pick the most recent signal per category so
+  // if multiple signals exist for the same date only the latest is shown.
+  const signalsByCategory = useMemo(() => {
+    const signals = data?.signals ?? []
+    return {
+      majors: signals.find(s => s.category === 'majors' || s.category == null) ?? null,
+      memecoins: signals.find(s => s.category === 'memecoins') ?? null,
     }
-    
-    signals.forEach(signal => {
-      if (grouped[signal.tier]) {
-        grouped[signal.tier].push(signal)
-      }
-    })
-    
-    return grouped
   }, [data?.signals])
 
-  // Group T2 (Elite) signals by category
-  const t2SignalsByCategory = useMemo(() => {
-    const t2Signals = signalsByTier.T2
-    return {
-      majors: t2Signals.find(s => s.category === 'majors') || null,
-      memecoins: t2Signals.find(s => s.category === 'memecoins') || null,
-    }
-  }, [signalsByTier.T2])
-
-  // Reset category when tier changes away from T2
-  useEffect(() => {
-    if (activeTier !== 'T2') {
-      setActiveCategory('majors')
-    }
-  }, [activeTier])
-
-  // Set initial active tier to first available tier
-  useEffect(() => {
-    if (!activeTier && data?.signals) {
-      const tiers: Tier[] = ['T1', 'T2']
-      const firstTierWithSignal = tiers.find(tier => signalsByTier[tier].length > 0)
-      if (firstTierWithSignal) {
-        setActiveTier(firstTierWithSignal)
-      }
-    }
-  }, [data?.signals, activeTier, signalsByTier])
-
-  const signals = data?.signals || []
-  const isActive = data?.isActive || false
-  const effectiveUserTier = data?.userTier || userTier
-  const tiers: Tier[] = ['T1', 'T2']
-  
-  // Get current signal based on active tier and category
-  const getCurrentSignal = (): DailySignal | null => {
-    if (!activeTier) return null
-    if (activeTier === 'T2') {
-      return t2SignalsByCategory[activeCategory]
-    }
-    return signalsByTier[activeTier]?.[0] || null
-  }
-  
-  const currentSignal = getCurrentSignal()
-  const hasAccess = currentSignal ? canAccessTier(effectiveUserTier, currentSignal.tier, isActive) : false
+  const signals = data?.signals ?? []
+  const currentSignal = signalsByCategory[activeCategory]
   const currentSignalId = currentSignal?.id
   const currentSignalCategory = currentSignal?.category
   const currentSignalPrimary = currentSignal?.primaryAsset
   const currentSignalSecondary = currentSignal?.secondaryAsset
   const currentSignalTertiary = currentSignal?.tertiaryAsset
   const currentSignalText = currentSignal?.signal ?? ''
+
   const allocationSplits = useMemo(() => {
     if (!currentSignalId || currentSignalCategory === 'memecoins') return []
     const allocationAssets = currentSignalPrimary &&
@@ -239,7 +172,6 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     return (
       <Card>
         <CardContent className="pt-6">
-          {/* Calendar Date Picker - Above tier selector */}
           <div className="flex justify-center mb-4" data-tour="portfolio-date-picker">
             <CalendarDatePicker
               selectedDate={selectedDate}
@@ -250,7 +182,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
             <TrendingUp className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">No Daily Updates Available</h3>
             <p className="text-[var(--text-muted)]">
-              {selectedDate 
+              {selectedDate
                 ? `No updates found for the selected date.`
                 : "Check back later for today's portfolio updates."}
             </p>
@@ -263,7 +195,6 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
   return (
     <Card>
       <CardContent className="pt-6">
-        {/* Calendar Date Picker - Above tier selector */}
         <div className="flex justify-center mb-4" data-tour="portfolio-date-picker">
           <CalendarDatePicker
             selectedDate={selectedDate}
@@ -271,221 +202,161 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
           />
         </div>
 
-        {/* Tab Navigation */}
+        {/* Category Tab Navigation — majors / memecoins */}
         <div className="flex justify-center mb-6">
           <div
             className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto"
-            data-tour="portfolio-tier-tabs"
+            data-tour="portfolio-category-tabs"
           >
-            {tiers.map((tier) => {
-              const signal = signalsByTier[tier]?.[0]
-              const hasSignal = !!signal
-              const canAccess = hasSignal ? canAccessTier(effectiveUserTier, tier, isActive) : false
-              const isLocked = hasSignal && !canAccess
-              
+            {(['majors', 'memecoins'] as Category[]).map((category) => {
+              const hasSignal = !!signalsByCategory[category]
               return (
                 <Button
-                  key={tier}
-                  variant={activeTier === tier ? 'default' : 'ghost'}
-                  onClick={() => hasSignal && setActiveTier(tier)}
+                  key={category}
+                  variant={activeCategory === category ? 'default' : 'ghost'}
+                  onClick={() => hasSignal && setActiveCategory(category)}
                   disabled={!hasSignal}
                   className={cn(
                     'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none',
-                    activeTier === tier
+                    activeCategory === category
                       ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
                       : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]',
                     !hasSignal && 'opacity-50 cursor-not-allowed'
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    {isLocked && <Lock className="w-4 h-4" />}
-                    {tierLabels[tier]}
-                  </div>
+                  {CATEGORY_LABELS[category]}
                 </Button>
               )
             })}
           </div>
         </div>
 
-        {/* Category Tab Navigation (only for T2/Elite) */}
-        {activeTier === 'T2' && (
-          <div className="flex justify-center mb-6">
-            <div
-              className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto"
-              data-tour="portfolio-category-tabs"
-            >
-              {(['majors', 'memecoins'] as Category[]).map((category) => {
-                const hasSignal = !!t2SignalsByCategory[category]
-                const signal = t2SignalsByCategory[category]
-                const canAccess = signal ? canAccessTier(effectiveUserTier, 'T2', isActive) : false
-                const isLocked = hasSignal && !canAccess
-                
-                return (
-                  <Button
-                    key={category}
-                    variant={activeCategory === category ? 'default' : 'ghost'}
-                    onClick={() => hasSignal && setActiveCategory(category)}
-                    disabled={!hasSignal}
-                    className={cn(
-                      'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none capitalize',
-                      activeCategory === category
-                        ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
-                        : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]',
-                      !hasSignal && 'opacity-50 cursor-not-allowed'
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isLocked && <Lock className="w-4 h-4" />}
-                      {category === 'majors' ? 'Market Rotation' : 'Memecoins'}
-                    </div>
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
         {/* Active Tab Content */}
         {currentSignal && (
           <div
-            className={`${tierColors[currentSignal.tier]} border-2 shadow-lg rounded-lg p-6`}
+            className={`${CATEGORY_STYLES[(currentSignal.category as Category) ?? 'majors']} border-2 shadow-lg rounded-lg p-6`}
             data-tour="portfolio-update-card"
           >
-            {!hasAccess ? (
-              <div className="text-center py-12">
-                <Lock className="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-[var(--text-strong)] mb-2">Locked Content</h3>
-                <p className="text-[var(--text-muted)] mb-4">
-                  This update is available for {tierLabels[currentSignal.tier]} members and above.
-                </p>
-                <p className="text-sm text-[var(--text-muted)]">
-                  Upgrade your subscription to access this tier&apos;s updates.
-                </p>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Zap className="w-5 h-5 text-yellow-500" />
+                <h3 className="text-lg font-bold text-[var(--text-strong)]">
+                  ⚡ Portfolio Update — {CATEGORY_LABELS[(currentSignal.category as Category) ?? 'majors']} ⚡
+                </h3>
+              </div>
+              <div className="flex items-center gap-3">
+                {(userRole === 'admin' || userRole === 'editor') && onEditSignal && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEditSignal(currentSignal)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </Button>
+                )}
+                <span className="text-xs text-[var(--text-muted)]">
+                  {formatDate(new Date(currentSignal.publishedAt), 'short')}
+                </span>
+              </div>
+            </div>
+
+            {/* Allocation Split */}
+            {allocationSplits.length > 0 ? (
+              <div className="mb-4" data-tour="portfolio-allocation">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-[var(--text-strong)]">Allocation Split</h4>
+                  {riskProfileData?.recommendedProfile && (
+                    <span className="text-xs text-[var(--text-muted)]">
+                      Recommended: {formatRiskProfileLabel(riskProfileData.recommendedProfile)}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {allocationSplits.map((split) => {
+                    const profile = allocationLabelToProfile[split.label]
+                    const displayLabel = formatRiskProfileLabel(profile)
+                    const isActive = activeAllocationProfile
+                      ? activeAllocationProfile === profile
+                      : allocationSplits[0]?.label === split.label
+                    const isRecommended = riskProfileData?.recommendedProfile === profile
+
+                    return (
+                      <button
+                        key={split.label}
+                        type="button"
+                        onClick={() => setActiveAllocationProfile(profile)}
+                        className={cn(
+                          'w-full text-left rounded-2xl border p-4 transition-all',
+                          isActive
+                            ? 'border-amber-400 bg-amber-500/10 shadow-sm'
+                            : 'border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-[var(--border-subtle)]'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-[var(--text-strong)]">{displayLabel}</span>
+                            {isRecommended && (
+                              <span className="text-[10px] uppercase tracking-wide bg-yellow-200 text-yellow-900 px-2 py-1 rounded-full">
+                                Recommended for you
+                              </span>
+                            )}
+                          </div>
+                          {isActive && (
+                            <span className="text-xs text-[var(--text-muted)]">Selected</span>
+                          )}
+                        </div>
+                        {isActive && (
+                          <div className="mt-3 text-sm text-[var(--text-strong)]">
+                            {split.allocations
+                              .map((allocation) => `${allocation.percent}% ${getAssetDisplayLabel(allocation.asset)}`)
+                              .join(' / ')}
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             ) : (
-              <>
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <Zap className="w-5 h-5 text-yellow-500" />
-                    <h3 className="text-lg font-bold text-[var(--text-strong)]">
-                      ⚡ Portfolio Update - {tierLabels[currentSignal.tier]}{currentSignal.category === 'majors' ? ' Market Rotation' : currentSignal.category === 'memecoins' ? ' Memecoins' : ''} ⚡
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {(userRole === 'admin' || userRole === 'editor') && onEditSignal && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEditSignal(currentSignal)}
-                        className="flex items-center gap-2"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Edit
-                      </Button>
-                    )}
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {formatDate(new Date(currentSignal.publishedAt), 'short')}
-                    </span>
+              <div className="mb-4" data-tour="portfolio-allocation">
+                <h4 className="font-bold text-[var(--text-strong)] mb-2">Update:</h4>
+                <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
+                  <div className="text-lg text-[var(--text-strong)]">
+                    {currentSignal.signal.split('\n').map((line, index) => (
+                      <p key={index} className="mb-1 last:mb-0">
+                        {line.trim() || '\u00A0'}
+                      </p>
+                    ))}
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* Allocation Split */}
-                {allocationSplits.length > 0 ? (
-                  <div className="mb-4" data-tour="portfolio-allocation">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-[var(--text-strong)]">Allocation Split</h4>
-                      {riskProfileData?.recommendedProfile && (
-                        <span className="text-xs text-[var(--text-muted)]">
-                          Recommended: {formatRiskProfileLabel(riskProfileData.recommendedProfile)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-3">
-                      {allocationSplits.map((split) => {
-                        const profile = allocationLabelToProfile[split.label]
-                        const displayLabel = formatRiskProfileLabel(profile)
-                        const isActive = activeAllocationProfile
-                          ? activeAllocationProfile === profile
-                          : allocationSplits[0]?.label === split.label
-                        const isRecommended = riskProfileData?.recommendedProfile === profile
+            {/* Executive Summary */}
+            {currentSignal.executiveSummary && (
+              <div className="mb-4" data-tour="portfolio-summary">
+                <h4 className="font-bold text-[var(--text-strong)] mb-2">Executive Summary:</h4>
+                <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
+                  <p className="text-[var(--text-strong)] whitespace-pre-wrap">
+                    {currentSignal.executiveSummary}
+                  </p>
+                </div>
+              </div>
+            )}
 
-                        return (
-                          <button
-                            key={split.label}
-                            type="button"
-                            onClick={() => setActiveAllocationProfile(profile)}
-                            className={cn(
-                              'w-full text-left rounded-2xl border p-4 transition-all',
-                              isActive
-                                ? 'border-amber-400 bg-amber-500/10 shadow-sm'
-                                : 'border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-[var(--border-subtle)]'
-                            )}
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-semibold text-[var(--text-strong)]">{displayLabel}</span>
-                                {isRecommended && (
-                                  <span className="text-[10px] uppercase tracking-wide bg-yellow-200 text-yellow-900 px-2 py-1 rounded-full">
-                                    Recommended for you
-                                  </span>
-                                )}
-                              </div>
-                              {isActive && (
-                                <span className="text-xs text-[var(--text-muted)]">Selected</span>
-                              )}
-                            </div>
-                            {isActive && (
-                              <div className="mt-3 text-sm text-[var(--text-strong)]">
-                                {split.allocations
-                                  .map((allocation) => `${allocation.percent}% ${getAssetDisplayLabel(allocation.asset)}`)
-                                  .join(' / ')}
-                              </div>
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mb-4" data-tour="portfolio-allocation">
-                    <h4 className="font-bold text-[var(--text-strong)] mb-2">Update:</h4>
-                    <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
-                      <div className="text-lg text-[var(--text-strong)]">
-                        {currentSignal.signal.split('\n').map((line, index) => (
-                          <p key={index} className="mb-1 last:mb-0">
-                            {line.trim() || '\u00A0'}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Executive Summary */}
-                {currentSignal.executiveSummary && (
-                  <div className="mb-4" data-tour="portfolio-summary">
-                    <h4 className="font-bold text-[var(--text-strong)] mb-2">Executive Summary:</h4>
-                    <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
-                      <p className="text-[var(--text-strong)] whitespace-pre-wrap">
-                        {currentSignal.executiveSummary}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Associated Data */}
-                {currentSignal.associatedData && (
-                  <div data-tour="portfolio-data">
-                    <h4 className="font-bold text-[var(--text-strong)] mb-2">Associated Data:</h4>
-                    <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
-                      <p className="text-[var(--text-strong)] whitespace-pre-wrap">
-                        {currentSignal.associatedData}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </>
+            {/* Associated Data */}
+            {currentSignal.associatedData && (
+              <div data-tour="portfolio-data">
+                <h4 className="font-bold text-[var(--text-strong)] mb-2">Associated Data:</h4>
+                <div className="bg-[var(--bg-panel)] rounded-lg p-4 border border-[var(--border-subtle)]">
+                  <p className="text-[var(--text-strong)] whitespace-pre-wrap">
+                    {currentSignal.associatedData}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -493,4 +364,3 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
     </Card>
   )
 }
-

@@ -78,59 +78,13 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
 }
 
 /**
- * Check if user can access a specific tier
- * Validates both subscription status and tier level
+ * Legacy shim — the platform now has a single unified subscription tier, so
+ * any paid/trial member can access all tiered content. Left in place so the
+ * handful of remaining call-sites don't need refactoring in one sweep.
+ * Prefer `hasActiveSubscription(userId)` for new code.
  */
-export async function canAccessTier(userId: string, requiredTier: string): Promise<boolean> {
-  try {
-    // Check if subscription is active first
-    const isActive = await hasActiveSubscription(userId)
-    if (!isActive) {
-      return false
-    }
-    
-    const membership = await prisma.membership.findFirst({
-      where: { userId },
-    })
-    
-    if (!membership) {
-      return false
-    }
-    
-    // Check tier access
-    // Map old tiers to new: T1→removed, T2→T1, T3→T2
-    const mapTier = (tier: string): string => {
-      if (tier === 'T3') return 'T2' // Old T3 → new T2 (Elite)
-      if (tier === 'T2') return 'T1' // Old T2 → new T1 (Growth)
-      if (tier === 'T1') return '' // Old T1 → removed (no access)
-      return tier
-    }
-    
-    const mappedUserTier = mapTier(membership.tier)
-    const mappedRequiredTier = mapTier(requiredTier)
-    
-    // Old T1 users have no access
-    if (!mappedUserTier) return false
-    
-    const tierHierarchy = ['T1', 'T2']
-    const userTierIndex = tierHierarchy.indexOf(mappedUserTier)
-    const requiredTierIndex = tierHierarchy.indexOf(mappedRequiredTier)
-    
-    // If tier not found in hierarchy, deny access
-    if (userTierIndex === -1 || requiredTierIndex === -1) {
-      return false
-    }
-    
-    return userTierIndex >= requiredTierIndex
-  } catch (error) {
-    logger.error(
-      'Error checking tier access',
-      error instanceof Error ? error : new Error(String(error)),
-      { userId, requiredTier }
-    )
-    // Fail closed - assume no access on error
-    return false
-  }
+export async function canAccessTier(userId: string, _requiredTier?: string): Promise<boolean> {
+  return hasActiveSubscription(userId)
 }
 
 /**
@@ -190,17 +144,11 @@ export async function requireActiveSubscription(mode: AccessMode = 'page') {
   return user
 }
 
-export async function requireTier(requiredTier: string, mode: AccessMode = 'page') {
-  const user = await requireActiveSubscription(mode)
-  const canAccess = await canAccessTier(user.id, requiredTier)
-
-  if (!canAccess) {
-    if (mode === 'api') {
-      throw NextResponse.json({ error: 'Forbidden' }, { status: 403 }) as any
-    }
-    redirect('/subscribe?required=true')
-  }
-
-  return user
+/**
+ * @deprecated Single-tier model — `requireActiveSubscription` is now equivalent.
+ * Kept for backward compatibility with any call-sites still passing a tier.
+ */
+export async function requireTier(_requiredTier: string, mode: AccessMode = 'page') {
+  return requireActiveSubscription(mode)
 }
 

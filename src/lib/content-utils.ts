@@ -5,41 +5,20 @@
 
 import { formatDate } from './dates'
 
-export type MembershipTier = 'T1' | 'T2'
-
-// Map old tiers to new tiers
-function mapTier(tier: string | null): string | null {
-  if (!tier) return null
-  if (tier === 'T3') return 'T2' // Old T3 → new T2 (Elite)
-  if (tier === 'T2') return 'T1' // Old T2 → new T1 (Growth)
-  if (tier === 'T1') return null // Old T1 → removed (no access)
-  return tier
-}
-
-export function canViewContent(userRole: string, userTier: string | null, contentMinTier: string | null, contentLocked: boolean): boolean {
-  // Admins/editors can view everything
+/**
+ * Single-tier model: locked content is visible to anyone with an active
+ * subscription. The `contentMinTier` argument is retained for call-site
+ * compatibility but ignored.
+ */
+export function canViewContent(
+  userRole: string,
+  userTier: string | null,
+  _contentMinTier: string | null,
+  contentLocked: boolean,
+): boolean {
   if (userRole === 'admin' || userRole === 'editor') return true
-  
-  // If content is locked, check tier requirements
-  if (contentLocked && contentMinTier) {
-    if (!userTier) return false
-    
-    // Map both tiers to new structure
-    const mappedUserTier = mapTier(userTier)
-    const mappedContentTier = mapTier(contentMinTier)
-    
-    // Old T1 users have no access
-    if (!mappedUserTier) return false
-    
-    const tierOrder = { 'T1': 1, 'T2': 2 }
-    const userTierLevel = tierOrder[mappedUserTier as MembershipTier] || 0
-    const requiredTierLevel = tierOrder[mappedContentTier as MembershipTier] || 0
-    
-    return userTierLevel >= requiredTierLevel
-  }
-  
-  // If not locked or no tier requirement, anyone can view
-  return true
+  if (!contentLocked) return true
+  return Boolean(userTier)
 }
 
 export function generateSlug(title: string): string {

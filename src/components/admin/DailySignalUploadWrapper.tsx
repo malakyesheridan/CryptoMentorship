@@ -11,7 +11,7 @@ interface DailySignalUploadWrapperProps {
   userRole?: string
   editingSignal?: {
     id: string
-    tier: 'T1' | 'T2' | 'T3' // Allow T3 for backward compatibility with existing data
+    tier?: string // Legacy — not used; all new signals are tagged T2 server-side
     category?: 'majors' | 'memecoins' | null
     signal: string
     primaryAsset?: string | null
@@ -23,50 +23,25 @@ interface DailySignalUploadWrapperProps {
   onEditComplete?: () => void
 }
 
-type Tier = 'T1' | 'T2'
-
-const tierLabels: Record<Tier, string> = {
-  T1: 'Growth',
-  T2: 'Elite',
-}
-
 type Category = 'majors' | 'memecoins'
+
+const CATEGORY_LABELS: Record<Category, string> = {
+  majors: 'Market Rotation',
+  memecoins: 'Memecoins',
+}
 
 export default function DailySignalUploadWrapper({ userRole, editingSignal, onEditComplete }: DailySignalUploadWrapperProps) {
   const [mounted, setMounted] = useState(false)
-  const [activeTier, setActiveTier] = useState<Tier>('T1')
   const [activeCategory, setActiveCategory] = useState<Category>('majors')
-
-  const mapEditingSignal = (signal: NonNullable<DailySignalUploadWrapperProps['editingSignal']>) => {
-    if (signal.tier === 'T3') {
-      return { tier: 'T2' as Tier, category: signal.category ?? 'majors' }
-    }
-    if (signal.tier === 'T2' && signal.category) {
-      return { tier: 'T2' as Tier, category: signal.category }
-    }
-    return { tier: 'T1' as Tier, category: undefined }
-  }
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Reset category when tier changes
-  useEffect(() => {
-    if (activeTier !== 'T2') {
-      setActiveCategory('majors')
-    }
-  }, [activeTier])
-
-  // When editing signal is provided, set the active tier/category and scroll to form
   useEffect(() => {
     if (editingSignal) {
-      const mapped = mapEditingSignal(editingSignal)
-      setActiveTier(mapped.tier)
-      if (mapped.tier === 'T2' && mapped.category) {
-        setActiveCategory(mapped.category)
-      }
-      // Scroll to upload section
+      const category: Category = editingSignal.category === 'memecoins' ? 'memecoins' : 'majors'
+      setActiveCategory(category)
       setTimeout(() => {
         const uploadSection = document.getElementById('daily-signal-upload')
         if (uploadSection) {
@@ -93,74 +68,45 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
             <h2 className="text-2xl font-bold text-[var(--text-strong)]">Daily Portfolio Updates</h2>
           </div>
           <p className="text-[var(--text-strong)]">
-            Create daily updates for each tier. Users will see updates for their tier and all lower tiers.
+            Post a daily update for Market Rotation or Memecoins. All active subscribers will see it.
           </p>
         </div>
 
-        {/* Tier Tab Navigation */}
+        {/* Category Tab Navigation */}
         <div className="flex justify-center mb-6">
           <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto">
-            {(['T1', 'T2'] as Tier[]).map((tier) => (
+            {(['majors', 'memecoins'] as Category[]).map((category) => (
               <Button
-                key={tier}
-                variant={activeTier === tier ? 'default' : 'ghost'}
-                onClick={() => setActiveTier(tier)}
+                key={category}
+                variant={activeCategory === category ? 'default' : 'ghost'}
+                onClick={() => setActiveCategory(category)}
                 className={cn(
                   'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 min-h-[44px] flex-1 sm:flex-none',
-                  activeTier === tier
+                  activeCategory === category
                     ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
                     : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
                 )}
               >
-                {tierLabels[tier]}
+                {CATEGORY_LABELS[category]}
               </Button>
             ))}
           </div>
         </div>
 
-        {/* Category Tab Navigation (only for T2/Elite) */}
-        {activeTier === 'T2' && (
-          <div className="flex justify-center mb-6">
-            <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg p-2 flex flex-wrap gap-2 border border-[var(--border-subtle)] w-full sm:w-auto">
-              {(['majors', 'memecoins'] as Category[]).map((category) => (
-                <Button
-                  key={category}
-                  variant={activeCategory === category ? 'default' : 'ghost'}
-                  onClick={() => setActiveCategory(category)}
-                  className={cn(
-                    'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 min-h-[44px] flex-1 sm:flex-none capitalize',
-                    activeCategory === category
-                      ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
-                      : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
-                  )}
-                >
-                  {category === 'majors' ? 'Market Rotation' : 'Memecoins'}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Active Tab Content */}
-        {([
-          { tier: 'T1' as Tier, category: undefined },
-          { tier: 'T2' as Tier, category: 'majors' as Category },
-          { tier: 'T2' as Tier, category: 'memecoins' as Category },
-        ]).map((form) => {
-          const isActive = activeTier === form.tier && (form.tier !== 'T2' || activeCategory === form.category)
-          const mappedEditing = editingSignal ? mapEditingSignal(editingSignal) : null
-          const shouldHydrate = mappedEditing
-            ? mappedEditing.tier === form.tier && (form.tier !== 'T2' || mappedEditing.category === form.category)
-            : false
+        {/* Forms — render both so form state per category persists while switching tabs */}
+        {(['majors', 'memecoins'] as Category[]).map((category) => {
+          const isActive = activeCategory === category
+          const editingCategory: Category =
+            editingSignal?.category === 'memecoins' ? 'memecoins' : 'majors'
+          const shouldHydrate = !!editingSignal && editingCategory === category
 
           return (
-            <div key={`${form.tier}-${form.category ?? 'default'}`} className={isActive ? 'block' : 'hidden'}>
-              <DailySignalUpload 
-                tier={form.tier}
-                category={form.category}
+            <div key={category} className={isActive ? 'block' : 'hidden'}>
+              <DailySignalUpload
+                category={category}
                 userRole={userRole}
-                formIdPrefix={`${form.tier}-${form.category ?? 'default'}`}
-                existingSignal={editingSignal && shouldHydrate
+                formIdPrefix={category}
+                existingSignal={shouldHydrate && editingSignal
                   ? {
                       id: editingSignal.id,
                       signal: editingSignal.signal,
@@ -184,4 +130,3 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
     </Card>
   )
 }
-

@@ -17,7 +17,7 @@ function escapeHtml(text: string | null | undefined): string {
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2'
+  tier: string
   category?: 'majors' | 'memecoins' | null
   signal: string
   primaryAsset?: string | null
@@ -28,14 +28,17 @@ interface DailySignal {
   publishedAt: Date | string
 }
 
-const tierLabels: Record<'T1' | 'T2', string> = {
-  T1: 'Growth',
-  T2: 'Elite',
+type Category = 'majors' | 'memecoins'
+
+const CATEGORY_LABELS: Record<Category, string> = {
+  majors: 'Market Rotation',
+  memecoins: 'Memecoins',
 }
 
-const tierColors: Record<'T1' | 'T2', { bg: string; border: string; text: string }> = {
-  T1: { bg: '#FAF5FF', border: '#E9D5FF', text: '#6B21A8' }, // purple-50, purple-200, purple-800 (old T2)
-  T2: { bg: '#FEFCE8', border: '#FEF08A', text: '#854D0E' }, // yellow-50, yellow-200, yellow-800 (old T3)
+// Majors uses the brand gold; memecoins gets the complementary purple accent.
+const CATEGORY_COLORS: Record<Category, { bg: string; border: string; text: string }> = {
+  majors:    { bg: '#FEFCE8', border: '#FEF08A', text: '#854D0E' },
+  memecoins: { bg: '#FAF5FF', border: '#E9D5FF', text: '#6B21A8' },
 }
 
 function getAssetDisplayName(asset: PortfolioAsset): string {
@@ -47,14 +50,10 @@ function getAssetDisplayName(asset: PortfolioAsset): string {
  * Generate HTML for a single update section
  */
 function generateUpdateSection(signal: DailySignal): string {
-  const categoryLabel = signal.category === 'majors' 
-    ? ' Market Rotation' 
-    : signal.category === 'memecoins' 
-    ? ' Memecoins' 
-    : ''
-  
-    const tierColor = tierColors[signal.tier]
-    const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
+  const normalisedCategory: Category = signal.category === 'memecoins' ? 'memecoins' : 'majors'
+  const categoryLabel = CATEGORY_LABELS[normalisedCategory]
+  const tierColor = CATEGORY_COLORS[normalisedCategory]
+  const publishedDate = formatDate(new Date(signal.publishedAt), 'short')
     const isMemecoins = signal.category === 'memecoins'
     const allocationAssets = !isMemecoins
       ? signal.primaryAsset && signal.secondaryAsset && signal.tertiaryAsset
@@ -111,7 +110,7 @@ function generateUpdateSection(signal: DailySignal): string {
         <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 200px;">
           <span style="font-size: 24px;">⚡</span>
           <h3 style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0; line-height: 1.4;">
-            Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel} ⚡
+            Portfolio Update — ${categoryLabel} ⚡
           </h3>
         </div>
         <span style="font-size: 14px; color: #64748b; white-space: nowrap;">
@@ -169,8 +168,6 @@ export async function sendDailySignalEmail({
   // Generate update sections
   const signalSections = signals.map(signal => generateUpdateSection(signal)).join('')
 
-  // Determine main tier (for header)
-  const mainTier = signals[0].tier
   const hasMultipleCategories = signals.length > 1 && signals.some(s => s.category)
 
   const html = `
@@ -258,13 +255,8 @@ export async function sendDailySignalEmail({
 
   // Generate text version
   const textSignals = signals.map(signal => {
-    const categoryLabel = signal.category === 'majors' 
-      ? ' Market Rotation' 
-      : signal.category === 'memecoins' 
-      ? ' Memecoins' 
-      : ''
-    
-    let text = `Portfolio Update - ${tierLabels[signal.tier]}${categoryLabel}\n`
+    const textCategory: Category = signal.category === 'memecoins' ? 'memecoins' : 'majors'
+    let text = `Portfolio Update — ${CATEGORY_LABELS[textCategory]}\n`
     text += `Published: ${formatDate(new Date(signal.publishedAt), 'short')}\n\n`
     const isMemecoins = signal.category === 'memecoins'
     const allocationAssets = !isMemecoins
@@ -340,14 +332,15 @@ export async function sendTrialNotificationEmail({
 }: {
   to: string
   userName?: string | null
-  tier: 'T1' | 'T2'
+  /** Retained for API compatibility; not surfaced in the email body anymore. */
+  tier?: string
   trialEndDate: Date
   isExtension: boolean
   loginUrl: string
 }): Promise<void> {
   const greeting = userName ? `Hi ${userName},` : 'Hi there,'
-  const tierLabel = tierLabels[tier]
-  const tierColor = tierColors[tier]
+  // Warm gold palette used for trial callouts — matches the brand accent.
+  const accent = { bg: '#FEFCE8', border: '#FEF08A', text: '#854D0E' }
   const formattedEndDate = formatDate(trialEndDate, 'MMMM d, yyyy')
   const formattedEndDateTime = formatDate(trialEndDate, 'MMMM d, yyyy h:mm a')
   
@@ -397,11 +390,11 @@ export async function sendTrialNotificationEmail({
                 : `We're excited to let you know that a trial subscription has been activated for your account.`}
             </p>
 
-            <div class="trial-box" style="background: ${tierColor.bg}; border: 2px solid ${tierColor.border}; border-radius: 12px; padding: 32px 28px; margin-bottom: 36px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div class="trial-box" style="background: ${accent.bg}; border: 2px solid ${accent.border}; border-radius: 12px; padding: 32px 28px; margin-bottom: 36px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
                 <span style="font-size: 24px;">🎉</span>
-                <h3 style="font-size: 20px; font-weight: bold; color: ${tierColor.text}; margin: 0; line-height: 1.4;">
-                  ${tierLabel} Tier Trial
+                <h3 style="font-size: 20px; font-weight: bold; color: ${accent.text}; margin: 0; line-height: 1.4;">
+                  Your Trial
                 </h3>
               </div>
 
@@ -409,9 +402,6 @@ export async function sendTrialNotificationEmail({
                 <h4 style="font-weight: 700; color: #1e293b; margin: 0 0 12px 0; font-size: 17px; letter-spacing: 0.3px;">Trial Details:</h4>
                 <div class="text-box" style="background: white; border-radius: 10px; padding: 20px 18px; border: 1px solid #e2e8f0;">
                   <div style="font-size: 16px; color: #1e293b; margin: 0; line-height: 1.8;">
-                    <p style="margin: 0 0 12px 0; padding: 0; line-height: 1.8;">
-                      <strong>Tier:</strong> ${tierLabel}
-                    </p>
                     <p style="margin: 0 0 12px 0; padding: 0; line-height: 1.8;">
                       <strong>Trial End Date:</strong> ${formattedEndDateTime}
                     </p>
@@ -425,8 +415,8 @@ export async function sendTrialNotificationEmail({
 
             <p style="margin: 0 0 24px 0; font-size: 17px; color: #475569; line-height: 1.7;">
               ${isExtension
-                ? `You can continue enjoying all the benefits of your ${tierLabel} tier subscription.`
-                : `You now have access to all the features and content available in the ${tierLabel} tier.`}
+                ? `You can continue enjoying full access to the platform during your trial.`
+                : `You now have full access to the platform's daily signals, research, and community for the duration of your trial.`}
             </p>
 
             <div style="text-align: center; margin: 40px 0;">
@@ -454,21 +444,18 @@ ${isExtension ? 'Trial Extended' : 'Trial Subscription Activated'}
 
 ${greeting}
 
-${isExtension 
+${isExtension
   ? `Great news! Your trial subscription has been extended.`
   : `We're excited to let you know that a trial subscription has been activated for your account.`}
 
-${tierLabel} Tier Trial
-
 Trial Details:
-- Tier: ${tierLabel}
 - Trial End Date: ${formattedEndDateTime}
 
 Your trial access will remain active until ${formattedEndDate}.
 
 ${isExtension
-  ? `You can continue enjoying all the benefits of your ${tierLabel} tier subscription.`
-  : `You now have access to all the features and content available in the ${tierLabel} tier.`}
+  ? `You can continue enjoying full access to the platform during your trial.`
+  : `You now have full access to the platform's daily signals, research, and community for the duration of your trial.`}
 
 Access Your Account: ${loginUrl}
 
@@ -479,7 +466,7 @@ If you have any questions or need assistance, please don't hesitate to reach out
 
   await sendEmail({
     to,
-    subject: isExtension ? `Trial Extended - ${tierLabel} Tier` : `Trial Subscription Activated - ${tierLabel} Tier`,
+    subject: isExtension ? 'Trial Extended' : 'Trial Subscription Activated',
     html,
     text,
   })

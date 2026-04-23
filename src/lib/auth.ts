@@ -214,7 +214,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             image: user.image, // Add image field
             role: user.role as 'guest' | 'member' | 'editor' | 'admin',
-            membershipTier: membership?.tier || 'T1',
+            membershipTier: membership?.tier || 'T2',
           }
         } catch (error) {
           logger.error(
@@ -329,7 +329,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email
         token.name = user.name
         token.role = (user as any).role || 'guest'
-        token.membershipTier = (user as any).membershipTier || 'T1'
+        token.membershipTier = (user as any).membershipTier || 'T2'
         token.picture = user.image
         token.lastRefreshed = Math.floor(Date.now() / 1000)
         
@@ -386,7 +386,7 @@ export const authOptions: NextAuthOptions = {
                   tier: true,
                 },
               })
-              token.membershipTier = membership?.tier || 'T1'
+              token.membershipTier = membership?.tier || 'T2'
             } catch (membershipError) {
               // If membership query fails (e.g., missing columns), use default
               const error = membershipError instanceof Error ? membershipError : new Error(String(membershipError))
@@ -423,7 +423,7 @@ export const authOptions: NextAuthOptions = {
           session.user.email = (token.email as string) || ''
           session.user.name = (token.name as string) || ''
           session.user.role = (token.role as 'guest' | 'member' | 'editor' | 'admin') || 'guest'
-          session.user.membershipTier = (token.membershipTier as string) || 'T1'
+          session.user.membershipTier = (token.membershipTier as string) || 'T2'
           session.user.image = (token.picture as string | null) || null
         }
         return session

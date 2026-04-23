@@ -12,7 +12,6 @@ import { toast } from 'sonner'
 import { buildAllocationSplits, portfolioAssets, getAssetDisplayLabel, type PortfolioAsset } from '@/lib/portfolio-assets'
 
 interface DailySignalUploadProps {
-  tier: 'T1' | 'T2'
   category?: 'majors' | 'memecoins'
   userRole?: string
   formIdPrefix?: string
@@ -28,14 +27,17 @@ interface DailySignalUploadProps {
   onEditComplete?: () => void
 }
 
-const tierLabels = {
-  T1: 'Growth',
-  T2: 'Elite',
-}
+const CATEGORY_LABELS = {
+  majors: 'Market Rotation',
+  memecoins: 'Memecoins',
+} as const
 
-// Shared helper; the local override map previously lived here.
+// All new signals publish under the single unified subscription. The `tier`
+// column on PortfolioDailySignal is retained in the schema for historical
+// continuity and always written as 'T2'.
+const SIGNAL_TIER = 'T2' as const
 
-export default function DailySignalUpload({ tier, category, userRole, formIdPrefix, existingSignal, onEditComplete }: DailySignalUploadProps) {
+export default function DailySignalUpload({ category, userRole, formIdPrefix, existingSignal, onEditComplete }: DailySignalUploadProps) {
   const router = useRouter()
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
@@ -43,7 +45,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
   const [isEditing, setIsEditing] = useState(!!existingSignal)
   const [showPreview, setShowPreview] = useState(false)
   const isMemecoins = category === 'memecoins'
-  const idPrefix = formIdPrefix ?? `${tier}-${category ?? 'default'}`
+  const idPrefix = formIdPrefix ?? (category ?? 'default')
 
   const parseAssetsFromSignal = useCallback((signal: string): PortfolioAsset[] => {
     if (!signal) return []
@@ -224,8 +226,8 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
       } else {
         // Create new signal
         const requestBody = {
-          tier,
-          ...(tier === 'T2' && category ? { category } : {}),
+          tier: SIGNAL_TIER,
+          ...(category ? { category } : {}),
           ...(isMemecoins
             ? { signal: formData.signalText.trim() }
             : {
@@ -237,7 +239,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
           associatedData: formData.associatedData.trim() || undefined,
         }
 
-        console.log(`Creating ${tier}${category ? ` ${category}` : ''} daily update:`, requestBody)
+        console.log(`Creating ${category ?? 'default'} daily update:`, requestBody)
 
         const result = await json<{ id: string } | { error: string; details?: any[] }>('/api/admin/portfolio-daily-signals', {
           method: 'POST',
@@ -251,8 +253,8 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
           throw new Error(errorDetails)
         }
 
-        const categoryLabel = category === 'majors' ? 'Market Rotation' : category === 'memecoins' ? 'Memecoins' : ''
-        toast.success(`${tierLabels[tier]}${categoryLabel ? ` ${categoryLabel}` : ''} update posted successfully!`)
+        const categoryLabel = category ? CATEGORY_LABELS[category] : 'Daily'
+        toast.success(`${categoryLabel} update posted successfully!`)
         setUploadStatus('success')
         setFormData({
           ...getAssetDefaults(),
@@ -415,7 +417,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
           <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4">
             <div className="mb-3 flex items-center justify-between">
               <h4 className="text-sm font-semibold text-[var(--text-strong)]">
-                Portfolio Update - {tierLabels[tier]}{previewCategoryLabel ? ` ${previewCategoryLabel}` : ''}
+                Portfolio Update — {previewCategoryLabel || 'Daily'}
               </h4>
               <span className="text-xs text-[var(--text-muted)]">Preview</span>
             </div>
@@ -469,7 +471,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
         {uploadStatus === 'success' && (
           <div className="flex items-center space-x-2 text-green-600">
             <CheckCircle className="w-5 h-5" />
-            <span>Update posted successfully! It will replace any existing update for this tier today.</span>
+            <span>Update posted successfully! It will replace any existing update for this category today.</span>
           </div>
         )}
 
@@ -497,7 +499,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
             ? (isEditing ? 'Updating...' : 'Posting Update...')
             : isEditing
               ? 'Update'
-              : `Post ${tierLabels[tier]}${category === 'majors' ? ' Market Rotation' : category === 'memecoins' ? ' Memecoins' : ''} Update`}
+              : `Post ${category ? CATEGORY_LABELS[category] : 'Daily'} Update`}
         </Button>
       </form>
     </div>

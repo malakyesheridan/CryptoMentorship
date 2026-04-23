@@ -116,7 +116,6 @@ export default async function PortfolioPage() {
 
   try {
     const userRole = user.role || 'guest'
-    const userTier = (user as any)?.membershipTier || null
 
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
@@ -141,7 +140,7 @@ export default async function PortfolioPage() {
         <RiskOnboardingGate />
         {/* Daily Signal Manager (Upload + Display) */}
         <div className="mb-8" data-tour="portfolio-updates">
-          <DailySignalManager userTier={userTier} userRole={userRole} />
+          <DailySignalManager userRole={userRole} />
         </div>
 
         {/* Disclaimer */}

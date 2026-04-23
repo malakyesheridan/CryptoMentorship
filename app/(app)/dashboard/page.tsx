@@ -37,7 +37,6 @@ export default async function DashboardPage() {
           userName={user?.name ?? sessionUser.name ?? null}
           userImage={user?.image ?? sessionUser.image ?? null}
           memberSince={user?.createdAt ?? new Date()}
-          tier={membership?.tier ?? null}
           status={membership?.status ?? null}
         />
 
@@ -51,7 +50,6 @@ export default async function DashboardPage() {
         <DailySignalSnapshot
           signals={signals}
           hasSubscription={hasSubscription}
-          userTier={membership?.tier ?? null}
         />
 
         {/* Announcements */}

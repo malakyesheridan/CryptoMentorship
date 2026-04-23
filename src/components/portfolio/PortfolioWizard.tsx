@@ -37,7 +37,7 @@ const STEPS: WizardStep[] = [
   {
     id: "portfolio-updates",
     title: "Daily update hub",
-    body: "All daily updates, tier tabs, and notes live here.",
+    body: "All daily updates and notes live here.",
     selector: "[data-tour=\"portfolio-updates\"]",
     placement: "top"
   },
@@ -49,20 +49,13 @@ const STEPS: WizardStep[] = [
     placement: "bottom"
   },
   {
-    id: "portfolio-tier-tabs",
-    title: "Tier tabs",
-    body: "Switch between Growth and Elite updates based on your tier.",
-    selector: "[data-tour=\"portfolio-tier-tabs\"]",
-    placement: "bottom"
-  },
-  {
     id: "portfolio-category-tabs",
-    title: "Elite categories",
-    body: "Elite members can switch between Market Rotation and Memecoins.",
+    title: "Update categories",
+    body: "Switch between Market Rotation and Memecoins updates.",
     selector: "[data-tour=\"portfolio-category-tabs\"]",
     placement: "bottom",
     optional: true,
-    missingBody: "Category tabs appear for Elite updates."
+    missingBody: "Category tabs appear once updates are published."
   },
   {
     id: "portfolio-update-card",

@@ -27,8 +27,11 @@ function deriveRiskProfileFromAssets(input: {
 }
 
 const createDailySignalSchema = z.object({
-  tier: z.enum(['T1', 'T2']),
-  category: z.enum(['majors', 'memecoins']).optional(),
+  // Single-tier model — the `tier` field is retained in the DB for historical
+  // continuity but server-side always written as 'T2'. Still accepted in the
+  // request for backward-compat with older clients.
+  tier: z.enum(['T1', 'T2']).optional(),
+  category: z.enum(['majors', 'memecoins']),
   signal: z.string().optional(),
   primaryAsset: z.enum(portfolioAssets).optional(),
   secondaryAsset: z.enum(portfolioAssets).optional(),
@@ -36,17 +39,6 @@ const createDailySignalSchema = z.object({
   executiveSummary: z.string().optional(),
   associatedData: z.string().optional(),
 }).superRefine((data, ctx) => {
-  // Category is required for T2 (Elite), optional for T1 (Growth)
-  if (data.tier === 'T2') {
-    if (data.category !== 'majors' && data.category !== 'memecoins') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Category must be 'majors' or 'memecoins' for T2 (Elite) tier",
-        path: ['category'],
-      })
-    }
-  }
-
   const requiresTextSignal = data.category === 'memecoins'
   if (requiresTextSignal) {
     if (!data.signal || !data.signal.trim()) {
@@ -150,8 +142,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createDailySignalSchema.parse(body)
 
-    // Delete any existing update for this tier/category for today only (keep history)
-    let whereClause: any
+    // Delete any existing update for this category today (keeps history on prior days)
     const now = new Date()
     const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
     const endOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
@@ -159,61 +150,30 @@ export async function POST(request: NextRequest) {
       gte: startOfTodayUtc,
       lt: new Date(endOfTodayUtc.getTime() + 1)
     }
-    
-    if (data.tier === 'T2' && data.category) {
-      // For T2 (Elite), filter by tier and category
-      whereClause = {
-        tier: data.tier,
-        category: data.category,
-        publishedAt: todayFilter
-      }
-    } else if (data.tier === 'T1') {
-      // For T1 (Growth), find signals with tier T1 OR old T2 signals without category
-      // This handles both new T1 signals and old T2 signals that map to T1
-      whereClause = {
-        OR: [
-          { tier: 'T1', category: null },
-          { tier: 'T2', category: null }
-        ],
-        publishedAt: todayFilter
-      }
-    } else {
-      // Fallback (shouldn't happen with current schema)
-      whereClause = {
-        tier: data.tier,
-        publishedAt: todayFilter
-      }
-    }
 
-    // Delete any updates for this tier/category for today only
     await prisma.portfolioDailySignal.deleteMany({
-      where: whereClause,
+      where: {
+        category: data.category,
+        publishedAt: todayFilter,
+      },
     })
 
-  // Create new update
-  // For T1 (Growth), ensure category is explicitly null (not undefined)
-  const signalValue = data.category === 'memecoins'
-    ? data.signal!.trim()
-    : formatAllocationSignal(data.primaryAsset!, data.secondaryAsset!, data.tertiaryAsset!)
-  const riskProfile = data.category === 'memecoins'
-    ? 'CONSERVATIVE'
-    : deriveRiskProfileFromAssets(data)
+    const signalValue = data.category === 'memecoins'
+      ? data.signal!.trim()
+      : formatAllocationSignal(data.primaryAsset!, data.secondaryAsset!, data.tertiaryAsset!)
+    const riskProfile = data.category === 'memecoins'
+      ? 'CONSERVATIVE'
+      : deriveRiskProfileFromAssets(data)
 
-  const createData: any = {
-    tier: data.tier,
-    riskProfile,
-    signal: signalValue,
+    const createData: any = {
+      // Single-tier model — always tag new signals as 'T2' for schema continuity.
+      tier: 'T2',
+      category: data.category,
+      riskProfile,
+      signal: signalValue,
       executiveSummary: data.executiveSummary || null,
       associatedData: data.associatedData || null,
-      createdById: session.user.id
-    }
-    
-    // Only include category for T2 (Elite)
-    if (data.tier === 'T2' && data.category) {
-      createData.category = data.category
-    } else {
-      // For T1 (Growth), explicitly set category to null
-      createData.category = null
+      createdById: session.user.id,
     }
     
     const signal = await prisma.portfolioDailySignal.create({

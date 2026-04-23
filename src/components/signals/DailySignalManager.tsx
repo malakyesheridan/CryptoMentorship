@@ -6,7 +6,7 @@ import AdminSignalUploadWrapper from '@/components/AdminSignalUploadWrapper'
 
 interface DailySignal {
   id: string
-  tier: 'T1' | 'T2'
+  tier: string
   category?: 'majors' | 'memecoins' | null
   signal: string
   primaryAsset?: string | null
@@ -18,26 +18,24 @@ interface DailySignal {
 }
 
 interface DailySignalManagerProps {
-  userTier: string | null
   userRole?: string
 }
 
-export default function DailySignalManager({ userTier, userRole }: DailySignalManagerProps) {
+export default function DailySignalManager({ userRole }: DailySignalManagerProps) {
   const [editingSignal, setEditingSignal] = useState<DailySignal | null>(null)
 
   return (
     <div className="space-y-8">
       {/* Admin Upload Section */}
-      <AdminSignalUploadWrapper 
+      <AdminSignalUploadWrapper
         userRole={userRole}
         editingSignal={editingSignal}
         onEditComplete={() => setEditingSignal(null)}
       />
-      
+
       {/* Daily Update Display */}
       <div className="space-y-6">
-        <DailySignalDisplay 
-          userTier={userTier} 
+        <DailySignalDisplay
           userRole={userRole}
           onEditSignal={(signal) => setEditingSignal(signal)}
         />
@@ -45,4 +43,3 @@ export default function DailySignalManager({ userTier, userRole }: DailySignalMa
     </div>
   )
 }
-

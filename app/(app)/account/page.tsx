@@ -107,14 +107,8 @@ interface ReferralRow {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-function getTierDisplayName(tier: string) {
-  const tierNames: Record<string, string> = {
-    T1: 'T1 Basic',
-    T2: 'T2 Premium',
-    T3: 'T3 Elite',
-  }
-  return tierNames[tier] || tier
-}
+// Single-tier model — the specific tier string isn't surfaced to users. We
+// just show whether the subscription is active, on trial, or paused.
 
 function getStatusVariant(status: string) {
   if (status === 'active') return 'default' as const
@@ -458,11 +452,11 @@ export default function AccountPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Tier + Status */}
+            {/* Status */}
             {membership && (
               <div className="flex flex-wrap items-center gap-3">
                 <Badge variant="preview" className="text-sm px-3 py-1">
-                  {getTierDisplayName(membership.tier)}
+                  {membership.status === 'trial' ? 'Trial Member' : 'Member'}
                 </Badge>
                 {membership.currentPeriodEnd && (
                   <span className="text-sm text-[var(--text-muted)]">

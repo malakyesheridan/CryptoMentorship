@@ -6,20 +6,19 @@ interface WelcomeHeaderProps {
   userName: string | null
   userImage: string | null
   memberSince: Date
-  tier: string | null
   status: string | null
 }
 
-const tierLabels: Record<string, string> = {
-  T1: 'Growth',
-  T2: 'Elite',
-  T3: 'VIP',
+function getMembershipLabel(status: string | null): string {
+  if (status === 'trial') return 'Trial'
+  if (status === 'active') return 'Member'
+  return 'Free'
 }
 
-export function WelcomeHeader({ userName, userImage, memberSince, tier, status }: WelcomeHeaderProps) {
+export function WelcomeHeader({ userName, userImage, memberSince, status }: WelcomeHeaderProps) {
   const firstName = userName?.split(' ')[0] ?? 'Member'
   const isActive = status === 'active' || status === 'trial'
-  const tierLabel = tier && isActive ? tierLabels[tier] ?? tier : 'Free'
+  const label = getMembershipLabel(status)
 
   return (
     <div className="flex items-center justify-between">
@@ -29,7 +28,7 @@ export function WelcomeHeader({ userName, userImage, memberSince, tier, status }
         </h1>
         <div className="flex items-center gap-3">
           <Badge variant={isActive ? 'preview' : 'secondary'}>
-            {tierLabel}
+            {label}
           </Badge>
           <span className="text-sm text-[var(--text-muted)]">
             Member since {formatDate(memberSince)}
