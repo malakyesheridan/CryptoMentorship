@@ -127,10 +127,10 @@ export default async function PortfolioPage() {
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6" data-tour="portfolio-hero">
-              <span className="text-white">My </span>
-              <span className="text-yellow-400">Portfolio</span>
+              <span className="text-[var(--text-strong)]">My </span>
+              <span className="text-[var(--gold-400)]">Portfolio</span>
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-slate-300 mb-8 px-4">
+            <p className="text-base sm:text-lg lg:text-xl text-[var(--text-muted)] mb-8 px-4">
               View Daily Updates to Coen&apos;s Portfolio
             </p>
           </div>
@@ -145,7 +145,7 @@ export default async function PortfolioPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="bg-[#2a2418] border border-[var(--border-subtle)] rounded-2xl p-6 mt-12" data-tour="portfolio-disclaimer">
+        <div className="bg-[var(--bg-warning-subtle)] border border-[var(--border-subtle)] rounded-2xl p-6 mt-12" data-tour="portfolio-disclaimer">
           <div className="flex items-start gap-4">
             <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
               <span className="text-white text-sm font-bold">!</span>

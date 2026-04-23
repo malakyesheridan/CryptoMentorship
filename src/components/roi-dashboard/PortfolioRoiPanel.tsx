@@ -328,7 +328,7 @@ export function PortfolioRoiPanel() {
       </div>
       {showStatusBadge ? (
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-          <span className="rounded-full bg-[#2a2418] px-3 py-1 text-xs font-semibold text-yellow-500">
+          <span className="rounded-full bg-[var(--bg-warning-subtle)] px-3 py-1 text-xs font-semibold text-yellow-500">
             Updating / waiting for latest data
           </span>
           <span className="text-xs text-[var(--text-muted)]">{allocationLabel}</span>
@@ -343,7 +343,7 @@ export function PortfolioRoiPanel() {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">ROI Since Tracking Started</p>
-            <p className={roiInception !== null && roiInception >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
+            <p className={roiInception !== null && roiInception >= 0 ? 'text-xl font-semibold text-[var(--success)]' : 'text-xl font-semibold text-[var(--danger)]'}>
               {formatPercent(roiInception)}
             </p>
             <p className="mt-1 text-[11px] text-[var(--text-muted)]">From {trackingStartLabel}</p>
@@ -352,7 +352,7 @@ export function PortfolioRoiPanel() {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">{roiLastLabel}</p>
-            <p className={roi30d !== null && roi30d >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
+            <p className={roi30d !== null && roi30d >= 0 ? 'text-xl font-semibold text-[var(--success)]' : 'text-xl font-semibold text-[var(--danger)]'}>
               {formatPercent(roi30d)}
             </p>
           </CardContent>
@@ -360,14 +360,14 @@ export function PortfolioRoiPanel() {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">Max Drawdown</p>
-            <p className="text-xl font-semibold text-[#c03030]">{formatPercent(maxDrawdown)}</p>
+            <p className="text-xl font-semibold text-[var(--danger)]">{formatPercent(maxDrawdown)}</p>
             <p className="mt-1 text-[11px] text-[var(--text-muted)]">Within tracked period</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">Primary Move Since Last Update</p>
-            <p className={primaryMovePercent !== null && primaryMovePercent >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
+            <p className={primaryMovePercent !== null && primaryMovePercent >= 0 ? 'text-xl font-semibold text-[var(--success)]' : 'text-xl font-semibold text-[var(--danger)]'}>
               {formatPercent(primaryMovePercent)}
             </p>
             <p className="mt-1 text-[11px] text-[var(--text-muted)]">

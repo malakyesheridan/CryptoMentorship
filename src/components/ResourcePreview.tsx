@@ -25,14 +25,14 @@ export default function ResourcePreview({ resource, canView }: ResourcePreviewPr
     return (
       <div className="bg-[var(--bg-panel)] rounded-lg border border-[var(--border-subtle)] p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#2e1a1a] rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-[#c03030]" />
+          <div className="w-10 h-10 bg-[var(--bg-danger-subtle)] rounded-lg flex items-center justify-center">
+            <FileText className="w-5 h-5 text-[var(--danger)]" />
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-[var(--text-strong)]">{resource.title}</h3>
             <p className="text-sm text-[var(--text-strong)]">Member Only Resource</p>
           </div>
-          <Badge className="bg-[#1a1a2e] text-blue-400 border-blue-200">
+          <Badge className="bg-[var(--bg-info-subtle)] text-blue-400 border-blue-200">
             Member Only
           </Badge>
         </div>
@@ -43,8 +43,8 @@ export default function ResourcePreview({ resource, canView }: ResourcePreviewPr
   return (
     <div className="bg-[var(--bg-panel)] rounded-lg border border-[var(--border-subtle)] p-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#2e1a1a] rounded-lg flex items-center justify-center">
-          <FileText className="w-5 h-5 text-[#c03030]" />
+        <div className="w-10 h-10 bg-[var(--bg-danger-subtle)] rounded-lg flex items-center justify-center">
+          <FileText className="w-5 h-5 text-[var(--danger)]" />
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-[var(--text-strong)]">{resource.title}</h3>

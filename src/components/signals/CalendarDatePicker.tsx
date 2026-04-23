@@ -46,7 +46,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "flex items-center gap-2 rounded-xl px-4 py-2 font-medium transition-all duration-200",
-          selectedDate && "bg-[#2a2418] border-yellow-700 text-yellow-500 hover:bg-[#2a2418]"
+          selectedDate && "bg-[var(--bg-warning-subtle)] border-yellow-700 text-yellow-500 hover:bg-[var(--bg-warning-subtle)]"
         )}
       >
         <Calendar className="h-4 w-4" />
@@ -55,7 +55,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
           : 'Select Date'}
         {selectedDate && (
           <X 
-            className="h-3 w-3 ml-1 hover:bg-[#2a2418] rounded p-0.5" 
+            className="h-3 w-3 ml-1 hover:bg-[var(--bg-warning-subtle)] rounded p-0.5" 
             onClick={(e) => {
               e.stopPropagation()
               handleClear()
@@ -106,7 +106,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
                   variant="outline"
                   size="sm"
                   onClick={handleClear}
-                  className="flex-1 text-[#c03030] hover:text-[#c03030] hover:bg-[#2e1a1a]"
+                  className="flex-1 text-[var(--danger)] hover:text-[var(--danger)] hover:bg-[var(--bg-danger-subtle)]"
                 >
                   Clear
                 </Button>

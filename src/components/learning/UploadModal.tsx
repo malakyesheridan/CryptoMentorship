@@ -92,14 +92,14 @@ export function UploadModal({
         </DialogHeader>
 
         {lastCreatedTrack && (
-          <div className="mb-4 rounded-lg border border-[#1a2e1a] bg-[#1a2e1a] px-4 py-3 text-sm text-[#4a7c3f] flex items-start justify-between gap-4">
+          <div className="mb-4 rounded-lg border border-[#1a2e1a] bg-[var(--bg-success-subtle)] px-4 py-3 text-sm text-[var(--success)] flex items-start justify-between gap-4">
             <span>
               Track created: <span className="font-semibold">{lastCreatedTrack.title}</span>
             </span>
             <button
               type="button"
               onClick={() => setLastCreatedTrack(null)}
-              className="text-[#4a7c3f] hover:text-[#4a7c3f]"
+              className="text-[var(--success)] hover:text-[var(--success)]"
               aria-label="Dismiss track created confirmation"
             >
               <X className="h-4 w-4" />
@@ -107,14 +107,14 @@ export function UploadModal({
           </div>
         )}
         {lastUploadedLessonTitle && (
-          <div className="mb-4 rounded-lg border border-[#1a2e1a] bg-[#1a2e1a] px-4 py-3 text-sm text-[#4a7c3f] flex items-start justify-between gap-4">
+          <div className="mb-4 rounded-lg border border-[#1a2e1a] bg-[var(--bg-success-subtle)] px-4 py-3 text-sm text-[var(--success)] flex items-start justify-between gap-4">
             <span>
               Lesson uploaded: <span className="font-semibold">{lastUploadedLessonTitle}</span>
             </span>
             <button
               type="button"
               onClick={() => setLastUploadedLessonTitle(null)}
-              className="text-[#4a7c3f] hover:text-[#4a7c3f]"
+              className="text-[var(--success)] hover:text-[var(--success)]"
               aria-label="Dismiss lesson uploaded confirmation"
             >
               <X className="h-4 w-4" />

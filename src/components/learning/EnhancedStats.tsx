@@ -50,15 +50,15 @@ export function EnhancedStats({
   }
 
   const getConsistencyColor = (score: number) => {
-    if (score >= 80) return 'text-[#4a7c3f]'
+    if (score >= 80) return 'text-[var(--success)]'
     if (score >= 60) return 'text-yellow-600'
-    return 'text-[#c03030]'
+    return 'text-[var(--danger)]'
   }
 
   const getConsistencyBadge = (score: number) => {
-    if (score >= 80) return { text: 'Excellent', color: 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]' }
-    if (score >= 60) return { text: 'Good', color: 'bg-[#2a2418] text-[#c9a227] border-[#2a2418]' }
-    return { text: 'Needs Improvement', color: 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]' }
+    if (score >= 80) return { text: 'Excellent', color: 'bg-[var(--bg-success-subtle)] text-[var(--success)] border-[#1a2e1a]' }
+    if (score >= 60) return { text: 'Good', color: 'bg-[var(--bg-warning-subtle)] text-[var(--gold-400)] border-[#2a2418]' }
+    return { text: 'Needs Improvement', color: 'bg-[var(--bg-danger-subtle)] text-[var(--danger)] border-[#2e1a1a]' }
   }
 
   const consistencyBadge = getConsistencyBadge(enhancedMetrics.consistencyScore)
@@ -70,7 +70,7 @@ export function EnhancedStats({
         <Link href="/learning" className="group">
           <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full">
             <CardContent className="p-4 sm:p-6 text-center">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[#1a1d2e] rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[#1a1d2e] group-hover:scale-110 transition-all duration-300">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[var(--bg-info-subtle)] rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[var(--bg-info-subtle)] group-hover:scale-110 transition-all duration-300">
                 <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-[#5b8dd9] transition-colors duration-300 text-sm sm:text-base">Started Tracks</h3>
@@ -82,11 +82,11 @@ export function EnhancedStats({
         <Link href="/learning" className="group">
           <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full">
             <CardContent className="p-4 sm:p-6 text-center">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[#1a2e1a] rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[#1a2e1a] group-hover:scale-110 transition-all duration-300">
-                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-[#4a7c3f]" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[var(--bg-success-subtle)] rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[var(--bg-success-subtle)] group-hover:scale-110 transition-all duration-300">
+                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-[var(--success)]" />
               </div>
-              <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-[#4a7c3f] transition-colors duration-300 text-sm sm:text-base">Completed Tracks</h3>
-              <p className="text-xl sm:text-2xl font-bold text-[#4a7c3f] group-hover:text-[#4a7c3f] transition-colors duration-300">{completedTracks}</p>
+              <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-[var(--success)] transition-colors duration-300 text-sm sm:text-base">Completed Tracks</h3>
+              <p className="text-xl sm:text-2xl font-bold text-[var(--success)] group-hover:text-[var(--success)] transition-colors duration-300">{completedTracks}</p>
             </CardContent>
           </Card>
         </Link>
@@ -106,7 +106,7 @@ export function EnhancedStats({
         <Link href="/learning" className="group">
           <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full">
             <CardContent className="p-4 sm:p-6 text-center">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[#2a2418] rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[#2a2418] group-hover:scale-110 transition-all duration-300">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-[var(--bg-warning-subtle)] rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[var(--bg-warning-subtle)] group-hover:scale-110 transition-all duration-300">
                 <Award className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
               <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-yellow-700 transition-colors duration-300 text-sm sm:text-base">Certificates</h3>
@@ -121,10 +121,10 @@ export function EnhancedStats({
         <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 bg-[#2a2018] rounded-lg flex items-center justify-center group-hover:bg-[#2a2018] group-hover:scale-110 transition-all duration-300">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 bg-[var(--bg-warning-subtle)] rounded-lg flex items-center justify-center group-hover:bg-[var(--bg-warning-subtle)] group-hover:scale-110 transition-all duration-300">
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
               </div>
-              <Badge variant="secondary" className="bg-[#2a2018] text-[#d97706] border-[#2a2018] group-hover:scale-105 transition-transform duration-300 text-xs">
+              <Badge variant="secondary" className="bg-[var(--bg-warning-subtle)] text-[var(--warning)] border-[#2a2018] group-hover:scale-105 transition-transform duration-300 text-xs">
                 This Week
               </Badge>
             </div>
@@ -139,8 +139,8 @@ export function EnhancedStats({
         <Card className="group-hover:shadow-xl group-hover:scale-[1.02] group-hover:-translate-y-1 transition-all duration-300 transform-gpu h-full">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 bg-[#1a2e1a] rounded-lg flex items-center justify-center group-hover:bg-[#1a2e1a] group-hover:scale-110 transition-all duration-300">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-[#4a7c3f]" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 bg-[var(--bg-success-subtle)] rounded-lg flex items-center justify-center group-hover:bg-[var(--bg-success-subtle)] group-hover:scale-110 transition-all duration-300">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-[var(--success)]" />
               </div>
               <Badge variant="secondary" className={cn('group-hover:scale-105 transition-transform duration-300 text-xs', consistencyBadge.color)}>
                 {consistencyBadge.text}

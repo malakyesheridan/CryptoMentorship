@@ -122,9 +122,9 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
 
   const getPriorityColor = (priority: 'high' | 'medium' | 'low') => {
     switch (priority) {
-      case 'high': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
-      case 'medium': return 'bg-[#2a2418] text-[#c9a227] border-[#2a2418]'
-      case 'low': return 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]'
+      case 'high': return 'bg-[var(--bg-danger-subtle)] text-[var(--danger)] border-[#2e1a1a]'
+      case 'medium': return 'bg-[var(--bg-warning-subtle)] text-[var(--gold-400)] border-[#2a2418]'
+      case 'low': return 'bg-[var(--bg-info-subtle)] text-[#5b8dd9] border-[#1a1d2e]'
       default: return 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }

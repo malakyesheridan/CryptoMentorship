@@ -47,21 +47,21 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
       title: 'Max Drawdown',
       value: formatMaxDrawdown(stats.maxDrawdown),
       icon: TrendingDown,
-      color: 'text-[#c03030]',
+      color: 'text-[var(--danger)]',
       description: 'Peak to trough'
     },
     {
       title: 'Success Rate',
       value: formatWinRate(stats.winRate),
       icon: Target,
-      color: stats.winRate >= 50 ? 'text-[#4a7c3f]' : 'text-[#c03030]',
+      color: stats.winRate >= 50 ? 'text-[var(--success)]' : 'text-[var(--danger)]',
       description: 'Profitable investments'
     },
     {
       title: 'Profit Factor',
       value: formatProfitFactor(stats.profitFactor),
       icon: BarChart3,
-      color: stats.profitFactor >= 1 ? 'text-[#4a7c3f]' : 'text-[#c03030]',
+      color: stats.profitFactor >= 1 ? 'text-[var(--success)]' : 'text-[var(--danger)]',
       description: 'Gross profit / loss'
     },
     {
@@ -163,21 +163,21 @@ export function PerformanceKPIs({ stats, timeRange }: PerformanceKPIsProps) {
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-[var(--text-muted)]">Max Drawdown</span>
-              <span className="font-medium text-[#c03030]">
+              <span className="font-medium text-[var(--danger)]">
                 {formatMaxDrawdown(stats.maxDrawdown)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-[var(--text-muted)]">Success Rate</span>
-              <span className={`font-medium ${stats.winRate >= 50 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
+              <span className={`font-medium ${stats.winRate >= 50 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                 {formatWinRate(stats.winRate)}
               </span>
             </div>
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-[var(--text-muted)]">Profit Factor</span>
-              <span className={`font-medium ${stats.profitFactor >= 1 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
+              <span className={`font-medium ${stats.profitFactor >= 1 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                 {formatProfitFactor(stats.profitFactor)}
               </span>
             </div>

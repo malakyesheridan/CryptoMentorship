@@ -146,7 +146,7 @@ export default function NewSignalPage() {
                       onChange={(e) => handleInputChange('direction', e.target.value)}
                       className="mr-2"
                     />
-                    <span className="text-[#4a7c3f] font-medium">Long</span>
+                    <span className="text-[var(--success)] font-medium">Long</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -156,7 +156,7 @@ export default function NewSignalPage() {
                       onChange={(e) => handleInputChange('direction', e.target.value)}
                       className="mr-2"
                     />
-                    <span className="text-[#c03030] font-medium">Short</span>
+                    <span className="text-[var(--danger)] font-medium">Short</span>
                   </label>
                 </div>
               </div>
@@ -185,7 +185,7 @@ export default function NewSignalPage() {
                         <button
                           type="button"
                           onClick={() => removeTag(tag)}
-                          className="ml-1 hover:text-[#c03030]"
+                          className="ml-1 hover:text-[var(--danger)]"
                         >
                           <X className="h-3 w-3" />
                         </button>

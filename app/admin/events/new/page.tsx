@@ -432,7 +432,7 @@ function AdminEventForm({ event, isEdit = false }: AdminEventFormProps) {
 
                     <Button 
                       variant="outline" 
-                      className="w-full text-[#c03030] hover:text-[#c03030]"
+                      className="w-full text-[var(--danger)] hover:text-[var(--danger)]"
                       onClick={handleDelete}
                       disabled={loading}
                     >

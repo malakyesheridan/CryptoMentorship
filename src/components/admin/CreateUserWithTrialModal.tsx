@@ -91,8 +91,8 @@ export function CreateUserWithTrialModal({ onSuccess, onClose }: CreateUserWithT
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-[#1a2e1a] border border-[#4a7c3f] rounded-lg">
-              <p className="text-sm font-medium text-[#4a7c3f] mb-2">User account created with trial subscription</p>
+            <div className="p-4 bg-[var(--bg-success-subtle)] border border-[var(--success)] rounded-lg">
+              <p className="text-sm font-medium text-[var(--success)] mb-2">User account created with trial subscription</p>
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="font-medium">Email:</span> {createdUser.email}

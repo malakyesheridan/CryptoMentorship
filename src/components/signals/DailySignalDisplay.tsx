@@ -44,8 +44,8 @@ const tierLabels: Record<Tier, string> = {
 }
 
 const tierColors: Record<Tier, string> = {
-  T1: 'bg-[#1a1520] border-purple-800',
-  T2: 'bg-[#2a2418] border-yellow-800',
+  T1: 'bg-purple-500/10 border-purple-500/30',
+  T2: 'bg-amber-500/10 border-amber-500/30',
 }
 
 const allocationLabelToProfile: Record<'Aggressive' | 'Semi Aggressive' | 'Conservative', RiskProfile> = {
@@ -224,9 +224,9 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
 
   if (error) {
     return (
-      <Card className="border-[#c03030]/40 bg-[#2e1a1a]">
+      <Card className="border-[var(--danger)]/40 bg-[var(--bg-danger-subtle)]">
         <CardContent className="pt-6">
-          <div className="flex items-center space-x-2 text-[#c03030]">
+          <div className="flex items-center space-x-2 text-[var(--danger)]">
             <AlertCircle className="w-5 h-5" />
             <span>Error loading daily updates. Please try again later.</span>
           </div>
@@ -418,7 +418,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                             className={cn(
                               'w-full text-left rounded-2xl border p-4 transition-all',
                               isActive
-                                ? 'border-yellow-400 bg-[#2a2418] shadow-sm'
+                                ? 'border-amber-400 bg-amber-500/10 shadow-sm'
                                 : 'border-[var(--border-subtle)] bg-[var(--bg-panel)] hover:border-[var(--border-subtle)]'
                             )}
                           >

@@ -181,7 +181,7 @@ export function ActivityChart({
       
       {/* Selected day details */}
       {selectedBar && (
-        <div className="mt-4 p-3 bg-[#1a1d2e] rounded-lg border border-[#1a1d2e]">
+        <div className="mt-4 p-3 bg-[var(--bg-info-subtle)] rounded-lg border border-[#1a1d2e]">
           <div className="text-sm text-[#5b8dd9]">
             <strong>{format(new Date(selectedBar), 'EEEE, MMMM d, yyyy')}</strong>
             <p className="mt-1">

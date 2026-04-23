@@ -158,7 +158,7 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
       </div>
 
       {/* Disclaimer */}
-      <div className="bg-[#2a2418] border border-[var(--border-subtle)] rounded-lg p-4 mb-8">
+      <div className="bg-[var(--bg-warning-subtle)] border border-[var(--border-subtle)] rounded-lg p-4 mb-8">
         <div className="flex items-start gap-3">
           <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
             <span className="text-white text-xs font-bold">!</span>
@@ -197,8 +197,8 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
             <Link href="/portfolio/sol-long-2024-03" className="block">
               <div className="p-4 border border-[var(--border-subtle)] rounded-lg hover:border-[var(--border-subtle)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-[#1a2e1a] rounded-lg flex items-center justify-center">
-                    <span className="text-[#4a7c3f] text-sm font-bold">SOL</span>
+                  <div className="w-8 h-8 bg-[var(--bg-success-subtle)] rounded-lg flex items-center justify-center">
+                    <span className="text-[var(--success)] text-sm font-bold">SOL</span>
                   </div>
                   <div>
                     <h4 className="font-semibold text-[var(--text-strong)]">SOL Long</h4>
@@ -211,8 +211,8 @@ export default async function SignalDetailPage({ params }: SignalDetailPageProps
             <Link href="/portfolio/avax-short-2024-04" className="block">
               <div className="p-4 border border-[var(--border-subtle)] rounded-lg hover:border-[var(--border-subtle)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-[#2e1a1a] rounded-lg flex items-center justify-center">
-                    <span className="text-[#c03030] text-sm font-bold">AVAX</span>
+                  <div className="w-8 h-8 bg-[var(--bg-danger-subtle)] rounded-lg flex items-center justify-center">
+                    <span className="text-[var(--danger)] text-sm font-bold">AVAX</span>
                   </div>
                   <div>
                     <h4 className="font-semibold text-[var(--text-strong)]">AVAX Short</h4>

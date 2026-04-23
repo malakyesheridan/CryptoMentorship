@@ -178,12 +178,12 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
                 placeholder="Enter notification title"
                 maxLength={200}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${
-                  errors.title ? 'border-[#c03030]' : 'border-[var(--border-subtle)]'
+                  errors.title ? 'border-[var(--danger)]' : 'border-[var(--border-subtle)]'
                 }`}
                 required
               />
               {errors.title && (
-                <p className="mt-1 text-sm text-[#c03030]">{errors.title}</p>
+                <p className="mt-1 text-sm text-[var(--danger)]">{errors.title}</p>
               )}
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {formData.title.length}/200 characters
@@ -202,11 +202,11 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
                 maxLength={1000}
                 rows={4}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${
-                  errors.body ? 'border-[#c03030]' : 'border-[var(--border-subtle)]'
+                  errors.body ? 'border-[var(--danger)]' : 'border-[var(--border-subtle)]'
                 }`}
               />
               {errors.body && (
-                <p className="mt-1 text-sm text-[#c03030]">{errors.body}</p>
+                <p className="mt-1 text-sm text-[var(--danger)]">{errors.body}</p>
               )}
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {formData.body?.length || 0}/1000 characters
@@ -224,11 +224,11 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
                 onChange={(e) => handleChange('url', e.target.value)}
                 placeholder="https://example.com/page"
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent ${
-                  errors.url ? 'border-[#c03030]' : 'border-[var(--border-subtle)]'
+                  errors.url ? 'border-[var(--danger)]' : 'border-[var(--border-subtle)]'
                 }`}
               />
               {errors.url && (
-                <p className="mt-1 text-sm text-[#c03030]">{errors.url}</p>
+                <p className="mt-1 text-sm text-[var(--danger)]">{errors.url}</p>
               )}
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 Users will be able to click the notification to navigate to this URL
@@ -236,7 +236,7 @@ export function CreateNotificationModal({ isOpen, onClose, onSuccess }: CreateNo
             </div>
 
             {/* Info */}
-            <div className="bg-[#1a1e2e] border border-[#4a7cc3] rounded-lg p-4">
+            <div className="bg-[var(--bg-info-subtle)] border border-[#4a7cc3] rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <Users className="h-5 w-5 text-[#4a7cc3] mt-0.5" />
                 <div>

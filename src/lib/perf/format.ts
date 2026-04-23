@@ -364,7 +364,7 @@ export function formatTradeCount(value: number): string {
  */
 export function getReturnColorClass(value: Decimal | number): string {
   const numValue = typeof value === 'number' ? value : toNum(value)
-  if (numValue > 0) return 'text-[#4a7c3f]'
-  if (numValue < 0) return 'text-[#c03030]'
+  if (numValue > 0) return 'text-[var(--success)]'
+  if (numValue < 0) return 'text-[var(--danger)]'
   return 'text-[var(--text-strong)]'
 }

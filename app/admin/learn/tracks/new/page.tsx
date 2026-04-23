@@ -255,7 +255,7 @@ export default function NewTrackPage() {
             <DbHealthBanner />
 
             {errorMessage && (
-              <div className="mb-6 rounded-md border border-[#c03030] bg-[#2e1a1a] px-4 py-3 text-sm text-[#c03030]">
+              <div className="mb-6 rounded-md border border-[var(--danger)] bg-[var(--bg-danger-subtle)] px-4 py-3 text-sm text-[var(--danger)]">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                   <span>{errorMessage}</span>
@@ -302,7 +302,7 @@ export default function NewTrackPage() {
                             slugStatus === 'available'
                               ? 'text-green-700'
                               : slugStatus === 'taken' || slugStatus === 'invalid'
-                              ? 'text-[#c03030]'
+                              ? 'text-[var(--danger)]'
                               : 'text-[var(--text-muted)]'
                           }
                         >
@@ -435,12 +435,12 @@ export default function NewTrackPage() {
 
                 <div className="text-sm text-[var(--text-muted)]">
                   {formData.publishedAt ? (
-                    <span className="flex items-center gap-1 text-[#4a7c3f]">
+                    <span className="flex items-center gap-1 text-[var(--success)]">
                       <Eye className="h-4 w-4" />
                       Will be published
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-[#c9a227]">
+                    <span className="flex items-center gap-1 text-[var(--gold-400)]">
                       <EyeOff className="h-4 w-4" />
                       Will be saved as draft
                     </span>

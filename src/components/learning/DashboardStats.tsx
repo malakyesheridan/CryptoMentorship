@@ -72,9 +72,9 @@ export function DashboardStats({
                 showPercentage={false}
                 animated={true}
               />
-              <Activity className="h-8 w-8 text-[#4a7c3f] ml-2 group-hover:text-[#4a7c3f] transition-colors duration-300" />
+              <Activity className="h-8 w-8 text-[var(--success)] ml-2 group-hover:text-[var(--success)] transition-colors duration-300" />
             </div>
-            <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-[#4a7c3f] transition-colors duration-300">My Progress</h3>
+            <h3 className="font-semibold text-[var(--text-strong)] mb-2 group-hover:text-[var(--success)] transition-colors duration-300">My Progress</h3>
             <p className="text-sm text-[var(--text-strong)] group-hover:text-[var(--text-strong)] transition-colors duration-300">
               {completedTracks} of {totalEnrollments} completed
             </p>

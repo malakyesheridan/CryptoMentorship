@@ -86,14 +86,14 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
   const getStatusBadge = (course: CourseData) => {
     if (course.completedAt) {
       return (
-        <Badge variant="default" className="bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]">
+        <Badge variant="default" className="bg-[var(--bg-success-subtle)] text-[var(--success)] border-[#1a2e1a]">
           <CheckCircle className="h-3 w-3 mr-1" />
           Completed
         </Badge>
       )
     } else if (course.progressPct > 0) {
       return (
-        <Badge variant="default" className="bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]">
+        <Badge variant="default" className="bg-[var(--bg-info-subtle)] text-[#5b8dd9] border-[#1a1d2e]">
           <Clock className="h-3 w-3 mr-1" />
           In Progress
         </Badge>

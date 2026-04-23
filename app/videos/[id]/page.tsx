@@ -106,7 +106,7 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
                 </div>
                 <Badge
                   variant={video.status === 'ready' ? 'default' : 'secondary'}
-                  className={`${video.status === 'ready' ? 'bg-[#1a2e1a] text-[#4a7c3f] hover:bg-[#1a2e1a]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'} px-3 py-1`}
+                  className={`${video.status === 'ready' ? 'bg-[var(--bg-success-subtle)] text-[var(--success)] hover:bg-[var(--bg-success-subtle)]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'} px-3 py-1`}
                 >
                   {video.status}
                 </Badge>
@@ -154,7 +154,7 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
                   <span className="text-[var(--text-muted)] font-medium">Visibility</span>
                   <Badge
                     variant="outline"
-                    className={`${video.visibility === 'public' ? 'bg-[#1a2e1a] text-[#4a7c3f] border-[#4a7c3f]/30' : 'bg-[#1a1e2e] text-blue-400 border-blue-400/30'} px-3 py-1`}
+                    className={`${video.visibility === 'public' ? 'bg-[var(--bg-success-subtle)] text-[var(--success)] border-[var(--success)]/30' : 'bg-[var(--bg-info-subtle)] text-blue-400 border-blue-400/30'} px-3 py-1`}
                   >
                     {video.visibility}
                   </Badge>

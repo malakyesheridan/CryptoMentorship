@@ -85,7 +85,7 @@ export default async function AdminTracksPage() {
 
             <DbHealthBanner />
             {error && (
-              <div className="mb-6 rounded-md border border-[#c03030] bg-[#2e1a1a] px-4 py-3 text-sm text-[#c03030]">
+              <div className="mb-6 rounded-md border border-[var(--danger)] bg-[var(--bg-danger-subtle)] px-4 py-3 text-sm text-[var(--danger)]">
                 {error}
               </div>
             )}
@@ -98,7 +98,7 @@ export default async function AdminTracksPage() {
                     <p className="text-sm font-medium text-[var(--text-strong)]">Total Tracks</p>
                     <p className="text-2xl font-bold text-[var(--text-strong)]">{tracks.length}</p>
                   </div>
-                  <div className="h-8 w-8 bg-[#1a1e2e] rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-[var(--bg-info-subtle)] rounded-lg flex items-center justify-center">
                     <BookOpen className="h-4 w-4 text-[#4a7cc3]" />
                   </div>
                 </div>
@@ -108,12 +108,12 @@ export default async function AdminTracksPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-[var(--text-strong)]">Published</p>
-                    <p className="text-2xl font-bold text-[#4a7c3f]">
+                    <p className="text-2xl font-bold text-[var(--success)]">
                       {tracks.filter(t => t.publishedAt).length}
                     </p>
                   </div>
-                  <div className="h-8 w-8 bg-[#1a2e1a] rounded-lg flex items-center justify-center">
-                    <Eye className="h-4 w-4 text-[#4a7c3f]" />
+                  <div className="h-8 w-8 bg-[var(--bg-success-subtle)] rounded-lg flex items-center justify-center">
+                    <Eye className="h-4 w-4 text-[var(--success)]" />
                   </div>
                 </div>
               </div>
@@ -122,12 +122,12 @@ export default async function AdminTracksPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-[var(--text-strong)]">Draft</p>
-                    <p className="text-2xl font-bold text-[#c9a227]">
+                    <p className="text-2xl font-bold text-[var(--gold-400)]">
                       {tracks.filter(t => !t.publishedAt).length}
                     </p>
                   </div>
-                  <div className="h-8 w-8 bg-[#2a2418] rounded-lg flex items-center justify-center">
-                    <EyeOff className="h-4 w-4 text-[#c9a227]" />
+                  <div className="h-8 w-8 bg-[var(--bg-warning-subtle)] rounded-lg flex items-center justify-center">
+                    <EyeOff className="h-4 w-4 text-[var(--gold-400)]" />
                   </div>
                 </div>
               </div>
@@ -271,7 +271,7 @@ export default async function AdminTracksPage() {
                                     <Edit className="h-4 w-4" />
                                   </Button>
                                 </Link>
-                                <Button variant="outline" size="sm" className="text-[#c03030] hover:text-[#c03030]">
+                                <Button variant="outline" size="sm" className="text-[var(--danger)] hover:text-[var(--danger)]">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>

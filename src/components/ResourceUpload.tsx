@@ -223,14 +223,14 @@ export default function ResourceUpload() {
 
           {/* Status Messages */}
           {uploadStatus === 'success' && (
-            <div className="flex items-center space-x-2 text-[#4a7c3f]">
+            <div className="flex items-center space-x-2 text-[var(--success)]">
               <CheckCircle className="w-5 h-5" />
               <span>Resource uploaded successfully!</span>
             </div>
           )}
 
           {uploadStatus === 'error' && (
-            <div className="flex items-center space-x-2 text-[#c03030]">
+            <div className="flex items-center space-x-2 text-[var(--danger)]">
               <AlertCircle className="w-5 h-5" />
               <span>{errorMessage}</span>
             </div>

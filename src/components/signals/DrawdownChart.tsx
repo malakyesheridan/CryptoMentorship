@@ -87,7 +87,7 @@ export function DrawdownChart({ equityPoints }: DrawdownChartProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="text-center">
               <p className="text-sm text-[var(--text-muted)]">Max Drawdown</p>
-              <p className="text-lg font-semibold text-[#c03030]">
+              <p className="text-lg font-semibold text-[var(--danger)]">
                 {formatPercentage(maxDrawdown)}
               </p>
             </div>

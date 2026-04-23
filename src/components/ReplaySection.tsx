@@ -180,7 +180,7 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
                   <button
                     key={chapter.id}
                     onClick={() => handleChapterClick(chapter.startMs)}
-                    className="w-full text-left p-3 rounded-lg border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-[#2a2418] transition-colors"
+                    className="w-full text-left p-3 rounded-lg border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-[var(--bg-warning-subtle)] transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[var(--text-strong)]">
@@ -237,7 +237,7 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
                       <button
                         key={segment.id}
                         onClick={() => handleSegmentClick(segment.startMs)}
-                        className="w-full text-left p-3 rounded-lg border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-[#2a2418] transition-colors"
+                        className="w-full text-left p-3 rounded-lg border border-[var(--border-subtle)] hover:border-gold-300 hover:bg-[var(--bg-warning-subtle)] transition-colors"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <span className="text-sm text-[var(--text-strong)]">

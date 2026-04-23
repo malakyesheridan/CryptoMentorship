@@ -154,7 +154,7 @@ export function RoiEquityChart({
           {modelReturn !== null ? (
             <div className="flex items-center justify-between gap-4 text-[var(--text-muted)]">
               <span>Daily return</span>
-              <span className={modelReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}>
+              <span className={modelReturn >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}>
                 {formatPercent(modelReturn)}
               </span>
             </div>
@@ -168,7 +168,7 @@ export function RoiEquityChart({
           {primaryChange !== null ? (
             <div className="flex items-center justify-between gap-4 text-[var(--text-muted)]">
               <span>Primary change</span>
-              <span className={primaryChange >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}>
+              <span className={primaryChange >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}>
                 {formatCurrencySigned(primaryChange)} ({formatPercent(primaryChangePct)})
               </span>
             </div>

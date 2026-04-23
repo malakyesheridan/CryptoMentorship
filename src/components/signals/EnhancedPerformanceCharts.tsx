@@ -190,7 +190,7 @@ export function EnhancedPerformanceCharts({
                   <div>
                     <p className="text-sm font-medium text-[var(--text-muted)]">Total Return</p>
                     <p className={`text-2xl font-bold ${
-                      totalReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'
+                      totalReturn >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'
                     }`}>
                       {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
                     </p>
@@ -205,7 +205,7 @@ export function EnhancedPerformanceCharts({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-[var(--text-muted)]">Max Drawdown</p>
-                    <p className="text-2xl font-bold text-[#c03030]">
+                    <p className="text-2xl font-bold text-[var(--danger)]">
                       -{maxDrawdown.toFixed(2)}%
                     </p>
                   </div>

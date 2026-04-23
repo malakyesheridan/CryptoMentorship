@@ -132,16 +132,16 @@ export default async function ClosedTradesPage() {
           </div>
 
           <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-[#1a2e1a] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#1a2e1a] transition-colors">
-              <span className="text-[#4a7c3f] text-lg font-bold">✓</span>
+            <div className="w-12 h-12 bg-[var(--bg-success-subtle)] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[var(--bg-success-subtle)] transition-colors">
+              <span className="text-[var(--success)] text-lg font-bold">✓</span>
             </div>
             <h3 className="font-semibold text-[var(--text-strong)] mb-2">Win Rate</h3>
-            <p className="text-2xl font-bold text-[#4a7c3f] mb-1">{winRate}%</p>
+            <p className="text-2xl font-bold text-[var(--success)] mb-1">{winRate}%</p>
             <p className="text-sm text-[var(--text-strong)]">{winningTrades} wins</p>
           </div>
 
           <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-[#1a1e2e] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#1a1e2e] transition-colors">
+            <div className="w-12 h-12 bg-[var(--bg-info-subtle)] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[var(--bg-info-subtle)] transition-colors">
               <span className="text-blue-400 text-lg font-bold">R</span>
             </div>
             <h3 className="font-semibold text-[var(--text-strong)] mb-2">Avg R-Multiple</h3>
@@ -150,11 +150,11 @@ export default async function ClosedTradesPage() {
           </div>
 
           <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-[#1a1e2e] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#1a1e2e] transition-colors">
+            <div className="w-12 h-12 bg-[var(--bg-info-subtle)] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[var(--bg-info-subtle)] transition-colors">
               <span className="text-purple-400 text-lg font-bold">$</span>
             </div>
             <h3 className="font-semibold text-[var(--text-strong)] mb-2">Total P&L</h3>
-            <p className={`text-2xl font-bold mb-1 ${totalPnL >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
+            <p className={`text-2xl font-bold mb-1 ${totalPnL >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
               {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString()}
             </p>
             <p className="text-sm text-[var(--text-strong)]">Realized</p>
@@ -162,7 +162,7 @@ export default async function ClosedTradesPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="bg-[#2a2418] border border-[var(--border-subtle)] rounded-2xl p-6 mb-12">
+        <div className="bg-[var(--bg-warning-subtle)] border border-[var(--border-subtle)] rounded-2xl p-6 mb-12">
           <div className="flex items-start gap-4">
             <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
               <span className="text-white text-sm font-bold">!</span>
@@ -202,11 +202,11 @@ export default async function ClosedTradesPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-[var(--text-muted)]">Winning Trades:</span>
-                  <span className="font-medium text-[#4a7c3f]">{winningTrades} ({winRate}%)</span>
+                  <span className="font-medium text-[var(--success)]">{winningTrades} ({winRate}%)</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[var(--text-muted)]">Losing Trades:</span>
-                  <span className="font-medium text-[#c03030]">{losingTrades} ({100 - winRate}%)</span>
+                  <span className="font-medium text-[var(--danger)]">{losingTrades} ({100 - winRate}%)</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[var(--text-muted)]">Break-even Trades:</span>
@@ -225,13 +225,13 @@ export default async function ClosedTradesPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[var(--text-muted)]">Best Trade:</span>
-                  <span className="font-medium text-[#4a7c3f]">
+                  <span className="font-medium text-[var(--success)]">
                     {Math.max(...closedTrades.map(t => t.rMultiple || 0)).toFixed(2)}R
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[var(--text-muted)]">Worst Trade:</span>
-                  <span className="font-medium text-[#c03030]">
+                  <span className="font-medium text-[var(--danger)]">
                     {Math.min(...closedTrades.map(t => t.rMultiple || 0)).toFixed(2)}R
                   </span>
                 </div>

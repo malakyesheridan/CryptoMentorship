@@ -11,8 +11,8 @@ export function CryptoCompassError({ errorMessage }: CryptoCompassErrorProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--bg-page)] via-[var(--bg-panel)] to-[var(--bg-hover)] flex items-center justify-center px-4">
       <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg border border-[var(--border-subtle)] p-8 max-w-md w-full text-center">
-        <div className="w-16 h-16 bg-[#2e1a1a] rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-8 h-8 text-[#c03030]" />
+        <div className="w-16 h-16 bg-[var(--bg-danger-subtle)] rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-8 h-8 text-[var(--danger)]" />
         </div>
         <h1 className="text-2xl font-bold text-[var(--text-strong)] mb-2">Error Loading Crypto Compass Page</h1>
         <p className="text-[var(--text-strong)] mb-1">Something went wrong while loading the page.</p>

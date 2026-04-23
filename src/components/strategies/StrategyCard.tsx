@@ -48,7 +48,7 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
 
   return (
     <Link href={`/strategies/${slug}`} className="block">
-      <div className="card p-5 hover:border-[#c9a227]/40 transition-colors">
+      <div className="card p-5 hover:border-[var(--gold-400)]/40 transition-colors">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-base font-semibold text-[var(--text-strong)] truncate mr-2">
@@ -89,7 +89,7 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] mb-0.5">Max DD</p>
-            <p className="text-sm font-semibold text-[#c03030]">
+            <p className="text-sm font-semibold text-[var(--danger)]">
               {maxDd.toFixed(1)}%
             </p>
           </div>

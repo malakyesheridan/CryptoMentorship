@@ -182,7 +182,7 @@ export function EventDetailHeader({
                 <Users className="h-5 w-5 text-[var(--text-muted)]" />
                 <div>
                   <p className="font-medium text-[var(--text-strong)]">Capacity</p>
-                  <p className={`text-sm ${getCapacityText() === 'Full' ? 'text-[#c03030]' : 'text-[var(--text-strong)]'}`}>
+                  <p className={`text-sm ${getCapacityText() === 'Full' ? 'text-[var(--danger)]' : 'text-[var(--text-strong)]'}`}>
                     {getCapacityText()}
                   </p>
                 </div>
@@ -239,12 +239,12 @@ export function EventDetailHeader({
 
       {/* Join Live Button */}
       {canJoinLive() && (
-        <Card className="border-[#4a7c3f]/30 bg-[#1a2e1a]">
+        <Card className="border-[var(--success)]/30 bg-[var(--bg-success-subtle)]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="heading-2 text-lg mb-2 text-[#4a7c3f]">🔴 Live Now</h3>
-                <p className="text-sm text-[#4a7c3f]">
+                <h3 className="heading-2 text-lg mb-2 text-[var(--success)]">🔴 Live Now</h3>
+                <p className="text-sm text-[var(--success)]">
                   This event is currently live. Click below to join the session.
                 </p>
               </div>

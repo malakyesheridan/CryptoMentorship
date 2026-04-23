@@ -41,14 +41,14 @@ export function DrawdownChart({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-[#c03030]" />
+              <TrendingDown className="h-5 w-5 text-[var(--danger)]" />
               {title}
             </CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div className="text-right">
-              <div className="font-semibold text-[#c03030]">
+              <div className="font-semibold text-[var(--danger)]">
                 {maxDrawdown.toFixed(2)}%
               </div>
               <div className="text-[var(--text-muted)]">Max Drawdown</div>

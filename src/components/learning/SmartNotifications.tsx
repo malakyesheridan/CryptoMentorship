@@ -250,7 +250,7 @@ export function SmartNotifications({
             <Bell className="h-6 w-6 text-blue-600" />
             <CardTitle className="text-[#5b8dd9]">Smart Notifications</CardTitle>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]">
+              <Badge variant="secondary" className="bg-[var(--bg-danger-subtle)] text-[var(--danger)] border-[#2e1a1a]">
                 {unreadCount} new
               </Badge>
             )}
@@ -318,7 +318,7 @@ export function SmartNotifications({
                           onClick={() => markAsRead(notification.id)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                         >
-                          <CheckCircle className="h-4 w-4 text-[#4a7c3f]" />
+                          <CheckCircle className="h-4 w-4 text-[var(--success)]" />
                         </button>
                       )}
                       <button

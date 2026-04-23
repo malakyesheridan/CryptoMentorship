@@ -53,6 +53,25 @@ const REPLACEMENTS = [
   { pattern: /to-\[#2a2520\]/g, replacement: 'to-[var(--bg-skeleton)]' },
   { pattern: /group-hover:from-\[#2a2520\]/g, replacement: 'group-hover:from-[var(--bg-skeleton)]' },
   { pattern: /group-hover:to-\[#2a2520\]/g, replacement: 'group-hover:to-[var(--bg-skeleton)]' },
+  // Semantic status colors (direct hex → CSS var)
+  { pattern: /text-\[#c03030\]/g, replacement: 'text-[var(--danger)]' },
+  { pattern: /text-\[#4a7c3f\]/g, replacement: 'text-[var(--success)]' },
+  { pattern: /text-\[#c9a227\]/g, replacement: 'text-[var(--gold-400)]' },
+  { pattern: /text-\[#d97706\]/g, replacement: 'text-[var(--warning)]' },
+  { pattern: /bg-\[#c03030\]/g, replacement: 'bg-[var(--danger)]' },
+  { pattern: /bg-\[#4a7c3f\]/g, replacement: 'bg-[var(--success)]' },
+  { pattern: /bg-\[#c9a227\]/g, replacement: 'bg-[var(--gold-400)]' },
+  { pattern: /border-\[#c03030\]/g, replacement: 'border-[var(--danger)]' },
+  { pattern: /border-\[#4a7c3f\]/g, replacement: 'border-[var(--success)]' },
+  { pattern: /border-\[#c9a227\]/g, replacement: 'border-[var(--gold-400)]' },
+  // Tinted alert panel backgrounds (opacity-free variants are used as panel fills)
+  { pattern: /bg-\[#2e1a1a\]/g, replacement: 'bg-[var(--bg-danger-subtle)]' },
+  { pattern: /bg-\[#1a2e1a\]/g, replacement: 'bg-[var(--bg-success-subtle)]' },
+  { pattern: /bg-\[#2a2418\]/g, replacement: 'bg-[var(--bg-warning-subtle)]' },
+  { pattern: /bg-\[#2a2018\]/g, replacement: 'bg-[var(--bg-warning-subtle)]' },
+  { pattern: /bg-\[#1a1d2e\]/g, replacement: 'bg-[var(--bg-info-subtle)]' },
+  { pattern: /bg-\[#1a1e2e\]/g, replacement: 'bg-[var(--bg-info-subtle)]' },
+  { pattern: /bg-\[#1a1a2e\]/g, replacement: 'bg-[var(--bg-info-subtle)]' },
   // Chart internals — Recharts SVG attrs and JS tooltip styles.
   // CSS variables do resolve in SVG presentation attributes in all modern
   // browsers, and in inline-style strings.

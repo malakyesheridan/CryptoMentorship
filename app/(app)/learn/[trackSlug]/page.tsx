@@ -208,7 +208,7 @@ export default async function TrackPage({
                       <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-1.5">
                         <div
                           className={`h-1.5 rounded-full transition-all duration-300 ${
-                            progressPct === 100 ? 'bg-[#4a7c3f]' : 'bg-gold-500'
+                            progressPct === 100 ? 'bg-[var(--success)]' : 'bg-gold-500'
                           }`}
                           style={{ width: `${progressPct}%` }}
                         />
@@ -359,7 +359,7 @@ function LessonRow({
       <div className="flex items-center gap-3">
         <div className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
           isCompleted
-            ? 'bg-[#1a2e1a] text-[#4a7c3f]'
+            ? 'bg-[var(--bg-success-subtle)] text-[var(--success)]'
             : isNext
               ? 'bg-gold-500/20 text-gold-500'
               : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
@@ -389,7 +389,7 @@ function LessonRow({
               <span className="text-xs text-[var(--text-muted)]">{lesson.durationMin} min</span>
             )}
             {isCompleted && (
-              <span className="text-xs text-[#4a7c3f]">Completed</span>
+              <span className="text-xs text-[var(--success)]">Completed</span>
             )}
           </div>
         </div>

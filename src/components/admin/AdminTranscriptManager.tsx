@@ -122,8 +122,8 @@ export function AdminTranscriptManager({
     <div className="space-y-4">
       {/* Error Message */}
       {error && (
-        <div className="bg-[#2e1a1a] border border-[#c03030] rounded-lg p-4">
-          <p className="text-[#c03030] text-sm whitespace-pre-line">{error}</p>
+        <div className="bg-[var(--bg-danger-subtle)] border border-[var(--danger)] rounded-lg p-4">
+          <p className="text-[var(--danger)] text-sm whitespace-pre-line">{error}</p>
         </div>
       )}
 

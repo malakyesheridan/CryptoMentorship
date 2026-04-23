@@ -39,14 +39,14 @@ interface TradeDetailProps {
 export function TradeDetail({ trade, onBack }: TradeDetailProps) {
   const getDirectionIcon = (direction: 'long' | 'short') => {
     return direction === 'long' ? (
-      <TrendingUp className="h-5 w-5 text-[#4a7c3f]" />
+      <TrendingUp className="h-5 w-5 text-[var(--success)]" />
     ) : (
-      <TrendingDown className="h-5 w-5 text-[#c03030]" />
+      <TrendingDown className="h-5 w-5 text-[var(--danger)]" />
     )
   }
 
   const getDirectionColor = (direction: 'long' | 'short') => {
-    return direction === 'long' ? 'text-[#4a7c3f]' : 'text-[#c03030]'
+    return direction === 'long' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
   }
 
   const getStatusColor = (status: 'open' | 'closed') => {
@@ -139,13 +139,13 @@ export function TradeDetail({ trade, onBack }: TradeDetailProps) {
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)]">Stop Loss:</span>
-                  <span className="font-medium text-[#c03030]">
+                  <span className="font-medium text-[var(--danger)]">
                     {trade.stopLoss ? formatCurrency(trade.stopLoss) : '—'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)]">Take Profit:</span>
-                  <span className="font-medium text-[#4a7c3f]">
+                  <span className="font-medium text-[var(--success)]">
                     {trade.takeProfit ? formatCurrency(trade.takeProfit) : '—'}
                   </span>
                 </div>
@@ -164,13 +164,13 @@ export function TradeDetail({ trade, onBack }: TradeDetailProps) {
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)]">R-Multiple:</span>
-                  <span className={`font-medium ${trade.rMultiple !== undefined ? (trade.rMultiple > 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]') : 'text-[var(--text-muted)]'}`}>
+                  <span className={`font-medium ${trade.rMultiple !== undefined ? (trade.rMultiple > 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]') : 'text-[var(--text-muted)]'}`}>
                     {trade.rMultiple !== undefined ? formatNumber(trade.rMultiple, 2) : '—'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[var(--text-muted)]">P&L:</span>
-                  <span className={`font-medium ${trade.pnl !== undefined ? (trade.pnl > 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]') : 'text-[var(--text-muted)]'}`}>
+                  <span className={`font-medium ${trade.pnl !== undefined ? (trade.pnl > 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]') : 'text-[var(--text-muted)]'}`}>
                     {trade.pnl !== undefined ? formatCurrency(trade.pnl) : '—'}
                   </span>
                 </div>
@@ -306,7 +306,7 @@ export function TradeDetail({ trade, onBack }: TradeDetailProps) {
                   <p className="text-sm text-[var(--text-muted)]">
                     {formatDate(trade.exitTime, 'long')} - Exited at {formatCurrency(trade.exitPrice!)}
                     {trade.rMultiple !== undefined && (
-                      <span className={`ml-2 ${trade.rMultiple > 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
+                      <span className={`ml-2 ${trade.rMultiple > 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                         ({formatNumber(trade.rMultiple, 2)}R)
                       </span>
                     )}

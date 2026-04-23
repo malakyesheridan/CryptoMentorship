@@ -191,7 +191,7 @@ export default async function CohortDashboardPage({
                   <p className="text-sm font-medium text-[var(--text-muted)]">Total Lessons</p>
                   <p className="text-2xl font-bold text-[var(--text-strong)]">{cohort.releases.length}</p>
                 </div>
-                <div className="h-8 w-8 bg-[#1a1e2e] rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 bg-[var(--bg-info-subtle)] rounded-lg flex items-center justify-center">
                   <BookOpen className="h-4 w-4 text-blue-600" />
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default async function CohortDashboardPage({
                   <p className="text-sm font-medium text-[var(--text-muted)]">Available</p>
                   <p className="text-2xl font-bold text-green-600">{availableLessons.length}</p>
                 </div>
-                <div className="h-8 w-8 bg-[#1a2e1a] rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 bg-[var(--bg-success-subtle)] rounded-lg flex items-center justify-center">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 </div>
               </div>
@@ -215,7 +215,7 @@ export default async function CohortDashboardPage({
                   <p className="text-sm font-medium text-[var(--text-muted)]">Members</p>
                   <p className="text-2xl font-bold text-purple-600">{cohort.enrollments.length}</p>
                 </div>
-                <div className="h-8 w-8 bg-[#1a1e2e] rounded-lg flex items-center justify-center">
+                <div className="h-8 w-8 bg-[var(--bg-info-subtle)] rounded-lg flex items-center justify-center">
                   <Users className="h-4 w-4 text-purple-600" />
                 </div>
               </div>
@@ -287,10 +287,10 @@ export default async function CohortDashboardPage({
                   {availableLessons.map((release) => (
                     <div
                       key={release.id}
-                      className="flex items-center justify-between p-4 bg-[#1a2e1a] border border-[#4a7c3f] rounded-lg"
+                      className="flex items-center justify-between p-4 bg-[var(--bg-success-subtle)] border border-[var(--success)] rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 bg-[#1a2e1a] rounded-full flex items-center justify-center">
+                        <div className="h-8 w-8 bg-[var(--bg-success-subtle)] rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         </div>
                         

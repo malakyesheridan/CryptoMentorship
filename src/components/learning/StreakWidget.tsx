@@ -81,7 +81,7 @@ export function StreakWidget({
                 </span>
                 <span className="text-[var(--text-strong)] group-hover:text-[var(--text-strong)] transition-colors duration-300">days</span>
                 {getStreakBadge(streak) && (
-                  <Badge variant="secondary" className="bg-[#2a2018] text-[#d97706] border-[#2a2018] group-hover:scale-105 transition-transform duration-300">
+                  <Badge variant="secondary" className="bg-[var(--bg-warning-subtle)] text-[var(--warning)] border-[#2a2018] group-hover:scale-105 transition-transform duration-300">
                     {getStreakBadge(streak)}
                   </Badge>
                 )}
@@ -148,7 +148,7 @@ export function StreakWidget({
 
         {/* Streak tips */}
         {streak === 0 && (
-          <div className="mt-4 p-3 bg-[#1a1d2e] rounded-lg border border-[#1a1d2e] group-hover:bg-[#1a1d2e] group-hover:scale-105 transition-all duration-300">
+          <div className="mt-4 p-3 bg-[var(--bg-info-subtle)] rounded-lg border border-[#1a1d2e] group-hover:bg-[var(--bg-info-subtle)] group-hover:scale-105 transition-all duration-300">
             <div className="flex items-start gap-2">
               <Calendar className="h-4 w-4 text-blue-600 mt-0.5 group-hover:scale-110 transition-transform duration-300" />
               <div className="text-sm text-[#5b8dd9] group-hover:text-[#5b8dd9] transition-colors duration-300">
@@ -160,10 +160,10 @@ export function StreakWidget({
         )}
 
         {streak > 0 && streak < 7 && (
-          <div className="mt-4 p-3 bg-[#1a2e1a] rounded-lg border border-[#1a2e1a] group-hover:bg-[#1a2e1a] group-hover:scale-105 transition-all duration-300">
+          <div className="mt-4 p-3 bg-[var(--bg-success-subtle)] rounded-lg border border-[#1a2e1a] group-hover:bg-[var(--bg-success-subtle)] group-hover:scale-105 transition-all duration-300">
             <div className="flex items-start gap-2">
-              <Clock className="h-4 w-4 text-[#4a7c3f] mt-0.5 group-hover:scale-110 transition-transform duration-300" />
-              <div className="text-sm text-[#4a7c3f] group-hover:text-[#4a7c3f] transition-colors duration-300">
+              <Clock className="h-4 w-4 text-[var(--success)] mt-0.5 group-hover:scale-110 transition-transform duration-300" />
+              <div className="text-sm text-[var(--success)] group-hover:text-[var(--success)] transition-colors duration-300">
                 <p className="font-medium mb-1">Keep it up!</p>
                 <p>You&apos;re building great habits. Try to complete a lesson today to maintain your streak.</p>
               </div>

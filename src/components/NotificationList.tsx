@@ -59,10 +59,10 @@ export function NotificationList({
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'success': return 'bg-[#1a2e1a] text-[#4a7c3f] border-[#4a7c3f]/30'
-      case 'warning': return 'bg-[#2a2418] text-[var(--gold-400)] border-[var(--gold-400)]/30'
-      case 'error': return 'bg-[#2e1a1a] text-[#c03030] border-[#c03030]/30'
-      default: return 'bg-[#1a1a2e] text-blue-400 border-blue-400/30'
+      case 'success': return 'bg-[var(--bg-success-subtle)] text-[var(--success)] border-[var(--success)]/30'
+      case 'warning': return 'bg-[var(--bg-warning-subtle)] text-[var(--gold-400)] border-[var(--gold-400)]/30'
+      case 'error': return 'bg-[var(--bg-danger-subtle)] text-[var(--danger)] border-[var(--danger)]/30'
+      default: return 'bg-[var(--bg-info-subtle)] text-blue-400 border-blue-400/30'
     }
   }
 
@@ -94,7 +94,7 @@ export function NotificationList({
       {unreadCount > 0 && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-[#1a1a2e] text-blue-400 border-blue-400/30">
+            <Badge variant="outline" className="bg-[var(--bg-info-subtle)] text-blue-400 border-blue-400/30">
               {unreadCount} unread
             </Badge>
           </div>
@@ -115,7 +115,7 @@ export function NotificationList({
           <Card 
             key={notification.id} 
             className={`transition-all duration-200 hover:shadow-md ${
-              !notification.read ? 'border-l-4 border-l-blue-500 bg-[#1a1a2e]/30' : ''
+              !notification.read ? 'border-l-4 border-l-blue-500 bg-[var(--bg-info-subtle)]/30' : ''
             }`}
           >
             <CardContent className="p-4">
@@ -154,7 +154,7 @@ export function NotificationList({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(notification.id)}
-                    className="h-8 w-8 p-0 text-[var(--text-muted)] hover:text-[#c03030]"
+                    className="h-8 w-8 p-0 text-[var(--text-muted)] hover:text-[var(--danger)]"
                   >
                     <X className="h-4 w-4" />
                   </Button>

@@ -257,12 +257,12 @@ export function LessonFormModal({
           <div className="flex items-center justify-between pt-2">
             <div className="text-sm text-[var(--text-muted)]">
               {formData.publishedAt ? (
-                <span className="flex items-center gap-1 text-[#4a7c3f]">
+                <span className="flex items-center gap-1 text-[var(--success)]">
                   <Eye className="h-4 w-4" />
                   Will be published
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[#c9a227]">
+                <span className="flex items-center gap-1 text-[var(--gold-400)]">
                   <EyeOff className="h-4 w-4" />
                   Will be saved as draft
                 </span>

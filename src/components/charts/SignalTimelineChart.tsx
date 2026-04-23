@@ -69,8 +69,8 @@ export function SignalTimelineChart({
               <span className="font-medium">Direction:</span>
               <span className={`px-2 py-1 rounded text-xs font-medium ${
                 data.direction === 'long'
-                  ? 'bg-[#1a2e1a] text-[#4a7c3f]'
-                  : 'bg-[#2e1a1a] text-[#c03030]'
+                  ? 'bg-[var(--bg-success-subtle)] text-[var(--success)]'
+                  : 'bg-[var(--bg-danger-subtle)] text-[var(--danger)]'
               }`}>
                 {data.direction.toUpperCase()}
               </span>
@@ -86,7 +86,7 @@ export function SignalTimelineChart({
             {data.pnl !== undefined && (
               <div className="mb-1">
                 <span className="font-medium">P&L:</span> 
-                <span className={`ml-1 ${data.pnl >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
+                <span className={`ml-1 ${data.pnl >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                   {data.pnl >= 0 ? '+' : ''}{formatTooltipValue(data.pnl)}
                 </span>
               </div>

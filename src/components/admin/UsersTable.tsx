@@ -183,7 +183,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                       >
                         <Power className={cn(
                           "w-4 h-4",
-                          user.isActive ? "text-[#c03030]" : "text-[#4a7c3f]"
+                          user.isActive ? "text-[var(--danger)]" : "text-[var(--success)]"
                         )} />
                       </Button>
                       {currentUserId && (
@@ -296,7 +296,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                           >
                             <Power className={cn(
                               "w-3 h-3",
-                              user.isActive ? "text-[#c03030]" : "text-[#4a7c3f]"
+                              user.isActive ? "text-[var(--danger)]" : "text-[var(--success)]"
                             )} />
                           </Button>
                         </div>

@@ -98,7 +98,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
             </div>
             <div className="text-center">
               <p className="text-sm text-[var(--text-muted)]">Win Rate</p>
-              <p className="text-lg font-semibold text-[#4a7c3f]">
+              <p className="text-lg font-semibold text-[var(--success)]">
                 {formatNumber(winRate, 1)}%
               </p>
             </div>

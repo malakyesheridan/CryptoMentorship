@@ -133,7 +133,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         <div className="space-y-4">
           {items.map((notification) => (
             <Card key={notification.id} className={`transition-colors ${
-              !notification.readAt ? 'bg-[#1a1e2e] border-[var(--border-subtle)]' : ''
+              !notification.readAt ? 'bg-[var(--bg-info-subtle)] border-[var(--border-subtle)]' : ''
             }`}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">

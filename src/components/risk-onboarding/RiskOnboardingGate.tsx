@@ -41,7 +41,7 @@ export function RiskOnboardingGate() {
       <RiskOnboardingModal open={open} onOpenChange={handleOpenChange} />
 
       {data?.status !== 'completed' && (
-        <div className="mb-8 rounded-2xl border border-[var(--gold-400)]/30 bg-[#2a2418] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-8 rounded-2xl border border-[var(--gold-400)]/30 bg-[var(--bg-warning-subtle)] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-[var(--gold-400)]">Get your recommended profile (2 mins)</p>
             <p className="text-sm text-[var(--gold-400)]">

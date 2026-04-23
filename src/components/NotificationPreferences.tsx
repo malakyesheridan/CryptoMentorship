@@ -127,7 +127,7 @@ export function NotificationPreferences() {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-[#c03030]">Failed to load notification preferences</p>
+          <p className="text-[var(--danger)]">Failed to load notification preferences</p>
         </CardContent>
       </Card>
     )

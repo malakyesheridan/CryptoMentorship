@@ -385,7 +385,7 @@ export default function LoginPage() {
               )}
               
               {error && (
-                <div className="mt-6 p-4 bg-[#2e1a1a] border border-[#c03030] rounded-lg text-[#c03030] text-sm">
+                <div className="mt-6 p-4 bg-[var(--bg-danger-subtle)] border border-[var(--danger)] rounded-lg text-[var(--danger)] text-sm">
                   {error}
                 </div>
               )}

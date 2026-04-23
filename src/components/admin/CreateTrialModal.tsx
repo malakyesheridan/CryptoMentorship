@@ -116,7 +116,7 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
             </div>
             
             {isExtending && currentEndDate && (
-              <div className="p-3 bg-[#1a1e2e] border border-[#4a7cc3] rounded-md">
+              <div className="p-3 bg-[var(--bg-info-subtle)] border border-[#4a7cc3] rounded-md">
                 <p className="text-sm font-medium text-[#4a7cc3]">Current Trial End Date</p>
                 <p className="text-sm text-[#4a7cc3] mt-1">
                   {formatDate(currentEndDate, 'MMM d, yyyy h:mm a')}
@@ -153,7 +153,7 @@ export function CreateTrialModal({ userId, userName, userEmail, currentMembershi
                 </p>
               )}
               {extensionNotAfterCurrent && (
-                <p className="text-sm text-[#c03030] mt-1">
+                <p className="text-sm text-[var(--danger)] mt-1">
                   Select a date after the current trial end date.
                 </p>
               )}

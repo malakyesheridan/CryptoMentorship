@@ -266,7 +266,7 @@ export function TradeTable({
                   </td>
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm`}>
                     {trade.rMultiple !== null && trade.rMultiple !== undefined ? (
-                      <span className={trade.rMultiple > 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}>
+                      <span className={trade.rMultiple > 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}>
                         {formatNumber(trade.rMultiple, 2)}
                       </span>
                     ) : '—'}

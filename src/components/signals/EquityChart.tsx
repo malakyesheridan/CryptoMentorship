@@ -100,7 +100,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
             </div>
             <div className="text-center">
               <p className="text-sm text-[var(--text-muted)]">Total Return</p>
-              <p className={`text-lg font-semibold ${totalReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
+              <p className={`text-lg font-semibold ${totalReturn >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                 {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
               </p>
             </div>

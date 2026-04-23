@@ -80,7 +80,7 @@ export function RiskProfileOverrideForm({
         />
       </div>
 
-      {error && <p className="text-sm text-[#c03030]">{error}</p>}
+      {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
       {status === 'saved' && <p className="text-sm text-emerald-600">Override saved.</p>}
 
       <Button onClick={handleSubmit} disabled={status === 'saving'}>

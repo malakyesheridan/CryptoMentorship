@@ -146,13 +146,13 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
                       <Play className="w-16 h-16 text-[var(--text-muted)] group-hover:text-gold-500 transition-colors duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="absolute top-3 left-3">
-                        <Badge className={`text-xs px-2 py-1 ${video.visibility === 'public' ? 'bg-[#1a2e1a] text-[#4a7c3f]' : 'bg-[#1a1a2e] text-blue-400'}`}>
+                        <Badge className={`text-xs px-2 py-1 ${video.visibility === 'public' ? 'bg-[var(--bg-success-subtle)] text-[var(--success)]' : 'bg-[var(--bg-info-subtle)] text-blue-400'}`}>
                           {video.visibility}
                         </Badge>
                       </div>
                       {!canView && (
                         <div className="absolute top-3 right-3">
-                          <Badge className="bg-[#2e1a1a] text-[#c03030] text-xs px-2 py-1">
+                          <Badge className="bg-[var(--bg-danger-subtle)] text-[var(--danger)] text-xs px-2 py-1">
                             <Lock className="w-3 h-3 mr-1" />
                             Locked
                           </Badge>

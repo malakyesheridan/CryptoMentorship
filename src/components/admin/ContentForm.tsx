@@ -197,7 +197,7 @@ export function ContentForm({ initialData }: ContentFormProps) {
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="ml-1 hover:text-[#c03030]"
+                className="ml-1 hover:text-[var(--danger)]"
               >
                 <X className="w-3 h-3" />
               </button>

@@ -209,7 +209,7 @@ export function LessonPlayer({
                                   isCurrentLesson
                                     ? 'bg-gold-100 text-gold-700 font-medium'
                                     : isCompleted
-                                    ? 'text-[#4a7c3f] hover:bg-[#1a2e1a]'
+                                    ? 'text-[var(--success)] hover:bg-[var(--bg-success-subtle)]'
                                     : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                                 }`}
                               >
@@ -254,7 +254,7 @@ export function LessonPlayer({
                             {lesson.durationMin} minutes
                           </span>
                         )}
-                        <Badge variant="secondary" className="text-xs bg-[#2a2418] text-[#c9a227]">
+                        <Badge variant="secondary" className="text-xs bg-[var(--bg-warning-subtle)] text-[var(--gold-400)]">
                           <Lock className="h-3 w-3 mr-1" />
                           Locked
                         </Badge>
@@ -272,8 +272,8 @@ export function LessonPlayer({
                       This lesson will be released as part of your cohort schedule.
                     </p>
                     {accessInfo?.releaseAt && (
-                      <div className="bg-[#2a2418] border border-[#2a2418] rounded-lg p-4 mb-6">
-                        <div className="flex items-center justify-center gap-2 text-[#c9a227]">
+                      <div className="bg-[var(--bg-warning-subtle)] border border-[#2a2418] rounded-lg p-4 mb-6">
+                        <div className="flex items-center justify-center gap-2 text-[var(--gold-400)]">
                           <Calendar className="h-4 w-4" />
                           <span className="font-medium">
                             {formatRelativeTime(accessInfo.releaseAt)}
@@ -339,7 +339,7 @@ export function LessonPlayer({
                                   isCurrentLesson
                                     ? 'bg-gold-100 text-gold-900 font-medium border border-gold-200'
                                     : isCompleted
-                                    ? 'text-[#4a7c3f] hover:bg-[#1a2e1a]'
+                                    ? 'text-[var(--success)] hover:bg-[var(--bg-success-subtle)]'
                                     : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                                 }`}
                               >

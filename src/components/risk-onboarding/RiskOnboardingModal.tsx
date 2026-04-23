@@ -261,12 +261,12 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
             </div>
           ) : mode === 'result' && result ? (
             <div className="space-y-6">
-              <div className="rounded-2xl border border-[#4a7c3f]/30 bg-[#1a2e1a] p-4">
-                <p className="text-sm text-[#4a7c3f]">Recommended profile</p>
-                <h3 className="text-2xl font-semibold text-[#4a7c3f]">
+              <div className="rounded-2xl border border-[var(--success)]/30 bg-[var(--bg-success-subtle)] p-4">
+                <p className="text-sm text-[var(--success)]">Recommended profile</p>
+                <h3 className="text-2xl font-semibold text-[var(--success)]">
                   {formatRiskProfileLabel(result.recommendedProfile)}
                 </h3>
-                <p className="text-sm text-[#4a7c3f] mt-2">Score: {result.score} / 100</p>
+                <p className="text-sm text-[var(--success)] mt-2">Score: {result.score} / 100</p>
               </div>
               <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4">
                 <h4 className="text-sm font-semibold text-[var(--text-strong)]">Why this fit</h4>
@@ -394,7 +394,7 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
               )}
 
               {error && (
-                <div className="rounded-xl border border-[#c03030]/30 bg-[#2e1a1a] px-3 py-2 text-sm text-[#c03030]">
+                <div className="rounded-xl border border-[var(--danger)]/30 bg-[var(--bg-danger-subtle)] px-3 py-2 text-sm text-[var(--danger)]">
                   {error}
                 </div>
               )}

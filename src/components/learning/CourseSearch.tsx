@@ -79,9 +79,9 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
   const getCourseStatus = (course: CourseData) => {
     if (course.isEnrolled) {
       if (course.progressPct === 100) {
-        return { label: 'Completed', color: 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]' }
+        return { label: 'Completed', color: 'bg-[var(--bg-success-subtle)] text-[var(--success)] border-[#1a2e1a]' }
       } else if (course.progressPct && course.progressPct > 0) {
-        return { label: 'In Progress', color: 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]' }
+        return { label: 'In Progress', color: 'bg-[var(--bg-info-subtle)] text-[#5b8dd9] border-[#1a1d2e]' }
       } else {
         return { label: 'Started', color: 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]' }
       }

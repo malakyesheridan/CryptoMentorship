@@ -32,6 +32,14 @@
   /* Semantic */
   --success:          #4a7c3f;
   --danger:           #c03030;
+  --warning:          #d97706;
+  --info:             #4a7cc3;
+
+  /* Tinted alert panel backgrounds — subtle translucent wash over the panel */
+  --bg-success-subtle: #1a2e1a;
+  --bg-danger-subtle:  #2e1a1a;
+  --bg-warning-subtle: #2a2418;
+  --bg-info-subtle:    #1a1d2e;
 
   /* Elevation */
   --shadow-card:      0 8px 24px rgba(0, 0, 0, 0.3);
@@ -63,6 +71,14 @@
   /* Semantic — darker for contrast on light bg */
   --success:          #3a6830;
   --danger:           #a82424;
+  --warning:          #a85a05;
+  --info:             #2e5aa3;
+
+  /* Tinted alert panel backgrounds — light-mode equivalents. */
+  --bg-success-subtle: #ecf4e6;
+  --bg-danger-subtle:  #fae8e8;
+  --bg-warning-subtle: #fbf2dd;
+  --bg-info-subtle:    #e7ecf7;
 
   /* Elevation — much lighter shadows on light bg */
   --shadow-card:      0 4px 16px rgba(26, 21, 16, 0.08);

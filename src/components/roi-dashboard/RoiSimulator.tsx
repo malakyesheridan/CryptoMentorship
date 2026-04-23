@@ -97,19 +97,19 @@ export function RoiSimulator({
           </div>
           <div>
             <p className="text-xs text-[var(--text-muted)]">Profit</p>
-            <p className={simulation.profit >= 0 ? 'text-lg font-semibold text-[#4a7c3f]' : 'text-lg font-semibold text-[#c03030]'}>
+            <p className={simulation.profit >= 0 ? 'text-lg font-semibold text-[var(--success)]' : 'text-lg font-semibold text-[var(--danger)]'}>
               {formatCurrency(simulation.profit)}
             </p>
           </div>
           <div>
             <p className="text-xs text-[var(--text-muted)]">ROI</p>
-            <p className={simulation.roiPct >= 0 ? 'text-lg font-semibold text-[#4a7c3f]' : 'text-lg font-semibold text-[#c03030]'}>
+            <p className={simulation.roiPct >= 0 ? 'text-lg font-semibold text-[var(--success)]' : 'text-lg font-semibold text-[var(--danger)]'}>
               {simulation.roiPct.toFixed(2)}%
             </p>
           </div>
           <div>
             <p className="text-xs text-[var(--text-muted)]">Worst Drawdown</p>
-            <p className="text-lg font-semibold text-[#c03030]">
+            <p className="text-lg font-semibold text-[var(--danger)]">
               {simulation.maxDrawdownPct.toFixed(2)}% ({formatCurrency(simulation.maxDrawdownAmount)})
             </p>
           </div>

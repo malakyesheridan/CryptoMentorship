@@ -192,12 +192,12 @@ export function ProgressTimeline({
 
   const getBadgeColor = (badge: string) => {
     switch (badge) {
-      case 'Completed': return 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]'
-      case 'Certificate': return 'bg-[#2a2418] text-[#c9a227] border-[#2a2418]'
-      case 'Streak': return 'bg-[#2a2018] text-[#d97706] border-[#2a2018]'
-      case 'Legendary': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
+      case 'Completed': return 'bg-[var(--bg-success-subtle)] text-[var(--success)] border-[#1a2e1a]'
+      case 'Certificate': return 'bg-[var(--bg-warning-subtle)] text-[var(--gold-400)] border-[#2a2418]'
+      case 'Streak': return 'bg-[var(--bg-warning-subtle)] text-[var(--warning)] border-[#2a2018]'
+      case 'Legendary': return 'bg-[var(--bg-danger-subtle)] text-[var(--danger)] border-[#2e1a1a]'
       case 'Achievement': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
-      case 'Master': return 'bg-[#1a1a2e] text-[#818cf8] border-[#1a1a2e]'
+      case 'Master': return 'bg-[var(--bg-info-subtle)] text-[#818cf8] border-[#1a1a2e]'
       default: return 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
@@ -244,7 +244,7 @@ export function ProgressTimeline({
                 <div 
                   className={cn(
                     'flex items-start gap-4 p-4 rounded-lg transition-all duration-300 cursor-pointer group',
-                    isSelected ? 'bg-[#1a1d2e] shadow-md' : 'hover:bg-[#1a1d2e]'
+                    isSelected ? 'bg-[var(--bg-info-subtle)] shadow-md' : 'hover:bg-[var(--bg-info-subtle)]'
                   )}
                   onClick={() => setSelectedMilestone(isSelected ? null : milestone.id)}
                 >

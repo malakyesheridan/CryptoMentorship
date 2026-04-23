@@ -31,9 +31,9 @@ export function PasswordStrengthMeter({ password, className }: PasswordStrengthM
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-[var(--text-strong)]">Password strength</span>
         <span className={`text-xs font-medium ${
-          strength >= 70 ? 'text-[#4a7c3f]' : 
+          strength >= 70 ? 'text-[var(--success)]' : 
           strength >= 40 ? 'text-yellow-600' : 
-          'text-[#c03030]'
+          'text-[var(--danger)]'
         }`}>
           {strengthText}
         </span>
@@ -45,7 +45,7 @@ export function PasswordStrengthMeter({ password, className }: PasswordStrengthM
         />
       </div>
       {!validation.valid && validation.error && (
-        <p className="text-xs text-[#c03030] mt-1">{validation.error}</p>
+        <p className="text-xs text-[var(--danger)] mt-1">{validation.error}</p>
       )}
     </div>
   )

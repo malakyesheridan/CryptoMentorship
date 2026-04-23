@@ -154,10 +154,10 @@ export function RiskOnboardingConfigEditor() {
       </div>
 
       {errors.length > 0 && (
-        <Card className="border-[#c03030] bg-[#2e1a1a]">
+        <Card className="border-[var(--danger)] bg-[var(--bg-danger-subtle)]">
           <CardContent className="pt-6">
-            <p className="text-sm font-semibold text-[#c03030]">Fix the following before saving:</p>
-            <ul className="mt-2 list-disc pl-5 text-sm text-[#c03030] space-y-1">
+            <p className="text-sm font-semibold text-[var(--danger)]">Fix the following before saving:</p>
+            <ul className="mt-2 list-disc pl-5 text-sm text-[var(--danger)] space-y-1">
               {errors.map((error) => (
                 <li key={error}>{error}</li>
               ))}

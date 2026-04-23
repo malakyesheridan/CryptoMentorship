@@ -130,7 +130,7 @@ export function Sidebar() {
                         className={cn(
                           'flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                           isChildActive
-                            ? 'bg-[#2a2418] text-[var(--gold-400)]'
+                            ? 'bg-[var(--bg-warning-subtle)] text-[var(--gold-400)]'
                             : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
                         )}
                       >

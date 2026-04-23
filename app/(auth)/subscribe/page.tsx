@@ -167,7 +167,7 @@ function SubscribePageContent() {
       {(isRequired || isNewUser || error) && (
         <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           {isRequired && (
-            <div className="max-w-2xl mx-auto mb-6 p-4 bg-[#2a2418] border border-[var(--border-subtle)] rounded-lg flex items-start gap-3">
+            <div className="max-w-2xl mx-auto mb-6 p-4 bg-[var(--bg-warning-subtle)] border border-[var(--border-subtle)] rounded-lg flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-left">
                 <p className="font-semibold text-[var(--text-strong)] mb-1">Subscription Required</p>
@@ -178,22 +178,22 @@ function SubscribePageContent() {
             </div>
           )}
           {isNewUser && (
-            <div className="max-w-2xl mx-auto mb-6 p-4 bg-[#1a2e1a] border border-[var(--border-subtle)] rounded-lg">
-              <p className="text-[#4a7c3f] font-medium">
+            <div className="max-w-2xl mx-auto mb-6 p-4 bg-[var(--bg-success-subtle)] border border-[var(--border-subtle)] rounded-lg">
+              <p className="text-[var(--success)] font-medium">
                 Welcome! Your account has been created. Choose a subscription plan to get started.
               </p>
             </div>
           )}
           {error && (
-            <div className="max-w-2xl mx-auto mb-8 p-4 bg-[#2e1a1a] border border-[var(--border-subtle)] rounded-lg flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-[#c03030] flex-shrink-0 mt-0.5" />
+            <div className="max-w-2xl mx-auto mb-8 p-4 bg-[var(--bg-danger-subtle)] border border-[var(--border-subtle)] rounded-lg flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-[var(--danger)] flex-shrink-0 mt-0.5" />
               <div className="text-left flex-1">
-                <p className="font-semibold text-[#c03030] mb-1">Error</p>
+                <p className="font-semibold text-[var(--danger)] mb-1">Error</p>
                 <p className="text-sm text-[var(--text-muted)]">{error}</p>
               </div>
               <button
                 onClick={() => setError(null)}
-                className="text-[#c03030] hover:text-red-400 text-xl leading-none"
+                className="text-[var(--danger)] hover:text-red-400 text-xl leading-none"
                 aria-label="Close error"
               >
                 ×
@@ -224,7 +224,7 @@ function SubscribePageContent() {
                 <div className="p-6 lg:p-8 grow">
                   {/* Icon */}
                   <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 rounded-xl bg-[#2a2418] border-2 border-yellow-300 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-xl bg-[var(--bg-warning-subtle)] border-2 border-yellow-300 flex items-center justify-center">
                       <Icon className="h-8 w-8 text-yellow-600" strokeWidth={2} />
                     </div>
                   </div>

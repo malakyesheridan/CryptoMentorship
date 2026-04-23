@@ -101,7 +101,7 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
     
     if (question.answeredAt) {
       return (
-        <Badge variant="outline" className="text-[#4a7c3f] border-[#4a7c3f]">
+        <Badge variant="outline" className="text-[var(--success)] border-[var(--success)]">
           <CheckCircle className="h-3 w-3 mr-1" />
           Answered
         </Badge>
@@ -137,8 +137,8 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
     <div className="space-y-4">
       {/* Error Message */}
       {error && (
-        <div className="bg-[#2e1a1a] border border-[#c03030] rounded-lg p-4">
-          <p className="text-[#c03030] text-sm">{error}</p>
+        <div className="bg-[var(--bg-danger-subtle)] border border-[var(--danger)] rounded-lg p-4">
+          <p className="text-[var(--danger)] text-sm">{error}</p>
         </div>
       )}
 
@@ -174,12 +174,12 @@ export function AdminQuestionsTable({ questions, eventId }: AdminQuestionsTableP
 
               {/* Existing Answer */}
               {question.answer && (
-                <div className="bg-[#1a2e1a] border border-[#4a7c3f] rounded-lg p-4">
+                <div className="bg-[var(--bg-success-subtle)] border border-[var(--success)] rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="h-4 w-4 text-[#4a7c3f]" />
-                    <span className="text-sm font-medium text-[#4a7c3f]">Answer</span>
+                    <CheckCircle className="h-4 w-4 text-[var(--success)]" />
+                    <span className="text-sm font-medium text-[var(--success)]">Answer</span>
                   </div>
-                  <p className="text-[#4a7c3f]">{question.answer}</p>
+                  <p className="text-[var(--success)]">{question.answer}</p>
                 </div>
               )}
 

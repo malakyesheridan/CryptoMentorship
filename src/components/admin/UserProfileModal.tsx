@@ -181,7 +181,7 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
 
           {error && (
             <div className="text-center py-12">
-              <p className="text-[#c03030]">{error}</p>
+              <p className="text-[var(--danger)]">{error}</p>
               <Button onClick={fetchUserProfile} className="mt-4" variant="outline">
                 Retry
               </Button>

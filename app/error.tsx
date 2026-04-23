@@ -21,7 +21,7 @@ export default function Error({
     <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#2e1a1a]">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-danger-subtle)]">
             <AlertTriangle className="h-6 w-6 text-red-600" />
           </div>
           <CardTitle className="text-xl">Something went wrong</CardTitle>

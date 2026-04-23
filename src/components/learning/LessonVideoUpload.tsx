@@ -319,8 +319,8 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 htmlFor="video"
                 className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                   formData.video
-                    ? 'border-green-500 bg-[#1a2e1a]'
-                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
+                    ? 'border-green-500 bg-[var(--bg-success-subtle)]'
+                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[var(--bg-warning-subtle)]'
                 } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex flex-col items-center gap-2">
@@ -357,8 +357,8 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 htmlFor="thumbnail"
                 className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                   formData.thumbnail
-                    ? 'border-green-500 bg-[#1a2e1a]'
-                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
+                    ? 'border-green-500 bg-[var(--bg-success-subtle)]'
+                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[var(--bg-warning-subtle)]'
                 } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex flex-col items-center gap-2">
@@ -453,7 +453,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
 
         {/* Status Messages */}
         {uploadStatus === 'success' && (
-          <div className="mt-4 flex items-center justify-between gap-3 text-[#4a7c3f]">
+          <div className="mt-4 flex items-center justify-between gap-3 text-[var(--success)]">
             <div className="flex items-center space-x-2">
               <CheckCircle className="w-5 h-5" />
               <span>
@@ -467,7 +467,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 setUploadProgress(0)
                 setLastUploadedTitle(null)
               }}
-              className="text-[#4a7c3f] hover:text-[#4a7c3f]"
+              className="text-[var(--success)] hover:text-[var(--success)]"
               aria-label="Dismiss lesson uploaded confirmation"
             >
               <X className="h-4 w-4" />
@@ -476,7 +476,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
         )}
 
         {uploadStatus === 'error' && errorMessage && (
-          <div className="mt-4 flex items-center space-x-2 text-[#c03030]">
+          <div className="mt-4 flex items-center space-x-2 text-[var(--danger)]">
             <AlertCircle className="w-5 h-5" />
             <span>{errorMessage}</span>
           </div>

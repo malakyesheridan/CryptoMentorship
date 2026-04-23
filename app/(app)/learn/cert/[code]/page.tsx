@@ -164,9 +164,9 @@ export default async function CertificatePage({
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-center gap-2 p-3 bg-[#1a2e1a] rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-[#4a7c3f]" />
-                  <span className="text-sm font-medium text-[#4a7c3f]">Verified Certificate</span>
+                <div className="flex items-center justify-center gap-2 p-3 bg-[var(--bg-success-subtle)] rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-[var(--success)]" />
+                  <span className="text-sm font-medium text-[var(--success)]">Verified Certificate</span>
                 </div>
               </div>
             </CardContent>

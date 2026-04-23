@@ -190,25 +190,25 @@ export default function CSVImportPage() {
               {/* Progress Steps */}
               <div className="flex items-center gap-4 mb-6">
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'upload' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
+                  currentStep.step === 'upload' ? 'bg-[var(--bg-info-subtle)] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <Upload className="h-4 w-4" />
                   Upload
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'mapping' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
+                  currentStep.step === 'mapping' ? 'bg-[var(--bg-info-subtle)] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <FileText className="h-4 w-4" />
                   Mapping
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'preview' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
+                  currentStep.step === 'preview' ? 'bg-[var(--bg-info-subtle)] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <CheckCircle className="h-4 w-4" />
                   Preview
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'import' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
+                  currentStep.step === 'import' ? 'bg-[var(--bg-info-subtle)] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <CheckCircle className="h-4 w-4" />
                   Import
@@ -250,12 +250,12 @@ export default function CSVImportPage() {
                   </div>
 
                   {currentStep.errors && (
-                    <div className="mt-6 p-4 bg-[#2e1a1a] border border-[#c03030] rounded-lg">
-                      <div className="flex items-center gap-2 text-[#c03030]">
+                    <div className="mt-6 p-4 bg-[var(--bg-danger-subtle)] border border-[var(--danger)] rounded-lg">
+                      <div className="flex items-center gap-2 text-[var(--danger)]">
                         <XCircle className="h-5 w-5" />
                         <span className="font-medium">Upload Error</span>
                       </div>
-                      <p className="text-[#c03030] mt-1">
+                      <p className="text-[var(--danger)] mt-1">
                         {currentStep.errors[0]?.message}
                       </p>
                     </div>
@@ -295,12 +295,12 @@ export default function CSVImportPage() {
                 </div>
 
                 {currentStep.errors && currentStep.errors.length > 0 && (
-                  <div className="mb-6 p-4 bg-[#2a2418] border border-[#c9a227] rounded-lg">
-                    <div className="flex items-center gap-2 text-[#c9a227] mb-2">
+                  <div className="mb-6 p-4 bg-[var(--bg-warning-subtle)] border border-[var(--gold-400)] rounded-lg">
+                    <div className="flex items-center gap-2 text-[var(--gold-400)] mb-2">
                       <AlertTriangle className="h-5 w-5" />
                       <span className="font-medium">Validation Errors</span>
                     </div>
-                    <div className="text-sm text-[#c9a227]">
+                    <div className="text-sm text-[var(--gold-400)]">
                       {currentStep.errors.length} rows have errors and will be skipped.
                     </div>
                   </div>
@@ -326,7 +326,7 @@ export default function CSVImportPage() {
                           <td className="px-3 py-2">{row.symbol}</td>
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded text-xs ${
-                              row.direction === 'LONG' ? 'bg-[#1a2e1a] text-[#4a7c3f]' : 'bg-[#2e1a1a] text-[#c03030]'
+                              row.direction === 'LONG' ? 'bg-[var(--bg-success-subtle)] text-[var(--success)]' : 'bg-[var(--bg-danger-subtle)] text-[var(--danger)]'
                             }`}>
                               {row.direction}
                             </span>
@@ -337,7 +337,7 @@ export default function CSVImportPage() {
                           <td className="px-3 py-2">{row.riskPct}%</td>
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded text-xs ${
-                              row.exitTime ? 'bg-[var(--bg-hover)] text-[var(--text-strong)]' : 'bg-[#1a1e2e] text-[#4a7cc3]'
+                              row.exitTime ? 'bg-[var(--bg-hover)] text-[var(--text-strong)]' : 'bg-[var(--bg-info-subtle)] text-[#4a7cc3]'
                             }`}>
                               {row.exitTime ? 'Closed' : 'Open'}
                             </span>

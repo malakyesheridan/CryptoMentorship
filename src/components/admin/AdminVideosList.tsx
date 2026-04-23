@@ -241,7 +241,7 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
                       variant="ghost" 
                       size="sm"
                       onClick={() => handleDelete(video.id)}
-                      className="text-[#c03030] hover:text-[#c03030] hover:bg-[#2e1a1a]"
+                      className="text-[var(--danger)] hover:text-[var(--danger)] hover:bg-[var(--bg-danger-subtle)]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

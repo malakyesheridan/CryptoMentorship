@@ -236,7 +236,7 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
               <BookOpen className="w-5 h-5 text-yellow-500" />
               <span>Create New Learning Track</span>
             </CardTitle>
-            <Badge className="bg-[#2a2418] text-yellow-700 border-[#2a2418] px-2 py-1 text-xs">
+            <Badge className="bg-[var(--bg-warning-subtle)] text-yellow-700 border-[#2a2418] px-2 py-1 text-xs">
               <Shield className="w-3 h-3 mr-1" />
               Admin Only
             </Badge>
@@ -265,10 +265,10 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
             />
             {generatedSlug && (
               <div className="text-xs">
-                {slugStatus === 'available' && <span className="text-[#4a7c3f]">Slug available: {generatedSlug}</span>}
+                {slugStatus === 'available' && <span className="text-[var(--success)]">Slug available: {generatedSlug}</span>}
                 {slugStatus === 'checking' && <span className="text-[var(--text-muted)]">Checking slug...</span>}
                 {slugStatus === 'taken' && (
-                  <span className="text-[#c03030]">
+                  <span className="text-[var(--danger)]">
                     Slug taken. Suggested: {slugSuggestion || `${generatedSlug}-2`}
                   </span>
                 )}
@@ -298,8 +298,8 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
                 htmlFor="cover-image"
                 className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                   formData.coverImage
-                    ? 'border-green-500 bg-[#1a2e1a]'
-                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
+                    ? 'border-green-500 bg-[var(--bg-success-subtle)]'
+                    : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[var(--bg-warning-subtle)]'
                 } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex flex-col items-center gap-2">
@@ -363,22 +363,22 @@ export function SimpleTrackUpload({ onSuccess }: SimpleTrackUploadProps) {
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="bg-[#2e1a1a] border border-[#2e1a1a] rounded-lg p-4 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-[#c03030] flex-shrink-0 mt-0.5" />
+            <div className="bg-[var(--bg-danger-subtle)] border border-[#2e1a1a] rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-[var(--danger)] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-[#c03030]">Error</p>
-                <p className="text-sm text-[#c03030] mt-1">{errorMessage}</p>
+                <p className="text-sm font-medium text-[var(--danger)]">Error</p>
+                <p className="text-sm text-[var(--danger)] mt-1">{errorMessage}</p>
               </div>
             </div>
           )}
 
           {/* Success Message */}
           {uploadStatus === 'success' && (
-            <div className="bg-[#1a2e1a] border border-[#1a2e1a] rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-[#4a7c3f] flex-shrink-0 mt-0.5" />
+            <div className="bg-[var(--bg-success-subtle)] border border-[#1a2e1a] rounded-lg p-4 flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-[var(--success)] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-[#4a7c3f]">Success!</p>
-                <p className="text-sm text-[#4a7c3f] mt-1">Track created successfully. You can now upload videos to it.</p>
+                <p className="text-sm font-medium text-[var(--success)]">Success!</p>
+                <p className="text-sm text-[var(--success)] mt-1">Track created successfully. You can now upload videos to it.</p>
               </div>
             </div>
           )}

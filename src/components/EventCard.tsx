@@ -169,7 +169,7 @@ export function EventCard({
           {capacity && (
             <div className="flex items-center gap-2 text-sm text-[var(--text-strong)]">
               <Users className="h-4 w-4" />
-              <span className={getCapacityText() === 'Full' ? 'text-[#c03030]' : ''}>
+              <span className={getCapacityText() === 'Full' ? 'text-[var(--danger)]' : ''}>
                 {getCapacityText()}
               </span>
             </div>
@@ -184,7 +184,7 @@ export function EventCard({
               size="sm"
               onClick={() => handleRSVP('going')}
               disabled={isRsvping || getCapacityText() === 'Full'}
-              className={userRsvp?.status === 'going' ? 'bg-gold-500 hover:bg-gold-600 text-white' : 'hover:bg-[#2a2418] hover:border-yellow-300'}
+              className={userRsvp?.status === 'going' ? 'bg-gold-500 hover:bg-gold-600 text-white' : 'hover:bg-[var(--bg-warning-subtle)] hover:border-yellow-300'}
             >
               Going
             </Button>
@@ -193,7 +193,7 @@ export function EventCard({
               size="sm"
               onClick={() => handleRSVP('interested')}
               disabled={isRsvping}
-              className={userRsvp?.status === 'interested' ? 'bg-gold-500 hover:bg-gold-600 text-white' : 'hover:bg-[#2a2418] hover:border-yellow-300'}
+              className={userRsvp?.status === 'interested' ? 'bg-gold-500 hover:bg-gold-600 text-white' : 'hover:bg-[var(--bg-warning-subtle)] hover:border-yellow-300'}
             >
               Interested
             </Button>
@@ -202,7 +202,7 @@ export function EventCard({
               size="sm"
               onClick={() => handleRSVP('declined')}
               disabled={isRsvping}
-              className={userRsvp?.status === 'declined' ? 'bg-red-500 hover:bg-red-600 text-white' : 'hover:bg-[#2e1a1a] hover:border-red-300'}
+              className={userRsvp?.status === 'declined' ? 'bg-red-500 hover:bg-red-600 text-white' : 'hover:bg-[var(--bg-danger-subtle)] hover:border-red-300'}
             >
               Decline
             </Button>
@@ -212,14 +212,14 @@ export function EventCard({
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
           <Link href={`/events/${slug}`}>
-            <Button variant="ghost" size="sm" className="text-[var(--text-strong)] hover:text-yellow-600 hover:bg-[#2a2418]">
+            <Button variant="ghost" size="sm" className="text-[var(--text-strong)] hover:text-yellow-600 hover:bg-[var(--bg-warning-subtle)]">
               View Details
             </Button>
           </Link>
           
           {isUpcoming && (
             <Link href={`/api/events/${slug}/ics`}>
-              <Button variant="outline" size="sm" className="border-[var(--border-subtle)] hover:border-yellow-300 hover:bg-[#2a2418]">
+              <Button variant="outline" size="sm" className="border-[var(--border-subtle)] hover:border-yellow-300 hover:bg-[var(--bg-warning-subtle)]">
                 Add to Calendar
               </Button>
             </Link>

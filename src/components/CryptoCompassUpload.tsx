@@ -280,8 +280,8 @@ export default function CryptoCompassUpload({ onSuccess }: CryptoCompassUploadPr
             htmlFor="video-file"
             className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
               episodeData.video
-                ? 'border-green-500 bg-[#1a2e1a]'
-                : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
+                ? 'border-green-500 bg-[var(--bg-success-subtle)]'
+                : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[var(--bg-warning-subtle)]'
             } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <div className="flex flex-col items-center gap-2">
@@ -314,8 +314,8 @@ export default function CryptoCompassUpload({ onSuccess }: CryptoCompassUploadPr
             htmlFor="thumbnail-file"
             className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
               episodeData.thumbnail
-                ? 'border-green-500 bg-[#1a2e1a]'
-                : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
+                ? 'border-green-500 bg-[var(--bg-success-subtle)]'
+                : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[var(--bg-warning-subtle)]'
             } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <div className="flex flex-col items-center gap-2">
@@ -397,14 +397,14 @@ export default function CryptoCompassUpload({ onSuccess }: CryptoCompassUploadPr
       </Button>
 
       {uploadStatus === 'success' && (
-        <div className="flex items-center space-x-2 text-[#4a7c3f]">
+        <div className="flex items-center space-x-2 text-[var(--success)]">
           <CheckCircle className="w-5 h-5" />
           <span>Episode created successfully!</span>
         </div>
       )}
 
       {uploadStatus === 'error' && (
-        <div className="flex items-center space-x-2 text-[#c03030]">
+        <div className="flex items-center space-x-2 text-[var(--danger)]">
           <AlertCircle className="w-5 h-5" />
           <span>{errorMessage}</span>
         </div>

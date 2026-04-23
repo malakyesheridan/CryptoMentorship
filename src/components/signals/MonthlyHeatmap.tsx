@@ -88,13 +88,13 @@ export function MonthlyHeatmap({ monthlyReturns }: MonthlyHeatmapProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <p className="text-sm text-[var(--text-muted)]">Best Month</p>
-              <p className="text-lg font-semibold text-[#4a7c3f]">
+              <p className="text-lg font-semibold text-[var(--success)]">
                 {formatPercentage(maxReturn)}
               </p>
             </div>
             <div className="text-center">
               <p className="text-sm text-[var(--text-muted)]">Worst Month</p>
-              <p className="text-lg font-semibold text-[#c03030]">
+              <p className="text-lg font-semibold text-[var(--danger)]">
                 {formatPercentage(minReturn)}
               </p>
             </div>

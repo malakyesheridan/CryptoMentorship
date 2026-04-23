@@ -284,7 +284,7 @@ export default async function AdminEventsPage({ searchParams }: AdminEventsPageP
                         <Users className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button variant="outline" size="sm" className="text-[#c03030] hover:text-[#c03030]">
+                    <Button variant="outline" size="sm" className="text-[var(--danger)] hover:text-[var(--danger)]">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

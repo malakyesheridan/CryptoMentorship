@@ -33,10 +33,10 @@ export default function ResourceCard({ resource, canView }: ResourceCardProps) {
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-10 h-10 bg-[#2e1a1a] rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[#c03030]" />
+                <div className="w-10 h-10 bg-[var(--bg-danger-subtle)] rounded-lg flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[var(--danger)]" />
                 </div>
-                <Badge className={`text-xs px-2 py-1 ${resource.locked ? 'bg-[#1a1a2e] text-blue-400 border-blue-200' : 'bg-[#1a2e1a] text-[#4a7c3f] border-[#4a7c3f]/30'}`}>
+                <Badge className={`text-xs px-2 py-1 ${resource.locked ? 'bg-[var(--bg-info-subtle)] text-blue-400 border-blue-200' : 'bg-[var(--bg-success-subtle)] text-[var(--success)] border-[var(--success)]/30'}`}>
                   {resource.locked ? 'Member' : 'Public'}
                 </Badge>
               </div>

@@ -103,28 +103,28 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
         <CardContent>
           <div className={`p-4 rounded-lg border ${
             existingSubmission.passed 
-              ? 'bg-[#1a2e1a] border-[#1a2e1a]' 
-              : 'bg-[#2e1a1a] border-[#2e1a1a]'
+              ? 'bg-[var(--bg-success-subtle)] border-[#1a2e1a]' 
+              : 'bg-[var(--bg-danger-subtle)] border-[#2e1a1a]'
           }`}>
             <div className="flex items-center gap-2 mb-2">
               {existingSubmission.passed ? (
-                <CheckCircle className="h-5 w-5 text-[#4a7c3f]" />
+                <CheckCircle className="h-5 w-5 text-[var(--success)]" />
               ) : (
-                <XCircle className="h-5 w-5 text-[#c03030]" />
+                <XCircle className="h-5 w-5 text-[var(--danger)]" />
               )}
               <span className={`font-medium ${
-                existingSubmission.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
+                existingSubmission.passed ? 'text-[var(--success)]' : 'text-[var(--danger)]'
               }`}>
                 {existingSubmission.passed ? 'Quiz Passed!' : 'Quiz Failed'}
               </span>
             </div>
             <p className={`text-sm ${
-              existingSubmission.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
+              existingSubmission.passed ? 'text-[var(--success)]' : 'text-[var(--danger)]'
             }`}>
               Score: {existingSubmission.scorePct}% (Required: {passPct}%)
             </p>
             {!existingSubmission.passed && (
-              <p className="text-sm text-[#c03030] mt-2">
+              <p className="text-sm text-[var(--danger)] mt-2">
                 You can retake the quiz to pass and complete this lesson.
               </p>
             )}
@@ -146,23 +146,23 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
         <CardContent>
           <div className={`p-4 rounded-lg border ${
             result.passed 
-              ? 'bg-[#1a2e1a] border-[#1a2e1a]' 
-              : 'bg-[#2e1a1a] border-[#2e1a1a]'
+              ? 'bg-[var(--bg-success-subtle)] border-[#1a2e1a]' 
+              : 'bg-[var(--bg-danger-subtle)] border-[#2e1a1a]'
           }`}>
             <div className="flex items-center gap-2 mb-2">
               {result.passed ? (
-                <CheckCircle className="h-5 w-5 text-[#4a7c3f]" />
+                <CheckCircle className="h-5 w-5 text-[var(--success)]" />
               ) : (
-                <XCircle className="h-5 w-5 text-[#c03030]" />
+                <XCircle className="h-5 w-5 text-[var(--danger)]" />
               )}
               <span className={`font-medium ${
-                result.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
+                result.passed ? 'text-[var(--success)]' : 'text-[var(--danger)]'
               }`}>
                 {result.passed ? 'Quiz Passed!' : 'Quiz Failed'}
               </span>
             </div>
             <p className={`text-sm ${
-              result.passed ? 'text-[#4a7c3f]' : 'text-[#c03030]'
+              result.passed ? 'text-[var(--success)]' : 'text-[var(--danger)]'
             }`}>
               Score: {result.scorePct}% ({result.correctAnswers}/{result.totalQuestions} correct)
             </p>

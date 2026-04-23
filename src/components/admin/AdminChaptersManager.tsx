@@ -111,8 +111,8 @@ export function AdminChaptersManager({
     <div className="space-y-4">
       {/* Error Message */}
       {error && (
-        <div className="bg-[#2e1a1a] border border-[#c03030] rounded-lg p-4">
-          <p className="text-[#c03030] text-sm">{error}</p>
+        <div className="bg-[var(--bg-danger-subtle)] border border-[var(--danger)] rounded-lg p-4">
+          <p className="text-[var(--danger)] text-sm">{error}</p>
         </div>
       )}
 
@@ -224,7 +224,7 @@ export function AdminChaptersManager({
                     size="sm"
                     variant="outline"
                     onClick={() => handleDeleteChapter(chapter.id)}
-                    className="text-[#c03030] hover:text-[#c03030]"
+                    className="text-[var(--danger)] hover:text-[var(--danger)]"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

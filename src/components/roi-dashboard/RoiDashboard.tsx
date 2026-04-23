@@ -19,7 +19,7 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">ROI Since Tracking Started</p>
-            <p className={metrics.roiSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
+            <p className={metrics.roiSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[var(--success)]' : 'text-xl font-semibold text-[var(--danger)]'}>
               {formatPercent(metrics.roiSinceInceptionPct)}
             </p>
           </CardContent>
@@ -27,7 +27,7 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">ROI (last 30 days)</p>
-            <p className={metrics.roiLast30DaysPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
+            <p className={metrics.roiLast30DaysPct >= 0 ? 'text-xl font-semibold text-[var(--success)]' : 'text-xl font-semibold text-[var(--danger)]'}>
               {formatPercent(metrics.roiLast30DaysPct)}
             </p>
           </CardContent>
@@ -35,13 +35,13 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">Max Drawdown</p>
-            <p className="text-xl font-semibold text-[#c03030]">{formatPercent(metrics.maxDrawdownPct)}</p>
+            <p className="text-xl font-semibold text-[var(--danger)]">{formatPercent(metrics.maxDrawdownPct)}</p>
           </CardContent>
         </Card>
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">Buy and Hold BTC</p>
-            <p className={btcSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
+            <p className={btcSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[var(--success)]' : 'text-xl font-semibold text-[var(--danger)]'}>
               {formatPercent(btcSinceInceptionPct)}
             </p>
           </CardContent>
@@ -49,7 +49,7 @@ export function RoiDashboard({ payload }: { payload: RoiDashboardPayload }) {
         <Card className="card">
           <CardContent className="p-5">
             <p className="text-xs text-[var(--text-muted)]">Buy and Hold ETH</p>
-            <p className={ethSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[#4a7c3f]' : 'text-xl font-semibold text-[#c03030]'}>
+            <p className={ethSinceInceptionPct >= 0 ? 'text-xl font-semibold text-[var(--success)]' : 'text-xl font-semibold text-[var(--danger)]'}>
               {formatPercent(ethSinceInceptionPct)}
             </p>
           </CardContent>

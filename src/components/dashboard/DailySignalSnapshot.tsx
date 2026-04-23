@@ -28,8 +28,8 @@ const tierLabels: Record<string, string> = {
 }
 
 const tierColors: Record<string, string> = {
-  T1: 'border-purple-800/50 bg-[#1a1520]/50',
-  T2: 'border-yellow-800/50 bg-[#2a2418]/50',
+  T1: 'border-purple-500/30 bg-purple-500/10',
+  T2: 'border-amber-500/30 bg-amber-500/10',
 }
 
 function canAccessTier(userTier: string | null, signalTier: string, isActive: boolean): boolean {

@@ -102,7 +102,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                   <Badge className={`text-xs px-2 py-0.5 font-medium ${
                     item.locked
                       ? 'bg-blue-600 text-white border-blue-700'
-                      : 'bg-[#1a2e1a] text-[#4a7c3f] border-[#1a2e1a]'
+                      : 'bg-[var(--bg-success-subtle)] text-[var(--success)] border-[#1a2e1a]'
                   }`}>
                     {item.locked ? 'Member' : 'Public'}
                   </Badge>
@@ -172,7 +172,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-[var(--text-muted)]">
                         {item.progressPct === 100 ? (
-                          <span className="flex items-center gap-1 text-[#4a7c3f]">
+                          <span className="flex items-center gap-1 text-[var(--success)]">
                             <CheckCircle className="h-3 w-3" />
                             Completed
                           </span>
@@ -185,7 +185,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                     <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full transition-all duration-300 ${
-                          item.progressPct === 100 ? 'bg-[#4a7c3f]' : 'bg-gold-500'
+                          item.progressPct === 100 ? 'bg-[var(--success)]' : 'bg-gold-500'
                         }`}
                         style={{ width: `${item.progressPct}%` }}
                       />

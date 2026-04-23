@@ -130,19 +130,19 @@ function PreviewPanel() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-[var(--text-muted)]">ROI Since Tracking Started</p>
-                <p className={cn('text-lg font-semibold', preview.metrics.roiSinceInceptionPct >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]')}>
+                <p className={cn('text-lg font-semibold', preview.metrics.roiSinceInceptionPct >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
                   {formatPercent(preview.metrics.roiSinceInceptionPct)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-[var(--text-muted)]">ROI (last 30 days)</p>
-                <p className={cn('text-lg font-semibold', preview.metrics.roiLast30DaysPct >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]')}>
+                <p className={cn('text-lg font-semibold', preview.metrics.roiLast30DaysPct >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
                   {formatPercent(preview.metrics.roiLast30DaysPct)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-[var(--text-muted)]">Max Drawdown</p>
-                <p className="text-lg font-semibold text-[#c03030]">
+                <p className="text-lg font-semibold text-[var(--danger)]">
                   {formatPercent(preview.metrics.maxDrawdownPct)}
                 </p>
               </div>
@@ -173,8 +173,8 @@ function PreviewPanel() {
                 <div className="space-y-2">
                   {preview.validation.errors.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-[#c03030]">Errors</p>
-                      <ul className="text-sm text-[#c03030] list-disc list-inside">
+                      <p className="text-xs font-semibold text-[var(--danger)]">Errors</p>
+                      <ul className="text-sm text-[var(--danger)] list-disc list-inside">
                         {preview.validation.errors.map((error) => (
                           <li key={error}>{error}</li>
                         ))}

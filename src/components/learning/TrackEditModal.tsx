@@ -357,8 +357,8 @@ export function TrackEditModal({
                       htmlFor="cover-image-edit"
                       className={`flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                         formData.coverImage
-                          ? 'border-green-500 bg-[#1a2e1a]'
-                          : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[#2a2418]'
+                          ? 'border-green-500 bg-[var(--bg-success-subtle)]'
+                          : 'border-[var(--border-subtle)] hover:border-yellow-500 hover:bg-[var(--bg-warning-subtle)]'
                       } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="flex flex-col items-center gap-2">
@@ -663,7 +663,7 @@ export function TrackEditModal({
 
                 <div className="flex items-center gap-2 text-sm">
                   {formData.publishedAt ? (
-                    <span className="flex items-center gap-1 text-[#4a7c3f]">
+                    <span className="flex items-center gap-1 text-[var(--success)]">
                       <Eye className="h-4 w-4" />
                       Will be published
                     </span>

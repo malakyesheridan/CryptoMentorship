@@ -474,7 +474,7 @@ export default function DailySignalUpload({ tier, category, userRole, formIdPref
         )}
 
         {uploadStatus === 'error' && (
-          <div className="flex items-center space-x-2 text-[#c03030]">
+          <div className="flex items-center space-x-2 text-[var(--danger)]">
             <AlertCircle className="w-5 h-5" />
             <span>{errorMessage}</span>
           </div>
