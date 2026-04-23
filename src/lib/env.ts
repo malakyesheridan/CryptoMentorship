@@ -263,46 +263,51 @@ if (typeof window === 'undefined') {
 }
 
 // Referral system configuration helpers
-function getAppUrl(): string {
-  // Priority: NEXT_PUBLIC_APP_URL > NEXTAUTH_URL > localhost (dev only)
+// Canonical production domain — hardcoded as the final fallback so referral
+// links, email CTAs, and notification links never embed a Vercel preview slug
+// or localhost URL if an env var is missing.
+const PRODUCTION_DOMAIN = 'https://stewartandco.com.au'
+
+export function getAppUrl(): string {
+  // Priority: NEXT_PUBLIC_APP_URL > NEXTAUTH_URL > production domain (prod) / localhost (dev)
   const publicUrl = process.env.NEXT_PUBLIC_APP_URL
   const authUrl = process.env.NEXTAUTH_URL
-  
-  // In production, prefer NEXT_PUBLIC_APP_URL
+
+  // In production, prefer NEXT_PUBLIC_APP_URL, then NEXTAUTH_URL, then the
+  // hardcoded canonical domain. We never fall through to localhost in prod.
   if (process.env.NODE_ENV === 'production') {
     if (publicUrl && publicUrl.startsWith('http')) {
-      return publicUrl.replace(/\/$/, '') // Remove trailing slash
+      return publicUrl.replace(/\/$/, '')
     }
     if (authUrl && authUrl.startsWith('http')) {
       return authUrl.replace(/\/$/, '')
     }
-    // Production should have a URL set
-    console.warn('[Referral] No production URL configured. Using fallback.')
+    console.warn(
+      `[Referral] NEXT_PUBLIC_APP_URL not set in production; defaulting to ${PRODUCTION_DOMAIN}`
+    )
+    return PRODUCTION_DOMAIN
   }
-  
-  // Development: use NEXT_PUBLIC_APP_URL if set, otherwise try to detect current port
+
+  // Development: explicit NEXT_PUBLIC_APP_URL wins.
   if (publicUrl && publicUrl.startsWith('http')) {
     return publicUrl.replace(/\/$/, '')
   }
-  
-  // In development, try to use the current request URL or fallback to common dev ports
-  // Check if we're in a server context and can detect the port
+
+  // Server-side dev: honour PORT if set.
   if (typeof window === 'undefined' && process.env.PORT) {
-    const port = process.env.PORT
-    return `http://localhost:${port}`
+    return `http://localhost:${process.env.PORT}`
   }
-  
-  // Try NEXTAUTH_URL but prefer port 5000 (common dev port)
+
+  // Try NEXTAUTH_URL but normalise dev ports to 5000 for consistency.
   if (authUrl && authUrl.startsWith('http')) {
-    // If NEXTAUTH_URL is on a different port, use port 5000 for consistency
     const url = new URL(authUrl)
     if (url.port === '5001' || url.port === '3000') {
-      return `http://localhost:5000`
+      return 'http://localhost:5000'
     }
     return authUrl.replace(/\/$/, '')
   }
-  
-  // Last resort: localhost:5000 (common dev port)
+
+  // Last resort in dev.
   return 'http://localhost:5000'
 }
 

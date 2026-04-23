@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger'
 import { enqueueEmail } from '@/lib/email/outbox'
 import { resolveEmailRecipientsForEvent, shouldSendInAppNotification } from '@/lib/notifications/preferences'
 import { buildNotificationDedupeKey, type NotificationEvent } from '@/lib/notifications/types'
+import { getAppUrl } from '@/lib/env'
 
 interface DailySignal {
   id: string
@@ -18,11 +19,7 @@ interface DailySignal {
 }
 
 function resolveBaseUrl() {
-  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-  if (!baseUrl.startsWith('http')) {
-    baseUrl = `https://${baseUrl}`
-  }
-  return baseUrl.replace(/\/$/, '')
+  return getAppUrl()
 }
 
 function mapSignalTier(signal: { tier: string; category?: string | null }): 'T1' | 'T2' {

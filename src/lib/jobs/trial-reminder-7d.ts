@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { env } from '@/lib/env'
+import { env, getAppUrl } from '@/lib/env'
 import { sendTrialReminderDigestEmail } from '@/lib/email'
 
 const REMINDER_TYPE = 'TRIAL_7_DAYS_LEFT'
@@ -37,11 +37,7 @@ function toDateKey(date: Date) {
 }
 
 function buildAppUrl() {
-  const publicUrl = process.env.NEXT_PUBLIC_APP_URL
-  if (publicUrl && publicUrl.startsWith('http')) {
-    return publicUrl.replace(/\/$/, '')
-  }
-  return env.NEXTAUTH_URL.replace(/\/$/, '')
+  return getAppUrl()
 }
 
 function computeWindow(now: Date) {

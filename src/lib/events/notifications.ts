@@ -4,6 +4,7 @@ import { enqueueEmail } from '@/lib/email/outbox'
 import { buildNotificationDedupeKey, type NotificationEvent } from '@/lib/notifications/types'
 import { resolveEmailRecipientsForEvent } from '@/lib/notifications/preferences'
 import { logger } from '@/lib/logger'
+import { getAppUrl } from '@/lib/env'
 
 export type AppEvent =
   | { type: 'research_published'; contentId: string }
@@ -23,20 +24,13 @@ export type AppEvent =
   | { type: 'question_answered'; questionId: string; questionAuthorId: string }
 
 function getBaseUrl() {
-  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-  if (!baseUrl.startsWith('http')) {
-    baseUrl = `https://${baseUrl}`
-  }
-  return baseUrl.replace(/\/$/, '')
+  return getAppUrl()
 }
 
 function resolveNotificationEventCronUrl(): string | null {
-  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || ''
+  const baseUrl = getAppUrl()
   if (!baseUrl) return null
-  if (!baseUrl.startsWith('http')) {
-    baseUrl = `https://${baseUrl}`
-  }
-  return new URL('/api/cron/notification-events', baseUrl.replace(/\/$/, '')).toString()
+  return new URL('/api/cron/notification-events', baseUrl).toString()
 }
 
 async function enqueueNotificationEmail(event: NotificationEvent, recipient: {

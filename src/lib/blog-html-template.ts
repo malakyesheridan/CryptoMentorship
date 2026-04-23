@@ -267,7 +267,7 @@ export function wrapInBrandedHTML(opts: {
     <!-- Footer -->
     <div style="margin-top:48px;padding-top:24px;border-top:1px solid ${C.border};text-align:center;">
       <div style="font-family:Georgia,serif;font-size:12px;letter-spacing:2px;color:${C.textMuted};text-transform:uppercase;margin-bottom:12px;">STEWART &amp; CO</div>
-      <a href="https://stewartandco.vercel.app/login" style="display:inline-block;padding:12px 32px;background-color:${C.gold};color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;">Visit the Platform</a>
+      <a href="https://stewartandco.com.au/login" style="display:inline-block;padding:12px 32px;background-color:${C.gold};color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;border-radius:6px;">Visit the Platform</a>
       <p style="font-size:12px;color:${C.textMuted};margin-top:16px;">This content is proprietary to Stewart &amp; Co. Do not redistribute.</p>
     </div>
   </div>

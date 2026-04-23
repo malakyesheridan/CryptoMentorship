@@ -6,14 +6,12 @@ import { sendDailySignalEmail } from '@/lib/email-templates'
 import { buildWelcomeTrialEmail } from '@/lib/templates/welcome-trial'
 import { buildWelcomeEmail } from '@/lib/templates/welcome'
 import type { NotificationEmailType } from '@/lib/notifications/types'
+import { getAppUrl } from '@/lib/env'
 
 function resolveCronUrl(): string | null {
-  let baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL || ''
+  const baseUrl = getAppUrl()
   if (!baseUrl) return null
-  if (!baseUrl.startsWith('http')) {
-    baseUrl = `https://${baseUrl}`
-  }
-  return new URL('/api/cron/email-outbox', baseUrl.replace(/\/$/, '')).toString()
+  return new URL('/api/cron/email-outbox', baseUrl).toString()
 }
 
 function triggerOutboxProcessing() {
