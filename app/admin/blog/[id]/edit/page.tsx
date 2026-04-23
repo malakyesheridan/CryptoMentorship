@@ -358,9 +358,9 @@ export default function EditBlogPostPage() {
   if (isLoading) {
     return (
       <div className="container-main section-padding animate-pulse">
-        <div className="h-8 w-48 bg-[#2a2520] rounded mb-4" />
-        <div className="h-5 w-80 bg-[#2a2520] rounded mb-8" />
-        <div className="h-96 bg-[#2a2520] rounded" />
+        <div className="h-8 w-48 bg-[var(--bg-skeleton)] rounded mb-4" />
+        <div className="h-5 w-80 bg-[var(--bg-skeleton)] rounded mb-8" />
+        <div className="h-96 bg-[var(--bg-skeleton)] rounded" />
       </div>
     )
   }

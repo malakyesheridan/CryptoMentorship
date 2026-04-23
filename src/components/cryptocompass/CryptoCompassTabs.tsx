@@ -49,7 +49,7 @@ export function CryptoCompassTabs({ activeCategory, onCategoryChange, counts }: 
               'rounded-lg px-4 py-2 font-medium transition-all duration-200 text-sm',
               isActive
                 ? `${cat.color} shadow-md`
-                : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
             )}
           >
             <cat.icon className="h-4 w-4 mr-1.5" />

@@ -169,7 +169,7 @@ export function RealTimeProgress({
             <h3 className="font-semibold text-sm mb-3">Recent Achievements</h3>
             <div className="space-y-2">
               {achievements.map((achievement, index) => (
-                <div key={index} className="flex items-start gap-3 p-2 rounded-lg bg-[#1a1815]">
+                <div key={index} className="flex items-start gap-3 p-2 rounded-lg bg-[var(--bg-hover)]">
                   {getAchievementIcon(achievement.type)}
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{achievement.title}</div>

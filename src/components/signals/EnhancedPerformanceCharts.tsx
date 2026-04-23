@@ -149,7 +149,7 @@ export function EnhancedPerformanceCharts({
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-[var(--text-muted)]">Time Range:</span>
-          <span className="px-2 py-1 bg-[#1a1815] rounded text-sm font-medium">{scope}</span>
+          <span className="px-2 py-1 bg-[var(--bg-hover)] rounded text-sm font-medium">{scope}</span>
         </div>
       </div>
 

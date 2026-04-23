@@ -84,7 +84,7 @@ export function PostComposer({ onSubmit, isAdmin, userImage, userName }: PostCom
         {userImage ? (
           <img src={userImage} alt="" className="w-10 h-10 rounded-full shrink-0" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[#2a2520] flex items-center justify-center text-sm font-medium text-[var(--text-muted)] shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[var(--bg-skeleton)] flex items-center justify-center text-sm font-medium text-[var(--text-muted)] shrink-0">
             {(userName?.[0] ?? '?').toUpperCase()}
           </div>
         )}
@@ -99,7 +99,7 @@ export function PostComposer({ onSubmit, isAdmin, userImage, userName }: PostCom
         {userImage ? (
           <img src={userImage} alt="" className="w-10 h-10 rounded-full shrink-0" />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-[#2a2520] flex items-center justify-center text-sm font-medium text-[var(--text-muted)] shrink-0">
+          <div className="w-10 h-10 rounded-full bg-[var(--bg-skeleton)] flex items-center justify-center text-sm font-medium text-[var(--text-muted)] shrink-0">
             {(userName?.[0] ?? '?').toUpperCase()}
           </div>
         )}
@@ -140,7 +140,7 @@ export function PostComposer({ onSubmit, isAdmin, userImage, userName }: PostCom
               className={`text-xs px-3 py-1.5 rounded-full font-medium whitespace-nowrap transition-all ${
                 isActive
                   ? `${colors.bg} ${colors.text} ring-1 ring-current/20`
-                  : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
               }`}
             >
               {label}
@@ -156,7 +156,7 @@ export function PostComposer({ onSubmit, isAdmin, userImage, userName }: PostCom
           <button
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815] rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)] rounded-lg transition-colors"
           >
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
             {uploading ? 'Uploading...' : 'Image'}
@@ -172,7 +172,7 @@ export function PostComposer({ onSubmit, isAdmin, userImage, userName }: PostCom
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setExpanded(false); setBody(''); setImageUrl(null) }}
-            className="text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] px-3 py-1.5 rounded-lg hover:bg-[#1a1815] transition-colors"
+            className="text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] px-3 py-1.5 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
           >
             Cancel
           </button>

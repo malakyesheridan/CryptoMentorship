@@ -8,7 +8,7 @@ import { Zap, TrendingUp, AlertCircle, Lock, Edit } from 'lucide-react'
 import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { CalendarDatePicker } from './CalendarDatePicker'
-import { buildAllocationSplits, parseAllocationAssets, type PortfolioAsset } from '@/lib/portfolio-assets'
+import { buildAllocationSplits, parseAllocationAssets, getAssetDisplayLabel, type PortfolioAsset } from '@/lib/portfolio-assets'
 import { useRiskProfile } from '@/hooks/useRiskProfile'
 import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 
@@ -293,7 +293,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                     'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none',
                     activeTier === tier
                       ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
-                      : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]',
+                      : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]',
                     !hasSignal && 'opacity-50 cursor-not-allowed'
                   )}
                 >
@@ -330,7 +330,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                       'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 relative min-h-[44px] flex-1 sm:flex-none capitalize',
                       activeCategory === category
                         ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
-                        : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]',
+                        : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]',
                       !hasSignal && 'opacity-50 cursor-not-allowed'
                     )}
                   >
@@ -438,7 +438,7 @@ export default function DailySignalDisplay({ userTier, userRole, onEditSignal }:
                             {isActive && (
                               <div className="mt-3 text-sm text-[var(--text-strong)]">
                                 {split.allocations
-                                  .map((allocation) => `${allocation.percent}% ${allocation.asset}`)
+                                  .map((allocation) => `${allocation.percent}% ${getAssetDisplayLabel(allocation.asset)}`)
                                   .join(' / ')}
                               </div>
                             )}

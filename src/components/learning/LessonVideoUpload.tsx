@@ -420,7 +420,7 @@ export function LessonVideoUpload({ trackId, onUploadSuccess }: LessonVideoUploa
                 <span className="text-[var(--text-strong)]">Upload Progress</span>
                 <span className="font-medium text-[var(--text-strong)]">{uploadProgress}%</span>
               </div>
-              <div className="w-full bg-[#2a2520] rounded-full h-2">
+              <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-2">
                 <div 
                   className="bg-gold-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}

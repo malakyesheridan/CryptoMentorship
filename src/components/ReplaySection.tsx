@@ -90,7 +90,7 @@ export function ReplaySection({ recordingUrl, chapters = [], transcript, eventTi
   const renderPlayer = () => {
     if (!recordingUrl) {
       return (
-        <div className="bg-[#1a1815] rounded-lg aspect-video flex items-center justify-center">
+        <div className="bg-[var(--bg-hover)] rounded-lg aspect-video flex items-center justify-center">
           <div className="text-center text-[var(--text-muted)]">
             <Play className="h-12 w-12 mx-auto mb-4 text-[var(--text-muted)]" />
             <p>No recording available</p>

@@ -21,9 +21,9 @@ export function Slider({ value, max, step = 1, onValueChange, className = '' }: 
       step={step}
       value={value[0]}
       onChange={handleChange}
-      className={`w-full h-2 bg-[#2a2520] rounded-lg appearance-none cursor-pointer slider ${className}`}
+      className={`w-full h-2 bg-[var(--bg-skeleton)] rounded-lg appearance-none cursor-pointer slider ${className}`}
       style={{
-        background: `linear-gradient(to right, var(--gold-400) 0%, var(--gold-400) ${(value[0] / max) * 100}%, #2a2520 ${(value[0] / max) * 100}%, #2a2520 100%)`
+        background: `linear-gradient(to right, var(--gold-400) 0%, var(--gold-400) ${(value[0] / max) * 100}%, var(--bg-skeleton) ${(value[0] / max) * 100}%, var(--bg-skeleton) 100%)`
       }}
     />
   )

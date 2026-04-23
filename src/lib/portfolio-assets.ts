@@ -15,6 +15,20 @@ export const portfolioAssets = [
 
 export type PortfolioAsset = typeof portfolioAssets[number]
 
+// Display-label overrides: the internal key stays stable (used by price feeds,
+// signal lookups, DB records) while the UI shows the friendly name.
+const ASSET_DISPLAY_LABELS: Record<string, string> = {
+  XAUTUSD: 'XAUT (Gold)',
+}
+
+/**
+ * Returns the user-facing label for an asset symbol. Falls back to the raw
+ * symbol for assets without a display override.
+ */
+export function getAssetDisplayLabel(asset: string): string {
+  return ASSET_DISPLAY_LABELS[asset] ?? asset
+}
+
 export type AllocationAssets = {
   primaryAsset: PortfolioAsset
   secondaryAsset: PortfolioAsset

@@ -125,7 +125,7 @@ export function CourseRecommendations({ courses, className = '' }: CourseRecomme
       case 'high': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
       case 'medium': return 'bg-[#2a2418] text-[#c9a227] border-[#2a2418]'
       case 'low': return 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]'
-      default: return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
+      default: return 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 

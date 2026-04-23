@@ -271,7 +271,7 @@ function SubscribePageContent() {
                   <Button
                     onClick={() => handleSubscribe(plan.tier)}
                     disabled={loading === plan.tier || !priceData}
-                    className="w-full rounded-xl bg-[var(--bg-panel)] hover:bg-[#1a1815] text-[var(--text-strong)] border border-[var(--border-subtle)]"
+                    className="w-full rounded-xl bg-[var(--bg-panel)] hover:bg-[var(--bg-hover)] text-[var(--text-strong)] border border-[var(--border-subtle)]"
                     variant="default"
                   >
                     {loading === plan.tier ? (

@@ -40,7 +40,7 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
   const dominantAsset = latestSnapshot?.dominantAsset ?? 'BTC'
   const equityValue = latestSnapshot?.equityValue ?? 0
 
-  const assetColor = ASSET_COLORS[dominantAsset] ?? '#8a7d6b'
+  const assetColor = ASSET_COLORS[dominantAsset] ?? 'var(--text-muted)'
   const returnColor = netReturn >= 0 ? '#4a7c3f' : '#c03030'
 
   // Use last 30 points for sparkline
@@ -51,10 +51,10 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
       <div className="card p-5 hover:border-[#c9a227]/40 transition-colors">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-[#f5f0e8] truncate mr-2">
+          <h3 className="text-base font-semibold text-[var(--text-strong)] truncate mr-2">
             {name}
           </h3>
-          <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border border-[#2a2520] text-[#8a7d6b]">
+          <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border border-[var(--border-subtle)] text-[var(--text-muted)]">
             {STRATEGY_TYPE_LABELS[type] ?? type}
           </span>
         </div>
@@ -65,9 +65,9 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
             className="inline-block w-2.5 h-2.5 rounded-full"
             style={{ backgroundColor: assetColor }}
           />
-          <span className="text-xs text-[#8a7d6b]">{dominantAsset}</span>
+          <span className="text-xs text-[var(--text-muted)]">{dominantAsset}</span>
           {equityValue > 0 && (
-            <span className="ml-auto text-xs text-[#8a7d6b]">
+            <span className="ml-auto text-xs text-[var(--text-muted)]">
               ${equityValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           )}
@@ -76,19 +76,19 @@ export function StrategyCard({ strategy }: StrategyCardProps) {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-[#8a7d6b] mb-0.5">Return</p>
+            <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] mb-0.5">Return</p>
             <p className="text-sm font-semibold" style={{ color: returnColor }}>
               {netReturn >= 0 ? '+' : ''}{netReturn.toFixed(1)}%
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-[#8a7d6b] mb-0.5">Sharpe</p>
-            <p className="text-sm font-semibold text-[#f5f0e8]">
+            <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] mb-0.5">Sharpe</p>
+            <p className="text-sm font-semibold text-[var(--text-strong)]">
               {sharpe.toFixed(2)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-[#8a7d6b] mb-0.5">Max DD</p>
+            <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] mb-0.5">Max DD</p>
             <p className="text-sm font-semibold text-[#c03030]">
               {maxDd.toFixed(1)}%
             </p>

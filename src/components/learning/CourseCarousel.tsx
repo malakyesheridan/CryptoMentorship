@@ -147,14 +147,14 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
           <button
             onClick={scrollLeft}
             disabled={!canScrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--bg-panel)] rounded-full p-2 shadow-lg border border-[var(--border-subtle)] hover:bg-[#1a1815] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--bg-panel)] rounded-full p-2 shadow-lg border border-[var(--border-subtle)] hover:bg-[var(--bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={scrollRight}
             disabled={!canScrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--bg-panel)] rounded-full p-2 shadow-lg border border-[var(--border-subtle)] hover:bg-[#1a1815] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-[var(--bg-panel)] rounded-full p-2 shadow-lg border border-[var(--border-subtle)] hover:bg-[var(--bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -247,7 +247,7 @@ export function CourseCarousel({ courses, className = '' }: CourseCarouselProps)
                 'w-2 h-2 rounded-full transition-all',
                 Math.floor(currentIndex / 3) === index
                   ? 'bg-blue-600'
-                  : 'bg-[#2a2520] hover:bg-[#3a3530]'
+                  : 'bg-[var(--bg-skeleton)] hover:bg-[var(--bg-skeleton-alt)]'
               )}
             />
           ))}

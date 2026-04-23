@@ -81,7 +81,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="flex items-center gap-1 text-xs text-[var(--text-muted)] bg-[#1a1815] px-2 py-1 rounded-full">
+                          <div className="flex items-center gap-1 text-xs text-[var(--text-muted)] bg-[var(--bg-hover)] px-2 py-1 rounded-full">
                             <Calendar className="w-3 h-3" />
                             {formatContentDate(episode.publishedAt)}
                           </div>
@@ -142,7 +142,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
               return (
                 <Link key={video.id} href={`/videos/${video.id}`}>
                   <article className="group cursor-pointer bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-[var(--border-subtle)] overflow-hidden">
-                    <div className="relative bg-gradient-to-br from-[#1a1815] to-[#2a2520] aspect-video flex items-center justify-center overflow-hidden">
+                    <div className="relative bg-gradient-to-br from-[var(--bg-hover)] to-[var(--bg-skeleton)] aspect-video flex items-center justify-center overflow-hidden">
                       <Play className="w-16 h-16 text-[var(--text-muted)] group-hover:text-gold-500 transition-colors duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <div className="absolute top-3 left-3">
@@ -202,7 +202,7 @@ export default function CryptoCompassContent({ episodes, videos, userRole, userT
       {/* Empty State */}
       {filteredEpisodes.length === 0 && filteredVideos.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-24 h-24 bg-[#1a1815] rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-24 h-24 bg-[var(--bg-hover)] rounded-full flex items-center justify-center mx-auto mb-6">
             <Play className="w-12 h-12 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">No content found</h3>

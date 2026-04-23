@@ -38,7 +38,7 @@ export function PasswordStrengthMeter({ password, className }: PasswordStrengthM
           {strengthText}
         </span>
       </div>
-      <div className="w-full bg-[#2a2520] rounded-full h-2">
+      <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-2">
         <div
           className={`h-2 rounded-full transition-all duration-300 ${colorClass}`}
           style={{ width: `${strengthPercentage}%` }}

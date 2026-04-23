@@ -280,7 +280,7 @@ export default function PostDetailPage({ params }: { params: { postId: string } 
                 {post.author.image ? (
                   <img src={post.author.image} alt="" className="w-12 h-12 rounded-full ring-2 ring-[var(--border-subtle)]" />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-[#2a2520] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-base font-semibold text-[var(--text-muted)]">
+                  <div className="w-12 h-12 rounded-full bg-[var(--bg-skeleton)] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-base font-semibold text-[var(--text-muted)]">
                     {(post.author.name?.[0] ?? '?').toUpperCase()}
                   </div>
                 )}

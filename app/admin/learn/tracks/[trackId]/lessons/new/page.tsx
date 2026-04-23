@@ -64,7 +64,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
+    <div className="min-h-screen bg-[var(--bg-hover)]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -236,7 +236,7 @@ function NewLessonPageContent({ params }: NewLessonPageProps) {
 export default function NewLessonPage({ params }: NewLessonPageProps) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#1a1815] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-hover)] flex items-center justify-center">
         <div className="text-center">
           <p className="text-[var(--text-strong)]">Loading...</p>
         </div>

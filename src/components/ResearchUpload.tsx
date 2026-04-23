@@ -176,7 +176,7 @@ export default function ResearchUpload() {
               value={formData.visibility}
               onChange={(e) => setFormData({ ...formData, visibility: e.target.value })}
               disabled={isUploading}
-              className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-[#1a1815] disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-[var(--bg-hover)] disabled:cursor-not-allowed"
             >
               <option value="public">Public - Everyone can view</option>
               <option value="member">Member - Members only</option>

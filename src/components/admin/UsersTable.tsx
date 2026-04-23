@@ -227,7 +227,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
                   return (
                     <tr 
                       key={user.id} 
-                      className="border-b border-[color:var(--border-subtle)] hover:bg-[#1a1815] cursor-pointer"
+                      className="border-b border-[color:var(--border-subtle)] hover:bg-[var(--bg-hover)] cursor-pointer"
                       onClick={() => setSelectedUserId(user.id)}
                     >
                       <td className="py-4 px-4">

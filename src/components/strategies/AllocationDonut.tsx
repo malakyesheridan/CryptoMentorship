@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { ASSET_COLORS } from '@/lib/strategies/constants'
+import { getAssetDisplayLabel } from '@/lib/portfolio-assets'
 
 interface Holding {
   asset: string
@@ -27,10 +28,10 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   const { asset, allocationPct } = payload[0].payload
   return (
     <div className="rounded-lg px-3 py-2 text-xs shadow-lg border"
-      style={{ backgroundColor: '#141210', borderColor: '#2a2520' }}
+      style={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-subtle)' }}
     >
-      <span className="font-medium text-[#f5f0e8]">{asset}</span>
-      <span className="ml-2 tabular-nums text-[#8a7d6b]">
+      <span className="font-medium text-[var(--text-strong)]">{getAssetDisplayLabel(asset)}</span>
+      <span className="ml-2 tabular-nums text-[var(--text-muted)]">
         {allocationPct.toFixed(1)}%
       </span>
     </div>
@@ -40,7 +41,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function AllocationDonut({ holdings }: AllocationDonutProps) {
   if (!holdings || holdings.length === 0) {
     return (
-      <div className="text-center py-8 text-[#8a7d6b]">
+      <div className="text-center py-8 text-[var(--text-muted)]">
         <p>No allocation data</p>
       </div>
     )
@@ -64,7 +65,7 @@ export function AllocationDonut({ holdings }: AllocationDonutProps) {
             {holdings.map((entry) => (
               <Cell
                 key={entry.asset}
-                fill={ASSET_COLORS[entry.asset] ?? '#8a7d6b'}
+                fill={ASSET_COLORS[entry.asset] ?? 'var(--text-muted)'}
               />
             ))}
           </Pie>
@@ -74,7 +75,7 @@ export function AllocationDonut({ holdings }: AllocationDonutProps) {
             iconType="circle"
             iconSize={8}
             formatter={(value: string) => (
-              <span className="text-xs text-[#8a7d6b]">{value}</span>
+              <span className="text-xs text-[var(--text-muted)]">{getAssetDisplayLabel(value)}</span>
             )}
           />
         </PieChart>

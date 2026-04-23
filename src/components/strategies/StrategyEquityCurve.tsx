@@ -33,16 +33,16 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
   const point = payload[0].payload
-  const assetColor = ASSET_COLORS[point.dominantAsset] ?? '#8a7d6b'
+  const assetColor = ASSET_COLORS[point.dominantAsset] ?? 'var(--text-muted)'
   const returnColor = point.dailyReturn >= 0 ? '#4a7c3f' : '#c03030'
 
   return (
     <div
       className="rounded-lg px-3 py-2 text-xs shadow-lg border"
-      style={{ backgroundColor: '#141210', borderColor: '#2a2520' }}
+      style={{ backgroundColor: 'var(--bg-panel)', borderColor: 'var(--border-subtle)' }}
     >
-      <p className="text-[#8a7d6b] mb-1">{point.date}</p>
-      <p className="text-[#f5f0e8] font-medium">
+      <p className="text-[var(--text-muted)] mb-1">{point.date}</p>
+      <p className="text-[var(--text-strong)] font-medium">
         ${point.equityValue.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
@@ -53,7 +53,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
           className="inline-block w-2 h-2 rounded-full"
           style={{ backgroundColor: assetColor }}
         />
-        <span className="text-[#8a7d6b]">{point.dominantAsset}</span>
+        <span className="text-[var(--text-muted)]">{point.dominantAsset}</span>
         <span className="ml-auto tabular-nums" style={{ color: returnColor }}>
           {point.dailyReturn >= 0 ? '+' : ''}
           {point.dailyReturn.toFixed(2)}%
@@ -80,13 +80,13 @@ function buildGradientStops(data: EquityCurvePoint[]) {
     if (asset !== prevAsset) {
       const pct = ((i - 1) / (data.length - 1)) * 100
       const pctNext = (i / (data.length - 1)) * 100
-      stops.push({ offset: `${pct}%`, color: ASSET_COLORS[prevAsset] ?? '#8a7d6b' })
-      stops.push({ offset: `${pctNext}%`, color: ASSET_COLORS[asset] ?? '#8a7d6b' })
+      stops.push({ offset: `${pct}%`, color: ASSET_COLORS[prevAsset] ?? 'var(--text-muted)' })
+      stops.push({ offset: `${pctNext}%`, color: ASSET_COLORS[asset] ?? 'var(--text-muted)' })
       prevAsset = asset
     }
   }
   // Final segment
-  stops.push({ offset: '100%', color: ASSET_COLORS[prevAsset] ?? '#8a7d6b' })
+  stops.push({ offset: '100%', color: ASSET_COLORS[prevAsset] ?? 'var(--text-muted)' })
   if (stops.length === 1) {
     stops.unshift({ offset: '0%', color: stops[0].color })
   }
@@ -97,7 +97,7 @@ function buildGradientStops(data: EquityCurvePoint[]) {
 export function StrategyEquityCurve({ equityCurve }: StrategyEquityCurveProps) {
   if (!equityCurve || equityCurve.length === 0) {
     return (
-      <div className="text-center py-12 text-[#8a7d6b]">
+      <div className="text-center py-12 text-[var(--text-muted)]">
         <p>No equity curve data available</p>
       </div>
     )
@@ -131,19 +131,19 @@ export function StrategyEquityCurve({ equityCurve }: StrategyEquityCurveProps) {
 
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#2a2520"
+            stroke="var(--border-subtle)"
             vertical={false}
           />
 
           <XAxis
             dataKey="date"
-            tick={{ fill: '#8a7d6b', fontSize: 11 }}
+            tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#2a2520' }}
+            axisLine={{ stroke: 'var(--border-subtle)' }}
             minTickGap={40}
           />
           <YAxis
-            tick={{ fill: '#8a7d6b', fontSize: 11 }}
+            tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) =>

@@ -34,7 +34,7 @@ export function PostContent({ body, imageUrl, truncate = true }: PostContentProp
           <img
             src={imageUrl}
             alt="Post image"
-            className="max-h-[500px] object-contain w-full bg-[#0a0a0a]"
+            className="max-h-[500px] object-contain w-full bg-[var(--bg-page)]"
           />
         </div>
       )}

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NotificationPreferences } from '@/components/NotificationPreferences'
+import { ThemePreferenceCard } from '@/components/ThemePreferenceCard'
 import { formatDate } from '@/lib/dates'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -127,7 +128,7 @@ function SectionSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div className="animate-pulse space-y-3">
       {Array.from({ length: lines }).map((_, i) => (
-        <div key={i} className="h-4 bg-[#2a2520] rounded" style={{ width: `${70 - i * 15}%` }} />
+        <div key={i} className="h-4 bg-[var(--bg-skeleton)] rounded" style={{ width: `${70 - i * 15}%` }} />
       ))}
     </div>
   )
@@ -353,7 +354,7 @@ export default function AccountPage() {
               {user?.image ? (
                 <img src={user.image as string} alt="" className="w-20 h-20 rounded-full ring-2 ring-[var(--border-subtle)]" />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-[#2a2520] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-2xl font-bold text-[var(--text-muted)]">
+                <div className="w-20 h-20 rounded-full bg-[var(--bg-skeleton)] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-2xl font-bold text-[var(--text-muted)]">
                   {((user?.name as string)?.[0] ?? '?').toUpperCase()}
                 </div>
               )}
@@ -375,7 +376,7 @@ export default function AccountPage() {
                     )}
                     <button
                       onClick={() => setIsEditingName(true)}
-                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815] transition-colors"
+                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)] transition-colors"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
@@ -528,7 +529,7 @@ export default function AccountPage() {
                 {showBillingHistory && (
                   <div className="mt-3 space-y-2">
                     {payments.map(payment => (
-                      <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg bg-[#141210] border border-[var(--border-subtle)]">
+                      <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-panel)] border border-[var(--border-subtle)]">
                         <div>
                           <span className="text-sm font-medium text-[var(--text-strong)]">
                             ${payment.amount.toFixed(2)} {payment.currency.toUpperCase()}
@@ -564,7 +565,7 @@ export default function AccountPage() {
         ) : (
           <div className="space-y-5">
             {/* Affiliate Link */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 bg-[#141210] rounded-lg border border-[var(--border-subtle)]">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 bg-[var(--bg-panel)] rounded-lg border border-[var(--border-subtle)]">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <LinkIcon className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
                 <code className="text-sm text-[var(--text-strong)] truncate">{summary.shortLink}</code>
@@ -572,7 +573,7 @@ export default function AccountPage() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => copyToClipboard(summary.shortLink)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1a1815] text-[var(--text-muted)] hover:text-[var(--text-strong)] border border-[var(--border-subtle)] transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-strong)] border border-[var(--border-subtle)] transition-colors"
                 >
                   {copied ? <><CheckCircle className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
                 </button>
@@ -584,7 +585,7 @@ export default function AccountPage() {
                       copyToClipboard(summary.shortLink)
                     }
                   }}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#1a1815] text-[var(--text-muted)] hover:text-[var(--text-strong)] border border-[var(--border-subtle)] transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-strong)] border border-[var(--border-subtle)] transition-colors"
                 >
                   <Share2 className="w-3 h-3" /> Share
                 </button>
@@ -599,7 +600,7 @@ export default function AccountPage() {
                   <code className="font-mono text-[var(--text-strong)]">{currentSlug || summary.referralCode}</code>
                   <button
                     onClick={() => { setNewSlug(currentSlug || ''); setIsEditingSlug(true) }}
-                    className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815] transition-colors"
+                    className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)] transition-colors"
                   >
                     <Edit2 className="w-3 h-3" />
                   </button>
@@ -618,7 +619,7 @@ export default function AccountPage() {
                   <button onClick={handleSaveSlug} disabled={isSavingSlug || !newSlug.trim()} className="p-1.5 rounded text-emerald-400 hover:bg-emerald-500/15 transition-colors disabled:opacity-40">
                     {isSavingSlug ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                   </button>
-                  <button onClick={() => { setIsEditingSlug(false); setNewSlug('') }} className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815] transition-colors">
+                  <button onClick={() => { setIsEditingSlug(false); setNewSlug('') }} className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)] transition-colors">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -633,7 +634,7 @@ export default function AccountPage() {
                 { label: 'Payable', value: summary.stats.payable, icon: Clock, color: 'text-amber-400' },
                 { label: 'Paid', value: `$${(summary.stats.paidTotalCents / 100).toFixed(2)}`, icon: DollarSign, color: 'text-emerald-400' },
               ].map(stat => (
-                <div key={stat.label} className="p-3 rounded-lg bg-[#141210] border border-[var(--border-subtle)] text-center">
+                <div key={stat.label} className="p-3 rounded-lg bg-[var(--bg-panel)] border border-[var(--border-subtle)] text-center">
                   <stat.icon className={`w-5 h-5 mx-auto mb-1.5 ${stat.color}`} />
                   <p className="text-xl font-bold text-[var(--text-strong)]">{stat.value}</p>
                   <p className="text-xs text-[var(--text-muted)]">{stat.label}</p>
@@ -685,6 +686,9 @@ export default function AccountPage() {
           </div>
         )}
       </div>
+
+      {/* ═══ APPEARANCE ═══ */}
+      <ThemePreferenceCard />
 
       {/* ═══ NOTIFICATIONS ═══ */}
       <div>

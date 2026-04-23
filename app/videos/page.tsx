@@ -60,7 +60,7 @@ export default async function VideosPage() {
           {videos.map((video) => (
             <Link key={video.id} href={`/videos/${video.id}`}>
               <Card className="card hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="aspect-video bg-[#1a1815] rounded-t-lg flex items-center justify-center">
+                <div className="aspect-video bg-[var(--bg-hover)] rounded-t-lg flex items-center justify-center">
                   <Video className="w-12 h-12 text-[var(--text-muted)]" />
                 </div>
                 <CardContent className="p-4">

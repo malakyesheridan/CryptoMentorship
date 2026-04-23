@@ -7,7 +7,7 @@ export const ASSET_COLORS: Record<string, string> = {
   BNB: '#ff9800',
   SUI: '#4fc3f7',
   Gold: '#c9a227',
-  USD: '#8a7d6b',
+  USD: 'var(--text-muted)',
 }
 
 export const STRATEGY_TYPE_LABELS: Record<string, string> = {

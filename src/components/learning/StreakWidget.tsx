@@ -111,7 +111,7 @@ export function StreakWidget({
               <span>Progress to {nextMilestone.label}</span>
               <span>{Math.round(progressToNext)}%</span>
             </div>
-            <div className="w-full bg-[#2a2520] rounded-full h-2 group-hover:bg-[#2a2520] transition-colors duration-300">
+            <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-2 group-hover:bg-[var(--bg-skeleton)] transition-colors duration-300">
               <div 
                 className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-300 group-hover:from-orange-600 group-hover:to-red-600"
                 style={{ width: `${Math.min(progressToNext, 100)}%` }}

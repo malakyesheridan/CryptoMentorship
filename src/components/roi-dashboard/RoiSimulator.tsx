@@ -118,16 +118,16 @@ export function RoiSimulator({
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={simulation.series} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(value) => format(parseDate(value), 'MMM d')}
-                stroke="#8a7d6b"
+                stroke="var(--text-muted)"
                 fontSize={12}
               />
               <YAxis
                 tickFormatter={(value) => formatCurrency(value)}
-                stroke="#8a7d6b"
+                stroke="var(--text-muted)"
                 fontSize={12}
               />
               <Tooltip

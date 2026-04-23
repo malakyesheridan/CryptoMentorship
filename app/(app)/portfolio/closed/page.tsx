@@ -87,7 +87,7 @@ export default async function ClosedTradesPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-[#0a0a0a]">
+      <div className="relative overflow-hidden bg-[var(--bg-page)]">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-20"></div>
         <div className="relative container mx-auto px-4 py-20 text-center">
           <div className="max-w-4xl mx-auto">
@@ -123,7 +123,7 @@ export default async function ClosedTradesPage() {
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <div className="bg-[var(--bg-panel)] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-center">
-            <div className="w-12 h-12 bg-[#1a1815] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[#2a2520] transition-colors">
+            <div className="w-12 h-12 bg-[var(--bg-hover)] rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-[var(--bg-skeleton)] transition-colors">
               <TrendingDown className="h-6 w-6 text-[var(--text-strong)]" />
             </div>
             <h3 className="font-semibold text-[var(--text-strong)] mb-2">Total Trades</h3>

@@ -251,7 +251,7 @@ export function AffiliatesOverview() {
                     <button
                       key={user.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-[#1a1815]"
+                      className="w-full text-left px-3 py-2 hover:bg-[var(--bg-hover)]"
                       onClick={() => {
                         setSelectedMember(user)
                         setMemberQuery(user.name || user.email)
@@ -293,7 +293,7 @@ export function AffiliatesOverview() {
                     <button
                       key={user.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-[#1a1815]"
+                      className="w-full text-left px-3 py-2 hover:bg-[var(--bg-hover)]"
                       onClick={() => {
                         setSelectedReferrer(user)
                         setReferrerQuery(user.name || user.email)

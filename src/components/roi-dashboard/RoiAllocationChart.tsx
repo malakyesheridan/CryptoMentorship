@@ -3,8 +3,9 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { AllocationSnapshot } from '@/lib/roi-dashboard'
+import { getAssetDisplayLabel } from '@/lib/portfolio-assets'
 
-const COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#f97316', '#0ea5e9', '#8a7d6b']
+const COLORS = ['#f59e0b', '#10b981', '#3b82f6', '#f97316', '#0ea5e9', 'var(--text-muted)']
 
 export function RoiAllocationChart({ allocation }: { allocation: AllocationSnapshot | null }) {
   if (!allocation) {
@@ -22,7 +23,7 @@ export function RoiAllocationChart({ allocation }: { allocation: AllocationSnaps
 
   const data = [
     ...allocation.items.map((item) => ({
-      name: item.asset,
+      name: getAssetDisplayLabel(item.asset),
       value: item.weight * 100
     })),
     {

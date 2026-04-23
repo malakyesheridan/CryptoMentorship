@@ -62,7 +62,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </span>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 rounded-lg hover:bg-[#1a1815] transition-colors"
+                  className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
                   aria-label="Close menu"
                 >
                   <X className="h-5 w-5 text-[var(--text-strong)]" />

@@ -51,12 +51,12 @@ export function ProfilePopover({ children, user }: ProfilePopoverProps) {
       {children}
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 w-60 bg-[#1a1815] border border-[var(--border-subtle)] rounded-xl shadow-lg z-30 p-4">
+        <div className="absolute left-0 top-full mt-2 w-60 bg-[var(--bg-hover)] border border-[var(--border-subtle)] rounded-xl shadow-lg z-30 p-4">
           <div className="flex items-center gap-3 mb-3">
             {user.image ? (
               <img src={user.image} alt="" className="w-10 h-10 rounded-full" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-[#2a2520] flex items-center justify-center text-sm font-medium text-[var(--text-muted)]">
+              <div className="w-10 h-10 rounded-full bg-[var(--bg-skeleton)] flex items-center justify-center text-sm font-medium text-[var(--text-muted)]">
                 {(user.name?.[0] ?? '?').toUpperCase()}
               </div>
             )}

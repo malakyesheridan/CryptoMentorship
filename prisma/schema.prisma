@@ -107,6 +107,7 @@ model User {
   onboardingCompleted Boolean   @default(false)
   timezone            String?
   preferences         String?
+  themePreference     String   @default("dark") // 'light' | 'dark' | 'system'
   clientId            String? // Multi-tenant support
   referralSlug        String?  @unique // Custom referral slug (e.g., "example")
   defaultRiskProfile  RiskProfile?

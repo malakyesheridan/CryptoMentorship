@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { BarChart3, Table as TableIcon } from "lucide-react";
+import { getAssetDisplayLabel } from "@/lib/portfolio-assets";
 
 type Mode = "bar" | "table";
 
@@ -24,7 +25,10 @@ export function DhrsTimeAllocation({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return sorted;
-    return sorted.filter(([k]) => k.toLowerCase().includes(q));
+    return sorted.filter(([k]) =>
+      k.toLowerCase().includes(q) ||
+      getAssetDisplayLabel(k).toLowerCase().includes(q)
+    );
   }, [sorted, search]);
 
   const max = sorted[0]?.[1] ?? 1;
@@ -79,9 +83,9 @@ export function DhrsTimeAllocation({
               <div key={asset} className="flex items-center gap-3">
                 <div
                   className="w-16 shrink-0 truncate text-xs text-[var(--text-strong)]"
-                  title={asset}
+                  title={getAssetDisplayLabel(asset)}
                 >
-                  {asset}
+                  {getAssetDisplayLabel(asset)}
                 </div>
                 <div
                   className="h-6 flex-1 overflow-hidden rounded"
@@ -121,7 +125,7 @@ export function DhrsTimeAllocation({
                     className="border-t"
                     style={{ borderColor: "var(--border-subtle)" }}
                   >
-                    <td className="px-2 py-1.5 text-[var(--text-strong)]">{asset}</td>
+                    <td className="px-2 py-1.5 text-[var(--text-strong)]">{getAssetDisplayLabel(asset)}</td>
                     <td className="px-2 py-1.5 text-right tabular-nums text-[var(--text-muted)]">
                       {pct.toFixed(2)}%
                     </td>

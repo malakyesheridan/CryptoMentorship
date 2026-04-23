@@ -40,7 +40,7 @@ export function CommentComposer({ onSubmit, placeholder = 'Write a comment...', 
             handleSubmit()
           }
         }}
-        className="flex-1 bg-[#1a1815] text-[var(--text-strong)] text-sm placeholder:text-[var(--text-muted)] rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[var(--gold-400)]/30 border border-[var(--border-subtle)]"
+        className="flex-1 bg-[var(--bg-hover)] text-[var(--text-strong)] text-sm placeholder:text-[var(--text-muted)] rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-[var(--gold-400)]/30 border border-[var(--border-subtle)]"
       />
       <button
         onClick={handleSubmit}

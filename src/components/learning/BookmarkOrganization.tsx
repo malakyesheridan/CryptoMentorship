@@ -65,7 +65,7 @@ export function BookmarkOrganization({ bookmarks, className = '' }: BookmarkOrga
       case 'Strategy': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
       case 'Technical': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
       case 'Video': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
-      default: return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
+      default: return 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
@@ -271,7 +271,7 @@ export function BookmarkOrganization({ bookmarks, className = '' }: BookmarkOrga
                         className="w-full h-32 object-cover rounded-lg group-hover:brightness-110 transition-all duration-300"
                       />
                     ) : (
-                      <div className="w-full h-32 bg-gradient-to-br from-[#1a1815] to-[#2a2520] rounded-lg flex items-center justify-center group-hover:from-[#2a2520] group-hover:to-[#2a2520] transition-all duration-300">
+                      <div className="w-full h-32 bg-gradient-to-br from-[var(--bg-hover)] to-[var(--bg-skeleton)] rounded-lg flex items-center justify-center group-hover:from-[var(--bg-skeleton)] group-hover:to-[var(--bg-skeleton)] transition-all duration-300">
                         <div className="group-hover:scale-110 transition-transform duration-300">
                           {getContentIcon(bookmark.type)}
                         </div>

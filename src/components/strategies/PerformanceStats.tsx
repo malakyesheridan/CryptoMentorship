@@ -53,28 +53,28 @@ export function PerformanceStats({ performanceJson }: PerformanceStatsProps) {
     {
       title: 'Sharpe Ratio',
       value: sharpe.toFixed(2),
-      color: sharpe >= 1 ? '#4a7c3f' : '#f5f0e8',
+      color: sharpe >= 1 ? '#4a7c3f' : 'var(--text-strong)',
       icon: BarChart3,
       description: 'Risk-adjusted returns',
     },
     {
       title: 'Sortino Ratio',
       value: sortino.toFixed(2),
-      color: sortino >= 1 ? '#4a7c3f' : '#f5f0e8',
+      color: sortino >= 1 ? '#4a7c3f' : 'var(--text-strong)',
       icon: Shield,
       description: 'Downside risk-adjusted',
     },
     {
       title: 'Calmar Ratio',
       value: calmar.toFixed(2),
-      color: calmar >= 1 ? '#4a7c3f' : '#f5f0e8',
+      color: calmar >= 1 ? '#4a7c3f' : 'var(--text-strong)',
       icon: Gauge,
       description: 'Return / Max drawdown',
     },
     {
       title: 'Omega Ratio',
       value: omega.toFixed(2),
-      color: omega >= 1 ? '#4a7c3f' : '#f5f0e8',
+      color: omega >= 1 ? '#4a7c3f' : 'var(--text-strong)',
       icon: Target,
       description: 'Gains vs losses ratio',
     },
@@ -92,19 +92,19 @@ export function PerformanceStats({ performanceJson }: PerformanceStatsProps) {
       {stats.map((stat) => (
         <div
           key={stat.title}
-          className="rounded-lg border border-[#2a2520] p-4"
-          style={{ backgroundColor: '#1a1815' }}
+          className="rounded-lg border border-[var(--border-subtle)] p-4"
+          style={{ backgroundColor: 'var(--bg-hover)' }}
         >
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] uppercase tracking-wider text-[#8a7d6b] font-medium">
+            <p className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-medium">
               {stat.title}
             </p>
-            <stat.icon className="h-4 w-4 text-[#8a7d6b]" />
+            <stat.icon className="h-4 w-4 text-[var(--text-muted)]" />
           </div>
           <p className="text-xl font-bold tabular-nums" style={{ color: stat.color }}>
             {stat.value}
           </p>
-          <p className="text-xs text-[#8a7d6b] mt-1">{stat.description}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{stat.description}</p>
         </div>
       ))}
     </div>

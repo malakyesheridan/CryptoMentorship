@@ -254,7 +254,7 @@ export default function LoginPage() {
               <img
                 src="https://i.imgur.com/h7es4Rn.png"
                 alt="STEWART & CO"
-                className="mb-4 h-auto w-auto max-w-[200px]"
+                className="logo-theme-aware mb-4 h-auto w-auto max-w-[200px]"
               />
               <p className="text-[var(--text-muted)] text-base lg:text-lg">
                 Premium cryptocurrency research and analysis
@@ -326,7 +326,7 @@ export default function LoginPage() {
                         }}
                         disabled={isLoading}
                         variant="outline"
-                        className="px-6 h-12 rounded-lg border-[var(--border-subtle)] text-[var(--text-strong)] hover:bg-[#1a1815]"
+                        className="px-6 h-12 rounded-lg border-[var(--border-subtle)] text-[var(--text-strong)] hover:bg-[var(--bg-hover)]"
                       >
                         Cancel
                       </Button>
@@ -361,16 +361,16 @@ export default function LoginPage() {
                       <Button
                         disabled={isLoading}
                         variant="outline"
-                        className="w-full h-12 rounded-lg border-[var(--border-subtle)] text-[var(--text-strong)] hover:bg-[#1a1815]"
+                        className="w-full h-12 rounded-lg border-[var(--border-subtle)] text-[var(--text-strong)] hover:bg-[var(--bg-hover)]"
                       >
                         Create Account
                       </Button>
                     </Link>
                     
                     <div className="flex items-center gap-3 my-6">
-                      <div className="flex-1 h-px bg-[#2a2520]"></div>
+                      <div className="flex-1 h-px bg-[var(--bg-skeleton)]"></div>
                       <span className="text-sm text-[var(--text-muted)]">or</span>
-                      <div className="flex-1 h-px bg-[#2a2520]"></div>
+                      <div className="flex-1 h-px bg-[var(--bg-skeleton)]"></div>
                     </div>
 
                     <Button

@@ -124,8 +124,8 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-[#2a2520] rounded mb-2"></div>
-                <div className="h-8 bg-[#2a2520] rounded"></div>
+                <div className="h-4 bg-[var(--bg-skeleton)] rounded mb-2"></div>
+                <div className="h-8 bg-[var(--bg-skeleton)] rounded"></div>
               </CardContent>
             </Card>
           ))}
@@ -249,7 +249,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
         <CardContent>
           <div className="space-y-4">
             {analytics.topTracks.map((track) => (
-              <div key={track.trackId} className="flex items-center justify-between p-4 bg-[#1a1815] rounded-lg">
+              <div key={track.trackId} className="flex items-center justify-between p-4 bg-[var(--bg-hover)] rounded-lg">
                 <div>
                   <h4 className="font-medium">{track.trackTitle}</h4>
                   <p className="text-sm text-[var(--text-strong)]">
@@ -278,7 +278,7 @@ export function LearningAnalytics({ trackId, className = '' }: LearningAnalytics
         <CardContent>
           <div className="space-y-3">
             {analytics.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-3 p-3 bg-[#1a1815] rounded-lg">
+              <div key={activity.id} className="flex items-center gap-3 p-3 bg-[var(--bg-hover)] rounded-lg">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <div className="flex-1">
                   <p className="font-medium">{activity.lesson.title}</p>

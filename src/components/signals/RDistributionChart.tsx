@@ -128,7 +128,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                       y1={y}
                       x2={chartWidth - margin.right}
                       y2={y}
-                      stroke="#2a2520"
+                      stroke="var(--border-subtle)"
                       strokeWidth={1}
                     />
                     <text
@@ -136,7 +136,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                       y={y + 4}
                       textAnchor="end"
                       fontSize="12"
-                      fill="#8a7d6b"
+                      fill="var(--text-muted)"
                     >
                       {count}
                     </text>
@@ -168,7 +168,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                       y={chartHeight - margin.bottom + 15}
                       textAnchor="middle"
                       fontSize="10"
-                      fill="#8a7d6b"
+                      fill="var(--text-muted)"
                     >
                       {formatNumber(bin.center, 1)}
                     </text>
@@ -182,7 +182,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y1={margin.top}
                 x2={scaleX(0)}
                 y2={chartHeight - margin.bottom}
-                stroke="#f5f0e8"
+                stroke="var(--text-strong)"
                 strokeWidth={2}
                 strokeDasharray="4 4"
               />
@@ -193,7 +193,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y1={chartHeight - margin.bottom}
                 x2={chartWidth - margin.right}
                 y2={chartHeight - margin.bottom}
-                stroke="#f5f0e8"
+                stroke="var(--text-strong)"
                 strokeWidth={2}
               />
               <line
@@ -201,7 +201,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y1={margin.top}
                 x2={margin.left}
                 y2={chartHeight - margin.bottom}
-                stroke="#f5f0e8"
+                stroke="var(--text-strong)"
                 strokeWidth={2}
               />
 
@@ -211,7 +211,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y={chartHeight - 5}
                 textAnchor="middle"
                 fontSize="12"
-                fill="#8a7d6b"
+                fill="var(--text-muted)"
               >
                 R-Multiple
               </text>
@@ -220,7 +220,7 @@ export function RDistributionChart({ rMultiples }: RDistributionChartProps) {
                 y={chartHeight / 2}
                 textAnchor="middle"
                 fontSize="12"
-                fill="#8a7d6b"
+                fill="var(--text-muted)"
                 transform={`rotate(-90, 15, ${chartHeight / 2})`}
               >
                 Frequency

@@ -41,7 +41,7 @@ export function PortfolioTabs({ activeTab, onTabChange, stats }: PortfolioTabsPr
               'rounded-xl px-6 py-3 font-medium transition-all duration-200',
               activeTab === tab.id
                 ? 'bg-gold-500 text-white shadow-md hover:bg-gold-600'
-                : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
             )}
           >
             <tab.icon className="h-4 w-4 mr-2" />

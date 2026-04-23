@@ -102,7 +102,7 @@ export function BookmarksGrid({
       case 'episode':
         return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
       default:
-        return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
+        return 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
@@ -135,7 +135,7 @@ export function BookmarksGrid({
       case 'Strategy': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
       case 'Technical': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
       case 'Video': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
-      default: return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
+      default: return 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
@@ -181,7 +181,7 @@ export function BookmarksGrid({
                   className="w-full h-32 object-cover rounded-lg group-hover:brightness-110 transition-all duration-300"
                 />
               ) : (
-                <div className="w-full h-32 bg-gradient-to-br from-[#1a1815] to-[#2a2520] rounded-lg flex items-center justify-center group-hover:from-[#2a2520] group-hover:to-[#2a2520] transition-all duration-300">
+                <div className="w-full h-32 bg-gradient-to-br from-[var(--bg-hover)] to-[var(--bg-skeleton)] rounded-lg flex items-center justify-center group-hover:from-[var(--bg-skeleton)] group-hover:to-[var(--bg-skeleton)] transition-all duration-300">
                   <div className="group-hover:scale-110 transition-transform duration-300">
                     {getContentIcon(bookmark.type)}
                   </div>
@@ -204,7 +204,7 @@ export function BookmarksGrid({
                 <button
                   onClick={() => handleRemoveBookmark(bookmark)}
                   disabled={removingId === bookmark.slug}
-                  className="absolute top-2 right-2 bg-[var(--bg-panel)] hover:bg-[#1a1815] rounded-full p-1.5 shadow-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110 transform-gpu"
+                  className="absolute top-2 right-2 bg-[var(--bg-panel)] hover:bg-[var(--bg-hover)] rounded-full p-1.5 shadow-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110 transform-gpu"
                   title="Remove bookmark"
                 >
                   <X className="h-3 w-3 text-[var(--text-strong)]" />

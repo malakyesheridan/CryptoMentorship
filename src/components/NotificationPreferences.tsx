@@ -138,10 +138,10 @@ export function NotificationPreferences() {
       <Card>
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-[#2a2520] rounded w-1/4"></div>
+            <div className="h-4 bg-[var(--bg-skeleton)] rounded w-1/4"></div>
             <div className="space-y-2">
-              <div className="h-4 bg-[#2a2520] rounded w-3/4"></div>
-              <div className="h-4 bg-[#2a2520] rounded w-1/2"></div>
+              <div className="h-4 bg-[var(--bg-skeleton)] rounded w-3/4"></div>
+              <div className="h-4 bg-[var(--bg-skeleton)] rounded w-1/2"></div>
             </div>
           </div>
         </CardContent>
@@ -284,7 +284,7 @@ export function NotificationPreferences() {
             />
           </div>
 
-          <div className="text-sm text-[var(--text-muted)] bg-[#1a1815] p-3 rounded-lg">
+          <div className="text-sm text-[var(--text-muted)] bg-[var(--bg-hover)] p-3 rounded-lg">
             <strong>Coming Soon:</strong> Email digest notifications will be available in a future update.
             You&apos;ll be able to receive daily or weekly summaries of new content and mentions.
           </div>

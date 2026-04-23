@@ -67,7 +67,7 @@ export function CommentItem({ comment, currentUserId, isAdmin, onReply, onReact,
           {comment.author.image ? (
             <img src={comment.author.image} alt="" className="w-6 h-6 rounded-full" />
           ) : (
-            <div className="w-6 h-6 rounded-full bg-[#2a2520] flex items-center justify-center text-[10px] font-medium text-[var(--text-muted)]">
+            <div className="w-6 h-6 rounded-full bg-[var(--bg-skeleton)] flex items-center justify-center text-[10px] font-medium text-[var(--text-muted)]">
               {(comment.author.name?.[0] ?? '?').toUpperCase()}
             </div>
           )}

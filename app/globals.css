@@ -53,7 +53,8 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-:root {
+:root,
+[data-theme="dark"] {
   --background: 0 0% 4%;
   --foreground: 36 30% 93%;
   --card: 30 8% 8%;
@@ -75,11 +76,32 @@
   --ring: 43 70% 47%;
   --radius: 0.5rem;
 
-  /* Custom CSS variables */
-  --gold-solid: #c9a227;
-  --gold-gradient-start: #c9a227;
-  --gold-gradient-end: #a07d10;
-  --border-subtle: #2a2520;
+  /* Legacy gold aliases — kept for backwards compat */
+  --gold-solid: var(--gold-400);
+  --gold-gradient-start: var(--gold-400);
+  --gold-gradient-end: var(--gold-600);
+}
+
+[data-theme="light"] {
+  --background: 40 43% 96%;           /* maps to --bg-page */
+  --foreground: 28 28% 8%;            /* maps to --text-strong */
+  --card: 0 0% 100%;                  /* maps to --bg-panel */
+  --card-foreground: 28 28% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 28 28% 8%;
+  --primary: 42 72% 36%;              /* darker gold for AA on cream */
+  --primary-foreground: 40 43% 98%;
+  --secondary: 36 36% 91%;
+  --secondary-foreground: 28 28% 8%;
+  --muted: 36 36% 91%;
+  --muted-foreground: 34 16% 36%;
+  --accent: 36 36% 91%;
+  --accent-foreground: 28 28% 8%;
+  --destructive: 0 64% 40%;
+  --destructive-foreground: 40 43% 98%;
+  --border: 37 38% 86%;
+  --input: 37 38% 86%;
+  --ring: 42 72% 36%;
 }
 
 * {
@@ -117,7 +139,7 @@ body {
 
 /* Custom shadow utilities */
 .shadow-soft {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-card);
 }
 
 /* Typography utilities */

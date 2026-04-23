@@ -95,7 +95,7 @@ export function Sidebar() {
                       'flex flex-1 items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
                       isParentActive
                         ? 'bg-[var(--gold-400)] text-white shadow-lg'
-                        : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                        : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
                     )}
                   >
                     <item.icon className="mr-3 h-5 w-5" />
@@ -106,7 +106,7 @@ export function Sidebar() {
                     aria-label={`Toggle ${item.name} submenu`}
                     className={cn(
                       'md:hidden p-2 rounded-lg transition-colors',
-                      isMenuOpen ? 'text-[var(--text-strong)]' : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
+                      isMenuOpen ? 'text-[var(--text-strong)]' : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                     )}
                     onClick={(event) => {
                       event.preventDefault()
@@ -131,7 +131,7 @@ export function Sidebar() {
                           'flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                           isChildActive
                             ? 'bg-[#2a2418] text-[var(--gold-400)]'
-                            : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                            : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
                         )}
                       >
                         {child.name}
@@ -152,7 +152,7 @@ export function Sidebar() {
                 'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-[var(--gold-400)] text-white shadow-lg'
-                  : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
               )}
             >
               <item.icon className="mr-3 h-5 w-5" />

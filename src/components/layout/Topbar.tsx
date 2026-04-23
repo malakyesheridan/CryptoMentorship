@@ -29,7 +29,7 @@ export function Topbar({ onMenuClick, isMenuOpen }: TopbarProps) {
           {/* Mobile menu button */}
           <button
             onClick={onMenuClick}
-            className="md:hidden p-2 rounded-lg hover:bg-[#1a1815] transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
             aria-label="Toggle menu"
           >
             {isMenuOpen ? (
@@ -48,7 +48,7 @@ export function Topbar({ onMenuClick, isMenuOpen }: TopbarProps) {
             <DropdownMenu>
               <DropdownMenuTrigger
                 data-testid="user-menu"
-                className="flex items-center space-x-3 p-2 rounded-xl hover:bg-[#1a1815] transition-colors"
+                className="flex items-center space-x-3 p-2 rounded-xl hover:bg-[var(--bg-hover)] transition-colors"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={session?.user?.image || ''} />

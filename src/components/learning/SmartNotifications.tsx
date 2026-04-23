@@ -228,7 +228,7 @@ export function SmartNotifications({
 
   if (!notificationsEnabled) {
     return (
-      <Card className={cn('bg-gradient-to-r from-[#1a1815] to-[#1a1815] border-[var(--border-subtle)]', className)}>
+      <Card className={cn('bg-gradient-to-r from-[var(--bg-hover)] to-[var(--bg-hover)] border-[var(--border-subtle)]', className)}>
         <CardContent className="p-6 text-center">
           <BellOff className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">Notifications Disabled</h3>
@@ -294,7 +294,7 @@ export function SmartNotifications({
                 key={notification.id}
                 className={cn(
                   'flex items-start gap-3 p-3 rounded-lg transition-all duration-300 group',
-                  notification.read ? 'bg-[#1a1815]' : 'bg-[var(--bg-panel)] shadow-sm'
+                  notification.read ? 'bg-[var(--bg-hover)]' : 'bg-[var(--bg-panel)] shadow-sm'
                 )}
               >
                 <div className={cn(

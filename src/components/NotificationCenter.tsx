@@ -151,7 +151,7 @@ export function NotificationCenter({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label="Notifications"
-        className="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-[#1a1815] transition-colors"
+        className="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-[var(--bg-hover)] transition-colors"
       >
         <span className="sr-only">Notifications</span>
         <Bell className="h-5 w-5 text-[var(--text-strong)]" />
@@ -291,7 +291,7 @@ function Body({
         return (
           <div
             key={notification.id}
-            className="p-4 hover:bg-[#1a1815] cursor-pointer transition-colors"
+            className="p-4 hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
             onClick={() => onItemClick(notification)}
           >
             <div className="flex items-start justify-between gap-3">

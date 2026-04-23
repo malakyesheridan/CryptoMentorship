@@ -82,7 +82,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const questionCount = event.questions.length
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
+    <div className="min-h-screen bg-[var(--bg-hover)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <Link href="/admin/events">

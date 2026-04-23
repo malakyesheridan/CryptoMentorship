@@ -23,7 +23,7 @@ export function ReactionBar({ userReactions, reactionCounts, onReact }: Reaction
         className={`flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
           likeActive
             ? 'bg-emerald-500/15 text-emerald-400'
-            : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-emerald-400'
+            : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-emerald-400'
         }`}
         title="Like"
       >
@@ -35,7 +35,7 @@ export function ReactionBar({ userReactions, reactionCounts, onReact }: Reaction
         className={`flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
           dislikeActive
             ? 'bg-red-500/15 text-red-400'
-            : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-red-400'
+            : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-red-400'
         }`}
         title="Dislike"
       >

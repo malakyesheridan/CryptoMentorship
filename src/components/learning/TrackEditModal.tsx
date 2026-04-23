@@ -263,8 +263,8 @@ export function TrackEditModal({
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-4xl">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-[#2a2520] rounded w-1/4"></div>
-            <div className="h-64 bg-[#2a2520] rounded"></div>
+            <div className="h-8 bg-[var(--bg-skeleton)] rounded w-1/4"></div>
+            <div className="h-64 bg-[var(--bg-skeleton)] rounded"></div>
           </div>
         </DialogContent>
       </Dialog>
@@ -403,7 +403,7 @@ export function TrackEditModal({
                   </div>
                   {coverUploadProgress > 0 && coverUploadProgress < 100 && (
                     <div className="mt-2">
-                      <div className="w-full bg-[#2a2520] rounded-full h-2">
+                      <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-2">
                         <div
                           className="bg-gold-500 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${coverUploadProgress}%` }}

@@ -207,7 +207,7 @@ export function QuizComponent({ lessonId, questions, passPct, existingSubmission
                 {question.options.map((option, optionIndex) => (
                   <label
                     key={optionIndex}
-                    className="flex items-center gap-3 p-3 border border-[var(--border-subtle)] rounded-lg hover:bg-[#1a1815] cursor-pointer"
+                    className="flex items-center gap-3 p-3 border border-[var(--border-subtle)] rounded-lg hover:bg-[var(--bg-hover)] cursor-pointer"
                   >
                     <input
                       type="checkbox"

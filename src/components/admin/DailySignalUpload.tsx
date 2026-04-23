@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { CheckCircle, AlertCircle } from 'lucide-react'
 import { json } from '@/lib/http'
 import { toast } from 'sonner'
-import { buildAllocationSplits, portfolioAssets, type PortfolioAsset } from '@/lib/portfolio-assets'
+import { buildAllocationSplits, portfolioAssets, getAssetDisplayLabel, type PortfolioAsset } from '@/lib/portfolio-assets'
 
 interface DailySignalUploadProps {
   tier: 'T1' | 'T2'
@@ -33,13 +33,7 @@ const tierLabels = {
   T2: 'Elite',
 }
 
-const assetDisplayLabels: Partial<Record<PortfolioAsset, string>> = {
-  XAUTUSD: 'XAUT (Gold)',
-}
-
-function getAssetDisplayLabel(asset: PortfolioAsset): string {
-  return assetDisplayLabels[asset] ?? asset
-}
+// Shared helper; the local override map previously lived here.
 
 export default function DailySignalUpload({ tier, category, userRole, formIdPrefix, existingSignal, onEditComplete }: DailySignalUploadProps) {
   const router = useRouter()

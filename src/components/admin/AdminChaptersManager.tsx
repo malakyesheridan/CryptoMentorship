@@ -239,7 +239,7 @@ export function AdminChaptersManager({
       {recordingUrl && chapters.length > 0 && (
         <div className="mt-6">
           <h4 className="font-medium text-[var(--text-strong)] mb-3">Preview</h4>
-          <div className="bg-[#1a1815] rounded-lg p-4">
+          <div className="bg-[var(--bg-hover)] rounded-lg p-4">
             <p className="text-sm text-[var(--text-strong)] mb-2">
               Click on chapters to test seeking functionality
             </p>

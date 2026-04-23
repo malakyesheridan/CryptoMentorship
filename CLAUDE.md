@@ -60,24 +60,48 @@ prisma/
 
 ## Styling Conventions
 
-### CSS Variables (dark theme)
+### CSS Variables (theme-aware)
+All colors are defined as CSS variables in `src/styles/tokens.css`. Dark is the
+default; light mode is applied via `[data-theme="light"]` on `<html>`.
+**Never hardcode hex values in components** — always use the var.
+
 ```
---bg-page       # Page background
---bg-panel      # Card/panel background
---border-subtle # Borders
---text-strong   # Primary text
---text-muted    # Secondary text
---gold-400      # Gold accent
+--bg-page          # Page background
+--bg-panel         # Card/panel background
+--bg-sidebar       # Sidebar background
+--bg-hover         # Row/panel hover state
+--bg-skeleton      # Skeleton shimmer base
+--bg-skeleton-alt  # Secondary skeleton / locked badge
+--border-subtle    # Borders
+--text-strong      # Primary text
+--text-muted       # Secondary text
+--text-inverse     # Text on gold/bright surfaces (stays dark in both modes)
+--gold-400         # Gold accent
+--gold-600         # Darker gold for hover
+--success          # Semantic green
+--danger           # Semantic red
+--shadow-card      # Elevation shadow
+--overlay-scrim    # Modal/dropdown backdrop
 ```
 
 ### Color Palette
-- Gold accent: `gold-400`, `gold-500`, `gold-600` (Tailwind custom colors)
-- Skeleton shimmer: `bg-[#2a2520]` with `animate-pulse`
+- Gold accent: `gold-400`, `gold-500`, `gold-600` (Tailwind custom colors, map to vars)
+- Skeleton shimmer: `bg-[var(--bg-skeleton)]` with `animate-pulse`
 - Panel backgrounds: `bg-[var(--bg-panel)]`
 - Page backgrounds: `bg-[var(--bg-page)]`
-- Dark hover states: `hover:bg-[#1a1815]`
-- Error red: `#c03030`
+- Hover states: `hover:bg-[var(--bg-hover)]`
 - Font: Playfair Display for headings (`font-playfair`)
+
+### Chart colors (Recharts)
+Recharts props accept CSS variables directly in SVG attributes (e.g.
+`stroke="var(--border-subtle)"`). For JS-resolved colors (dynamic series
+selection), use the `useChartColors()` hook from `@/lib/chart-theme`.
+
+### Theming
+- User preference stored on `User.themePreference` ('light' | 'dark' | 'system')
+- Toggle lives on the `/account` page via `<ThemePreferenceCard />`
+- `ThemeProvider` (in `src/components/theme-provider.tsx`) syncs localStorage ↔ server
+- Pre-hydration script in `app/layout.tsx` prevents flash of wrong theme
 
 ### Component Patterns
 - Use `Card`, `CardHeader`, `CardContent`, `CardTitle` from `@/components/ui/card`

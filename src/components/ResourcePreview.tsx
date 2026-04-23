@@ -87,7 +87,7 @@ export default function ResourcePreview({ resource, canView }: ResourcePreviewPr
               <X className="w-4 h-4" />
             </Button>
           </div>
-          <div className="bg-[#1a1815] rounded-lg p-4 text-center">
+          <div className="bg-[var(--bg-hover)] rounded-lg p-4 text-center">
             <FileText className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-2" />
             <p className="text-sm text-[var(--text-strong)] mb-3">
               PDF preview not available in this view

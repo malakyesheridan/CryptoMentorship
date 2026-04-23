@@ -165,7 +165,7 @@ export default function CSVImportPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
+    <div className="min-h-screen bg-[var(--bg-hover)]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">
@@ -190,25 +190,25 @@ export default function CSVImportPage() {
               {/* Progress Steps */}
               <div className="flex items-center gap-4 mb-6">
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'upload' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
+                  currentStep.step === 'upload' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <Upload className="h-4 w-4" />
                   Upload
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'mapping' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
+                  currentStep.step === 'mapping' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <FileText className="h-4 w-4" />
                   Mapping
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'preview' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
+                  currentStep.step === 'preview' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <CheckCircle className="h-4 w-4" />
                   Preview
                 </div>
                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-                  currentStep.step === 'import' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[#1a1815] text-[var(--text-strong)]'
+                  currentStep.step === 'import' ? 'bg-[#1a1e2e] text-[#4a7cc3]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
                 }`}>
                   <CheckCircle className="h-4 w-4" />
                   Import
@@ -309,7 +309,7 @@ export default function CSVImportPage() {
                 {/* Preview Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-[#1a1815]">
+                    <thead className="bg-[var(--bg-hover)]">
                       <tr>
                         <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Symbol</th>
                         <th className="px-3 py-2 text-left font-medium text-[var(--text-strong)]">Direction</th>
@@ -337,7 +337,7 @@ export default function CSVImportPage() {
                           <td className="px-3 py-2">{row.riskPct}%</td>
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded text-xs ${
-                              row.exitTime ? 'bg-[#1a1815] text-[var(--text-strong)]' : 'bg-[#1a1e2e] text-[#4a7cc3]'
+                              row.exitTime ? 'bg-[var(--bg-hover)] text-[var(--text-strong)]' : 'bg-[#1a1e2e] text-[#4a7cc3]'
                             }`}>
                               {row.exitTime ? 'Closed' : 'Open'}
                             </span>

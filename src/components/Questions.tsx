@@ -154,7 +154,7 @@ export function Questions({ eventId, initialQuestions = [] }: QuestionsProps) {
                 key={question.id}
                 className={`border rounded-lg p-4 ${
                   question.archivedAt 
-                    ? 'bg-[#1a1815] border-[var(--border-subtle)]' 
+                    ? 'bg-[var(--bg-hover)] border-[var(--border-subtle)]' 
                     : 'bg-[var(--bg-panel)] border-[var(--border-subtle)]'
                 }`}
               >

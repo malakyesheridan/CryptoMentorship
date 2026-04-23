@@ -125,7 +125,7 @@ export default function VideoSelector({
                   className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                     selectedVideo?.id === video.id
                       ? 'border-gold-500 bg-gold-50'
-                      : 'border-[var(--border-subtle)] hover:border-[var(--border-subtle)] hover:bg-[#1a1815]'
+                      : 'border-[var(--border-subtle)] hover:border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
                   }`}
                   onClick={() => handleVideoSelect(video)}
                 >

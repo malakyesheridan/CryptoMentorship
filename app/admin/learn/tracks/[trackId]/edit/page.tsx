@@ -105,14 +105,14 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
 
   if (isLoadingTrack) {
     return (
-      <div className="min-h-screen bg-[#1a1815]">
+      <div className="min-h-screen bg-[var(--bg-hover)]">
         <div className="flex">
           <AdminSidebar />
           <div className="flex-1 p-8">
             <div className="max-w-4xl mx-auto">
               <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-[#2a2520] rounded w-1/4"></div>
-                <div className="h-64 bg-[#2a2520] rounded"></div>
+                <div className="h-8 bg-[var(--bg-skeleton)] rounded w-1/4"></div>
+                <div className="h-64 bg-[var(--bg-skeleton)] rounded"></div>
               </div>
             </div>
           </div>
@@ -122,7 +122,7 @@ export default function TrackEditPage({ params }: TrackEditPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
+    <div className="min-h-screen bg-[var(--bg-hover)]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">

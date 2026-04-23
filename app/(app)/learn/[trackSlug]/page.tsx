@@ -205,7 +205,7 @@ export default async function TrackPage({
                         </span>
                         <span className="font-medium text-[var(--text-strong)]">{progressPct}%</span>
                       </div>
-                      <div className="w-full bg-[#2a2520] rounded-full h-1.5">
+                      <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-1.5">
                         <div
                           className={`h-1.5 rounded-full transition-all duration-300 ${
                             progressPct === 100 ? 'bg-[#4a7c3f]' : 'bg-gold-500'
@@ -287,7 +287,7 @@ export default async function TrackPage({
                 {/* Sectioned lessons */}
                 {sectionedLessons.map((section) => (
                   <div key={section.sectionId}>
-                    <div className="px-5 py-3 bg-[#1a1815]">
+                    <div className="px-5 py-3 bg-[var(--bg-hover)]">
                       <h3 className="text-sm font-semibold text-[var(--text-strong)] uppercase tracking-wide">
                         {section.sectionTitle}
                       </h3>
@@ -311,7 +311,7 @@ export default async function TrackPage({
                 {lessonsWithoutSections.length > 0 && (
                   <div>
                     {track.sections.length > 0 && (
-                      <div className="px-5 py-3 bg-[#1a1815]">
+                      <div className="px-5 py-3 bg-[var(--bg-hover)]">
                         <h3 className="text-sm font-semibold text-[var(--text-strong)] uppercase tracking-wide">
                           Other Lessons
                         </h3>
@@ -352,8 +352,8 @@ function LessonRow({
   return (
     <Link
       href={`/learn/${trackSlug}/lesson/${lesson.slug}`}
-      className={`block px-5 py-3.5 hover:bg-[#1a1815] transition-colors ${
-        isNext ? 'bg-[#1a1815]/50 border-l-2 border-l-gold-500' : ''
+      className={`block px-5 py-3.5 hover:bg-[var(--bg-hover)] transition-colors ${
+        isNext ? 'bg-[var(--bg-hover)]/50 border-l-2 border-l-gold-500' : ''
       }`}
     >
       <div className="flex items-center gap-3">
@@ -362,7 +362,7 @@ function LessonRow({
             ? 'bg-[#1a2e1a] text-[#4a7c3f]'
             : isNext
               ? 'bg-gold-500/20 text-gold-500'
-              : 'bg-[#1a1815] text-[var(--text-muted)]'
+              : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
         }`}>
           {isCompleted ? (
             <CheckCircle className="h-4 w-4" />

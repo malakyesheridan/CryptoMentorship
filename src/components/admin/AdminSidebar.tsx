@@ -188,7 +188,7 @@ export function AdminSidebar() {
                       'flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       hasActiveChild
                         ? 'text-gold-400'
-                        : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                     )}
                   >
                     <span className="flex items-center space-x-3">
@@ -221,7 +221,7 @@ export function AdminSidebar() {
                                 'flex items-center space-x-3 px-3 py-1.5 rounded-lg text-sm transition-colors',
                                 isActive
                                   ? 'bg-gradient-to-r from-gold-400 to-gold-600 text-white font-medium'
-                                  : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
+                                  : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                               )}
                             >
                               <child.icon className="h-4 w-4" />
@@ -247,7 +247,7 @@ export function AdminSidebar() {
                   'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-gradient-to-r from-gold-400 to-gold-600 text-white'
-                    : 'text-[var(--text-strong)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
+                    : 'text-[var(--text-strong)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                 )}
               >
                 <item.icon className="h-5 w-5" />

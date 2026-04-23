@@ -106,7 +106,7 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
                 </div>
                 <Badge
                   variant={video.status === 'ready' ? 'default' : 'secondary'}
-                  className={`${video.status === 'ready' ? 'bg-[#1a2e1a] text-[#4a7c3f] hover:bg-[#1a2e1a]' : 'bg-[#1a1815] text-[var(--text-strong)]'} px-3 py-1`}
+                  className={`${video.status === 'ready' ? 'bg-[#1a2e1a] text-[#4a7c3f] hover:bg-[#1a2e1a]' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'} px-3 py-1`}
                 >
                   {video.status}
                 </Badge>
@@ -170,7 +170,7 @@ export default async function VideoPage({ params }: { params: { id: string } }) 
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-[#1a1815] rounded-full flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 bg-[var(--bg-hover)] rounded-full flex items-center justify-center shadow-sm">
                   <User className="w-6 h-6 text-[var(--text-muted)]" />
                 </div>
                 <div>

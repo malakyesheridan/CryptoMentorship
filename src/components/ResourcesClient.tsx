@@ -54,7 +54,7 @@ export default function ResourcesClient({ resources, userRole, userTier }: Resou
         </div>
       ) : (
         <div className="text-center py-16">
-          <div className="w-24 h-24 bg-[#1a1815] rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-24 h-24 bg-[var(--bg-hover)] rounded-full flex items-center justify-center mx-auto mb-6">
             <FileText className="w-12 h-12 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">No Resources Found</h3>

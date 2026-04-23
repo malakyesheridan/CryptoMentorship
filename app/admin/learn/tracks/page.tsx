@@ -158,7 +158,7 @@ export default async function AdminTracksPage() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-[#1a1815] border-b border-[var(--border-subtle)]">
+                    <thead className="bg-[var(--bg-hover)] border-b border-[var(--border-subtle)]">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                           Track
@@ -186,7 +186,7 @@ export default async function AdminTracksPage() {
                         const totalDuration = track.lessons.reduce((sum, lesson) => sum + (lesson.durationMin || 0), 0)
                         
                         return (
-                          <tr key={track.id} className="hover:bg-[#1a1815]">
+                          <tr key={track.id} className="hover:bg-[var(--bg-hover)]">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 {track.coverUrl && (

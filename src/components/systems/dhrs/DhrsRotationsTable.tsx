@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DhrsRotation } from "@/types/dashboard-snapshot";
 import { formatPct, pnlColor } from "@/lib/systems-format";
+import { getAssetDisplayLabel } from "@/lib/portfolio-assets";
 
 export function DhrsRotationsTable({
   rotations,
@@ -23,8 +24,12 @@ export function DhrsRotationsTable({
   }, [rotations]);
 
   const filtered = useMemo(() => {
-    if (filter === "ALL") return rotations;
-    return rotations.filter((r) => r.from === filter || r.to === filter);
+    const base = filter === "ALL"
+      ? rotations
+      : rotations.filter((r) => r.from === filter || r.to === filter);
+    // Latest rotations first. Falls back to original order when dates tie
+    // (stable since we copy before sorting).
+    return [...base].sort((a, b) => b.date.localeCompare(a.date));
   }, [rotations, filter]);
 
   return (
@@ -42,7 +47,7 @@ export function DhrsRotationsTable({
         >
           {assets.map((a) => (
             <option key={a} value={a} style={{ background: "var(--bg-panel)" }}>
-              {a}
+              {a === "ALL" ? a : getAssetDisplayLabel(a)}
             </option>
           ))}
         </select>
@@ -81,9 +86,9 @@ export function DhrsRotationsTable({
                   </td>
                   <td className="px-3 py-2">
                     <span className="inline-flex items-center gap-1.5 text-[var(--text-strong)]">
-                      <span>{r.from}</span>
+                      <span>{getAssetDisplayLabel(r.from)}</span>
                       <ArrowRight className="h-3 w-3 text-[var(--text-muted)]" />
-                      <span>{r.to}</span>
+                      <span>{getAssetDisplayLabel(r.to)}</span>
                     </span>
                   </td>
                   <td

@@ -232,7 +232,7 @@ export function AdminTranscriptManager({
               <button
                 key={segment.id}
                 onClick={() => handleSeekToSegment(segment.startMs)}
-                className="w-full text-left p-2 rounded hover:bg-[#1a1815] transition-colors"
+                className="w-full text-left p-2 rounded hover:bg-[var(--bg-hover)] transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-xs text-[var(--text-muted)] font-mono min-w-[50px]">
@@ -250,7 +250,7 @@ export function AdminTranscriptManager({
           {recordingUrl && (
             <div className="mt-6">
               <h4 className="font-medium text-[var(--text-strong)] mb-3">Preview</h4>
-              <div className="bg-[#1a1815] rounded-lg p-4">
+              <div className="bg-[var(--bg-hover)] rounded-lg p-4">
                 <p className="text-sm text-[var(--text-strong)] mb-2">
                   Click on transcript segments to test seeking functionality
                 </p>

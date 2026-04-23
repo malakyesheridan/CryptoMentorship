@@ -147,17 +147,17 @@ export default async function CertificatePage({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-[var(--bg-hover)] rounded-lg">
                   <span className="text-sm font-medium text-[var(--text-muted)]">Certificate ID</span>
                   <span className="text-sm font-mono text-[var(--text-strong)]">{certificate.code}</span>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-[var(--bg-hover)] rounded-lg">
                   <span className="text-sm font-medium text-[var(--text-muted)]">Track</span>
                   <span className="text-sm text-[var(--text-strong)]">{track.title}</span>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-[var(--bg-hover)] rounded-lg">
                   <span className="text-sm font-medium text-[var(--text-muted)]">Issued</span>
                   <span className="text-sm text-[var(--text-strong)]">
                     {formatDate(certificate.issuedAt)}

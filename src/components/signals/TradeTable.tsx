@@ -122,7 +122,7 @@ export function TradeTable({
 
 
   const getStatusColor = (status: 'open' | 'closed') => {
-    return status === 'open' ? 'bg-blue-900/30 text-blue-300' : 'bg-[#1a1815] text-[var(--text-strong)]'
+    return status === 'open' ? 'bg-blue-900/30 text-blue-300' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
   }
 
 
@@ -147,7 +147,7 @@ export function TradeTable({
       <CardContent className="p-0">
         {/* Filters */}
         {showFilters && (
-          <div className="p-6 border-b border-[var(--border-subtle)] bg-[#1a1815]">
+          <div className="p-6 border-b border-[var(--border-subtle)] bg-[var(--bg-hover)]">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--text-strong)] mb-1">
@@ -216,22 +216,22 @@ export function TradeTable({
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#1a1815] border-b border-[var(--border-subtle)]">
+            <thead className="bg-[var(--bg-hover)] border-b border-[var(--border-subtle)]">
               <tr>
                 <th 
-                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[#1a1815]`}
+                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--bg-hover)]`}
                   onClick={() => handleSort('symbol')}
                 >
                   Symbol {getSortIcon('symbol')}
                 </th>
                 <th 
-                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[#1a1815]`}
+                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--bg-hover)]`}
                   onClick={() => handleSort('entryTime')}
                 >
                   Entry Date {getSortIcon('entryTime')}
                 </th>
                 <th 
-                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[#1a1815]`}
+                  className={`${compact ? 'px-3 py-2' : 'px-6 py-3'} text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--bg-hover)]`}
                   onClick={() => handleSort('status')}
                 >
                   Status {getSortIcon('status')}
@@ -250,7 +250,7 @@ export function TradeTable({
               {paginatedTrades.map((trade) => (
                 <tr 
                   key={trade.id}
-                  className="hover:bg-[#1a1815] cursor-pointer"
+                  className="hover:bg-[var(--bg-hover)] cursor-pointer"
                   onClick={() => handleTradeClick(trade)}
                 >
                   <td className={`${compact ? 'px-3 py-2' : 'px-6 py-4'} whitespace-nowrap text-sm font-medium text-[var(--text-strong)]`}>
@@ -295,7 +295,7 @@ export function TradeTable({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[#1a1815]">
+          <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-hover)]">
             <div className="flex items-center justify-between">
               <div className="text-sm text-[var(--text-strong)]">
                 Showing {startIndex + 1} to {Math.min(startIndex + pageSize, sortedTrades.length)} of {sortedTrades.length} trades

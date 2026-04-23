@@ -109,7 +109,7 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
                   'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 min-h-[44px] flex-1 sm:flex-none',
                   activeTier === tier
                     ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
-                    : 'text-[var(--text-strong)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                    : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
                 )}
               >
                 {tierLabels[tier]}
@@ -131,7 +131,7 @@ export default function DailySignalUploadWrapper({ userRole, editingSignal, onEd
                     'rounded-xl px-4 sm:px-6 py-3 font-medium transition-all duration-200 min-h-[44px] flex-1 sm:flex-none capitalize',
                     activeCategory === category
                       ? 'bg-yellow-500 text-white shadow-md hover:bg-gold-600'
-                      : 'text-[var(--text-strong)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                      : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
                   )}
                 >
                   {category === 'majors' ? 'Market Rotation' : 'Memecoins'}

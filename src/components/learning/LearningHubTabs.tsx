@@ -49,7 +49,7 @@ export function LearningHubTabs({ activeTab, onTabChange, stats }: LearningHubTa
                 'flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 whitespace-nowrap',
                 isActive
                   ? 'bg-gold-500 text-white shadow-md'
-                  : 'text-[var(--text-strong)] hover:bg-[#1a1815] hover:text-[var(--text-strong)]'
+                  : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-strong)]'
               )}
             >
               <Icon className="h-5 w-5" />
@@ -59,7 +59,7 @@ export function LearningHubTabs({ activeTab, onTabChange, stats }: LearningHubTa
                   'text-xs px-2 py-0.5 rounded-full',
                   isActive
                     ? 'bg-white/20 text-white'
-                    : 'bg-[#2a2520] text-[var(--text-strong)]'
+                    : 'bg-[var(--bg-skeleton)] text-[var(--text-strong)]'
                 )}>
                   {tab.description}
                 </span>

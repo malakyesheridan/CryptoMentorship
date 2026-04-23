@@ -115,7 +115,7 @@ export default function AdminAnnouncePage() {
 
               {/* Preview */}
               {preview && (title || body) && (
-                <div className="p-4 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]">
+                <div className="p-4 bg-[var(--bg-hover)] rounded-lg border border-[var(--border-subtle)]">
                   <h4 className="font-semibold text-[var(--text-strong)] mb-2">Preview</h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">

@@ -145,9 +145,9 @@ export function PersonalizedRecommendations({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(limit)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="h-32 bg-[#2a2520] rounded-lg mb-3"></div>
-                <div className="h-4 bg-[#2a2520] rounded mb-2"></div>
-                <div className="h-3 bg-[#2a2520] rounded w-2/3"></div>
+                <div className="h-32 bg-[var(--bg-skeleton)] rounded-lg mb-3"></div>
+                <div className="h-4 bg-[var(--bg-skeleton)] rounded mb-2"></div>
+                <div className="h-3 bg-[var(--bg-skeleton)] rounded w-2/3"></div>
               </div>
             ))}
           </div>
@@ -236,7 +236,7 @@ export function PersonalizedRecommendations({
                       {rec.progressPct !== undefined && (
                         <div className="text-right">
                           <div className="text-xs font-medium">{rec.progressPct}%</div>
-                          <div className="w-12 h-1 bg-[#2a2520] rounded-full">
+                          <div className="w-12 h-1 bg-[var(--bg-skeleton)] rounded-full">
                             <div 
                               className="h-1 bg-orange-500 rounded-full" 
                               style={{ width: `${rec.progressPct}%` }}

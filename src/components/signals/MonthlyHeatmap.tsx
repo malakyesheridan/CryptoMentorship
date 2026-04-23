@@ -57,7 +57,7 @@ export function MonthlyHeatmap({ monthlyReturns }: MonthlyHeatmapProps) {
   const maxAbsReturn = Math.max(Math.abs(maxReturn), Math.abs(minReturn))
 
   const getColor = (returnValue: number) => {
-    if (returnValue === 0) return '#1a1815' // No data
+    if (returnValue === 0) return 'var(--bg-hover)' // No data
     
     const intensity = Math.abs(returnValue) / maxAbsReturn
     const opacity = Math.max(0.3, intensity)
@@ -70,8 +70,8 @@ export function MonthlyHeatmap({ monthlyReturns }: MonthlyHeatmapProps) {
   }
 
   const getTextColor = (returnValue: number) => {
-    if (returnValue === 0) return '#8a7d6b'
-    return Math.abs(returnValue) > maxAbsReturn * 0.5 ? 'white' : '#f5f0e8'
+    if (returnValue === 0) return 'var(--text-muted)'
+    return Math.abs(returnValue) > maxAbsReturn * 0.5 ? 'white' : 'var(--text-strong)'
   }
 
   return (
@@ -157,7 +157,7 @@ export function MonthlyHeatmap({ monthlyReturns }: MonthlyHeatmapProps) {
               <span className="text-[var(--text-muted)]">Negative</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-[#1a1815] rounded"></div>
+              <div className="w-4 h-4 bg-[var(--bg-hover)] rounded"></div>
               <span className="text-[var(--text-muted)]">No Data</span>
             </div>
             <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export function MonthlyHeatmap({ monthlyReturns }: MonthlyHeatmapProps) {
               <span>{formatPercentage(-maxAbsReturn)}</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-[#1a1815] rounded"></div>
+              <div className="w-3 h-3 bg-[var(--bg-hover)] rounded"></div>
               <span>0%</span>
             </div>
             <div className="flex items-center gap-1">

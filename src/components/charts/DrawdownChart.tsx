@@ -65,29 +65,29 @@ export function DrawdownChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
             <XAxis 
               dataKey="date" 
               tickFormatter={(value) => format(new Date(value), 'MMM dd')}
-              stroke="#8a7d6b"
+              stroke="var(--text-muted)"
               fontSize={12}
             />
             <YAxis 
               tickFormatter={(value) => `${value}%`}
-              stroke="#8a7d6b"
+              stroke="var(--text-muted)"
               fontSize={12}
             />
             <Tooltip
               formatter={(value: number) => [formatTooltipValue(value), 'Drawdown']}
               labelFormatter={(label) => formatTooltipDate(label)}
               contentStyle={{
-                backgroundColor: '#141210',
-                border: '1px solid #2a2520',
+                backgroundColor: 'var(--bg-panel)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
               }}
             />
-            <ReferenceLine y={0} stroke="#8a7d6b" strokeDasharray="2 2" />
+            <ReferenceLine y={0} stroke="var(--text-muted)" strokeDasharray="2 2" />
             <Area
               type="monotone"
               dataKey="drawdown"

@@ -46,7 +46,7 @@ export function SignalTimelineChart({
     if (signal.status === 'closed') {
       if (signal.pnl && signal.pnl > 0) return '#10b981' // green for profit
       if (signal.pnl && signal.pnl < 0) return '#ef4444' // red for loss
-      return '#8a7d6b' // gray for break-even
+      return 'var(--text-muted)' // gray for break-even
     }
     return signal.direction === 'long' ? '#3b82f6' : '#f59e0b' // blue for long, amber for short
   }
@@ -115,16 +115,16 @@ export function SignalTimelineChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={height}>
           <ScatterChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
             <XAxis 
               dataKey="date" 
               tickFormatter={(value) => format(new Date(value), 'MMM dd')}
-              stroke="#8a7d6b"
+              stroke="var(--text-muted)"
               fontSize={12}
             />
             <YAxis 
               tickFormatter={(value) => formatTooltipValue(value)}
-              stroke="#8a7d6b"
+              stroke="var(--text-muted)"
               fontSize={12}
             />
             <Tooltip content={<CustomTooltip />} />

@@ -1,5 +1,6 @@
 import { Activity } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { getAssetDisplayLabel } from "@/lib/portfolio-assets";
 
 export function DhrsCurrentHoldingCard({
   dominant,
@@ -17,7 +18,7 @@ export function DhrsCurrentHoldingCard({
               Currently Holding
             </div>
             <div className="mt-2 text-4xl font-bold tabular-nums text-[var(--text-strong)]">
-              {dominant}
+              {getAssetDisplayLabel(dominant)}
             </div>
           </div>
           <div

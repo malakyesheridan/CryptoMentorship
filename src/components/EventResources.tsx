@@ -30,7 +30,7 @@ export function EventResources({ recordingUrl, resources, eventTitle }: EventRes
       <CardContent className="space-y-4">
         {/* Recording */}
         {recordingUrl && (
-          <div className="p-4 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]">
+          <div className="p-4 bg-[var(--bg-hover)] rounded-lg border border-[var(--border-subtle)]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Play className="h-5 w-5 text-[var(--text-strong)]" />
@@ -59,7 +59,7 @@ export function EventResources({ recordingUrl, resources, eventTitle }: EventRes
               {resources.map((resource, index) => (
                 <div 
                   key={index}
-                  className="flex items-center justify-between p-3 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]"
+                  className="flex items-center justify-between p-3 bg-[var(--bg-hover)] rounded-lg border border-[var(--border-subtle)]"
                 >
                   <div className="flex items-center gap-3">
                     <FileText className="h-4 w-4 text-[var(--text-strong)]" />

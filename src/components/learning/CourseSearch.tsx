@@ -83,7 +83,7 @@ export function CourseSearch({ courses, onStart, className = '' }: CourseSearchP
       } else if (course.progressPct && course.progressPct > 0) {
         return { label: 'In Progress', color: 'bg-[#1a1d2e] text-[#5b8dd9] border-[#1a1d2e]' }
       } else {
-        return { label: 'Started', color: 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]' }
+        return { label: 'Started', color: 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]' }
       }
     }
     return null

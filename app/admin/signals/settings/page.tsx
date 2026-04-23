@@ -63,7 +63,7 @@ export default function PortfolioSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#1a1815] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-hover)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--text-strong)] mx-auto"></div>
           <p className="text-[var(--text-strong)] mt-2">Loading settings...</p>
@@ -73,7 +73,7 @@ export default function PortfolioSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
+    <div className="min-h-screen bg-[var(--bg-hover)]">
       <div className="max-w-4xl mx-auto p-8">
         {/* Header */}
         <div className="mb-8">
@@ -202,7 +202,7 @@ export default function PortfolioSettingsPage() {
               <CardTitle>Performance Impact</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-[#1a1815] p-4 rounded-lg">
+              <div className="bg-[var(--bg-hover)] p-4 rounded-lg">
                 <h4 className="font-medium text-[var(--text-strong)] mb-2">Current Settings Impact</h4>
                 <div className="space-y-2 text-sm text-[var(--text-strong)]">
                   <p>• Base Capital: ${settings.baseCapitalUsd.toLocaleString()}</p>

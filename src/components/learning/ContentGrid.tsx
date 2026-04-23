@@ -53,7 +53,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
   if (items.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="w-24 h-24 bg-[#1a1815] rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-24 h-24 bg-[var(--bg-hover)] rounded-full flex items-center justify-center mx-auto mb-6">
           <BookOpen className="w-12 h-12 text-[var(--text-muted)]" />
         </div>
         <h3 className="text-xl font-semibold text-[var(--text-strong)] mb-2">No content available</h3>
@@ -78,7 +78,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
           >
             <article className="group bg-[var(--bg-panel)] rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-[var(--border-subtle)] overflow-hidden hover:-translate-y-0.5">
               {/* Cover Image */}
-              <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-[#1a1815] to-[#2a2520]">
+              <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-[var(--bg-hover)] to-[var(--bg-skeleton)]">
                 {item.coverUrl ? (
                   <Image
                     src={item.coverUrl}
@@ -182,7 +182,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
                       </span>
                       <span className="font-medium text-[var(--text-strong)]">{item.progressPct}%</span>
                     </div>
-                    <div className="w-full bg-[#2a2520] rounded-full h-1.5">
+                    <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full transition-all duration-300 ${
                           item.progressPct === 100 ? 'bg-[#4a7c3f]' : 'bg-gold-500'
@@ -214,7 +214,7 @@ export function ContentGrid({ items, showProgress = false, onItemClick, userRole
 
               {/* Lock Overlay */}
               {item.locked && (
-                <div className="absolute inset-0 bg-[#141210]/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="absolute inset-0 bg-[var(--bg-panel)]/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <div className="text-center">
                     <Lock className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-2" />
                     <p className="text-sm font-medium text-[var(--text-strong)]">Member Only</p>

@@ -15,7 +15,8 @@
   .card {
     background-color: var(--bg-panel);
     border: 1px solid var(--border-subtle);
-    @apply rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.3)];
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
   }
 
   .btn-gold {
@@ -28,7 +29,7 @@
 
   .badge-locked {
     @apply px-3 py-1 rounded-full text-xs font-medium;
-    background-color: #3a3530;
+    background-color: var(--bg-skeleton-alt);
     color: var(--text-muted);
   }
 

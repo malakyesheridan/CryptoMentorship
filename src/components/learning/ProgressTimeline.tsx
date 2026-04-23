@@ -186,7 +186,7 @@ export function ProgressTimeline({
       case 'certificate': return 'bg-gold-500'
       case 'streak': return 'bg-orange-500'
       case 'achievement': return 'bg-purple-500'
-      default: return 'bg-[#3a3530]'
+      default: return 'bg-[var(--bg-skeleton-alt)]'
     }
   }
 
@@ -198,13 +198,13 @@ export function ProgressTimeline({
       case 'Legendary': return 'bg-[#2e1a1a] text-[#c03030] border-[#2e1a1a]'
       case 'Achievement': return 'bg-[#231a2e] text-[#a78bfa] border-[#231a2e]'
       case 'Master': return 'bg-[#1a1a2e] text-[#818cf8] border-[#1a1a2e]'
-      default: return 'bg-[#1a1815] text-[var(--text-strong)] border-[var(--border-subtle)]'
+      default: return 'bg-[var(--bg-hover)] text-[var(--text-strong)] border-[var(--border-subtle)]'
     }
   }
 
   if (milestones.length === 0) {
     return (
-      <Card className={cn('bg-gradient-to-r from-[#1a1815] to-[#1a1815] border-[var(--border-subtle)]', className)}>
+      <Card className={cn('bg-gradient-to-r from-[var(--bg-hover)] to-[var(--bg-hover)] border-[var(--border-subtle)]', className)}>
         <CardContent className="p-8 text-center">
           <Calendar className="h-12 w-12 text-[var(--text-muted)] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">Start Your Learning Journey</h3>
@@ -238,7 +238,7 @@ export function ProgressTimeline({
               <div key={milestone.id} className="relative">
                 {/* Timeline line */}
                 {!isLast && (
-                  <div className="absolute left-6 top-12 w-0.5 h-8 bg-[#2a2520]"></div>
+                  <div className="absolute left-6 top-12 w-0.5 h-8 bg-[var(--bg-skeleton)]"></div>
                 )}
                 
                 <div 

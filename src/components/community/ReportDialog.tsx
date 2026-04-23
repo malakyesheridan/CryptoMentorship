@@ -42,7 +42,7 @@ export function ReportDialog({ type, targetId, onClose }: ReportDialogProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-[#1a1815] border border-[var(--border-subtle)] rounded-xl w-full max-w-md p-6 mx-4">
+      <div className="bg-[var(--bg-hover)] border border-[var(--border-subtle)] rounded-xl w-full max-w-md p-6 mx-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-[var(--text-strong)]">
             Report {type === 'post' ? 'Post' : 'Comment'}

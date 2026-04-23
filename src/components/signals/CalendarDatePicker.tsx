@@ -88,7 +88,7 @@ export function CalendarDatePicker({ selectedDate, onDateChange, availableDates 
                   }
                 }}
                 max={todayString}
-                className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-lg bg-[#1a1815] text-[var(--text-strong)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border-subtle)] rounded-lg bg-[var(--bg-hover)] text-[var(--text-strong)] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               />
             </div>
             

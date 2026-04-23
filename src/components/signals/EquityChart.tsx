@@ -124,7 +124,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                       y1={y}
                       x2={chartWidth - margin.right}
                       y2={y}
-                      stroke="#2a2520"
+                      stroke="var(--border-subtle)"
                       strokeWidth={1}
                     />
                     <text
@@ -132,7 +132,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                       y={y + 4}
                       textAnchor="end"
                       fontSize="12"
-                      fill="#8a7d6b"
+                      fill="var(--text-muted)"
                     >
                       {formatCurrency(value, 0)}
                     </text>
@@ -171,7 +171,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                 y1={chartHeight - margin.bottom}
                 x2={chartWidth - margin.right}
                 y2={chartHeight - margin.bottom}
-                stroke="#f5f0e8"
+                stroke="var(--text-strong)"
                 strokeWidth={2}
               />
               <line
@@ -179,7 +179,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                 y1={margin.top}
                 x2={margin.left}
                 y2={chartHeight - margin.bottom}
-                stroke="#f5f0e8"
+                stroke="var(--text-strong)"
                 strokeWidth={2}
               />
 
@@ -193,7 +193,7 @@ export function EquityChart({ equityPoints, baseCapital }: EquityChartProps) {
                     y={chartHeight - margin.bottom + 20}
                     textAnchor="middle"
                     fontSize="12"
-                    fill="#8a7d6b"
+                    fill="var(--text-muted)"
                   >
                     {formatDate(point.date, 'short')}
                   </text>

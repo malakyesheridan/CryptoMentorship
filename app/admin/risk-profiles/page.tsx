@@ -115,7 +115,7 @@ export default async function RiskProfilesPage() {
                       </td>
                       <td className="py-3 pr-4">{profile ? profile.score : '-'}</td>
                       <td className="py-3 pr-4">
-                        <span className="inline-flex rounded-full bg-[#1a1815] px-2 py-1 text-xs text-[var(--text-strong)]">
+                        <span className="inline-flex rounded-full bg-[var(--bg-hover)] px-2 py-1 text-xs text-[var(--text-strong)]">
                           {status.replace('_', ' ')}
                         </span>
                       </td>

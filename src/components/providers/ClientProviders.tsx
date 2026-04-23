@@ -1,6 +1,7 @@
 'use client'
 
 import { SessionProvider } from './SessionProvider'
+import { ThemeProvider } from '@/components/theme-provider'
 
 interface ClientProvidersProps {
   children: React.ReactNode
@@ -9,7 +10,7 @@ interface ClientProvidersProps {
 export function ClientProviders({ children }: ClientProvidersProps) {
   return (
     <SessionProvider>
-      {children}
+      <ThemeProvider>{children}</ThemeProvider>
     </SessionProvider>
   )
 }

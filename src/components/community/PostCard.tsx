@@ -66,7 +66,7 @@ export function PostCard({ post, currentUserId, isAdmin, onDelete, onReact }: Po
           {post.author.image ? (
             <img src={post.author.image} alt="" className="w-12 h-12 rounded-full ring-2 ring-[var(--border-subtle)]" />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[#2a2520] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-base font-semibold text-[var(--text-muted)]">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-skeleton)] ring-2 ring-[var(--border-subtle)] flex items-center justify-center text-base font-semibold text-[var(--text-muted)]">
               {(post.author.name?.[0] ?? '?').toUpperCase()}
             </div>
           )}
@@ -111,7 +111,7 @@ export function PostCard({ post, currentUserId, isAdmin, onDelete, onReact }: Po
               className={`flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
                 post.userReactions?.includes('LIKE' as ReactionType)
                   ? 'bg-emerald-500/15 text-emerald-400'
-                  : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-emerald-400'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-emerald-400'
               }`}
               title="Like"
             >
@@ -123,7 +123,7 @@ export function PostCard({ post, currentUserId, isAdmin, onDelete, onReact }: Po
               className={`flex items-center gap-1.5 text-sm px-2.5 py-1.5 rounded-lg transition-all ${
                 post.userReactions?.includes('DISLIKE' as ReactionType)
                   ? 'bg-red-500/15 text-red-400'
-                  : 'text-[var(--text-muted)] hover:bg-[#1a1815] hover:text-red-400'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-red-400'
               }`}
               title="Dislike"
             >
@@ -132,7 +132,7 @@ export function PostCard({ post, currentUserId, isAdmin, onDelete, onReact }: Po
             </button>
             <Link
               href={`/community/${post.id}`}
-              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] ml-auto px-2.5 py-1.5 rounded-lg hover:bg-[#1a1815] transition-colors"
+              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] ml-auto px-2.5 py-1.5 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
             >
               <MessageCircle className="w-4 h-4" />
               <span className="text-xs font-medium">{post.commentCount > 0 ? post.commentCount : ''}</span>

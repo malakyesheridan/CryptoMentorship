@@ -72,7 +72,7 @@ export function ContentCard({ id, title, excerpt, publishedAt, locked, kind, tag
       </div>
       
       {locked && !canAccess && (
-        <div className="mt-4 p-4 bg-[#1a1815] rounded-lg border border-[var(--border-subtle)]">
+        <div className="mt-4 p-4 bg-[var(--bg-hover)] rounded-lg border border-[var(--border-subtle)]">
           <p className="subhead text-sm mb-2">
             This content is available to members only.
           </p>

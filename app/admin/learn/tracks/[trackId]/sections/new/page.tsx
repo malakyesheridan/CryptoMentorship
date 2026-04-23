@@ -49,7 +49,7 @@ export default function NewSectionPage({ params }: NewSectionPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
+    <div className="min-h-screen bg-[var(--bg-hover)]">
       <div className="flex">
         <AdminSidebar />
         <div className="flex-1 p-8">

@@ -62,7 +62,7 @@ export function AnnouncementsList({ announcements }: AnnouncementsListProps) {
           >
             <div className="flex items-start gap-3">
               {/* Author avatar */}
-              <div className="relative h-9 w-9 rounded-full overflow-hidden bg-[#2a2520] shrink-0">
+              <div className="relative h-9 w-9 rounded-full overflow-hidden bg-[var(--bg-skeleton)] shrink-0">
                 {post.author.image ? (
                   <Image
                     src={post.author.image}

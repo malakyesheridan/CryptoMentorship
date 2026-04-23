@@ -81,7 +81,7 @@ export function RiskOnboardingGate() {
 
           <div
             className={cn(
-              'mt-4 rounded-xl border border-[var(--border-subtle)] bg-[#1a1815] p-4 text-sm text-[var(--text-strong)]',
+              'mt-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-hover)] p-4 text-sm text-[var(--text-strong)]',
               showWhy ? 'block' : 'hidden'
             )}
           >

@@ -50,7 +50,7 @@ export function TradeDetail({ trade, onBack }: TradeDetailProps) {
   }
 
   const getStatusColor = (status: 'open' | 'closed') => {
-    return status === 'open' ? 'bg-blue-900/30 text-blue-300' : 'bg-[#1a1815] text-[var(--text-strong)]'
+    return status === 'open' ? 'bg-blue-900/30 text-blue-300' : 'bg-[var(--bg-hover)] text-[var(--text-strong)]'
   }
 
   const getConvictionStars = (conviction?: number) => {
@@ -234,7 +234,7 @@ export function TradeDetail({ trade, onBack }: TradeDetailProps) {
               {trade.notes && (
                 <div className="space-y-2">
                   <h3 className="font-medium text-[var(--text-strong)]">Exit Notes</h3>
-                  <p className="text-sm text-[var(--text-muted)] bg-[#1a1815] p-3 rounded-md">
+                  <p className="text-sm text-[var(--text-muted)] bg-[var(--bg-hover)] p-3 rounded-md">
                     {trade.notes}
                   </p>
                 </div>

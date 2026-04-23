@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartExport } from './ChartExport'
 import { TrendingUp, TrendingDown } from 'lucide-react'
+import { useChartColors } from '@/lib/chart-theme'
 
 interface EquityPoint {
   date: string
@@ -31,6 +32,7 @@ export function EquityCurveChart({
   referenceValue = 10000
 }: EquityCurveChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
+  const c = useChartColors()
   // Calculate performance metrics
   const firstValue = data[0]?.equity || 0
   const lastValue = data[data.length - 1]?.equity || 0
@@ -58,7 +60,7 @@ export function EquityCurveChart({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#4a7c3f]" />
+              <TrendingUp className="h-5 w-5 text-[var(--success)]" />
               {title}
             </CardTitle>
             <CardDescription>{description}</CardDescription>
@@ -66,13 +68,13 @@ export function EquityCurveChart({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4 text-sm">
               <div className="text-right">
-                <div className={`font-semibold ${totalReturn >= 0 ? 'text-[#4a7c3f]' : 'text-[#c03030]'}`}>
+                <div className={`font-semibold ${totalReturn >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                   {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
                 </div>
                 <div className="text-[var(--text-muted)]">Total Return</div>
               </div>
               <div className="text-right">
-                <div className="font-semibold text-[#c03030]">
+                <div className="font-semibold text-[var(--danger)]">
                   -{maxDrawdown.toFixed(2)}%
                 </div>
                 <div className="text-[var(--text-muted)]">Max Drawdown</div>
@@ -86,43 +88,44 @@ export function EquityCurveChart({
         <div ref={chartRef}>
           <ResponsiveContainer width="100%" height={height}>
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2520" />
-            <XAxis 
-              dataKey="date" 
+            <CartesianGrid strokeDasharray="3 3" stroke={c.grid} />
+            <XAxis
+              dataKey="date"
               tickFormatter={(value) => format(new Date(value), 'MMM dd')}
-              stroke="#8a7d6b"
+              stroke={c.axis}
               fontSize={12}
             />
-            <YAxis 
+            <YAxis
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-              stroke="#8a7d6b"
+              stroke={c.axis}
               fontSize={12}
             />
             <Tooltip
               formatter={(value: number) => [formatTooltipValue(value), 'Equity']}
               labelFormatter={(label) => formatTooltipDate(label)}
               contentStyle={{
-                backgroundColor: '#141210',
-                border: '1px solid #2a2520',
+                backgroundColor: c.tooltipBg,
+                border: `1px solid ${c.tooltipBorder}`,
                 borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                color: c.tooltipText,
               }}
             />
             {showReferenceLine && (
-              <ReferenceLine 
-                y={referenceValue} 
-                stroke="#8a7d6b" 
-                strokeDasharray="2 2" 
+              <ReferenceLine
+                y={referenceValue}
+                stroke={c.axis}
+                strokeDasharray="2 2"
                 label={{ value: "Starting Value", position: "top" }}
               />
             )}
             <Line
               type="monotone"
               dataKey="equity"
-              stroke="#10b981"
+              stroke={c.positive}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: '#10b981' }}
+              activeDot={{ r: 4, fill: c.positive }}
             />
           </LineChart>
         </ResponsiveContainer>

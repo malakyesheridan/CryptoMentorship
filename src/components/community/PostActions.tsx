@@ -35,7 +35,7 @@ export function PostActions({ isAuthor, isAdmin, isPinned, onDelete, onPin, onRe
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-40 bg-[#1a1815] border border-[var(--border-subtle)] rounded-lg shadow-lg z-20 py-1">
+        <div className="absolute right-0 top-full mt-1 w-40 bg-[var(--bg-hover)] border border-[var(--border-subtle)] rounded-lg shadow-lg z-20 py-1">
           {isAdmin && onPin && (
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPin(); setOpen(false) }}

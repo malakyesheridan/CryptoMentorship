@@ -231,7 +231,7 @@ export default async function CohortDashboardPage({
                   {userProgress.completedLessons} of {userProgress.totalLessons} lessons completed
                 </span>
               </div>
-              <div className="w-full bg-[#2a2520] rounded-full h-3">
+              <div className="w-full bg-[var(--bg-skeleton)] rounded-full h-3">
                 <div 
                   className="bg-gold-600 h-3 rounded-full transition-all duration-300"
                   style={{ width: `${userProgress.progressPct}%` }}

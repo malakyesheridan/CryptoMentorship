@@ -75,21 +75,12 @@ export interface DhrsRotation {
   return_pct: number;
 }
 
-export interface DhrsPaper {
-  current_asset: string;
-  pnl_pct: number;
-  start_date: string;
-  end_date: string;
-  trades: number;
-}
-
 export interface DhrsSystem {
   regime: boolean;
   dominant: string;
   stats: DhrsStats;
   time_in: Record<string, number>;
   recent_rotations: DhrsRotation[];
-  paper: DhrsPaper;
 }
 
 export interface MrssChain {

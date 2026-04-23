@@ -11,12 +11,12 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) {
-  const { theme, setTheme } = useTheme()
+  const { preference, setTheme } = useTheme()
 
   const toggleTheme = () => {
-    if (theme === 'light') {
+    if (preference === 'light') {
       setTheme('dark')
-    } else if (theme === 'dark') {
+    } else if (preference === 'dark') {
       setTheme('system')
     } else {
       setTheme('light')
@@ -24,7 +24,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
   }
 
   const getIcon = () => {
-    switch (theme) {
+    switch (preference) {
       case 'light':
         return <Sun className="h-4 w-4" />
       case 'dark':
@@ -37,7 +37,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
   }
 
   const getLabel = () => {
-    switch (theme) {
+    switch (preference) {
       case 'light':
         return 'Light'
       case 'dark':
@@ -58,7 +58,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
         'group-hover:scale-105 transition-all duration-300',
         className
       )}
-      title={`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'} mode`}
+      title={`Switch to ${preference === 'light' ? 'dark' : preference === 'dark' ? 'system' : 'light'} mode`}
     >
       {getIcon()}
       {showLabel && (

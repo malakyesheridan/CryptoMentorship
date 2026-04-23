@@ -19,7 +19,7 @@ export function CircularProgress({
   size = 80,
   strokeWidth = 6,
   color = '#3b82f6', // blue-500
-  backgroundColor = '#2a2520', // slate-200
+  backgroundColor = 'var(--border-subtle)', // slate-200
   showPercentage = true,
   className = '',
   animated = true

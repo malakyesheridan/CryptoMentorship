@@ -61,7 +61,7 @@ export function RoleSelector({ userId, currentRole, currentUserId, className, on
     admin: 'border-[#c03030] text-[#c03030] bg-[#2e1a1a]',
     editor: 'border-[#4a7cc3] text-[#4a7cc3] bg-[#1a1e2e]',
     member: 'border-[#4a7c3f] text-[#4a7c3f] bg-[#1a2e1a]',
-    guest: 'border-[var(--border-subtle)] text-[var(--text-strong)] bg-[#1a1815]',
+    guest: 'border-[var(--border-subtle)] text-[var(--text-strong)] bg-[var(--bg-hover)]',
   }
 
   return (

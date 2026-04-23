@@ -174,7 +174,7 @@ export function LessonPlayer({
   // Show locked lesson view
   if (isLocked) {
     return (
-      <div className="min-h-screen bg-[#1a1815]">
+      <div className="min-h-screen bg-[var(--bg-hover)]">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar */}
@@ -210,7 +210,7 @@ export function LessonPlayer({
                                     ? 'bg-gold-100 text-gold-700 font-medium'
                                     : isCompleted
                                     ? 'text-[#4a7c3f] hover:bg-[#1a2e1a]'
-                                    : 'text-[var(--text-strong)] hover:bg-[#1a1815]'
+                                    : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export function LessonPlayer({
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1815]">
+    <div className="min-h-screen bg-[var(--bg-hover)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
@@ -340,7 +340,7 @@ export function LessonPlayer({
                                     ? 'bg-gold-100 text-gold-900 font-medium border border-gold-200'
                                     : isCompleted
                                     ? 'text-[#4a7c3f] hover:bg-[#1a2e1a]'
-                                    : 'text-[var(--text-strong)] hover:bg-[#1a1815]'
+                                    : 'text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
@@ -436,7 +436,7 @@ export function LessonPlayer({
 
                 {pdfResources.length > 0 && (
                   <div className="mb-6">
-                    <div className="rounded-lg border border-[var(--border-subtle)] bg-[#1a1815] p-4">
+                    <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-hover)] p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <FileText className="h-4 w-4 text-[var(--text-strong)]" />
                         <h3 className="text-sm font-semibold text-[var(--text-strong)]">Lesson PDFs</h3>

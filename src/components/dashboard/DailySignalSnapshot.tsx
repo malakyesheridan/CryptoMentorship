@@ -3,7 +3,7 @@ import { Zap, Lock, ArrowRight, TrendingUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/dates'
-import { parseAllocationAssets, buildAllocationSplits } from '@/lib/portfolio-assets'
+import { parseAllocationAssets, buildAllocationSplits, getAssetDisplayLabel } from '@/lib/portfolio-assets'
 import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState'
 
 interface Signal {
@@ -43,7 +43,7 @@ function getSignalSummary(signal: Signal): string {
   if (signal.category !== 'memecoins') {
     const assets = parseAllocationAssets(signal.signal)
     if (assets) {
-      return `${assets.primaryAsset} / ${assets.secondaryAsset} / ${assets.tertiaryAsset}`
+      return `${getAssetDisplayLabel(assets.primaryAsset)} / ${getAssetDisplayLabel(assets.secondaryAsset)} / ${getAssetDisplayLabel(assets.tertiaryAsset)}`
     }
   }
   // For memecoins or unparseable, show first line of signal text

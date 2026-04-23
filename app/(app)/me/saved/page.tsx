@@ -124,7 +124,7 @@ export default async function SavedPage() {
 
                   {/* Note if present */}
                   {bookmark.note && (
-                    <div className="mt-3 p-2 bg-[#1a1815] rounded text-sm text-[var(--text-muted)]">
+                    <div className="mt-3 p-2 bg-[var(--bg-hover)] rounded text-sm text-[var(--text-muted)]">
                       <strong>Note:</strong> {bookmark.note}
                     </div>
                   )}

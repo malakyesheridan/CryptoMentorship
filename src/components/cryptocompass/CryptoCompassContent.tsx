@@ -193,7 +193,7 @@ export function CryptoCompassContent({
             <Link key={episode.slug} href={`/crypto-compass/${episode.slug}`}>
               <article className="group bg-[var(--bg-panel)] rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-[var(--border-subtle)] overflow-hidden hover:-translate-y-0.5">
                 {/* Thumbnail */}
-                <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-[#1a1815] to-[#2a2520]">
+                <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-[var(--bg-hover)] to-[var(--bg-skeleton)]">
                   {getCoverUrl(episode.coverUrl) ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
@@ -259,7 +259,7 @@ export function CryptoCompassContent({
         </div>
       ) : (
         <div className="bg-[var(--bg-panel)] rounded-xl shadow-md border border-[var(--border-subtle)] p-12 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#1a1815] to-[#2a2520] rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-[var(--bg-hover)] to-[var(--bg-skeleton)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Play className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-lg font-semibold text-[var(--text-strong)] mb-2">

@@ -26,7 +26,7 @@ export function CategoryTabs({ active, onChange }: CategoryTabsProps) {
           className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
             active === tab.value
               ? 'bg-[var(--gold-400)] text-[#0a0a0a]'
-              : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[#1a1815]'
+              : 'text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)]'
           }`}
         >
           {tab.label}

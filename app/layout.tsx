@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import './globals.css'
 import { ClientProviders } from '@/components/providers/ClientProviders'
+import { THEME_PREHYDRATION_SCRIPT } from '@/components/theme-provider'
 import { Inter } from 'next/font/google'
 
 const inter = Inter({ 
@@ -24,7 +25,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" data-theme="dark" className={inter.variable}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: THEME_PREHYDRATION_SCRIPT }}
+        />
+      </head>
       <body className={`min-h-screen bg-[var(--bg-page)] text-[var(--text-strong)] ${inter.className}`}>
         <ClientProviders>{children}</ClientProviders>
       </body>

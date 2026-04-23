@@ -193,8 +193,8 @@ export default function AdminVideosList({ videos }: AdminVideosListProps) {
           ) : (
             <div className="space-y-4">
               {filteredVideos.map((video) => (
-                <div key={video.id} className="flex items-center space-x-4 p-4 border border-[var(--border-subtle)] rounded-lg hover:bg-[#1a1815]">
-                  <div className="w-16 h-16 bg-[#1a1815] rounded-lg flex items-center justify-center">
+                <div key={video.id} className="flex items-center space-x-4 p-4 border border-[var(--border-subtle)] rounded-lg hover:bg-[var(--bg-hover)]">
+                  <div className="w-16 h-16 bg-[var(--bg-hover)] rounded-lg flex items-center justify-center">
                     <Video className="w-8 h-8 text-[var(--text-muted)]" />
                   </div>
                   

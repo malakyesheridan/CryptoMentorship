@@ -174,7 +174,7 @@ export function BeamsBackground({
   return (
     <div
       className={cn(
-        "relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#0a0a0a] via-[#141210] to-[#0a0a0a]",
+        "relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[var(--bg-page)] via-[var(--bg-panel)] to-[var(--bg-page)]",
         className
       )}
     >
@@ -185,7 +185,7 @@ export function BeamsBackground({
       />
 
       <motion.div
-        className="absolute inset-0 bg-[#0a0a0a]/5"
+        className="absolute inset-0 bg-[var(--bg-page)]/5"
         animate={{
           opacity: [0.05, 0.15, 0.05],
         }}
