@@ -143,10 +143,15 @@ export default async function PortfolioPage() {
         <div className="mb-12">
           <ActiveSignalsSection userId={user.id} />
         </div>
-        {/* Daily Signal Manager (Upload + Display) */}
-        <div className="mb-8" data-tour="portfolio-updates">
-          <DailySignalManager userRole={userRole} />
-        </div>
+        {/* LEGACY: Daily Signal Manager (admin upload form + Market Rotation
+            subscriber card) is replaced by ActiveSignalsSection above and the
+            ingest pipeline. Hidden, NOT deleted — keep imports + components
+            intact so we can reference the old signal data during transition. */}
+        {false && (
+          <div className="mb-8" data-tour="portfolio-updates">
+            <DailySignalManager userRole={userRole} />
+          </div>
+        )}
 
         {/* Disclaimer */}
         <div className="bg-[var(--bg-warning-subtle)] border border-[var(--border-subtle)] rounded-2xl p-6 mt-12" data-tour="portfolio-disclaimer">
