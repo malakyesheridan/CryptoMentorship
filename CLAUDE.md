@@ -223,3 +223,9 @@ When creating/editing content, call `revalidateTag` with the relevant tag:
 - Don't fetch full relations just to count them — use `_count`
 - Don't render `AdminSidebar` in admin pages (layout renders it)
 - Don't use `RealTimeProgress` or similar client-side components that duplicate server-fetched data
+
+## Git Workflow (HARD RULES)
+
+- **Never create branches.** No feature branches, no `feat/*`, no `fix/*` — nothing. All work commits directly to `main`.
+- **Never open PRs.** Don't suggest a feature-branch + PR flow even when push to `main` is blocked by harness rules — surface the blocker and let the user push manually instead.
+- If a branch already exists from earlier work, fast-forward-merge it into `main` and delete it (locally and on origin).
