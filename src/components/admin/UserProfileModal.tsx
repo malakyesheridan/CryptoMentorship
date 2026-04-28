@@ -11,6 +11,7 @@ import { formatDate } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { RoleSelector } from './RoleSelector'
 import { CreateTrialModal } from './CreateTrialModal'
+import { UserSystemAccess } from './UserSystemAccess'
 import { toast } from 'sonner'
 
 interface UserProfileModalProps {
@@ -338,6 +339,11 @@ export function UserProfileModal({ userId, currentUserId, isOpen, onClose }: Use
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* System Access */}
+              <div>
+                <UserSystemAccess userId={data.user.id} />
               </div>
 
               {/* Stats Grid */}

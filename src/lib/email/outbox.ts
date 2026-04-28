@@ -5,6 +5,7 @@ import { sendEmail } from '@/lib/email'
 import { sendDailySignalEmail } from '@/lib/email-templates'
 import { buildWelcomeTrialEmail } from '@/lib/templates/welcome-trial'
 import { buildWelcomeEmail } from '@/lib/templates/welcome'
+import { buildSignalUpdateEmail, type SignalUpdateEmailInput } from '@/lib/templates/signal-update'
 import type { NotificationEmailType } from '@/lib/notifications/types'
 import { getAppUrl } from '@/lib/env'
 
@@ -357,6 +358,34 @@ async function sendOutboxEmail(entry: { type: EmailType; toEmail: string; payloa
         footerUrl: preferencesUrl,
       })
       await sendEmail({ to: entry.toEmail, subject: message.subject, html: message.html, text: message.text })
+      return
+    }
+    case EmailType.NOTIFICATION_SYSTEM_SIGNAL: {
+      const envelope = parseNotificationPayload(entry.payload)
+      const vars = (envelope.variables ?? {}) as Partial<SignalUpdateEmailInput>
+      const message = buildSignalUpdateEmail({
+        userName: vars.userName ?? null,
+        systemName: typeof vars.systemName === 'string' ? vars.systemName : 'System',
+        systemSlug: typeof vars.systemSlug === 'string' ? vars.systemSlug : '',
+        signalType: vars.signalType === 'zone_action' ? 'zone_action' : 'rotation',
+        signal: typeof vars.signal === 'string' ? vars.signal : '',
+        commentary: vars.commentary ?? null,
+        fromAsset: vars.fromAsset ?? null,
+        toAsset: vars.toAsset ?? null,
+        zone: vars.zone ?? null,
+        action: vars.action ?? null,
+        compositeZ: typeof vars.compositeZ === 'number' ? vars.compositeZ : null,
+        btcPrice: typeof vars.btcPrice === 'number' ? vars.btcPrice : null,
+        dashboardUrl: typeof vars.dashboardUrl === 'string' ? vars.dashboardUrl : '',
+        preferencesUrl: typeof vars.preferencesUrl === 'string' ? vars.preferencesUrl : '',
+      })
+      const subject = envelope.subject || message.subject
+      await sendEmail({
+        to: entry.toEmail,
+        subject,
+        html: message.html,
+        text: message.text,
+      })
       return
     }
     case EmailType.NOTIFICATION_COMMUNITY_REPLY: {

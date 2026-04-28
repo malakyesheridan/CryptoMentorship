@@ -2,6 +2,7 @@ import { requireActiveSubscription } from '@/lib/access'
 import DailySignalManager from '@/components/signals/DailySignalManager'
 import { PortfolioWizard } from '@/components/portfolio/PortfolioWizard'
 import { RiskOnboardingGate } from '@/components/risk-onboarding/RiskOnboardingGate'
+import { ActiveSignalsSection } from '@/components/portfolio/ActiveSignalsSection'
 import { unstable_cache } from 'next/cache'
 
 // Revalidate every 5 minutes (300 seconds) - portfolio data is historical, not real-time
@@ -138,6 +139,10 @@ export default async function PortfolioPage() {
 
       <div className="container mx-auto px-4 py-12">
         <RiskOnboardingGate />
+        {/* Your Active Signals (per-user system assignments) */}
+        <div className="mb-8">
+          <ActiveSignalsSection userId={user.id} />
+        </div>
         {/* Daily Signal Manager (Upload + Display) */}
         <div className="mb-8" data-tour="portfolio-updates">
           <DailySignalManager userRole={userRole} />

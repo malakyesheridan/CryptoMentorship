@@ -139,17 +139,17 @@ export async function POST(req: NextRequest) {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId
   const tier = session.metadata?.tier
-  
+
   if (!userId || !tier) {
     throw new Error('Missing userId or tier in session metadata')
   }
-  
+
   // Update membership with subscription details
   if (session.subscription && stripe) {
     const subscription = await stripe.subscriptions.retrieve(
       session.subscription as string
     )
-    
+
     await prisma.membership.upsert({
       where: { userId },
       update: {
@@ -173,6 +173,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       },
     })
+
+    // Auto-assign every active system to the new subscriber. Idempotent.
+    try {
+      const { assignAllActiveSystems } = await import('@/lib/systems/assign')
+      await assignAllActiveSystems(userId)
+    } catch (error) {
+      logger.error(
+        'Failed to auto-assign systems on checkout',
+        error instanceof Error ? error : new Error(String(error)),
+        { userId }
+      )
+    }
   }
 }
 
@@ -207,6 +219,19 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     },
   })
+
+  if (membershipStatus === 'trial' || membershipStatus === 'active') {
+    try {
+      const { assignAllActiveSystems } = await import('@/lib/systems/assign')
+      await assignAllActiveSystems(updatedMembership.userId)
+    } catch (error) {
+      logger.error(
+        'Failed to auto-assign systems on subscription update',
+        error instanceof Error ? error : new Error(String(error)),
+        { userId: updatedMembership.userId }
+      )
+    }
+  }
 
   if (membershipStatus === 'trial') {
     const trialStart = subscription.trial_start ? new Date(subscription.trial_start * 1000) : new Date()

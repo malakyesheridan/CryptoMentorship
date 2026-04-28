@@ -5,6 +5,7 @@ import { hashPassword } from '@/lib/password'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
 import { onTrialStarted } from '@/lib/membership/trial'
+import { assignAllActiveSystems } from '@/lib/systems/assign'
 
 const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -107,6 +108,17 @@ export async function POST(req: NextRequest) {
       createdBy: admin.id,
       createdByEmail: admin.email,
     })
+
+    // Assign every active system to the new user. Idempotent.
+    try {
+      await assignAllActiveSystems(user.id, { assignedBy: admin.id })
+    } catch (assignError) {
+      logger.error(
+        'Failed to auto-assign systems for newly created user',
+        assignError instanceof Error ? assignError : new Error(String(assignError)),
+        { userId: user.id }
+      )
+    }
     
     // Enqueue trial welcome email (non-blocking, idempotent)
     try {

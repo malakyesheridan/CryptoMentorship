@@ -55,6 +55,7 @@ enum EmailType {
   NOTIFICATION_COMMUNITY_MENTION
   NOTIFICATION_COMMUNITY_REPLY
   NOTIFICATION_STRATEGY_UPDATE
+  NOTIFICATION_SYSTEM_SIGNAL
 }
 
 enum OnboardingStatus {
@@ -171,6 +172,7 @@ model User {
   onboardingResponses      UserOnboardingResponse[]
   riskProfileSnapshot      UserRiskProfile?
   blogPosts              BlogPost[]
+  systemAssignments      UserSystemAssignment[]
 
   @@index([email])
   @@index([role])
@@ -1568,4 +1570,31 @@ model BlogPost {
   @@index([status, publishedAt(sort: Desc)])
   @@index([category])
   @@index([authorId])
+}
+
+model UserSystemAssignment {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  systemSlug String
+  isActive   Boolean  @default(true)
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  @@unique([userId, systemSlug])
+  @@index([userId])
+  @@index([systemSlug])
+}
+
+model SystemSignalIngest {
+  id               String   @id @default(cuid())
+  systemSlug       String
+  signalData       Json
+  processedAt      DateTime @default(now())
+  emailsQueued     Int      @default(0)
+  portfolioUpdated Boolean  @default(false)
+  source           String   @default("api")
+  error            String?
+
+  @@index([systemSlug, processedAt])
 }

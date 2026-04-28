@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
 import { onTrialStarted } from '@/lib/membership/trial'
+import { assignAllActiveSystems } from '@/lib/systems/assign'
 
 const createTrialSchema = z.object({
   userId: z.string(),
@@ -153,6 +154,18 @@ export async function POST(req: NextRequest) {
       createdByEmail: admin.email,
     })
     
+    // Assign every active system to the trial user. Idempotent on re-runs
+    // (e.g., trial extension).
+    try {
+      await assignAllActiveSystems(userId, { assignedBy: admin.id })
+    } catch (assignError) {
+      logger.error(
+        'Failed to auto-assign systems for trial user',
+        assignError instanceof Error ? assignError : new Error(String(assignError)),
+        { userId }
+      )
+    }
+
     // Enqueue trial welcome email (non-blocking, idempotent)
     try {
       await onTrialStarted({
