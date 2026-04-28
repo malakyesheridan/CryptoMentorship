@@ -692,6 +692,34 @@ export default function AccountPage() {
         </h2>
         <NotificationPreferences />
       </div>
+
+      {/* ═══ ADMIN TOOLS (admin only) ═══ */}
+      {user?.role === 'admin' && (
+        <div>
+          <h2 className="text-lg font-semibold text-[var(--text-strong)] mb-4 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-[var(--text-muted)]" />
+            Admin Tools
+          </h2>
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-6 space-y-4">
+            <div>
+              <h3 className="font-semibold text-[var(--text-strong)] mb-1">
+                System Access
+              </h3>
+              <p className="text-sm text-[var(--text-muted)] mb-3">
+                Choose which trading systems each user receives signals for.
+                Open a user from the admin Users page to toggle their systems.
+              </p>
+              <a
+                href="/admin/users"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--gold-400)] hover:underline"
+              >
+                <LinkIcon className="w-3.5 h-3.5" />
+                Manage user system access
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

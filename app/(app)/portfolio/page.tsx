@@ -139,8 +139,8 @@ export default async function PortfolioPage() {
 
       <div className="container mx-auto px-4 py-12">
         <RiskOnboardingGate />
-        {/* Your Active Signals (per-user system assignments) */}
-        <div className="mb-8">
+        {/* Your Systems (per-user assignments + live snapshot data) */}
+        <div className="mb-12">
           <ActiveSignalsSection userId={user.id} />
         </div>
         {/* Daily Signal Manager (Upload + Display) */}
