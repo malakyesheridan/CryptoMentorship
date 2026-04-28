@@ -116,6 +116,36 @@ export const DEFAULT_RISK_ONBOARDING_CONFIG: RiskOnboardingScoringConfig = {
         yes: 0,
         no: 0,
       },
+      // ── System-aware questions (Q10–Q14) feed UserSystemRecommendation
+      // via SYSTEM_AWARE_OPTION_WEIGHTS in questions.ts. They contribute 0
+      // points to the generic risk profile — listed here only so the admin
+      // config editor's per-option-score validation passes.
+      investment_style: {
+        active_rotation: 0,
+        major_rotation: 0,
+        passive_dca: 0,
+        mixed: 0,
+      },
+      asset_universe: {
+        broad_alts: 0,
+        majors_only: 0,
+        btc_only: 0,
+      },
+      monitoring_pref: {
+        daily: 0,
+        weekly: 0,
+        monthly: 0,
+      },
+      dd_tolerance: {
+        dd_10: 0,
+        dd_30: 0,
+        dd_50: 0,
+      },
+      time_commitment: {
+        minimal: 0,
+        moderate: 0,
+        significant: 0,
+      },
     },
     likertStatements: RISK_STATEMENT_IDS.reduce((acc, id) => {
       acc[id] = id === 'prefer_stability' ? LIKERT_POINTS_REVERSED : LIKERT_POINTS

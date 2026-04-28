@@ -27,6 +27,12 @@ export type RiskOnboardingAnswers = {
   learn_more_text?: string
   budget_range?: 'lt_1k' | '1k_10k' | '10k_50k' | '50k_plus'
   need_within_12m?: 'yes' | 'no'
+  // ── System-aware questions (Q10–Q14). Scored by system-score.ts only.
+  investment_style?: 'active_rotation' | 'major_rotation' | 'passive_dca' | 'mixed'
+  asset_universe?: 'broad_alts' | 'majors_only' | 'btc_only'
+  monitoring_pref?: 'daily' | 'weekly' | 'monthly'
+  dd_tolerance?: 'dd_10' | 'dd_30' | 'dd_50'
+  time_commitment?: 'minimal' | 'moderate' | 'significant'
 }
 
 export type ComputeRiskProfileResult = {

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const includeAnswers = searchParams.get('includeAnswers') === '1' || searchParams.get('includeAnswers') === 'true'
   const includeFreeText = searchParams.get('includeFreeText') === '1' || searchParams.get('includeFreeText') === 'true'
 
-  const [onboarding, profile, userRecord, config] = await Promise.all([
+  const [onboarding, profile, userRecord, config, recommendations, assignments] = await Promise.all([
     prisma.userOnboardingResponse.findUnique({
       where: {
         userId_wizardKey: {
@@ -41,6 +41,14 @@ export async function GET(request: NextRequest) {
       },
     }),
     getRiskOnboardingConfig(),
+    prisma.userSystemRecommendation.findMany({
+      where: { userId: user.id },
+      orderBy: { fitScore: 'desc' },
+    }),
+    prisma.userSystemAssignment.findMany({
+      where: { userId: user.id, isActive: true },
+      select: { systemSlug: true },
+    }),
   ])
 
   let status: 'not_started' | 'in_progress' | 'completed' = 'not_started'
@@ -66,6 +74,18 @@ export async function GET(request: NextRequest) {
       ? normalizeScoreToProfileRange(profile.score, recommendedProfile, config)
       : profile?.score ?? null
 
+  const assignedSlugs = new Set(assignments.map((a) => a.systemSlug))
+  const systems = recommendations.map((r) => ({
+    slug: r.systemSlug,
+    fitScore: r.fitScore,
+    fitLabel: r.fitLabel,
+    reasons: (r.reasons as string[] | null) ?? [],
+    recommended: r.recommended,
+    accepted: r.accepted,
+    declined: r.declined,
+    assigned: assignedSlugs.has(r.systemSlug),
+  }))
+
   return NextResponse.json({
     wizardKey: RISK_ONBOARDING_WIZARD_KEY,
     status,
@@ -83,5 +103,7 @@ export async function GET(request: NextRequest) {
     defaultRiskProfile,
     selectedRiskProfile,
     effectiveProfile,
+    systems,
+    activeAssignments: Array.from(assignedSlugs),
   })
 }

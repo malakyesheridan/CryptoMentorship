@@ -173,6 +173,7 @@ model User {
   riskProfileSnapshot      UserRiskProfile?
   blogPosts              BlogPost[]
   systemAssignments      UserSystemAssignment[]
+  systemRecommendations  UserSystemRecommendation[]
 
   @@index([email])
   @@index([role])
@@ -1597,4 +1598,25 @@ model SystemSignalIngest {
   error            String?
 
   @@index([systemSlug, processedAt])
+}
+
+model UserSystemRecommendation {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  systemSlug  String
+  fitScore    Int
+  fitLabel    String
+  reasons     Json
+  recommended Boolean
+  accepted    Boolean  @default(false)
+  declined    Boolean  @default(false)
+  version     Int      @default(1)
+  quizVersion Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, systemSlug])
+  @@index([userId])
+  @@index([systemSlug])
 }

@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireUser } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
-import { computeRiskProfile } from '@/lib/riskOnboarding/score'
+import { computeRiskProfile, type RiskOnboardingAnswers } from '@/lib/riskOnboarding/score'
 import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
+import { computeSystemFit, SYSTEM_FIT_VERSION } from '@/lib/riskOnboarding/system-score'
+import { logger } from '@/lib/logger'
 import { Prisma } from '@prisma/client'
 import {
   RISK_ONBOARDING_WIZARD_KEY,
@@ -80,6 +82,7 @@ export async function POST(request: NextRequest) {
   }
 
   const result = computeRiskProfile(answers as any, config)
+  const fit = computeSystemFit(answers as RiskOnboardingAnswers, result.recommendedProfile)
   const now = new Date()
   const answersJson = (answers ?? {}) as Prisma.InputJsonValue
 
@@ -127,12 +130,85 @@ export async function POST(request: NextRequest) {
         updatedAt: now,
       },
     })
+
+    // Upsert one UserSystemRecommendation per active system. Preserve any
+    // pre-existing accepted/declined choice so a retake doesn't silently
+    // wipe a user's prior decision.
+    for (const sys of fit.systems) {
+      await tx.userSystemRecommendation.upsert({
+        where: {
+          userId_systemSlug: {
+            userId: user.id,
+            systemSlug: sys.slug,
+          },
+        },
+        create: {
+          userId: user.id,
+          systemSlug: sys.slug,
+          fitScore: sys.score,
+          fitLabel: sys.label,
+          reasons: sys.reasons,
+          recommended: sys.recommended,
+          accepted: sys.recommended, // first-time default: recommended → accepted
+          declined: false,
+          version: SYSTEM_FIT_VERSION,
+          quizVersion: config.version,
+          updatedAt: now,
+        },
+        update: {
+          fitScore: sys.score,
+          fitLabel: sys.label,
+          reasons: sys.reasons,
+          recommended: sys.recommended,
+          version: SYSTEM_FIT_VERSION,
+          quizVersion: config.version,
+          updatedAt: now,
+          // accepted/declined NOT updated — user controls these via the
+          // result screen toggles.
+        },
+      })
+    }
   })
+
+  // Bridge to Phase B: ensure recommended systems have a UserSystemAssignment.
+  // (Non-recommended systems are NOT removed here — that requires explicit
+  // user action via the toggles on the result screen.)
+  for (const sys of fit.systems) {
+    if (!sys.recommended) continue
+    try {
+      await prisma.userSystemAssignment.upsert({
+        where: {
+          userId_systemSlug: {
+            userId: user.id,
+            systemSlug: sys.slug,
+          },
+        },
+        create: {
+          userId: user.id,
+          systemSlug: sys.slug,
+          isActive: true,
+          assignedBy: null, // null = automatic, not admin-assigned
+        },
+        update: {
+          isActive: true,
+        },
+      })
+    } catch (error) {
+      logger.warn('Auto-assign on quiz completion failed', {
+        userId: user.id,
+        systemSlug: sys.slug,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
 
   return NextResponse.json({
     recommendedProfile: result.recommendedProfile,
     score: result.score,
     drivers: result.drivers,
+    systems: fit.systems,
+    systemFitVersion: fit.version,
+    quizVersion: config.version,
     completedAt: now,
   })
 }

@@ -58,13 +58,24 @@ export function RiskOnboardingGate() {
 
       {data?.status === 'completed' && (
         <div className="mb-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-5 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-[var(--text-muted)]">Your recommended profile</p>
-              <h3 className="text-2xl font-semibold text-[var(--text-strong)]">{recommendedLabel}</h3>
-              {effectiveLabel && effectiveLabel !== recommendedLabel && (
-                <p className="text-sm text-[var(--text-muted)] mt-1">Current default: {effectiveLabel}</p>
-              )}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm text-[var(--text-muted)]">Your recommended systems</p>
+              <h3 className="text-xl font-semibold text-[var(--text-strong)]">
+                {(() => {
+                  const followed = (data.systems || [])
+                    .filter((s) => s.assigned)
+                    .map((s) => s.slug.toUpperCase())
+                  if (followed.length === 0) return 'None selected'
+                  return followed.join(', ')
+                })()}
+              </h3>
+              <p className="text-sm text-[var(--text-muted)] mt-1">
+                Risk profile: <span className="text-[var(--text-strong)]">{recommendedLabel}</span>
+                {effectiveLabel && effectiveLabel !== recommendedLabel && (
+                  <> · current default: {effectiveLabel}</>
+                )}
+              </p>
               {data?.overriddenByAdmin && data?.adminOverrideProfile && (
                 <p className="text-xs text-amber-600 mt-1">Admin override applied</p>
               )}
@@ -85,7 +96,26 @@ export function RiskOnboardingGate() {
               showWhy ? 'block' : 'hidden'
             )}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Drivers</p>
+            {(data?.systems || []).length > 0 && (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  System fit
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {data.systems.map((s) => (
+                    <li key={s.slug}>
+                      <span className="font-medium">{s.slug.toUpperCase()}</span>{' '}
+                      <span className="text-[var(--text-muted)]">
+                        — {s.fitLabel} ({s.fitScore}/100){s.assigned ? ' · following' : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              Profile drivers
+            </p>
             <ul className="mt-2 space-y-1">
               {(data?.drivers || []).map((driver) => (
                 <li key={driver}>- {driver}</li>

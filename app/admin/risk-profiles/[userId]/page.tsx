@@ -7,6 +7,7 @@ import { RISK_ONBOARDING_QUESTIONS, RISK_ONBOARDING_WIZARD_KEY } from '@/lib/ris
 import { RiskProfileOverrideForm } from '@/components/admin/RiskProfileOverrideForm'
 import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
 import { normalizeScoreToProfileRange } from '@/lib/riskOnboarding/config'
+import { getActiveSystems } from '@/lib/system-registry'
 
 const LIKERT_LABELS: Record<string, string> = {
   strongly_agree: 'Strongly agree',
@@ -19,7 +20,7 @@ const LIKERT_LABELS: Record<string, string> = {
 export default async function RiskProfileDetailPage({ params }: { params: { userId: string } }) {
   const userId = params.userId
 
-  const [user, onboarding, profile, config] = await Promise.all([
+  const [user, onboarding, profile, config, recommendations, assignments] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, defaultRiskProfile: true },
@@ -36,6 +37,14 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
       where: { userId },
     }),
     getRiskOnboardingConfig(),
+    prisma.userSystemRecommendation.findMany({
+      where: { userId },
+      orderBy: { fitScore: 'desc' },
+    }),
+    prisma.userSystemAssignment.findMany({
+      where: { userId, isActive: true },
+      select: { systemSlug: true, assignedBy: true, assignedAt: true },
+    }),
   ])
 
   if (!user) {
@@ -153,6 +162,103 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
               <span className="font-medium text-[var(--text-strong)]">Learning goals:</span> {answers.learn_more_text}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="card">
+        <CardHeader>
+          <CardTitle className="heading-2">System Recommendations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(() => {
+            const assignedSlugs = new Set(assignments.map((a) => a.systemSlug))
+            const registry = getActiveSystems()
+            const byslug = new Map(recommendations.map((r) => [r.systemSlug, r]))
+
+            if (recommendations.length === 0) {
+              return (
+                <p className="text-sm text-[var(--text-strong)]">
+                  No quiz-based system recommendations yet for this user.
+                </p>
+              )
+            }
+
+            return (
+              <div className="space-y-3">
+                {registry.map((sys) => {
+                  const rec = byslug.get(sys.slug)
+                  const assigned = assignedSlugs.has(sys.slug)
+                  return (
+                    <div
+                      key={sys.slug}
+                      className="rounded-xl border border-[var(--border-subtle)] p-4"
+                      style={{ borderLeftWidth: 4, borderLeftColor: sys.color }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div
+                            className="text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: sys.color }}
+                          >
+                            {sys.shortName}
+                          </div>
+                          <div className="text-sm text-[var(--text-muted)]">{sys.name}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
+                            {rec?.fitLabel ?? '—'}
+                          </div>
+                          <div className="text-base font-semibold tabular-nums text-[var(--text-strong)]">
+                            {rec ? `${rec.fitScore}/100` : '—'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                        <span
+                          className={
+                            assigned
+                              ? 'rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-700'
+                              : 'rounded-full bg-[var(--bg-skeleton)] px-2 py-0.5 text-[var(--text-muted)]'
+                          }
+                        >
+                          {assigned ? 'Currently assigned' : 'Not assigned'}
+                        </span>
+                        {rec?.recommended && (
+                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-700">
+                            Quiz recommends
+                          </span>
+                        )}
+                        {rec?.accepted && (
+                          <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-blue-700">
+                            User accepted
+                          </span>
+                        )}
+                        {rec?.declined && (
+                          <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-rose-700">
+                            User declined
+                          </span>
+                        )}
+                      </div>
+                      {rec && Array.isArray(rec.reasons) && rec.reasons.length > 0 && (
+                        <ul className="mt-2 space-y-1 text-sm text-[var(--text-strong)]">
+                          {(rec.reasons as string[]).map((r) => (
+                            <li key={r}>- {r}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )
+                })}
+                <p className="text-xs text-[var(--text-muted)]">
+                  To change the user&rsquo;s active system assignments, open them in{' '}
+                  <Link href="/admin/users" className="underline">
+                    Admin → Users
+                  </Link>{' '}
+                  and use the System Access section.
+                </p>
+              </div>
+            )
+          })()}
         </CardContent>
       </Card>
 

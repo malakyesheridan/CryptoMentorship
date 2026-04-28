@@ -36,6 +36,65 @@ export const RISK_STATEMENT_IDS = [
   'prefer_stability',
 ] as const
 
+// Per-system fit weights for the new "system-aware" questions (Q10–Q14).
+// These are NOT part of the admin-editable risk-profile config — they live in
+// code so the system-recommendation engine has a stable contract. Keys must
+// match systemSlug values in src/lib/system-registry.ts.
+export type SystemFitWeights = Record<string, number>
+
+export type SystemAwareOption = RiskQuestionOption & {
+  systemFit?: SystemFitWeights
+}
+
+export type SystemAwareQuestion = RiskQuestion & {
+  options?: SystemAwareOption[]
+}
+
+export const SYSTEM_AWARE_QUESTION_IDS = [
+  'investment_style',
+  'asset_universe',
+  'monitoring_pref',
+  'dd_tolerance',
+  'time_commitment',
+] as const
+
+export type SystemAwareQuestionId = (typeof SYSTEM_AWARE_QUESTION_IDS)[number]
+
+// Per-question, per-option, per-system point map. Sum across the five
+// system-aware questions yields a raw fit score per system; max possible is
+// 30 + 25 + 20 + 20 + 25 = 120 — see src/lib/riskOnboarding/system-score.ts.
+export const SYSTEM_AWARE_OPTION_WEIGHTS: Record<
+  SystemAwareQuestionId,
+  Record<string, SystemFitWeights>
+> = {
+  investment_style: {
+    active_rotation: { dhrs: 30, mrs: 25, sdca: 5 },
+    major_rotation:  { dhrs: 15, mrs: 30, sdca: 10 },
+    passive_dca:     { dhrs: 5,  mrs: 5,  sdca: 30 },
+    mixed:           { dhrs: 20, mrs: 20, sdca: 20 },
+  },
+  asset_universe: {
+    broad_alts:  { dhrs: 25, mrs: 5,  sdca: 0 },
+    majors_only: { dhrs: 10, mrs: 25, sdca: 10 },
+    btc_only:    { dhrs: 0,  mrs: 5,  sdca: 25 },
+  },
+  monitoring_pref: {
+    daily:   { dhrs: 20, mrs: 15, sdca: 5 },
+    weekly:  { dhrs: 10, mrs: 20, sdca: 10 },
+    monthly: { dhrs: 0,  mrs: 5,  sdca: 25 },
+  },
+  dd_tolerance: {
+    dd_10: { dhrs: 10, mrs: 15, sdca: 5 },
+    dd_30: { dhrs: 20, mrs: 20, sdca: 15 },
+    dd_50: { dhrs: 15, mrs: 10, sdca: 25 },
+  },
+  time_commitment: {
+    minimal:     { dhrs: 5,  mrs: 10, sdca: 25 },
+    moderate:    { dhrs: 15, mrs: 20, sdca: 15 },
+    significant: { dhrs: 25, mrs: 15, sdca: 5 },
+  },
+}
+
 export const RISK_ONBOARDING_QUESTIONS: RiskQuestion[] = [
   {
     id: 'goal',
@@ -132,6 +191,61 @@ export const RISK_ONBOARDING_QUESTIONS: RiskQuestion[] = [
       { id: 'no', label: 'No' },
     ],
   },
+  // ── System-aware questions (Q10–Q14) ────────────────────────────────────
+  // These feed UserSystemRecommendation per-system fit scores. The generic
+  // risk profile (CONSERVATIVE/SEMI/AGGRESSIVE) does NOT consume these
+  // questions — see config.ts scoring map.
+  {
+    id: 'investment_style',
+    title: 'Which approach best describes your ideal crypto strategy?',
+    type: 'single',
+    options: [
+      { id: 'active_rotation', label: 'Active — rotate between assets based on momentum and market conditions' },
+      { id: 'major_rotation',  label: 'Selective — rotate between major assets (BTC, ETH, SOL) with downside protection' },
+      { id: 'passive_dca',     label: 'Passive — systematic buy/sell based on long-term cycle indicators' },
+      { id: 'mixed',           label: 'A mix of active and passive' },
+    ],
+  },
+  {
+    id: 'asset_universe',
+    title: 'What range of crypto assets are you comfortable with?',
+    type: 'single',
+    options: [
+      { id: 'broad_alts',  label: 'Wide range — including mid/small cap altcoins, DeFi tokens, emerging L1s' },
+      { id: 'majors_only', label: 'Majors only — BTC, ETH, SOL, and top 10–20 by market cap' },
+      { id: 'btc_only',    label: 'Bitcoin focused — primarily or exclusively BTC' },
+    ],
+  },
+  {
+    id: 'monitoring_pref',
+    title: 'How often do you want to check and act on signals?',
+    type: 'single',
+    options: [
+      { id: 'daily',   label: 'Daily — I want to know every rotation and act quickly' },
+      { id: 'weekly',  label: "Weekly — I'll check in once a week" },
+      { id: 'monthly', label: 'Monthly or less — set and forget, notify me only on major changes' },
+    ],
+  },
+  {
+    id: 'dd_tolerance',
+    title: "What's the maximum portfolio drawdown you'd be comfortable seeing before wanting to exit?",
+    type: 'single',
+    options: [
+      { id: 'dd_10', label: '10% — I want tight risk management' },
+      { id: 'dd_30', label: '30% — I can handle moderate drawdowns if the system has a plan' },
+      { id: 'dd_50', label: '50% — I understand crypto is volatile and can stomach large drawdowns for larger upside' },
+    ],
+  },
+  {
+    id: 'time_commitment',
+    title: 'How much time do you want to spend managing your crypto portfolio?',
+    type: 'single',
+    options: [
+      { id: 'minimal',     label: 'Minimal — a few minutes per month' },
+      { id: 'moderate',    label: 'Moderate — 30 minutes per week' },
+      { id: 'significant', label: 'Significant — I enjoy actively following markets' },
+    ],
+  },
 ]
 
 export const RISK_ONBOARDING_REQUIRED_IDS = [
@@ -143,5 +257,10 @@ export const RISK_ONBOARDING_REQUIRED_IDS = [
   'own_crypto',
   'confidence_level',
   'need_within_12m',
+  'investment_style',
+  'asset_universe',
+  'monitoring_pref',
+  'dd_tolerance',
+  'time_commitment',
 ] as const
 

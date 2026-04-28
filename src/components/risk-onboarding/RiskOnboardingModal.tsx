@@ -53,11 +53,29 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDirty, setIsDirty] = useState(false)
+  type SystemFitEntry = {
+    slug: string
+    shortName?: string
+    fullName?: string
+    color?: string
+    score?: number
+    fitScore?: number
+    label?: string
+    fitLabel?: string
+    recommended: boolean
+    accepted?: boolean
+    declined?: boolean
+    reasons: string[]
+  }
   const [result, setResult] = useState<{
     recommendedProfile: 'CONSERVATIVE' | 'SEMI' | 'AGGRESSIVE'
     score: number
     drivers: string[]
+    systems: SystemFitEntry[]
   } | null>(null)
+  const [pendingDecisions, setPendingDecisions] = useState<Record<string, boolean>>({})
+  const [savingDecisions, setSavingDecisions] = useState(false)
+  const [showWhyProfile, setShowWhyProfile] = useState(false)
   const initRef = useRef(false)
   const saveTimeoutRef = useRef<number | null>(null)
 
@@ -74,6 +92,8 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
     setStepIndex(0)
     setAnswers({})
     setIsDirty(false)
+    setPendingDecisions({})
+    setShowWhyProfile(false)
   }, [open])
 
   useEffect(() => {
@@ -95,7 +115,18 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
         recommendedProfile: data.recommendedProfile || 'CONSERVATIVE',
         score: data.score || 0,
         drivers: data.drivers || [],
+        systems: (data.systems || []) as SystemFitEntry[],
       })
+      const initial: Record<string, boolean> = {}
+      for (const s of data.systems || []) {
+        // Source of truth on retake/reopen: current assignment > prior accepted
+        // > recommended (default-on for first-time users).
+        if (s.assigned) initial[s.slug] = true
+        else if (s.declined) initial[s.slug] = false
+        else if (s.accepted) initial[s.slug] = true
+        else initial[s.slug] = s.recommended
+      }
+      setPendingDecisions(initial)
     }
   }, [open, data, steps])
 
@@ -200,11 +231,17 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
         return
       }
       const data = await response.json()
+      const systems: SystemFitEntry[] = data.systems || []
       setResult({
         recommendedProfile: data.recommendedProfile,
         score: data.score,
         drivers: data.drivers || [],
+        systems,
       })
+      // Default toggle state on first complete = recommended.
+      const initial: Record<string, boolean> = {}
+      for (const s of systems) initial[s.slug] = s.recommended
+      setPendingDecisions(initial)
       setMode('result')
       void mutate()
       setIsDirty(false)
@@ -213,19 +250,36 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
     }
   }
 
-  const handleSetDefault = async () => {
-    if (!result) return
-    await fetch('/api/me/risk-profile/set-default', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profile: result.recommendedProfile }),
-    })
-    void mutate()
+  const handleToggleSystem = (slug: string, next: boolean) => {
+    setPendingDecisions((prev) => ({ ...prev, [slug]: next }))
   }
 
-  const handleGoToPortfolio = () => {
-    onOpenChange(false)
-    router.push('/portfolio')
+  const handleSaveAndGoToPortfolio = async () => {
+    if (!result) {
+      onOpenChange(false)
+      router.push('/portfolio')
+      return
+    }
+    setSavingDecisions(true)
+    try {
+      await Promise.all(
+        result.systems.map((s) =>
+          fetch('/api/me/risk-onboarding/system-decision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemSlug: s.slug,
+              accept: pendingDecisions[s.slug] ?? s.recommended,
+            }),
+          })
+        )
+      )
+      void mutate()
+    } finally {
+      setSavingDecisions(false)
+      onOpenChange(false)
+      router.push('/portfolio')
+    }
   }
 
   const progressValue = mode === 'result'
@@ -261,41 +315,125 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
             </div>
           ) : mode === 'result' && result ? (
             <div className="space-y-6">
-              <div className="rounded-2xl border border-[var(--success)]/30 bg-[var(--bg-success-subtle)] p-4">
-                <p className="text-sm text-[var(--success)]">Recommended profile</p>
-                <h3 className="text-2xl font-semibold text-[var(--success)]">
-                  {formatRiskProfileLabel(result.recommendedProfile)}
-                </h3>
-                <p className="text-sm text-[var(--success)] mt-2">Score: {result.score} / 100</p>
+              <div>
+                <h3 className="text-xl font-semibold text-[var(--text-strong)]">Your System Recommendations</h3>
+                <p className="text-sm text-[var(--text-muted)] mt-1">
+                  Based on your answers, here&rsquo;s what we recommend.
+                </p>
               </div>
-              <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4">
-                <h4 className="text-sm font-semibold text-[var(--text-strong)]">Why this fit</h4>
-                <ul className="mt-3 space-y-2 text-sm text-[var(--text-strong)]">
-                  {result.drivers.map((driver) => (
-                    <li key={driver}>- {driver}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4 space-y-3">
-                <h4 className="text-sm font-semibold text-[var(--text-strong)]">Score ranges</h4>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {configData.scoreRanges.map((range) => (
-                    <div key={range.profile} className="rounded-xl border border-[var(--border-subtle)] p-3">
-                      <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">{range.label}</p>
-                      <p className="text-sm font-semibold text-[var(--text-strong)]">
-                        {range.min}–{range.max}
-                      </p>
-                      <p className="text-xs text-[var(--text-strong)] mt-1">{range.description}</p>
+
+              <div className="space-y-3">
+                {result.systems.map((sys) => {
+                  const score = sys.fitScore ?? sys.score ?? 0
+                  const label = sys.fitLabel ?? sys.label ?? ''
+                  const isOn = pendingDecisions[sys.slug] ?? sys.recommended
+                  const accent = sys.color || 'var(--gold-400)'
+                  return (
+                    <div
+                      key={sys.slug}
+                      className="rounded-2xl border-l-4 border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4"
+                      style={{ borderLeftColor: accent }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div
+                            className="text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: accent }}
+                          >
+                            {sys.shortName ?? sys.slug.toUpperCase()}
+                          </div>
+                          {sys.fullName && (
+                            <div className="mt-0.5 text-sm text-[var(--text-muted)] truncate">
+                              {sys.fullName}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
+                            {label}
+                          </div>
+                          <div className="text-lg font-bold tabular-nums text-[var(--text-strong)]">
+                            {score}/100
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[var(--bg-skeleton)]">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${score}%`, background: accent }}
+                        />
+                      </div>
+
+                      {sys.reasons.length > 0 && (
+                        <ul className="mt-3 space-y-1 text-sm text-[var(--text-strong)]">
+                          {sys.reasons.map((r) => (
+                            <li key={r} className="flex gap-2">
+                              <span aria-hidden className="text-[var(--text-muted)]">•</span>
+                              <span>{r}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      <label className="mt-4 flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 cursor-pointer"
+                          checked={isOn}
+                          onChange={(e) => handleToggleSystem(sys.slug, e.target.checked)}
+                          disabled={savingDecisions}
+                        />
+                        <span className="text-sm font-medium text-[var(--text-strong)]">
+                          {isOn ? 'Following this system' : 'Follow this system'}
+                        </span>
+                      </label>
                     </div>
-                  ))}
-                </div>
-                <p className="text-xs text-[var(--text-muted)]">{configData.scoreMeaning}</p>
+                  )
+                })}
               </div>
-              <div className="flex flex-col gap-3">
-                <Button onClick={handleSetDefault}>Set my default to this profile</Button>
-                <Button variant="outline" onClick={handleGoToPortfolio}>
-                  Go to Portfolio
+
+              <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-panel)] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
+                      Your risk profile
+                    </p>
+                    <p className="text-sm font-semibold text-[var(--text-strong)]">
+                      {formatRiskProfileLabel(result.recommendedProfile)} · {result.score}/100
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowWhyProfile((v) => !v)}
+                  >
+                    {showWhyProfile ? 'Hide' : 'Why this profile?'}
+                  </Button>
+                </div>
+                {showWhyProfile && result.drivers.length > 0 && (
+                  <ul className="mt-3 space-y-1 text-sm text-[var(--text-strong)]">
+                    {result.drivers.map((d) => (
+                      <li key={d} className="flex gap-2">
+                        <span aria-hidden className="text-[var(--text-muted)]">•</span>
+                        <span>{d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="sticky bottom-0 bg-[var(--bg-panel)]/95 backdrop-blur border-t border-[var(--border-subtle)] pt-4">
+                <Button
+                  onClick={handleSaveAndGoToPortfolio}
+                  disabled={savingDecisions}
+                  className="w-full"
+                >
+                  {savingDecisions ? 'Saving…' : 'Save & Go to Portfolio'}
                 </Button>
+                <p className="mt-2 text-xs text-[var(--text-muted)] text-center">
+                  Your portfolio will show only the systems you follow.
+                </p>
               </div>
             </div>
           ) : (

@@ -1,5 +1,16 @@
 ﻿import useSWR from 'swr'
 
+export type RiskProfileSystemEntry = {
+  slug: string
+  fitScore: number
+  fitLabel: string
+  reasons: string[]
+  recommended: boolean
+  accepted: boolean
+  declined: boolean
+  assigned: boolean
+}
+
 export type RiskProfileResponse = {
   wizardKey: string
   status: 'not_started' | 'in_progress' | 'completed'
@@ -15,6 +26,8 @@ export type RiskProfileResponse = {
   defaultRiskProfile: 'CONSERVATIVE' | 'SEMI' | 'AGGRESSIVE' | null
   selectedRiskProfile: 'CONSERVATIVE' | 'SEMI' | 'AGGRESSIVE' | null
   effectiveProfile: 'CONSERVATIVE' | 'SEMI' | 'AGGRESSIVE' | null
+  systems: RiskProfileSystemEntry[]
+  activeAssignments: string[]
 }
 
 const fetcher = async (url: string) => {
