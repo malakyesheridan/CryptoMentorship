@@ -1,26 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import type { DashboardSnapshot } from "@/types/dashboard-snapshot";
 import { SdcaSection } from "./sdca/SdcaSection";
 import { DhrsSection } from "./dhrs/DhrsSection";
+import { MrsSection } from "./mrs/MrsSection";
 
-type TabKey = "sdca" | "dhrs";
+type TabKey = "sdca" | "dhrs" | "mrs";
 
 const TABS: { key: TabKey; label: string; subtitle: string }[] = [
   { key: "sdca", label: "SDCA", subtitle: "Bitcoin valuation signal" },
   { key: "dhrs", label: "DHRS", subtitle: "Rotation strategy" },
+  { key: "mrs", label: "MRS", subtitle: "Majors rotation" },
 ];
 
 export function SystemsTabs({ snapshot }: { snapshot: DashboardSnapshot }) {
   const [active, setActive] = useState<TabKey>("sdca");
 
-  // Hydrate from URL hash for deep links (#sdca / #dhrs). Legacy #mrss links
-  // fall through to the default SDCA tab.
+  // Hydrate from URL hash for deep links (#sdca / #dhrs / #mrs).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hash = window.location.hash.replace("#", "");
-    if (hash === "sdca" || hash === "dhrs") {
+    if (hash === "sdca" || hash === "dhrs" || hash === "mrs") {
       setActive(hash);
     }
   }, []);
@@ -86,6 +88,22 @@ export function SystemsTabs({ snapshot }: { snapshot: DashboardSnapshot }) {
       <div>
         {active === "sdca" && <SdcaSection data={snapshot.sdca} />}
         {active === "dhrs" && <DhrsSection data={snapshot.dhrs} />}
+        {active === "mrs" && (
+          snapshot.mrs ? (
+            <MrsSection data={snapshot.mrs} />
+          ) : (
+            <Card>
+              <CardContent className="p-10 text-center">
+                <div className="heading-md text-[var(--text-strong)]">
+                  System data connecting…
+                </div>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">
+                  Majors Rotation will appear here once the data feed is live.
+                </p>
+              </CardContent>
+            </Card>
+          )
+        )}
       </div>
     </div>
   );

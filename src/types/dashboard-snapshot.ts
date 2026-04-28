@@ -83,9 +83,39 @@ export interface DhrsSystem {
   recent_rotations: DhrsRotation[];
 }
 
+// MRS (Majors Rotation) currently mirrors the DHRS shape, but is defined
+// separately so the two can diverge as Coen extends his pipeline.
+export interface MrsStats {
+  net_profit_pct: number;
+  cagr: number;
+  max_dd_pct: number;
+  sharpe: number;
+  sortino: number;
+  calmar: number;
+  omega: number;
+  n_rotations: number;
+  years_elapsed: number;
+}
+
+export interface MrsRotation {
+  date: string;
+  from: string;
+  to: string;
+  return_pct: number;
+}
+
+export interface MrsSystem {
+  regime: boolean;
+  dominant: string;
+  stats: MrsStats;
+  time_in: Record<string, number>;
+  recent_rotations: MrsRotation[];
+}
+
 export interface DashboardSnapshot {
   timestamp: string;
   schema_version: string;
   sdca: SdcaSystem;
   dhrs: DhrsSystem;
+  mrs?: MrsSystem;
 }

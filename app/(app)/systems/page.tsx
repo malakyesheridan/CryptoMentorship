@@ -7,7 +7,7 @@ import { SnapshotMetaBadge } from "@/components/systems/SnapshotMetaBadge";
 
 export const metadata = {
   title: "Systems — Stewart & Co",
-  description: "Live performance dashboard for SDCA and DHRS systems.",
+  description: "Live performance dashboard for SDCA, DHRS, and MRS systems.",
 };
 
 export default async function SystemsPage() {
@@ -28,7 +28,7 @@ export default async function SystemsPage() {
           <div>
             <h1 className="heading-xl text-[var(--text-strong)]">Systems</h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Live performance across SDCA and DHRS.
+              Live performance across SDCA, DHRS, and MRS.
             </p>
           </div>
           <SnapshotMetaBadge timestamp={snapshot.timestamp} />

@@ -3,14 +3,14 @@
 import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { DhrsRotation } from "@/types/dashboard-snapshot";
+import type { MrsRotation } from "@/types/dashboard-snapshot";
 import { formatPct, pnlColor } from "@/lib/systems-format";
 import { getAssetDisplayLabel } from "@/lib/portfolio-assets";
 
-export function DhrsRotationsTable({
+export function MrsRotationsTable({
   rotations,
 }: {
-  rotations: DhrsRotation[];
+  rotations: MrsRotation[];
 }) {
   const [filter, setFilter] = useState<string>("ALL");
 

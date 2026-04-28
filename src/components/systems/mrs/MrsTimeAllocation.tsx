@@ -8,7 +8,7 @@ import { getAssetDisplayLabel } from "@/lib/portfolio-assets";
 
 type Mode = "bar" | "table";
 
-export function DhrsTimeAllocation({
+export function MrsTimeAllocation({
   timeIn,
 }: {
   timeIn: Record<string, number>;
