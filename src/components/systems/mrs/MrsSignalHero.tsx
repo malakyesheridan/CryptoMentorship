@@ -1,7 +1,7 @@
 import { Activity } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { MrsStats } from "@/types/dashboard-snapshot";
-import { formatPct, pnlColor } from "@/lib/systems-format";
+import { formatPct, formatPctCompact, pnlColor } from "@/lib/systems-format";
 import { getAssetDisplayLabel } from "@/lib/portfolio-assets";
 
 function regimeStyle(active: boolean) {
@@ -27,11 +27,11 @@ export function MrsSignalHero({
     <Card className="border-l-4" style={{ borderLeftColor: style.border }}>
       <CardContent className="p-6">
         <div className="grid gap-6 md:grid-cols-4">
-          <div>
+          <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
               Currently Holding
             </div>
-            <div className="mt-2 heading-lg text-[var(--text-strong)]">
+            <div className="mt-2 heading-lg truncate text-[var(--text-strong)]" title={getAssetDisplayLabel(dominant)}>
               {getAssetDisplayLabel(dominant)}
             </div>
             <div
@@ -43,43 +43,46 @@ export function MrsSignalHero({
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
               Net Profit
             </div>
             <div
-              className="mt-2 heading-lg tabular-nums"
+              className="mt-2 truncate text-2xl font-bold tabular-nums lg:text-3xl"
               style={{ color: netProfitColor }}
+              title={formatPct(stats.net_profit_pct, 1)}
             >
-              {formatPct(stats.net_profit_pct, 1)}
+              {formatPctCompact(stats.net_profit_pct, 1)}
             </div>
             <div className="mt-1 text-xs text-[var(--text-muted)]">
               Over {stats.years_elapsed.toFixed(1)} years
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
               CAGR
             </div>
             <div
-              className="mt-2 heading-lg tabular-nums"
+              className="mt-2 truncate text-2xl font-bold tabular-nums lg:text-3xl"
               style={{ color: cagrColor }}
+              title={formatPct(stats.cagr, 2)}
             >
-              {formatPct(stats.cagr, 2)}
+              {formatPctCompact(stats.cagr, 2)}
             </div>
             <div className="mt-1 text-xs text-[var(--text-muted)]">
               Annualised return
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
               Max Drawdown
             </div>
             <div
-              className="mt-2 heading-lg tabular-nums"
+              className="mt-2 truncate text-2xl font-bold tabular-nums lg:text-3xl"
               style={{ color: "var(--danger)" }}
+              title={`-${stats.max_dd_pct.toFixed(2)}%`}
             >
               −{stats.max_dd_pct.toFixed(2)}%
             </div>

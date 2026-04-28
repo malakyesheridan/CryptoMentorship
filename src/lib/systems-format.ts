@@ -5,6 +5,32 @@ export function formatPct(value: number, digits = 2): string {
   return `${sign}${value.toFixed(digits)}%`;
 }
 
+/**
+ * Compact percentage formatter for hero stats. Net profit on multi-year
+ * backtests can hit millions of percent, which blows out the grid column.
+ * Abbreviates above 10,000% so the value stays inside its card.
+ *
+ *   24,146,537.6  -> "+24.1M%"
+ *      241,000    -> "+241K%"
+ *       24,146    -> "+24,146%"
+ *           42.5  -> "+42.50%"
+ */
+export function formatPctCompact(value: number, digits = 2): string {
+  if (!Number.isFinite(value)) return "—";
+  const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    return `${sign}${(abs / 1_000_000).toFixed(1)}M%`;
+  }
+  if (abs >= 100_000) {
+    return `${sign}${Math.round(abs / 1_000)}K%`;
+  }
+  if (abs >= 10_000) {
+    return `${sign}${Math.round(abs).toLocaleString("en-US")}%`;
+  }
+  return `${sign}${abs.toFixed(digits)}%`;
+}
+
 export function formatNumber(value: number, digits = 2): string {
   return value.toFixed(digits);
 }
