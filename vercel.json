@@ -49,6 +49,10 @@
     {
       "path": "/api/cron/email-outbox",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/signal-bridge",
+      "schedule": "45 0 * * *"
     }
   ]
 }
