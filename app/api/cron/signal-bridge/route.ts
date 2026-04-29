@@ -5,8 +5,14 @@ import { getDashboardSnapshot } from '@/lib/dashboard-snapshot'
 import { getActiveSystems, type SystemDefinition } from '@/lib/system-registry'
 import {
   processSignalIngest,
+  buildDigestSignal,
+  buildSignalText,
+  commentaryFor,
+  queueDigestEmails,
+  dayKey,
   type IngestPayload,
 } from '@/lib/systems/ingest'
+import { getSystem } from '@/lib/system-registry'
 import type {
   DashboardSnapshot,
   DhrsSystem,
@@ -140,78 +146,65 @@ type SystemOutcome = {
   ingestId?: string
 }
 
-async function processSystem(
+type ChangeDetection = {
+  changed: boolean
+  reason: string
+  payload?: IngestPayload
+}
+
+async function detectChange(
   sys: SystemDefinition,
   snapshot: DashboardSnapshot
-): Promise<SystemOutcome> {
+): Promise<ChangeDetection> {
   if (sys.slug === 'dhrs') {
     const data = snapshot.dhrs
-    if (!data) return { system: sys.slug, changed: false, reason: 'no snapshot data' }
+    if (!data) return { changed: false, reason: 'no snapshot data' }
     const last = await lastIngestPayload(sys.slug)
     const lastKey = rotationKeyFromIngest(last)
     const currentKey = rotationKey(data)
     if (lastKey === currentKey) {
-      return { system: sys.slug, changed: false, reason: `unchanged (${currentKey})` }
-    }
-    const result = await processSignalIngest(mapRotation('dhrs', data), 'cron')
-    if (!result.ok) {
-      return { system: sys.slug, changed: false, reason: `ingest failed: ${result.error}` }
+      return { changed: false, reason: `unchanged (${currentKey})` }
     }
     return {
-      system: sys.slug,
       changed: true,
       reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      emailsQueued: result.emailsQueued,
-      ingestId: result.ingestId,
+      payload: mapRotation('dhrs', data),
     }
   }
 
   if (sys.slug === 'mrs') {
     const data = snapshot.mrs
-    if (!data) return { system: sys.slug, changed: false, reason: 'no snapshot data (mrs not in snapshot yet)' }
+    if (!data) return { changed: false, reason: 'no snapshot data (mrs not in snapshot yet)' }
     const last = await lastIngestPayload(sys.slug)
     const lastKey = rotationKeyFromIngest(last)
     const currentKey = rotationKey(data)
     if (lastKey === currentKey) {
-      return { system: sys.slug, changed: false, reason: `unchanged (${currentKey})` }
-    }
-    const result = await processSignalIngest(mapRotation('mrs', data), 'cron')
-    if (!result.ok) {
-      return { system: sys.slug, changed: false, reason: `ingest failed: ${result.error}` }
+      return { changed: false, reason: `unchanged (${currentKey})` }
     }
     return {
-      system: sys.slug,
       changed: true,
       reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      emailsQueued: result.emailsQueued,
-      ingestId: result.ingestId,
+      payload: mapRotation('mrs', data),
     }
   }
 
   if (sys.slug === 'sdca') {
     const data = snapshot.sdca
-    if (!data) return { system: sys.slug, changed: false, reason: 'no snapshot data' }
+    if (!data) return { changed: false, reason: 'no snapshot data' }
     const last = await lastIngestPayload(sys.slug)
     const lastKey = sdcaKeyFromIngest(last)
     const currentKey = sdcaKey(data)
     if (lastKey === currentKey) {
-      return { system: sys.slug, changed: false, reason: `unchanged (${currentKey})` }
-    }
-    const result = await processSignalIngest(mapSdca(data), 'cron')
-    if (!result.ok) {
-      return { system: sys.slug, changed: false, reason: `ingest failed: ${result.error}` }
+      return { changed: false, reason: `unchanged (${currentKey})` }
     }
     return {
-      system: sys.slug,
       changed: true,
       reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      emailsQueued: result.emailsQueued,
-      ingestId: result.ingestId,
+      payload: mapSdca(data),
     }
   }
 
   return {
-    system: sys.slug,
     changed: false,
     reason: `unknown system mapping (registry has slug ${sys.slug} but the bridge has no mapper)`,
   }
@@ -224,9 +217,43 @@ async function runBridge() {
   const systems = getActiveSystems()
 
   const outcomes: SystemOutcome[] = []
+  // Per-system ingest writes (audit log + PortfolioDailySignal +
+  // StrategyUpdate) happen with skipEmail=true so we can fan out a single
+  // combined digest after every system has been processed.
+  const changedPayloads: IngestPayload[] = []
+
   for (const sys of systems) {
     try {
-      outcomes.push(await processSystem(sys, snapshot))
+      const detection = await detectChange(sys, snapshot)
+      if (!detection.changed || !detection.payload) {
+        outcomes.push({
+          system: sys.slug,
+          changed: false,
+          reason: detection.reason,
+        })
+        continue
+      }
+
+      const result = await processSignalIngest(detection.payload, 'cron', {
+        skipEmail: true,
+      })
+      if (!result.ok) {
+        outcomes.push({
+          system: sys.slug,
+          changed: false,
+          reason: `ingest failed: ${result.error}`,
+        })
+        continue
+      }
+
+      changedPayloads.push(detection.payload)
+      outcomes.push({
+        system: sys.slug,
+        changed: true,
+        reason: detection.reason,
+        ingestId: result.ingestId,
+        // emailsQueued filled in below per-digest, not per-system
+      })
     } catch (error) {
       logger.error(
         'Signal bridge per-system error',
@@ -241,11 +268,38 @@ async function runBridge() {
     }
   }
 
+  // Single combined digest fan-out — one EmailOutbox row per qualifying
+  // user. dedupeKey daily_signal_digest_<date>_<userId> blocks duplicates
+  // across multiple bridge runs and across direct ingest pushes.
+  let emailsQueued = 0
+  if (changedPayloads.length > 0) {
+    const digestSignals = changedPayloads
+      .map((p) => {
+        const sys = getSystem(p.system)
+        if (!sys) return null
+        return buildDigestSignal(sys, p, buildSignalText(p), commentaryFor(p))
+      })
+      .filter((s): s is NonNullable<typeof s> => s !== null)
+
+    try {
+      emailsQueued = await queueDigestEmails({
+        signals: digestSignals,
+        signalDateStr: dayKey(new Date()),
+      })
+    } catch (error) {
+      logger.error(
+        'Signal bridge digest email queueing failed',
+        error instanceof Error ? error : new Error(String(error)),
+        { changedSlugs: changedPayloads.map((p) => p.system) }
+      )
+    }
+  }
+
   const summary = {
     snapshotTimestamp: snapshot.timestamp,
     systemsChecked: outcomes.length,
     signalsDetected: outcomes.filter((o) => o.changed).length,
-    emailsQueued: outcomes.reduce((sum, o) => sum + (o.emailsQueued ?? 0), 0),
+    emailsQueued,
     outcomes,
   }
 

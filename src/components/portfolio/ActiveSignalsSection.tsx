@@ -37,19 +37,34 @@ async function getSystemsForUser(userId: string): Promise<{
   systems: SystemView[]
   snapshotTimestamp: string | null
 }> {
-  const assignments = await prisma.userSystemAssignment.findMany({
-    where: { userId, isActive: true },
-    select: { systemSlug: true },
+  // Default-all behaviour matches the email pipeline (opt-out semantics):
+  //   - User has NO assignment rows → show every active system.
+  //   - User HAS assignment rows → show only the systems they haven't
+  //     explicitly opted out of (isActive=true rows).
+  // This means brand-new users and pre-Phase-B users without backfilled
+  // rows still see every system on /portfolio, matching what they'll
+  // receive via email.
+  const allAssignments = await prisma.userSystemAssignment.findMany({
+    where: { userId },
+    select: { systemSlug: true, isActive: true },
   })
 
-  if (assignments.length === 0) {
+  const registry = getActiveSystems()
+  const assignedSystems =
+    allAssignments.length === 0
+      ? registry
+      : (() => {
+          const optInSlugs = new Set(
+            allAssignments.filter((a) => a.isActive).map((a) => a.systemSlug)
+          )
+          return registry.filter((s) => optInSlugs.has(s.slug))
+        })()
+
+  // Empty state only fires when the user has explicitly opted out of every
+  // active system in the registry. New users (no rows) see all systems.
+  if (assignedSystems.length === 0) {
     return { hasAssignments: false, systems: [], snapshotTimestamp: null }
   }
-
-  const assignedSlugs = new Set(assignments.map((a) => a.systemSlug))
-  const assignedSystems = getActiveSystems().filter((s) =>
-    assignedSlugs.has(s.slug)
-  )
 
   // Fetch the dashboard snapshot in parallel with the latest ingest signal
   // per system. Snapshot failure shouldn't block the page entirely.
@@ -109,7 +124,7 @@ export async function ActiveSignalsSection({ userId }: { userId: string }) {
             Your Systems
           </h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Live signals from every system you&rsquo;re assigned to.
+            Live signals from every active system.
           </p>
         </div>
         {snapshotTimestamp && (

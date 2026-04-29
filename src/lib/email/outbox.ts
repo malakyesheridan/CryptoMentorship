@@ -6,6 +6,7 @@ import { sendDailySignalEmail } from '@/lib/email-templates'
 import { buildWelcomeTrialEmail } from '@/lib/templates/welcome-trial'
 import { buildWelcomeEmail } from '@/lib/templates/welcome'
 import { buildSignalUpdateEmail, type SignalUpdateEmailInput } from '@/lib/templates/signal-update'
+import { buildDailySignalDigestEmail, type DigestSignal } from '@/lib/templates/signal-digest'
 import type { NotificationEmailType } from '@/lib/notifications/types'
 import { getAppUrl } from '@/lib/env'
 
@@ -362,7 +363,52 @@ async function sendOutboxEmail(entry: { type: EmailType; toEmail: string; payloa
     }
     case EmailType.NOTIFICATION_SYSTEM_SIGNAL: {
       const envelope = parseNotificationPayload(entry.payload)
-      const vars = (envelope.variables ?? {}) as Partial<SignalUpdateEmailInput>
+      const vars = (envelope.variables ?? {}) as Partial<SignalUpdateEmailInput> & {
+        signals?: unknown
+        date?: string | Date
+      }
+
+      // New digest payload shape: variables.signals is an array.
+      // Legacy single-signal payload shape: top-level signal/systemName/etc.
+      // Both keep type=NOTIFICATION_SYSTEM_SIGNAL on the row, dispatcher
+      // picks template by payload shape.
+      if (Array.isArray(vars.signals) && vars.signals.length > 0) {
+        const digestSignals = vars.signals
+          .filter((s): s is Record<string, unknown> => !!s && typeof s === 'object')
+          .map<DigestSignal>((s) => ({
+            systemName: typeof s.systemName === 'string' ? s.systemName : 'System',
+            systemSlug: typeof s.systemSlug === 'string' ? s.systemSlug : '',
+            signalType: s.signalType === 'zone_action' ? 'zone_action' : 'rotation',
+            signal: typeof s.signal === 'string' ? s.signal : '',
+            commentary: typeof s.commentary === 'string' ? s.commentary : null,
+            fromAsset: typeof s.fromAsset === 'string' ? s.fromAsset : null,
+            toAsset: typeof s.toAsset === 'string' ? s.toAsset : null,
+            zone: typeof s.zone === 'string' ? s.zone : null,
+            action: typeof s.action === 'string' ? s.action : null,
+            compositeZ: typeof s.compositeZ === 'number' ? s.compositeZ : null,
+            btcPrice: typeof s.btcPrice === 'number' ? s.btcPrice : null,
+            color: typeof s.color === 'string' ? s.color : '#d4af37',
+          }))
+
+        const message = buildDailySignalDigestEmail({
+          userName: vars.userName ?? null,
+          signals: digestSignals,
+          dashboardUrl: typeof vars.dashboardUrl === 'string' ? vars.dashboardUrl : '',
+          preferencesUrl: typeof vars.preferencesUrl === 'string' ? vars.preferencesUrl : '',
+          date: vars.date,
+        })
+        const subject = envelope.subject || message.subject
+        await sendEmail({
+          to: entry.toEmail,
+          subject,
+          html: message.html,
+          text: message.text,
+        })
+        return
+      }
+
+      // Legacy single-signal path — preserved so EmailOutbox rows queued
+      // before this commit still send correctly.
       const message = buildSignalUpdateEmail({
         userName: vars.userName ?? null,
         systemName: typeof vars.systemName === 'string' ? vars.systemName : 'System',

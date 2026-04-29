@@ -10,6 +10,7 @@ import {
   isValidSystemSlug,
   type SystemDefinition,
 } from '@/lib/system-registry'
+import type { DigestSignal } from '@/lib/templates/signal-digest'
 
 // ─── Validation schemas (shared with the HTTP route) ────────────────────────
 
@@ -84,11 +85,11 @@ function utcDayBounds(date: Date) {
   return { start, end }
 }
 
-function dayKey(date: Date) {
+export function dayKey(date: Date) {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
 }
 
-function buildSignalText(payload: IngestPayload): string {
+export function buildSignalText(payload: IngestPayload): string {
   if (payload.signal_type === 'rotation') {
     return payload.data.allocation
   }
@@ -99,25 +100,37 @@ function buildSignalText(payload: IngestPayload): string {
   return action
 }
 
-function commentaryFor(payload: IngestPayload): string | null {
+export function commentaryFor(payload: IngestPayload): string | null {
   return payload.data.commentary?.trim() || null
 }
 
 // ─── Core pipeline ──────────────────────────────────────────────────────────
 
+export type ProcessOptions = {
+  /**
+   * Skip the per-system email fan-out at the end of the pipeline. The
+   * signal-bridge cron uses this to collect all changed signals first and
+   * then send a single combined digest email per user, instead of N emails.
+   */
+  skipEmail?: boolean
+}
+
 /**
  * The shared ingest pipeline. Used by:
- *   - POST /api/ingest/signal (Coen's Python pipeline)
- *   - GET  /api/cron/signal-bridge (auto-trigger from snapshot diff)
- *   - any future programmatic entry point
+ *   - POST /api/ingest/signal (Coen's Python pipeline) — skipEmail=false,
+ *     queues a single-signal digest for the user.
+ *   - GET  /api/cron/signal-bridge — calls per-system with skipEmail=true,
+ *     then fans out one combined digest per user.
  *
  * Idempotent: same (system, day) push deletes today's existing signal and
- * inserts the new one. EmailOutbox dedupe key blocks duplicate emails for
- * the same (system, day, user).
+ * inserts the new one. The digest dedupeKey (`daily_signal_digest_<date>_<user>`)
+ * blocks duplicate emails on the same day regardless of which path queued
+ * the row first.
  */
 export async function processSignalIngest(
   payload: IngestPayload,
-  source: IngestSource = 'api'
+  source: IngestSource = 'api',
+  options: ProcessOptions = {}
 ): Promise<IngestResult> {
   const system = getSystem(payload.system)
   if (!system || !system.isActive || !isValidSystemSlug(payload.system)) {
@@ -235,22 +248,22 @@ export async function processSignalIngest(
     })
   }
 
-  // 4. Email queue
+  // 4. Email queue (single-signal digest unless caller asks us to skip)
   let emailsQueued = 0
-  try {
-    emailsQueued = await queueSignalEmails({
-      system,
-      payload,
-      signalText,
-      commentary,
-      signalDateStr,
-    })
-  } catch (error) {
-    logger.error(
-      'Failed to queue signal emails',
-      error instanceof Error ? error : new Error(String(error)),
-      { ingestId: ingestRecord.id, systemSlug: system.slug }
-    )
+  if (!options.skipEmail) {
+    try {
+      const digestSignal = buildDigestSignal(system, payload, signalText, commentary)
+      emailsQueued = await queueDigestEmails({
+        signals: [digestSignal],
+        signalDateStr,
+      })
+    } catch (error) {
+      logger.error(
+        'Failed to queue signal emails',
+        error instanceof Error ? error : new Error(String(error)),
+        { ingestId: ingestRecord.id, systemSlug: system.slug }
+      )
+    }
   }
 
   // 5. Update audit log with results
@@ -276,108 +289,167 @@ export async function processSignalIngest(
   }
 }
 
-// ─── Email fan-out ──────────────────────────────────────────────────────────
+// ─── Email fan-out (digest format, opt-out semantics) ──────────────────────
 
-type QueueArgs = {
-  system: SystemDefinition
-  payload: IngestPayload
-  signalText: string
+/**
+ * Convert an ingest payload into the per-signal payload the digest email
+ * template expects. Pure mapping, no I/O.
+ */
+export function buildDigestSignal(
+  system: SystemDefinition,
+  payload: IngestPayload,
+  signalText: string,
   commentary: string | null
-  signalDateStr: string
+): DigestSignal {
+  const base: DigestSignal = {
+    systemName: system.shortName,
+    systemSlug: system.slug,
+    signalType: payload.signal_type,
+    signal: signalText,
+    commentary: commentary ?? null,
+    color: system.color,
+  }
+  if (payload.signal_type === 'rotation') {
+    base.fromAsset = payload.data.from_asset ?? null
+    base.toAsset = payload.data.to_asset ?? null
+  } else {
+    base.zone = payload.data.zone ?? null
+    base.action = payload.data.action ?? null
+    base.compositeZ =
+      typeof payload.data.composite_z === 'number' ? payload.data.composite_z : null
+    base.btcPrice =
+      typeof payload.data.btc_price === 'number' ? payload.data.btc_price : null
+  }
+  return base
 }
 
-async function queueSignalEmails(args: QueueArgs): Promise<number> {
-  const { system, payload, signalText, commentary, signalDateStr } = args
+type EmailRecipient = {
+  id: string
+  email: string
+  name: string | null
+}
+
+/**
+ * Resolve the set of users who should receive a digest email today.
+ *
+ * Default-all opt-out semantics:
+ *   - Start: every user with an active or trial membership and email
+ *     notifications enabled (or no preference row, defaulting to enabled).
+ *   - Subtract: users who have UserSystemAssignment rows with isActive=false
+ *     for EVERY signal in today's digest (i.e., they've explicitly opted
+ *     out of every system that's updating today).
+ *
+ * Per-user signal filtering (removing one system the user opted out of
+ * while keeping the others) is handled by the caller via `filterSignalsFor`.
+ */
+async function resolveDigestRecipients(
+  signalSlugs: string[]
+): Promise<{ user: EmailRecipient; optOuts: Set<string> }[]> {
   const now = new Date()
 
-  const assignments = await prisma.userSystemAssignment.findMany({
-    where: { systemSlug: system.slug, isActive: true },
+  // Pull all opt-out rows for the systems involved in this digest.
+  const optOuts = await prisma.userSystemAssignment.findMany({
+    where: {
+      isActive: false,
+      systemSlug: { in: signalSlugs },
+    },
+    select: { userId: true, systemSlug: true },
+  })
+  const optOutsByUser = new Map<string, Set<string>>()
+  for (const row of optOuts) {
+    const set = optOutsByUser.get(row.userId) ?? new Set<string>()
+    set.add(row.systemSlug)
+    optOutsByUser.set(row.userId, set)
+  }
+
+  const users = await prisma.user.findMany({
+    where: {
+      isActive: true,
+      memberships: {
+        some: {
+          status: { in: ['active', 'trial'] },
+          OR: [
+            { currentPeriodEnd: null },
+            { currentPeriodEnd: { gte: now } },
+          ],
+        },
+      },
+    },
     select: {
-      userId: true,
-      user: {
+      id: true,
+      email: true,
+      name: true,
+      notificationPreference: {
         select: {
-          id: true,
-          email: true,
-          name: true,
-          isActive: true,
-          notificationPreference: {
-            select: {
-              emailEnabled: true,
-              portfolioUpdatesEmail: true,
-            },
-          },
-          memberships: {
-            where: {
-              status: { in: ['active', 'trial'] },
-              OR: [
-                { currentPeriodEnd: null },
-                { currentPeriodEnd: { gte: now } },
-              ],
-            },
-            take: 1,
-            select: { id: true },
-          },
+          emailEnabled: true,
+          portfolioUpdatesEmail: true,
         },
       },
     },
   })
 
-  const eligible = assignments
-    .map((a) => a.user)
-    .filter((u): u is NonNullable<typeof u> => !!u && !!u.email && u.isActive)
-    .filter((u) => u.memberships.length > 0)
+  return users
+    .filter((u) => !!u.email)
     .filter((u) => {
       const prefs = u.notificationPreference
-      if (!prefs) return true // default: opted-in
+      if (!prefs) return true // default opted-in
       if (prefs.emailEnabled === false) return false
       if (prefs.portfolioUpdatesEmail === false) return false
       return true
     })
+    .map((u) => ({
+      user: { id: u.id, email: u.email, name: u.name },
+      optOuts: optOutsByUser.get(u.id) ?? new Set<string>(),
+    }))
+}
 
-  if (eligible.length === 0) {
-    logger.warn('Signal ingest queued zero emails', {
-      systemSlug: system.slug,
-      reason: assignments.length === 0
-        ? 'no UserSystemAssignment rows for this system — backfill not run?'
-        : 'all assigned users filtered out by membership/preferences',
-      assignmentCount: assignments.length,
+/**
+ * Queue one digest email per qualifying user. Each user's digest contains
+ * only the signals they haven't opted out of. Users who've opted out of
+ * every system in the digest are skipped entirely.
+ *
+ * dedupeKey = `daily_signal_digest_<YYYY-MM-DD>_<userId>` ensures one email
+ * per user per day across all paths (HTTP ingest + bridge cron). Whichever
+ * path fires first wins.
+ */
+export async function queueDigestEmails(args: {
+  signals: DigestSignal[]
+  signalDateStr: string
+}): Promise<number> {
+  const { signals, signalDateStr } = args
+  if (signals.length === 0) return 0
+
+  const slugs = signals.map((s) => s.systemSlug)
+  const recipients = await resolveDigestRecipients(slugs)
+  if (recipients.length === 0) {
+    logger.warn('Signal digest queued zero recipients', {
+      reason: 'no users with active membership + email preferences enabled',
+      signalSlugs: slugs,
     })
     return 0
   }
 
   const baseUrl = getAppUrl()
-  const dashboardUrl = `${baseUrl}/systems#${system.slug}`
+  const dashboardUrl = `${baseUrl}/systems`
   const preferencesUrl = `${baseUrl}/account`
-  const subject = `${system.emailSubjectPrefix} — ${signalText}`
+  const subject =
+    signals.length > 1
+      ? `Stewart & Co — Daily Signal Update (${signals.length} systems)`
+      : 'Stewart & Co — Daily Signal Update'
 
   let queued = 0
   await Promise.all(
-    eligible.map(async (user) => {
-      const dedupeKey = `signal_${system.slug}_${signalDateStr}_${user.id}`
+    recipients.map(async ({ user, optOuts }) => {
+      const userSignals = signals.filter((s) => !optOuts.has(s.systemSlug))
+      if (userSignals.length === 0) return // user opted out of every signal in this digest
+
+      const dedupeKey = `daily_signal_digest_${signalDateStr}_${user.id}`
       const variables: Record<string, unknown> = {
         userName: user.name,
-        systemName: system.shortName,
-        systemSlug: system.slug,
-        signalType: payload.signal_type,
-        signal: signalText,
-        commentary,
+        signals: userSignals,
+        date: signalDateStr,
         dashboardUrl,
         preferencesUrl,
-      }
-      if (payload.signal_type === 'rotation') {
-        variables.fromAsset = payload.data.from_asset ?? null
-        variables.toAsset = payload.data.to_asset ?? null
-      } else {
-        variables.zone = payload.data.zone
-        variables.action = payload.data.action
-        variables.compositeZ =
-          typeof payload.data.composite_z === 'number'
-            ? payload.data.composite_z
-            : null
-        variables.btcPrice =
-          typeof payload.data.btc_price === 'number'
-            ? payload.data.btc_price
-            : null
       }
 
       const result = await enqueueEmail({
