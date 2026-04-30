@@ -14,17 +14,32 @@ export class DashboardSnapshotError extends Error {
   }
 }
 
+export type GetDashboardSnapshotOptions = {
+  /**
+   * Bypass the Next.js fetch cache and read the freshest copy from Blob.
+   * Use this from the signal-bridge cron — page renders should keep the
+   * default 5-minute cache for performance.
+   */
+  fresh?: boolean;
+};
+
 /**
  * Fetches the latest dashboard snapshot from Vercel Blob.
- * Revalidates every 5 minutes (matches Coen's SDCA patch cadence).
+ * Default: 5-minute cache (matches Coen's SDCA patch cadence).
+ * Pass `{ fresh: true }` to bypass the cache for time-critical reads.
  * Server-only — never import from a client component.
  */
-export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
+export async function getDashboardSnapshot(
+  options: GetDashboardSnapshotOptions = {}
+): Promise<DashboardSnapshot> {
   let res: Response;
   try {
-    res = await fetch(SNAPSHOT_URL, {
-      next: { revalidate: 300, tags: ["dashboard-snapshot"] },
-    });
+    res = await fetch(
+      SNAPSHOT_URL,
+      options.fresh
+        ? { cache: "no-store" }
+        : { next: { revalidate: 300, tags: ["dashboard-snapshot"] } }
+    );
   } catch (err) {
     throw new DashboardSnapshotError("Network error fetching snapshot", err);
   }

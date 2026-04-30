@@ -42,7 +42,10 @@ function authorizeCronRequest(request: NextRequest): boolean {
 
   if (isVercelCron) return true
   if (cronSecret && (bearer === cronSecret || querySecret === cronSecret)) return true
-  if (internalDispatchSecret && internalToken === internalDispatchSecret) return true
+  // Match the ingest endpoint: accept Bearer with INTERNAL_DISPATCH_SECRET
+  // (in addition to the dedicated x-internal-job-token header) so manual
+  // diagnostic curls work with a single auth scheme.
+  if (internalDispatchSecret && (internalToken === internalDispatchSecret || bearer === internalDispatchSecret)) return true
   if (!isProduction && !cronSecret) return true
   return false
 }
@@ -60,11 +63,27 @@ async function lastIngestPayload(systemSlug: string): Promise<StoredSignal> {
   return (last?.signalData as StoredSignal) ?? null
 }
 
+function pickLatestRotation(
+  rotations: DhrsSystem['recent_rotations'] | MrsSystem['recent_rotations'] | undefined
+) {
+  // Don't trust array order — Coen's pipeline could emit oldest-first OR
+  // newest-first, and our own UI explicitly sorts via b.date.localeCompare(a.date)
+  // because the source order is unstable. Pick the rotation with the
+  // maximum ISO date.
+  if (!rotations || rotations.length === 0) return undefined
+  let best = rotations[0]
+  for (let i = 1; i < rotations.length; i++) {
+    const cur = rotations[i]
+    if ((cur?.date ?? '') > (best?.date ?? '')) best = cur
+  }
+  return best
+}
+
 function rotationKey(snap: DhrsSystem | MrsSystem): string {
   // Dominant asset is the meaningful "is the signal different?" key for
-  // rotation systems. Recent rotation date is included so a fresh rotation
-  // back to the same asset still triggers (rare but possible).
-  const lastRot = snap.recent_rotations?.[snap.recent_rotations.length - 1]
+  // rotation systems. Most-recent rotation date + endpoints included so a
+  // fresh rotation (even back to the same asset) still triggers.
+  const lastRot = pickLatestRotation(snap.recent_rotations)
   return [
     snap.dominant ?? '',
     lastRot?.date ?? '',
@@ -105,7 +124,7 @@ function mapRotation(
   systemSlug: 'dhrs' | 'mrs',
   snap: DhrsSystem | MrsSystem
 ): IngestPayload {
-  const lastRot = snap.recent_rotations?.[snap.recent_rotations.length - 1]
+  const lastRot = pickLatestRotation(snap.recent_rotations)
   return {
     system: systemSlug,
     signal_type: 'rotation',
@@ -213,7 +232,10 @@ async function detectChange(
 // ─── Handler ────────────────────────────────────────────────────────────────
 
 async function runBridge() {
-  const snapshot = await getDashboardSnapshot()
+  // Bypass the 5-minute fetch cache — the bridge runs at 00:45 and Coen
+  // pushes at 00:30, so the page-render cache could still hold the
+  // pre-push snapshot otherwise.
+  const snapshot = await getDashboardSnapshot({ fresh: true })
   const systems = getActiveSystems()
 
   const outcomes: SystemOutcome[] = []
