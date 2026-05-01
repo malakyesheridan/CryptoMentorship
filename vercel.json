@@ -52,7 +52,7 @@
     },
     {
       "path": "/api/cron/daily-signal-digest",
-      "schedule": "35 0 * * *"
+      "schedule": "0 1 * * *"
     }
   ]
 }
