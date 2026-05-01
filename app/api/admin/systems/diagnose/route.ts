@@ -423,7 +423,7 @@ async function runBridgeInline() {
         outcomes.push({ system: sys.slug, changed: false, reason: detection.reason })
         continue
       }
-      const result = await processSignalIngest(detection.payload, 'cron', { skipEmail: true })
+      const result = await processSignalIngest(detection.payload, 'cron')
       if (!result.ok) {
         outcomes.push({
           system: sys.slug,

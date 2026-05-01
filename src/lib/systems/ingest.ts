@@ -106,31 +106,24 @@ export function commentaryFor(payload: IngestPayload): string | null {
 
 // ─── Core pipeline ──────────────────────────────────────────────────────────
 
-export type ProcessOptions = {
-  /**
-   * Skip the per-system email fan-out at the end of the pipeline. The
-   * signal-bridge cron uses this to collect all changed signals first and
-   * then send a single combined digest email per user, instead of N emails.
-   */
-  skipEmail?: boolean
-}
-
 /**
- * The shared ingest pipeline. Used by:
- *   - POST /api/ingest/signal (Coen's Python pipeline) — skipEmail=false,
- *     queues a single-signal digest for the user.
- *   - GET  /api/cron/signal-bridge — calls per-system with skipEmail=true,
- *     then fans out one combined digest per user.
+ * The shared ingest pipeline. Pure data write — never queues emails.
+ * Email fan-out happens exclusively in /api/cron/daily-signal-digest at
+ * 00:35 UTC, which reads back today's PortfolioDailySignal rows and sends
+ * one combined digest per user.
+ *
+ * Callers:
+ *   - POST /api/ingest/signal (Coen's Python pipeline)
+ *   - GET  /api/cron/daily-signal-digest (snapshot upsert)
+ *   - GET  /api/cron/signal-bridge (legacy diff path, manual diagnostics)
+ *   - POST /api/admin/systems/diagnose (admin manual trigger)
  *
  * Idempotent: same (system, day) push deletes today's existing signal and
- * inserts the new one. The digest dedupeKey (`daily_signal_digest_<date>_<user>`)
- * blocks duplicate emails on the same day regardless of which path queued
- * the row first.
+ * inserts the new one.
  */
 export async function processSignalIngest(
   payload: IngestPayload,
-  source: IngestSource = 'api',
-  options: ProcessOptions = {}
+  source: IngestSource = 'api'
 ): Promise<IngestResult> {
   const system = getSystem(payload.system)
   if (!system || !system.isActive || !isValidSystemSlug(payload.system)) {
@@ -248,28 +241,12 @@ export async function processSignalIngest(
     })
   }
 
-  // 4. Email queue (single-signal digest unless caller asks us to skip)
-  let emailsQueued = 0
-  if (!options.skipEmail) {
-    try {
-      const digestSignal = buildDigestSignal(system, payload, signalText, commentary)
-      emailsQueued = await queueDigestEmails({
-        signals: [digestSignal],
-        signalDateStr,
-      })
-    } catch (error) {
-      logger.error(
-        'Failed to queue signal emails',
-        error instanceof Error ? error : new Error(String(error)),
-        { ingestId: ingestRecord.id, systemSlug: system.slug }
-      )
-    }
-  }
-
-  // 5. Update audit log with results
+  // 4. Update audit log with results. emailsQueued is always 0 here because
+  // the daily-digest cron is the sole email path; left in the schema for
+  // back-compat with existing rows and dashboards.
   await prisma.systemSignalIngest.update({
     where: { id: ingestRecord.id },
-    data: { emailsQueued, portfolioUpdated },
+    data: { emailsQueued: 0, portfolioUpdated },
   })
 
   // 6. Cache bust (non-fatal)
@@ -285,7 +262,7 @@ export async function processSignalIngest(
     system: system.slug,
     signal: signalText,
     portfolioSignalId,
-    emailsQueued,
+    emailsQueued: 0,
   }
 }
 
