@@ -27,7 +27,14 @@ function authorizeCronRequest(request: NextRequest): boolean {
     process.env.NODE_ENV === 'production' ||
     process.env.VERCEL_ENV === 'production'
 
+  // Vercel cron infrastructure: legacy header (older deployments still send
+  // this), current User-Agent contract (`vercel-cron/1.0` on every cron
+  // invocation), and bearer signing if the env var is literally named
+  // CRON_SECRET (Vercel ignores other names).
   const isVercelCron = request.headers.get('x-vercel-cron') === '1'
+  const userAgent = request.headers.get('user-agent') || ''
+  const isVercelCronUserAgent = /^vercel-cron\//i.test(userAgent)
+
   const authHeader = request.headers.get('authorization') || ''
   const bearer = authHeader.startsWith('Bearer ')
     ? authHeader.slice('Bearer '.length).trim()
@@ -36,6 +43,7 @@ function authorizeCronRequest(request: NextRequest): boolean {
   const internalToken = request.headers.get('x-internal-job-token') || ''
 
   if (isVercelCron) return true
+  if (isVercelCronUserAgent) return true
   if (cronSecret && (bearer === cronSecret || querySecret === cronSecret)) return true
   if (
     internalDispatchSecret &&
