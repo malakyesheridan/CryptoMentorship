@@ -12,6 +12,7 @@ import {
 } from '@/lib/systems-format'
 import { getAssetDisplayLabel } from '@/lib/portfolio-assets'
 import { getActiveSystems, type SystemDefinition } from '@/lib/system-registry'
+import { brandName } from '@/lib/brand'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot'
 import type {
   DashboardSnapshot,
@@ -92,6 +93,8 @@ async function getSystemsForUser(userId: string): Promise<{
     if (snapshotResult) {
       if (system.slug === 'dhrs') snap = snapshotResult.dhrs ?? null
       else if (system.slug === 'mrs') snap = snapshotResult.mrs ?? null
+      else if (system.slug === 'mars') snap = snapshotResult.mars ?? null
+      else if (system.slug === 'tars') snap = snapshotResult.tars ?? null
       else if (system.slug === 'sdca') snap = snapshotResult.sdca ?? null
     }
     const row = latestPerSystem[idx]
@@ -190,10 +193,10 @@ function CardShell({
               className="text-xs font-semibold uppercase tracking-wider"
               style={{ color: system.color }}
             >
-              {system.shortName}
+              {brandName(system.slug)}
             </div>
             <div className="mt-0.5 truncate text-sm text-[var(--text-muted)]">
-              {system.name}
+              {system.description}
             </div>
           </div>
         </div>

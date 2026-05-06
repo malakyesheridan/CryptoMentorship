@@ -4,6 +4,7 @@ import { requireRoleAPI } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { getActiveSystems, isValidSystemSlug } from '@/lib/system-registry'
+import { brandName } from '@/lib/brand'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,8 +38,8 @@ export async function GET(
 
     const availableSystems = getActiveSystems().map((s) => ({
       slug: s.slug,
-      name: s.name,
-      shortName: s.shortName,
+      name: brandName(s.slug),
+      shortName: brandName(s.slug),
       description: s.description,
     }))
 

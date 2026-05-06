@@ -5,6 +5,7 @@ import {
   type SystemAwareQuestionId,
 } from './questions'
 import { getActiveSystems, type SystemDefinition } from '@/lib/system-registry'
+import { brandName } from '@/lib/brand'
 
 export const SYSTEM_FIT_VERSION = 1
 
@@ -196,8 +197,8 @@ export function computeSystemFit(
     const reasons = buildReasons(sys.slug, profile, contributions)
     return {
       slug: sys.slug,
-      shortName: sys.shortName,
-      fullName: sys.name,
+      shortName: brandName(sys.slug),
+      fullName: sys.description,
       color: sys.color,
       score,
       label,

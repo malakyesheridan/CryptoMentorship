@@ -3,6 +3,7 @@ import { Prisma, EmailType, EmailOutboxStatus } from '@prisma/client'
 import { requireRoleAPI } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
 import { getActiveSystems, type SystemDefinition } from '@/lib/system-registry'
+import { brandName } from '@/lib/brand'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot'
 import {
   processSignalIngest,
@@ -194,7 +195,7 @@ export async function GET(_request: NextRequest) {
         null
       return {
         slug: sys.slug,
-        shortName: sys.shortName,
+        shortName: brandName(sys.slug),
         signalFormat: sys.signalFormat,
         optOutCount: optOutMap.get(sys.slug) ?? 0,
         totalIngests: summary?.totalIngests ?? 0,
@@ -349,7 +350,7 @@ function todayUtc(): string {
   return dayKey(new Date())
 }
 
-function mapRotation(slug: 'dhrs' | 'mrs', snap: DhrsSystem | MrsSystem): IngestPayload {
+function mapRotation(slug: 'dhrs' | 'mrs' | 'mars' | 'tars', snap: DhrsSystem | MrsSystem): IngestPayload {
   const lr = pickLatestRotation(snap.recent_rotations)
   return {
     system: slug,
@@ -506,6 +507,24 @@ async function detectChange(sys: SystemDefinition, snapshot: any) {
     const currentKey = rotationKey(data)
     if (lastKey === currentKey) return { changed: false as const, reason: `unchanged (${currentKey})` }
     return { changed: true as const, reason: `${lastKey ?? 'first'} → ${currentKey}`, payload: mapRotation('mrs', data) }
+  }
+  if (sys.slug === 'mars') {
+    const data = snapshot.mars as MrsSystem | undefined
+    if (!data) return { changed: false as const, reason: 'no snapshot data (mars not in snapshot yet)' }
+    const last = await lastIngestForSlug(sys.slug)
+    const lastKey = rotationKeyFromIngest(last)
+    const currentKey = rotationKey(data)
+    if (lastKey === currentKey) return { changed: false as const, reason: `unchanged (${currentKey})` }
+    return { changed: true as const, reason: `${lastKey ?? 'first'} → ${currentKey}`, payload: mapRotation('mars', data) }
+  }
+  if (sys.slug === 'tars') {
+    const data = snapshot.tars as MrsSystem | undefined
+    if (!data) return { changed: false as const, reason: 'no snapshot data (tars not in snapshot yet)' }
+    const last = await lastIngestForSlug(sys.slug)
+    const lastKey = rotationKeyFromIngest(last)
+    const currentKey = rotationKey(data)
+    if (lastKey === currentKey) return { changed: false as const, reason: `unchanged (${currentKey})` }
+    return { changed: true as const, reason: `${lastKey ?? 'first'} → ${currentKey}`, payload: mapRotation('tars', data) }
   }
   if (sys.slug === 'sdca') {
     const data = snapshot.sdca as SdcaSystem | undefined

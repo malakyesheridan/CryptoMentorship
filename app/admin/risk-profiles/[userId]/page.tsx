@@ -8,6 +8,7 @@ import { RiskProfileOverrideForm } from '@/components/admin/RiskProfileOverrideF
 import { getRiskOnboardingConfig } from '@/lib/riskOnboarding/config-store'
 import { normalizeScoreToProfileRange } from '@/lib/riskOnboarding/config'
 import { getActiveSystems } from '@/lib/system-registry'
+import { brandName } from '@/lib/brand'
 
 const LIKERT_LABELS: Record<string, string> = {
   strongly_agree: 'Strongly agree',
@@ -200,9 +201,9 @@ export default async function RiskProfileDetailPage({ params }: { params: { user
                             className="text-xs font-semibold uppercase tracking-wider"
                             style={{ color: sys.color }}
                           >
-                            {sys.shortName}
+                            {brandName(sys.slug)}
                           </div>
-                          <div className="text-sm text-[var(--text-muted)]">{sys.name}</div>
+                          <div className="text-sm text-[var(--text-muted)]">{sys.description}</div>
                         </div>
                         <div className="text-right">
                           <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">

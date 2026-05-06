@@ -21,8 +21,8 @@ export interface SystemDefinition {
 export const SYSTEMS: SystemDefinition[] = [
   {
     slug: 'dhrs',
-    name: 'Dynamic Hedging Rotation System',
-    shortName: 'DHRS',
+    name: 'Stewart Broad',
+    shortName: 'Stewart Broad',
     description:
       'Momentum-driven rotation across 60+ crypto assets with regime-based drawdown protection.',
     type: 'rotation',
@@ -30,25 +30,51 @@ export const SYSTEMS: SystemDefinition[] = [
     isActive: true,
     sortOrder: 10,
     color: '#C9A84C',
-    emailSubjectPrefix: 'DHRS Signal',
+    emailSubjectPrefix: 'Stewart Broad Signal',
   },
   {
     slug: 'mrs',
-    name: 'Majors Rotation System',
-    shortName: 'MRS',
+    name: 'Stewart Majors',
+    shortName: 'Stewart Majors',
     description:
-      'Systematic rotation across major crypto assets with regime-based drawdown protection.',
+      'Systematic rotation across BTC, ETH, and SOL with Gold as the defensive sleeve.',
     type: 'rotation',
     signalFormat: 'rotation',
     isActive: true,
     sortOrder: 20,
     color: '#5B8DEF',
-    emailSubjectPrefix: 'MRS Signal',
+    emailSubjectPrefix: 'Stewart Majors Signal',
+  },
+  {
+    slug: 'mars',
+    name: 'Stewart Core',
+    shortName: 'Stewart Core',
+    description:
+      'Six-asset rotation across BTC, ETH, SOL, SUI, XRP, and BNB with Gold defensive.',
+    type: 'rotation',
+    signalFormat: 'rotation',
+    isActive: true,
+    sortOrder: 22,
+    color: '#A78BFA',
+    emailSubjectPrefix: 'Stewart Core Signal',
+  },
+  {
+    slug: 'tars',
+    name: 'Stewart Select',
+    shortName: 'Stewart Select',
+    description:
+      'Ten-asset rotation across BTC, ETH, SOL, SUI, XRP, BNB, LINK, DOGE, TRX, and HYPE with Gold defensive.',
+    type: 'rotation',
+    signalFormat: 'rotation',
+    isActive: true,
+    sortOrder: 24,
+    color: '#F472B6',
+    emailSubjectPrefix: 'Stewart Select Signal',
   },
   {
     slug: 'sdca',
-    name: 'Strategic Dollar Cost Averaging',
-    shortName: 'SDCA',
+    name: 'Stewart Cycle',
+    shortName: 'Stewart Cycle',
     description:
       'Rules-based Bitcoin accumulation and distribution across 4-year cycles using 18 on-chain indicators.',
     type: 'buy_system',
@@ -56,7 +82,7 @@ export const SYSTEMS: SystemDefinition[] = [
     isActive: true,
     sortOrder: 30,
     color: '#10B981',
-    emailSubjectPrefix: 'SDCA Signal',
+    emailSubjectPrefix: 'Stewart Cycle Signal',
   },
 ]
 

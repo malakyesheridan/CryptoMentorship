@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { brandName } from '@/lib/brand'
 
 type AvailableSystem = {
   slug: string
@@ -147,7 +148,7 @@ export function UserSystemAccess({ userId }: UserSystemAccessProps) {
                   />
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-[var(--text-strong)]">
-                      {system.shortName}
+                      {brandName(system.slug)}
                     </div>
                     <div className="text-xs text-[var(--text-muted)] mt-0.5">
                       {system.description}

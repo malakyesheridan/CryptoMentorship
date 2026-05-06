@@ -10,6 +10,7 @@ import {
   isValidSystemSlug,
   type SystemDefinition,
 } from '@/lib/system-registry'
+import { brandName } from '@/lib/brand'
 import type { DigestSignal } from '@/lib/templates/signal-digest'
 
 // ─── Validation schemas (shared with the HTTP route) ────────────────────────
@@ -279,7 +280,7 @@ export function buildDigestSignal(
   commentary: string | null
 ): DigestSignal {
   const base: DigestSignal = {
-    systemName: system.shortName,
+    systemName: brandName(system.slug),
     systemSlug: system.slug,
     signalType: payload.signal_type,
     signal: signalText,

@@ -65,7 +65,7 @@ export function sdcaKeyFromIngest(stored: StoredSignal): string | null {
 }
 
 export function mapRotation(
-  slug: 'dhrs' | 'mrs',
+  slug: 'dhrs' | 'mrs' | 'mars' | 'tars',
   snap: DhrsSystem | MrsSystem
 ): IngestPayload {
   const lr = pickLatestRotation(snap.recent_rotations)
@@ -127,6 +127,12 @@ export function mapSnapshotToPayload(
   if (sys.slug === 'mrs') {
     return snapshot.mrs ? mapRotation('mrs', snapshot.mrs) : null
   }
+  if (sys.slug === 'mars') {
+    return snapshot.mars ? mapRotation('mars', snapshot.mars) : null
+  }
+  if (sys.slug === 'tars') {
+    return snapshot.tars ? mapRotation('tars', snapshot.tars) : null
+  }
   if (sys.slug === 'sdca') {
     return snapshot.sdca ? mapSdca(snapshot.sdca) : null
   }
@@ -172,6 +178,38 @@ export async function detectChange(
       changed: true,
       reason: `${lastKey ?? 'first'} → ${currentKey}`,
       payload: mapRotation('mrs', data),
+    }
+  }
+
+  if (sys.slug === 'mars') {
+    const data = snapshot.mars
+    if (!data) return { changed: false, reason: 'no snapshot data (mars not in snapshot yet)' }
+    const last = await lastIngestPayload(sys.slug)
+    const lastKey = rotationKeyFromIngest(last)
+    const currentKey = rotationKey(data)
+    if (lastKey === currentKey) {
+      return { changed: false, reason: `unchanged (${currentKey})` }
+    }
+    return {
+      changed: true,
+      reason: `${lastKey ?? 'first'} → ${currentKey}`,
+      payload: mapRotation('mars', data),
+    }
+  }
+
+  if (sys.slug === 'tars') {
+    const data = snapshot.tars
+    if (!data) return { changed: false, reason: 'no snapshot data (tars not in snapshot yet)' }
+    const last = await lastIngestPayload(sys.slug)
+    const lastKey = rotationKeyFromIngest(last)
+    const currentKey = rotationKey(data)
+    if (lastKey === currentKey) {
+      return { changed: false, reason: `unchanged (${currentKey})` }
+    }
+    return {
+      changed: true,
+      reason: `${lastKey ?? 'first'} → ${currentKey}`,
+      payload: mapRotation('tars', data),
     }
   }
 
