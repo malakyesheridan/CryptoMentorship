@@ -68,30 +68,30 @@ export const SYSTEM_AWARE_OPTION_WEIGHTS: Record<
   Record<string, SystemFitWeights>
 > = {
   investment_style: {
-    active_rotation: { dhrs: 30, mrs: 25, sdca: 5 },
-    major_rotation:  { dhrs: 15, mrs: 30, sdca: 10 },
-    passive_dca:     { dhrs: 5,  mrs: 5,  sdca: 30 },
-    mixed:           { dhrs: 20, mrs: 20, sdca: 20 },
+    active_rotation: { dhrs: 30, mrs: 25, mars: 28, tars: 30, sdca: 5 },
+    major_rotation:  { dhrs: 15, mrs: 30, mars: 28, tars: 22, sdca: 10 },
+    passive_dca:     { dhrs: 5,  mrs: 5,  mars: 5,  tars: 5,  sdca: 30 },
+    mixed:           { dhrs: 20, mrs: 20, mars: 20, tars: 18, sdca: 20 },
   },
   asset_universe: {
-    broad_alts:  { dhrs: 25, mrs: 5,  sdca: 0 },
-    majors_only: { dhrs: 10, mrs: 25, sdca: 10 },
-    btc_only:    { dhrs: 0,  mrs: 5,  sdca: 25 },
+    broad_alts:  { dhrs: 25, mrs: 5,  mars: 18, tars: 25, sdca: 0 },
+    majors_only: { dhrs: 10, mrs: 25, mars: 25, tars: 20, sdca: 10 },
+    btc_only:    { dhrs: 0,  mrs: 5,  mars: 5,  tars: 0,  sdca: 25 },
   },
   monitoring_pref: {
-    daily:   { dhrs: 20, mrs: 15, sdca: 5 },
-    weekly:  { dhrs: 10, mrs: 20, sdca: 10 },
-    monthly: { dhrs: 0,  mrs: 5,  sdca: 25 },
+    daily:   { dhrs: 20, mrs: 15, mars: 18, tars: 25, sdca: 5 },
+    weekly:  { dhrs: 10, mrs: 20, mars: 25, tars: 20, sdca: 10 },
+    monthly: { dhrs: 0,  mrs: 5,  mars: 5,  tars: 0,  sdca: 25 },
   },
   dd_tolerance: {
-    dd_10: { dhrs: 10, mrs: 15, sdca: 5 },
-    dd_30: { dhrs: 20, mrs: 20, sdca: 15 },
-    dd_50: { dhrs: 15, mrs: 10, sdca: 25 },
+    dd_10: { dhrs: 10, mrs: 15, mars: 10, tars: 5,  sdca: 5 },
+    dd_30: { dhrs: 20, mrs: 20, mars: 25, tars: 25, sdca: 15 },
+    dd_50: { dhrs: 15, mrs: 10, mars: 15, tars: 18, sdca: 25 },
   },
   time_commitment: {
-    minimal:     { dhrs: 5,  mrs: 10, sdca: 25 },
-    moderate:    { dhrs: 15, mrs: 20, sdca: 15 },
-    significant: { dhrs: 25, mrs: 15, sdca: 5 },
+    minimal:     { dhrs: 5,  mrs: 10, mars: 5,  tars: 5,  sdca: 25 },
+    moderate:    { dhrs: 15, mrs: 20, mars: 25, tars: 20, sdca: 15 },
+    significant: { dhrs: 25, mrs: 15, mars: 22, tars: 25, sdca: 5 },
   },
 }
 

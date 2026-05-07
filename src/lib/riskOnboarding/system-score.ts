@@ -35,9 +35,9 @@ export type SystemFitResult = {
 const MAX_RAW_PER_SYSTEM = 120
 
 const PROFILE_BONUS: Record<RiskProfile, Record<string, number>> = {
-  CONSERVATIVE: { dhrs: -10, mrs: -5, sdca: 15 },
-  SEMI:         { dhrs: 5,   mrs: 10, sdca: 5 },
-  AGGRESSIVE:   { dhrs: 15,  mrs: 10, sdca: -5 },
+  CONSERVATIVE: { dhrs: -10, mrs: -5, mars: -10, tars: -15, sdca: 15 },
+  SEMI:         { dhrs: 5,   mrs: 10, mars: 10,  tars: 5,   sdca: 5 },
+  AGGRESSIVE:   { dhrs: 15,  mrs: 10, mars: 10,  tars: 15,  sdca: -5 },
 }
 
 function clamp(n: number, min: number, max: number) {
@@ -122,6 +122,32 @@ const REASON_TEMPLATES: Record<string, Record<string, string>> = {
     'time_commitment:minimal':          'SDCA requires minimal time — trades happen a few times per year',
     'time_commitment:moderate':         'A modest time budget is plenty for SDCA',
   },
+  mars: {
+    'investment_style:active_rotation': 'You like active rotation — Stewart Core runs ~17 rotations a year across the deepest majors',
+    'investment_style:major_rotation':  'You prefer rotating between majors — Stewart Core extends that across six core assets',
+    'investment_style:mixed':           'Stewart Core anchors a mixed portfolio with a major-coin growth tilt',
+    'asset_universe:majors_only':       'Stewart Core stays inside the majors universe (BTC, ETH, SOL, SUI, XRP, BNB)',
+    'asset_universe:broad_alts':        'Stewart Core is a curated step toward a wider universe without exotic alts',
+    'monitoring_pref:weekly':           'Weekly check-ins fit Stewart Core’s rotation cadence',
+    'monitoring_pref:daily':            'You can act quickly when Stewart Core rotates',
+    'dd_tolerance:dd_30':               'Stewart Core targets a ~30% drawdown ceiling — your tolerance fits',
+    'dd_tolerance:dd_50':               'You can stomach the moderate drawdowns Stewart Core occasionally accepts for upside',
+    'time_commitment:moderate':         'A moderate weekly time budget matches Stewart Core’s cadence',
+    'time_commitment:significant':      'Active engagement helps you act on Stewart Core rotations',
+  },
+  tars: {
+    'investment_style:active_rotation': 'You prefer active rotation — Stewart Select is calibrated for the highest risk-adjusted return in the suite',
+    'investment_style:major_rotation':  'You like majors-style rotation — Stewart Select extends to ten sector leaders',
+    'investment_style:mixed':           'Stewart Select can power the active sleeve of a mixed portfolio',
+    'asset_universe:broad_alts':        'You’re comfortable beyond the top six — Stewart Select adds LINK, DOGE, TRX, and HYPE',
+    'asset_universe:majors_only':       'Stewart Select sits just beyond majors-only — extended majors with on-chain Gold defensive',
+    'monitoring_pref:daily':            'Daily engagement fits Stewart Select’s active cadence',
+    'monitoring_pref:weekly':           'Weekly check-ins still suit Stewart Select if you act on rotations promptly',
+    'dd_tolerance:dd_30':               'Stewart Select targets a ~25–30% drawdown — your tolerance lines up',
+    'dd_tolerance:dd_50':               'You can stomach the drawdowns Stewart Select occasionally accepts for upside',
+    'time_commitment:significant':      'Active engagement matches Stewart Select — including comfort with multi-venue execution (HYPE on Hyperliquid)',
+    'time_commitment:moderate':         'A moderate weekly time budget works for Stewart Select if you’re ready to handle HYPE on Hyperliquid',
+  },
 }
 
 function reasonFor(systemSlug: string, questionId: string, optionId: string): string | null {
@@ -135,6 +161,12 @@ function profileReason(systemSlug: string, profile: RiskProfile): string | null 
   }
   if (systemSlug === 'mrs' && profile === 'SEMI') {
     return 'Your balanced risk profile matches MRS’s approach'
+  }
+  if (systemSlug === 'mars' && (profile === 'SEMI' || profile === 'AGGRESSIVE')) {
+    return 'Your risk profile suits Stewart Core’s majors-plus growth tilt'
+  }
+  if (systemSlug === 'tars' && profile === 'AGGRESSIVE') {
+    return 'Your aggressive profile matches Stewart Select’s extended-majors lineup'
   }
   if (systemSlug === 'sdca' && profile === 'CONSERVATIVE') {
     return 'Your conservative profile matches SDCA’s longer-term approach'
