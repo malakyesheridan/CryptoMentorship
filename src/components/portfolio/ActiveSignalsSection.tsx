@@ -13,6 +13,7 @@ import {
 import { getAssetDisplayLabel } from '@/lib/portfolio-assets'
 import { getActiveSystems, type SystemDefinition } from '@/lib/system-registry'
 import { brandName } from '@/lib/brand'
+import { getSnapshotBlock } from '@/lib/systems/snapshot-mappers'
 import { FollowSystemButton } from './FollowSystemButton'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot'
 import type {
@@ -76,14 +77,9 @@ async function getSystemsForUser(userId: string): Promise<{
   ])
 
   const systems: SystemView[] = registry.map((system, idx) => {
-    let snap: DhrsSystem | MrsSystem | SdcaSystem | null = null
-    if (snapshotResult) {
-      if (system.slug === 'dhrs') snap = snapshotResult.dhrs ?? null
-      else if (system.slug === 'mrs') snap = snapshotResult.mrs ?? null
-      else if (system.slug === 'mars') snap = snapshotResult.mars ?? null
-      else if (system.slug === 'tars') snap = snapshotResult.tars ?? null
-      else if (system.slug === 'sdca') snap = snapshotResult.sdca ?? null
-    }
+    const snap: DhrsSystem | MrsSystem | SdcaSystem | null = snapshotResult
+      ? (getSnapshotBlock(system.slug, snapshotResult) ?? null)
+      : null
     const row = latestPerSystem[idx]
     const signal: SignalRow = row
       ? {

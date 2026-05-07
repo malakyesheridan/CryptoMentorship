@@ -18,6 +18,8 @@ export type ChangeDetection = {
   payload?: IngestPayload
 }
 
+export type SystemSnapshotBlock = DhrsSystem | MrsSystem | SdcaSystem
+
 export function pickLatestRotation(
   rotations:
     | DhrsSystem['recent_rotations']
@@ -110,6 +112,66 @@ export async function lastIngestPayload(
   return (last?.signalData as StoredSignal) ?? null
 }
 
+// ─── Dispatch table ─────────────────────────────────────────────────────────
+//
+// One source of truth for the per-system glue between a DashboardSnapshot
+// and the ingest pipeline. Used by mapSnapshotToPayload (daily-digest cron),
+// detectChange (legacy signal-bridge + admin diagnose), and the /portfolio
+// snapshot block lookup.
+//
+// Adding a new system: register it in src/lib/system-registry.ts AND add an
+// entry here keyed by the slug. An active-registry slug missing from this
+// table is handled as "unknown mapping" — logged and skipped, never thrown.
+
+export interface SystemDispatch {
+  getBlock(snapshot: DashboardSnapshot): SystemSnapshotBlock | undefined
+  noDataReason: string
+  currentKey(block: SystemSnapshotBlock): string
+  keyFromIngest(stored: StoredSignal): string | null
+  mapPayload(block: SystemSnapshotBlock): IngestPayload
+}
+
+function rotationDispatch(
+  slug: 'dhrs' | 'mrs' | 'mars' | 'tars',
+  noDataReason: string,
+  getBlock: (s: DashboardSnapshot) => DhrsSystem | MrsSystem | undefined
+): SystemDispatch {
+  return {
+    getBlock,
+    noDataReason,
+    currentKey: (block) => rotationKey(block as DhrsSystem | MrsSystem),
+    keyFromIngest: rotationKeyFromIngest,
+    mapPayload: (block) => mapRotation(slug, block as DhrsSystem | MrsSystem),
+  }
+}
+
+const sdcaDispatch: SystemDispatch = {
+  getBlock: (s) => s.sdca,
+  noDataReason: 'no snapshot data',
+  currentKey: (block) => sdcaKey(block as SdcaSystem),
+  keyFromIngest: sdcaKeyFromIngest,
+  mapPayload: (block) => mapSdca(block as SdcaSystem),
+}
+
+export const SYSTEM_DISPATCH: Record<string, SystemDispatch> = {
+  dhrs: rotationDispatch('dhrs', 'no snapshot data', (s) => s.dhrs),
+  mrs:  rotationDispatch('mrs',  'no snapshot data (mrs not in snapshot yet)',  (s) => s.mrs),
+  mars: rotationDispatch('mars', 'no snapshot data (mars not in snapshot yet)', (s) => s.mars),
+  tars: rotationDispatch('tars', 'no snapshot data (tars not in snapshot yet)', (s) => s.tars),
+  sdca: sdcaDispatch,
+}
+
+/**
+ * Read the per-system block out of a snapshot. Returns undefined for
+ * unregistered slugs or missing data.
+ */
+export function getSnapshotBlock(
+  slug: string,
+  snapshot: DashboardSnapshot
+): SystemSnapshotBlock | undefined {
+  return SYSTEM_DISPATCH[slug]?.getBlock(snapshot)
+}
+
 /**
  * Map a snapshot to an IngestPayload for the given system, regardless of
  * whether anything has changed. Used by the daily-digest cron, which always
@@ -121,22 +183,10 @@ export function mapSnapshotToPayload(
   sys: SystemDefinition,
   snapshot: DashboardSnapshot
 ): IngestPayload | null {
-  if (sys.slug === 'dhrs') {
-    return snapshot.dhrs ? mapRotation('dhrs', snapshot.dhrs) : null
-  }
-  if (sys.slug === 'mrs') {
-    return snapshot.mrs ? mapRotation('mrs', snapshot.mrs) : null
-  }
-  if (sys.slug === 'mars') {
-    return snapshot.mars ? mapRotation('mars', snapshot.mars) : null
-  }
-  if (sys.slug === 'tars') {
-    return snapshot.tars ? mapRotation('tars', snapshot.tars) : null
-  }
-  if (sys.slug === 'sdca') {
-    return snapshot.sdca ? mapSdca(snapshot.sdca) : null
-  }
-  return null
+  const dispatch = SYSTEM_DISPATCH[sys.slug]
+  if (!dispatch) return null
+  const block = dispatch.getBlock(snapshot)
+  return block ? dispatch.mapPayload(block) : null
 }
 
 /**
@@ -149,88 +199,26 @@ export async function detectChange(
   sys: SystemDefinition,
   snapshot: DashboardSnapshot
 ): Promise<ChangeDetection> {
-  if (sys.slug === 'dhrs') {
-    const data = snapshot.dhrs
-    if (!data) return { changed: false, reason: 'no snapshot data' }
-    const last = await lastIngestPayload(sys.slug)
-    const lastKey = rotationKeyFromIngest(last)
-    const currentKey = rotationKey(data)
-    if (lastKey === currentKey) {
-      return { changed: false, reason: `unchanged (${currentKey})` }
-    }
+  const dispatch = SYSTEM_DISPATCH[sys.slug]
+  if (!dispatch) {
     return {
-      changed: true,
-      reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      payload: mapRotation('dhrs', data),
+      changed: false,
+      reason: `unknown system mapping (registry has slug ${sys.slug} but no mapper)`,
     }
   }
-
-  if (sys.slug === 'mrs') {
-    const data = snapshot.mrs
-    if (!data) return { changed: false, reason: 'no snapshot data (mrs not in snapshot yet)' }
-    const last = await lastIngestPayload(sys.slug)
-    const lastKey = rotationKeyFromIngest(last)
-    const currentKey = rotationKey(data)
-    if (lastKey === currentKey) {
-      return { changed: false, reason: `unchanged (${currentKey})` }
-    }
-    return {
-      changed: true,
-      reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      payload: mapRotation('mrs', data),
-    }
+  const block = dispatch.getBlock(snapshot)
+  if (!block) {
+    return { changed: false, reason: dispatch.noDataReason }
   }
-
-  if (sys.slug === 'mars') {
-    const data = snapshot.mars
-    if (!data) return { changed: false, reason: 'no snapshot data (mars not in snapshot yet)' }
-    const last = await lastIngestPayload(sys.slug)
-    const lastKey = rotationKeyFromIngest(last)
-    const currentKey = rotationKey(data)
-    if (lastKey === currentKey) {
-      return { changed: false, reason: `unchanged (${currentKey})` }
-    }
-    return {
-      changed: true,
-      reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      payload: mapRotation('mars', data),
-    }
+  const last = await lastIngestPayload(sys.slug)
+  const lastKey = dispatch.keyFromIngest(last)
+  const currentKey = dispatch.currentKey(block)
+  if (lastKey === currentKey) {
+    return { changed: false, reason: `unchanged (${currentKey})` }
   }
-
-  if (sys.slug === 'tars') {
-    const data = snapshot.tars
-    if (!data) return { changed: false, reason: 'no snapshot data (tars not in snapshot yet)' }
-    const last = await lastIngestPayload(sys.slug)
-    const lastKey = rotationKeyFromIngest(last)
-    const currentKey = rotationKey(data)
-    if (lastKey === currentKey) {
-      return { changed: false, reason: `unchanged (${currentKey})` }
-    }
-    return {
-      changed: true,
-      reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      payload: mapRotation('tars', data),
-    }
-  }
-
-  if (sys.slug === 'sdca') {
-    const data = snapshot.sdca
-    if (!data) return { changed: false, reason: 'no snapshot data' }
-    const last = await lastIngestPayload(sys.slug)
-    const lastKey = sdcaKeyFromIngest(last)
-    const currentKey = sdcaKey(data)
-    if (lastKey === currentKey) {
-      return { changed: false, reason: `unchanged (${currentKey})` }
-    }
-    return {
-      changed: true,
-      reason: `${lastKey ?? 'first'} → ${currentKey}`,
-      payload: mapSdca(data),
-    }
-  }
-
   return {
-    changed: false,
-    reason: `unknown system mapping (registry has slug ${sys.slug} but no mapper)`,
+    changed: true,
+    reason: `${lastKey ?? 'first'} → ${currentKey}`,
+    payload: dispatch.mapPayload(block),
   }
 }
