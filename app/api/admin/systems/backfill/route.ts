@@ -6,21 +6,50 @@ import { assignAllActiveSystems } from '@/lib/systems/assign'
 
 export const dynamic = 'force-dynamic'
 
+// Mirror the cron-route auth pattern (see app/api/cron/signal-bridge/route.ts).
+// Returns true when the request carries a valid CRON_SECRET / VERCEL_CRON_SECRET
+// /INTERNAL_DISPATCH_SECRET via Authorization: Bearer / x-internal-job-token /
+// ?secret=, or arrives from Vercel's cron infrastructure.
+function authorizeBearerFallback(request: NextRequest): boolean {
+  const cronSecret = process.env.VERCEL_CRON_SECRET || process.env.CRON_SECRET
+  const internalDispatchSecret =
+    process.env.INTERNAL_DISPATCH_SECRET || process.env.NEXTAUTH_SECRET
+
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1'
+  const authHeader = request.headers.get('authorization') || ''
+  const bearer = authHeader.startsWith('Bearer ')
+    ? authHeader.slice('Bearer '.length).trim()
+    : ''
+  const querySecret = request.nextUrl.searchParams.get('secret') || ''
+  const internalToken = request.headers.get('x-internal-job-token') || ''
+
+  if (isVercelCron) return true
+  if (cronSecret && (bearer === cronSecret || querySecret === cronSecret)) return true
+  if (
+    internalDispatchSecret &&
+    (internalToken === internalDispatchSecret || bearer === internalDispatchSecret)
+  )
+    return true
+  return false
+}
+
 // POST /api/admin/systems/backfill
 //
-// DEPRECATED — kept for compatibility but no longer required for email
-// delivery. The signal email pipeline switched to opt-out semantics:
-// every user with an active/trial membership and email notifications on
-// receives the daily digest by default. Explicit opt-outs are stored as
-// UserSystemAssignment rows with isActive=false.
+// Auth: admin NextAuth session OR Bearer cron secret. The Bearer path was
+// added so ops tasks (re-running the backfill after a new system ships)
+// can fire from a CLI without a browser session.
 //
-// This endpoint still works (writes UserSystemAssignment rows with
-// isActive=true) and is harmless to call, but it no longer affects whether
-// users receive emails. Useful only if a future feature wants explicit
-// per-user, per-system "this user has been onboarded" provenance.
-export async function POST(_request: NextRequest) {
+// Behaviour: writes UserSystemAssignment rows with isActive=true for every
+// active/trial member who's missing one for any registry slug. Idempotent —
+// re-running is a no-op once every member has all five rows. Explicit
+// opt-outs (isActive=false rows) are preserved, never reactivated.
+export async function POST(request: NextRequest) {
   try {
-    const { user: adminUser } = await requireRoleAPI(['admin'])
+    let runByLabel = 'cron-secret'
+    if (!authorizeBearerFallback(request)) {
+      const { user: adminUser } = await requireRoleAPI(['admin'])
+      runByLabel = adminUser.id
+    }
 
     const now = new Date()
     const memberships = await prisma.membership.findMany({
@@ -38,7 +67,7 @@ export async function POST(_request: NextRequest) {
     let assignmentsCreated = 0
     for (const m of memberships) {
       const created = await assignAllActiveSystems(m.userId, {
-        assignedBy: adminUser.id,
+        assignedBy: runByLabel === 'cron-secret' ? null : runByLabel,
       })
       if (created > 0) {
         usersTouched += 1
@@ -50,7 +79,7 @@ export async function POST(_request: NextRequest) {
       memberships: memberships.length,
       usersTouched,
       assignmentsCreated,
-      runBy: adminUser.id,
+      runBy: runByLabel,
     })
 
     return NextResponse.json({
