@@ -13,6 +13,7 @@ import {
 import { getAssetDisplayLabel } from '@/lib/portfolio-assets'
 import { getActiveSystems, type SystemDefinition } from '@/lib/system-registry'
 import { brandName } from '@/lib/brand'
+import { FollowSystemButton } from './FollowSystemButton'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot'
 import type {
   DashboardSnapshot,
@@ -31,50 +32,36 @@ type SystemView = {
   system: SystemDefinition
   snapshot: DhrsSystem | MrsSystem | SdcaSystem | null
   signal: SignalRow
+  isFollowing: boolean
 }
 
 async function getSystemsForUser(userId: string): Promise<{
-  hasAssignments: boolean
   systems: SystemView[]
   snapshotTimestamp: string | null
 }> {
-  // Default-all behaviour matches the email pipeline (opt-out semantics):
-  //   - User has NO assignment rows → show every active system.
-  //   - User HAS assignment rows → show only the systems they haven't
-  //     explicitly opted out of (isActive=true rows).
-  // This means brand-new users and pre-Phase-B users without backfilled
-  // rows still see every system on /portfolio, matching what they'll
-  // receive via email.
+  // Always iterate the full registry so every active system has a card.
+  // Per-system Following state is computed from UserSystemAssignment with
+  // default-all semantics matching the email pipeline:
+  //   - No rows at all → every system is Following (new users default-in).
+  //   - Has rows → row.isActive=true is Following; missing row OR
+  //     isActive=false renders as Not Following with a Follow CTA.
+  const registry = getActiveSystems()
+
   const allAssignments = await prisma.userSystemAssignment.findMany({
     where: { userId },
     select: { systemSlug: true, isActive: true },
   })
+  const assignmentBySlug = new Map(
+    allAssignments.map((a) => [a.systemSlug, a.isActive])
+  )
+  const hasAnyAssignmentRows = allAssignments.length > 0
 
-  const registry = getActiveSystems()
-  const assignedSystems =
-    allAssignments.length === 0
-      ? registry
-      : (() => {
-          const optInSlugs = new Set(
-            allAssignments.filter((a) => a.isActive).map((a) => a.systemSlug)
-          )
-          return registry.filter((s) => optInSlugs.has(s.slug))
-        })()
-
-  // Empty state only fires when the user has explicitly opted out of every
-  // active system in the registry. New users (no rows) see all systems.
-  if (assignedSystems.length === 0) {
-    return { hasAssignments: false, systems: [], snapshotTimestamp: null }
-  }
-
-  // Fetch the dashboard snapshot in parallel with the latest ingest signal
-  // per system. Snapshot failure shouldn't block the page entirely.
   const [snapshotResult, latestPerSystem] = await Promise.all([
     getDashboardSnapshot()
       .then((s) => s as DashboardSnapshot)
       .catch(() => null),
     Promise.all(
-      assignedSystems.map((system) =>
+      registry.map((system) =>
         prisma.portfolioDailySignal.findFirst({
           where: { category: system.slug },
           orderBy: { publishedAt: 'desc' },
@@ -88,7 +75,7 @@ async function getSystemsForUser(userId: string): Promise<{
     ),
   ])
 
-  const systems: SystemView[] = assignedSystems.map((system, idx) => {
+  const systems: SystemView[] = registry.map((system, idx) => {
     let snap: DhrsSystem | MrsSystem | SdcaSystem | null = null
     if (snapshotResult) {
       if (system.slug === 'dhrs') snap = snapshotResult.dhrs ?? null
@@ -105,19 +92,23 @@ async function getSystemsForUser(userId: string): Promise<{
           publishedAt: row.publishedAt,
         }
       : null
-    return { system, snapshot: snap, signal }
+
+    const explicit = assignmentBySlug.get(system.slug)
+    const isFollowing =
+      explicit === true ||
+      (explicit === undefined && !hasAnyAssignmentRows)
+
+    return { system, snapshot: snap, signal, isFollowing }
   })
 
   return {
-    hasAssignments: true,
     systems,
     snapshotTimestamp: snapshotResult?.timestamp ?? null,
   }
 }
 
 export async function ActiveSignalsSection({ userId }: { userId: string }) {
-  const { hasAssignments, systems, snapshotTimestamp } =
-    await getSystemsForUser(userId)
+  const { systems, snapshotTimestamp } = await getSystemsForUser(userId)
 
   return (
     <section>
@@ -127,7 +118,8 @@ export async function ActiveSignalsSection({ userId }: { userId: string }) {
             Your Systems
           </h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Live signals from every active system.
+            Live signals from every active system. Follow the ones you want
+            in your daily digest.
           </p>
         </div>
         {snapshotTimestamp && (
@@ -138,36 +130,27 @@ export async function ActiveSignalsSection({ userId }: { userId: string }) {
         )}
       </div>
 
-      {!hasAssignments ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-sm text-[var(--text-muted)]">
-              You don&rsquo;t have any systems assigned yet. Contact support
-              for access.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {systems.map(({ system, snapshot, signal }) =>
-            system.signalFormat === 'rotation' ? (
-              <RotationSystemCard
-                key={system.slug}
-                system={system}
-                data={snapshot as DhrsSystem | MrsSystem | null}
-                signal={signal}
-              />
-            ) : (
-              <SdcaSystemCard
-                key={system.slug}
-                system={system}
-                data={snapshot as SdcaSystem | null}
-                signal={signal}
-              />
-            )
-          )}
-        </div>
-      )}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {systems.map(({ system, snapshot, signal, isFollowing }) =>
+          system.signalFormat === 'rotation' ? (
+            <RotationSystemCard
+              key={system.slug}
+              system={system}
+              data={snapshot as DhrsSystem | MrsSystem | null}
+              signal={signal}
+              isFollowing={isFollowing}
+            />
+          ) : (
+            <SdcaSystemCard
+              key={system.slug}
+              system={system}
+              data={snapshot as SdcaSystem | null}
+              signal={signal}
+              isFollowing={isFollowing}
+            />
+          )
+        )}
+      </div>
     </section>
   )
 }
@@ -176,15 +159,20 @@ export async function ActiveSignalsSection({ userId }: { userId: string }) {
 
 function CardShell({
   system,
+  isFollowing,
   children,
 }: {
   system: SystemDefinition
+  isFollowing: boolean
   children: React.ReactNode
 }) {
   return (
     <Card
       className="flex h-full flex-col border-l-4"
-      style={{ borderLeftColor: system.color }}
+      style={{
+        borderLeftColor: system.color,
+        opacity: isFollowing ? 1 : 0.78,
+      }}
     >
       <CardContent className="flex flex-1 flex-col p-5">
         <div className="mb-3 flex items-start justify-between gap-3">
@@ -199,6 +187,10 @@ function CardShell({
               {system.description}
             </div>
           </div>
+          <FollowSystemButton
+            systemSlug={system.slug}
+            initiallyFollowing={isFollowing}
+          />
         </div>
         {children}
       </CardContent>
@@ -227,12 +219,18 @@ function CommentaryBlock({ commentary }: { commentary: string | null }) {
   )
 }
 
-function AwaitingState({ system }: { system: SystemDefinition }) {
+function AwaitingState({
+  system,
+  isFollowing,
+}: {
+  system: SystemDefinition
+  isFollowing: boolean
+}) {
   return (
-    <CardShell system={system}>
+    <CardShell system={system} isFollowing={isFollowing}>
       <div className="flex flex-1 items-center">
         <p className="text-sm italic text-[var(--text-muted)]">
-          Awaiting first signal
+          System data connecting…
         </p>
       </div>
       <ViewFullDetailsLink slug={system.slug} />
@@ -244,13 +242,15 @@ function RotationSystemCard({
   system,
   data,
   signal,
+  isFollowing,
 }: {
   system: SystemDefinition
   data: DhrsSystem | MrsSystem | null
   signal: SignalRow
+  isFollowing: boolean
 }) {
   if (!data && !signal) {
-    return <AwaitingState system={system} />
+    return <AwaitingState system={system} isFollowing={isFollowing} />
   }
 
   const dominantLabel = data ? getAssetDisplayLabel(data.dominant) : null
@@ -267,7 +267,7 @@ function RotationSystemCard({
   const lastRotation = data?.recent_rotations?.[data.recent_rotations.length - 1]
 
   return (
-    <CardShell system={system}>
+    <CardShell system={system} isFollowing={isFollowing}>
       <div>
         <div className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
           Currently Holding
@@ -346,13 +346,15 @@ function SdcaSystemCard({
   system,
   data,
   signal,
+  isFollowing,
 }: {
   system: SystemDefinition
   data: SdcaSystem | null
   signal: SignalRow
+  isFollowing: boolean
 }) {
   if (!data && !signal) {
-    return <AwaitingState system={system} />
+    return <AwaitingState system={system} isFollowing={isFollowing} />
   }
 
   const action = data?.action ?? null
@@ -378,7 +380,7 @@ function SdcaSystemCard({
   })()
 
   return (
-    <CardShell system={system}>
+    <CardShell system={system} isFollowing={isFollowing}>
       <div>
         <div className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
           Zone
