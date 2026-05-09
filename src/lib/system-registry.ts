@@ -21,8 +21,8 @@ export interface SystemDefinition {
 export const SYSTEMS: SystemDefinition[] = [
   {
     slug: 'dhrs',
-    name: 'Stewart Broad',
-    shortName: 'Stewart Broad',
+    name: 'Stewart & Co Broad',
+    shortName: 'Stewart & Co Broad',
     description:
       'Momentum-driven rotation across 60+ crypto assets with regime-based drawdown protection.',
     type: 'rotation',
@@ -30,12 +30,12 @@ export const SYSTEMS: SystemDefinition[] = [
     isActive: true,
     sortOrder: 10,
     color: '#C9A84C',
-    emailSubjectPrefix: 'Stewart Broad Signal',
+    emailSubjectPrefix: 'Stewart & Co Broad Signal',
   },
   {
     slug: 'mrs',
-    name: 'Stewart Majors',
-    shortName: 'Stewart Majors',
+    name: 'Stewart & Co Majors',
+    shortName: 'Stewart & Co Majors',
     description:
       'Systematic rotation across BTC, ETH, and SOL with Gold as the defensive sleeve.',
     type: 'rotation',
@@ -43,12 +43,12 @@ export const SYSTEMS: SystemDefinition[] = [
     isActive: true,
     sortOrder: 20,
     color: '#5B8DEF',
-    emailSubjectPrefix: 'Stewart Majors Signal',
+    emailSubjectPrefix: 'Stewart & Co Majors Signal',
   },
   {
     slug: 'mars',
-    name: 'Stewart Core',
-    shortName: 'Stewart Core',
+    name: 'Stewart & Co Core',
+    shortName: 'Stewart & Co Core',
     description:
       'Six-asset rotation across BTC, ETH, SOL, SUI, XRP, and BNB with Gold defensive.',
     type: 'rotation',
@@ -56,12 +56,12 @@ export const SYSTEMS: SystemDefinition[] = [
     isActive: true,
     sortOrder: 22,
     color: '#A78BFA',
-    emailSubjectPrefix: 'Stewart Core Signal',
+    emailSubjectPrefix: 'Stewart & Co Core Signal',
   },
   {
     slug: 'tars',
-    name: 'Stewart Select',
-    shortName: 'Stewart Select',
+    name: 'Stewart & Co Select',
+    shortName: 'Stewart & Co Select',
     description:
       'Ten-asset rotation across BTC, ETH, SOL, SUI, XRP, BNB, LINK, DOGE, TRX, and HYPE with Gold defensive.',
     type: 'rotation',
@@ -69,12 +69,25 @@ export const SYSTEMS: SystemDefinition[] = [
     isActive: true,
     sortOrder: 24,
     color: '#F472B6',
-    emailSubjectPrefix: 'Stewart Select Signal',
+    emailSubjectPrefix: 'Stewart & Co Select Signal',
+  },
+  {
+    slug: 'tfars',
+    name: 'Stewart & Co Extended',
+    shortName: 'Stewart & Co Extended',
+    description:
+      '25-asset deep-history rotation across the established crypto universe with Gold defensive escape.',
+    type: 'rotation',
+    signalFormat: 'rotation',
+    isActive: true,
+    sortOrder: 26,
+    color: '#FB923C',
+    emailSubjectPrefix: 'Stewart & Co Extended Signal',
   },
   {
     slug: 'sdca',
-    name: 'Stewart Cycle',
-    shortName: 'Stewart Cycle',
+    name: 'Stewart & Co Cycle',
+    shortName: 'Stewart & Co Cycle',
     description:
       'Rules-based Bitcoin accumulation and distribution across 4-year cycles using 18 on-chain indicators.',
     type: 'buy_system',
@@ -82,7 +95,7 @@ export const SYSTEMS: SystemDefinition[] = [
     isActive: true,
     sortOrder: 30,
     color: '#10B981',
-    emailSubjectPrefix: 'Stewart Cycle Signal',
+    emailSubjectPrefix: 'Stewart & Co Cycle Signal',
   },
 ]
 

@@ -67,7 +67,7 @@ export function sdcaKeyFromIngest(stored: StoredSignal): string | null {
 }
 
 export function mapRotation(
-  slug: 'dhrs' | 'mrs' | 'mars' | 'tars',
+  slug: 'dhrs' | 'mrs' | 'mars' | 'tars' | 'tfars',
   snap: DhrsSystem | MrsSystem
 ): IngestPayload {
   const lr = pickLatestRotation(snap.recent_rotations)
@@ -132,7 +132,7 @@ export interface SystemDispatch {
 }
 
 function rotationDispatch(
-  slug: 'dhrs' | 'mrs' | 'mars' | 'tars',
+  slug: 'dhrs' | 'mrs' | 'mars' | 'tars' | 'tfars',
   noDataReason: string,
   getBlock: (s: DashboardSnapshot) => DhrsSystem | MrsSystem | undefined
 ): SystemDispatch {
@@ -154,11 +154,12 @@ const sdcaDispatch: SystemDispatch = {
 }
 
 export const SYSTEM_DISPATCH: Record<string, SystemDispatch> = {
-  dhrs: rotationDispatch('dhrs', 'no snapshot data', (s) => s.dhrs),
-  mrs:  rotationDispatch('mrs',  'no snapshot data (mrs not in snapshot yet)',  (s) => s.mrs),
-  mars: rotationDispatch('mars', 'no snapshot data (mars not in snapshot yet)', (s) => s.mars),
-  tars: rotationDispatch('tars', 'no snapshot data (tars not in snapshot yet)', (s) => s.tars),
-  sdca: sdcaDispatch,
+  dhrs:  rotationDispatch('dhrs',  'no snapshot data', (s) => s.dhrs),
+  mrs:   rotationDispatch('mrs',   'no snapshot data (mrs not in snapshot yet)',   (s) => s.mrs),
+  mars:  rotationDispatch('mars',  'no snapshot data (mars not in snapshot yet)',  (s) => s.mars),
+  tars:  rotationDispatch('tars',  'no snapshot data (tars not in snapshot yet)',  (s) => s.tars),
+  tfars: rotationDispatch('tfars', 'no snapshot data (tfars not in snapshot yet)', (s) => s.tfars),
+  sdca:  sdcaDispatch,
 }
 
 /**

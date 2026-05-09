@@ -8,7 +8,7 @@ import { SnapshotMetaBadge } from "@/components/systems/SnapshotMetaBadge";
 export const metadata = {
   title: "Systems — Stewart & Co",
   description:
-    "Live performance dashboard for Stewart Cycle, Stewart Majors, Stewart Core, Stewart Select, and Stewart Broad.",
+    "Live performance dashboard for Stewart & Co Cycle, Majors, Core, Select, Extended, and Broad.",
 };
 
 export default async function SystemsPage() {
@@ -29,8 +29,8 @@ export default async function SystemsPage() {
           <div>
             <h1 className="heading-xl text-[var(--text-strong)]">Systems</h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Live performance across Stewart Cycle, Stewart Majors, Stewart
-              Core, Stewart Select, and Stewart Broad.
+              Live performance across Stewart & Co Cycle, Majors, Core,
+              Select, Extended, and Broad.
             </p>
           </div>
           <SnapshotMetaBadge timestamp={snapshot.timestamp} />

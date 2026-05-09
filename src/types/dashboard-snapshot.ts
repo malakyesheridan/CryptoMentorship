@@ -112,11 +112,12 @@ export interface MrsSystem {
   recent_rotations: MrsRotation[];
 }
 
-// Stewart Core (mars) and Stewart Select (tars) share the rotation snapshot
-// shape used by DHRS / MRS. They're typed as separate aliases so the two can
-// diverge in future without cascading edits.
+// Stewart Core (mars), Stewart Select (tars), and Stewart Extended (tfars)
+// share the rotation snapshot shape used by DHRS / MRS. They're typed as
+// separate aliases so each can diverge in future without cascading edits.
 export type MarsSystem = MrsSystem;
 export type TarsSystem = MrsSystem;
+export type TfarsSystem = MrsSystem;
 
 export interface DashboardSnapshot {
   timestamp: string;
@@ -126,4 +127,5 @@ export interface DashboardSnapshot {
   mrs?: MrsSystem;
   mars?: MarsSystem;
   tars?: TarsSystem;
+  tfars?: TfarsSystem;
 }

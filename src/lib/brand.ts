@@ -5,12 +5,12 @@
 // system-registry shortName field.
 
 export const BRAND: Record<string, string> = {
-  sdca: 'Stewart Cycle',
-  mrs: 'Stewart Majors',
-  mars: 'Stewart Core',
-  tars: 'Stewart Select',
-  tfars: 'Stewart Extended',
-  dhrs: 'Stewart Broad',
+  sdca: 'Stewart & Co Cycle',
+  mrs: 'Stewart & Co Majors',
+  mars: 'Stewart & Co Core',
+  tars: 'Stewart & Co Select',
+  tfars: 'Stewart & Co Extended',
+  dhrs: 'Stewart & Co Broad',
 }
 
 export function brandName(key: string): string {

@@ -8,22 +8,23 @@ import { SdcaSection } from "./sdca/SdcaSection";
 import { DhrsSection } from "./dhrs/DhrsSection";
 import { MrsSection } from "./mrs/MrsSection";
 
-type TabKey = "sdca" | "mrs" | "mars" | "tars" | "dhrs";
+type TabKey = "sdca" | "mrs" | "mars" | "tars" | "tfars" | "dhrs";
 
 const TABS: { key: TabKey; label: string; subtitle: string }[] = [
   { key: "sdca", label: brandName("sdca"), subtitle: "Bitcoin valuation signal" },
   { key: "mrs", label: brandName("mrs"), subtitle: "3-asset rotation" },
   { key: "mars", label: brandName("mars"), subtitle: "6-asset rotation" },
   { key: "tars", label: brandName("tars"), subtitle: "10-asset rotation" },
+  { key: "tfars", label: brandName("tfars"), subtitle: "25-asset rotation" },
   { key: "dhrs", label: brandName("dhrs"), subtitle: "60+ asset rotation" },
 ];
 
-const TAB_KEYS = new Set<TabKey>(["sdca", "mrs", "mars", "tars", "dhrs"]);
+const TAB_KEYS = new Set<TabKey>(["sdca", "mrs", "mars", "tars", "tfars", "dhrs"]);
 
 export function SystemsTabs({ snapshot }: { snapshot: DashboardSnapshot }) {
   const [active, setActive] = useState<TabKey>("sdca");
 
-  // Hydrate from URL hash for deep links (#sdca / #dhrs / #mrs / #mars / #tars).
+  // Hydrate from URL hash for deep links (#sdca / #dhrs / #mrs / #mars / #tars / #tfars).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hash = window.location.hash.replace("#", "") as TabKey;
@@ -112,6 +113,13 @@ export function SystemsTabs({ snapshot }: { snapshot: DashboardSnapshot }) {
             <MrsSection data={snapshot.tars} />
           ) : (
             <PendingSection label={brandName("tars")} />
+          )
+        )}
+        {active === "tfars" && (
+          snapshot.tfars ? (
+            <MrsSection data={snapshot.tfars} />
+          ) : (
+            <PendingSection label={brandName("tfars")} />
           )
         )}
       </div>

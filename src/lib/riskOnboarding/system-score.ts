@@ -35,9 +35,9 @@ export type SystemFitResult = {
 const MAX_RAW_PER_SYSTEM = 120
 
 const PROFILE_BONUS: Record<RiskProfile, Record<string, number>> = {
-  CONSERVATIVE: { dhrs: -10, mrs: -5, mars: -10, tars: -15, sdca: 15 },
-  SEMI:         { dhrs: 5,   mrs: 10, mars: 10,  tars: 5,   sdca: 5 },
-  AGGRESSIVE:   { dhrs: 15,  mrs: 10, mars: 10,  tars: 15,  sdca: -5 },
+  CONSERVATIVE: { dhrs: -10, mrs: -5, mars: -10, tars: -15, tfars: -15, sdca: 15 },
+  SEMI:         { dhrs: 5,   mrs: 10, mars: 10,  tars: 5,   tfars: 5,   sdca: 5 },
+  AGGRESSIVE:   { dhrs: 15,  mrs: 10, mars: 10,  tars: 15,  tfars: 15,  sdca: -5 },
 }
 
 function clamp(n: number, min: number, max: number) {
@@ -91,62 +91,75 @@ const REASON_TEMPLATES: Record<string, Record<string, string>> = {
     'investment_style:mixed':           'You’re open to active strategies as part of a mix',
     'asset_universe:broad_alts':        'You’re comfortable with a wide range of crypto assets',
     'monitoring_pref:daily':            'You want to monitor and act on signals frequently',
-    'monitoring_pref:weekly':           'Weekly check-ins still suit DHRS’s rotation cadence',
-    'dd_tolerance:dd_30':               'Your drawdown tolerance aligns with DHRS’s regime-protected style',
-    'dd_tolerance:dd_50':               'You can stomach the larger drawdowns DHRS occasionally accepts for upside',
+    'monitoring_pref:weekly':           'Weekly check-ins still suit Stewart & Co Broad’s rotation cadence',
+    'dd_tolerance:dd_30':               'Your drawdown tolerance aligns with Stewart & Co Broad’s regime-protected style',
+    'dd_tolerance:dd_50':               'You can stomach the larger drawdowns Stewart & Co Broad occasionally accepts for upside',
     'time_commitment:significant':      'You enjoy actively following markets',
-    'time_commitment:moderate':         'Moderate weekly time commitment fits DHRS',
+    'time_commitment:moderate':         'Moderate weekly time commitment fits Stewart & Co Broad',
   },
   mrs: {
     'investment_style:major_rotation':  'You prefer rotating between established, major assets',
     'investment_style:active_rotation': 'You’re comfortable with rotation strategies',
-    'investment_style:mixed':           'You like blending approaches — MRS sits in the middle',
+    'investment_style:mixed':           'You like blending approaches — Stewart & Co Majors sits in the middle',
     'asset_universe:majors_only':       'You want exposure limited to top-tier assets',
     'asset_universe:broad_alts':        'You’re open to majors as a core sleeve',
-    'monitoring_pref:weekly':           'Weekly monitoring aligns with MRS’s rotation cadence',
-    'monitoring_pref:daily':            'You can act quickly when MRS rotates',
-    'dd_tolerance:dd_10':               'MRS’s narrower universe offers tighter risk management',
-    'dd_tolerance:dd_30':               'Your drawdown tolerance suits MRS’s majors-only rotation',
-    'time_commitment:moderate':         'A weekly time commitment matches MRS’s cadence',
-    'time_commitment:significant':      'You enjoy following markets — useful when MRS rotates',
+    'monitoring_pref:weekly':           'Weekly monitoring aligns with Stewart & Co Majors’ rotation cadence',
+    'monitoring_pref:daily':            'You can act quickly when Stewart & Co Majors rotates',
+    'dd_tolerance:dd_10':               'Stewart & Co Majors’ narrower universe offers tighter risk management',
+    'dd_tolerance:dd_30':               'Your drawdown tolerance suits Stewart & Co Majors’ majors-only rotation',
+    'time_commitment:moderate':         'A weekly time commitment matches Stewart & Co Majors’ cadence',
+    'time_commitment:significant':      'You enjoy following markets — useful when Stewart & Co Majors rotates',
   },
   sdca: {
     'investment_style:passive_dca':     'You prefer systematic, rules-based accumulation',
-    'investment_style:mixed':           'SDCA can anchor a mixed strategy',
-    'asset_universe:btc_only':          'Your Bitcoin focus aligns perfectly with SDCA',
-    'asset_universe:majors_only':       'SDCA’s BTC focus complements a majors-only mindset',
-    'monitoring_pref:monthly':          'SDCA’s low-frequency signals suit your set-and-forget preference',
-    'monitoring_pref:weekly':           'A weekly check-in is more than enough for SDCA',
-    'dd_tolerance:dd_50':               'SDCA accumulates through deep drawdowns — your tolerance fits',
-    'dd_tolerance:dd_30':               'Moderate drawdown tolerance pairs well with SDCA’s long horizon',
-    'time_commitment:minimal':          'SDCA requires minimal time — trades happen a few times per year',
-    'time_commitment:moderate':         'A modest time budget is plenty for SDCA',
+    'investment_style:mixed':           'Stewart & Co Cycle can anchor a mixed strategy',
+    'asset_universe:btc_only':          'Your Bitcoin focus aligns perfectly with Stewart & Co Cycle',
+    'asset_universe:majors_only':       'Stewart & Co Cycle’s BTC focus complements a majors-only mindset',
+    'monitoring_pref:monthly':          'Stewart & Co Cycle’s low-frequency signals suit your set-and-forget preference',
+    'monitoring_pref:weekly':           'A weekly check-in is more than enough for Stewart & Co Cycle',
+    'dd_tolerance:dd_50':               'Stewart & Co Cycle accumulates through deep drawdowns — your tolerance fits',
+    'dd_tolerance:dd_30':               'Moderate drawdown tolerance pairs well with Stewart & Co Cycle’s long horizon',
+    'time_commitment:minimal':          'Stewart & Co Cycle requires minimal time — trades happen a few times per year',
+    'time_commitment:moderate':         'A modest time budget is plenty for Stewart & Co Cycle',
   },
   mars: {
-    'investment_style:active_rotation': 'You like active rotation — Stewart Core runs ~17 rotations a year across the deepest majors',
-    'investment_style:major_rotation':  'You prefer rotating between majors — Stewart Core extends that across six core assets',
-    'investment_style:mixed':           'Stewart Core anchors a mixed portfolio with a major-coin growth tilt',
-    'asset_universe:majors_only':       'Stewart Core stays inside the majors universe (BTC, ETH, SOL, SUI, XRP, BNB)',
-    'asset_universe:broad_alts':        'Stewart Core is a curated step toward a wider universe without exotic alts',
-    'monitoring_pref:weekly':           'Weekly check-ins fit Stewart Core’s rotation cadence',
-    'monitoring_pref:daily':            'You can act quickly when Stewart Core rotates',
-    'dd_tolerance:dd_30':               'Stewart Core targets a ~30% drawdown ceiling — your tolerance fits',
-    'dd_tolerance:dd_50':               'You can stomach the moderate drawdowns Stewart Core occasionally accepts for upside',
-    'time_commitment:moderate':         'A moderate weekly time budget matches Stewart Core’s cadence',
-    'time_commitment:significant':      'Active engagement helps you act on Stewart Core rotations',
+    'investment_style:active_rotation': 'You like active rotation — Stewart & Co Core runs ~17 rotations a year across the deepest majors',
+    'investment_style:major_rotation':  'You prefer rotating between majors — Stewart & Co Core extends that across six core assets',
+    'investment_style:mixed':           'Stewart & Co Core anchors a mixed portfolio with a major-coin growth tilt',
+    'asset_universe:majors_only':       'Stewart & Co Core stays inside the majors universe (BTC, ETH, SOL, SUI, XRP, BNB)',
+    'asset_universe:broad_alts':        'Stewart & Co Core is a curated step toward a wider universe without exotic alts',
+    'monitoring_pref:weekly':           'Weekly check-ins fit Stewart & Co Core’s rotation cadence',
+    'monitoring_pref:daily':            'You can act quickly when Stewart & Co Core rotates',
+    'dd_tolerance:dd_30':               'Stewart & Co Core targets a ~30% drawdown ceiling — your tolerance fits',
+    'dd_tolerance:dd_50':               'You can stomach the moderate drawdowns Stewart & Co Core occasionally accepts for upside',
+    'time_commitment:moderate':         'A moderate weekly time budget matches Stewart & Co Core’s cadence',
+    'time_commitment:significant':      'Active engagement helps you act on Stewart & Co Core rotations',
   },
   tars: {
-    'investment_style:active_rotation': 'You prefer active rotation — Stewart Select is calibrated for the highest risk-adjusted return in the suite',
-    'investment_style:major_rotation':  'You like majors-style rotation — Stewart Select extends to ten sector leaders',
-    'investment_style:mixed':           'Stewart Select can power the active sleeve of a mixed portfolio',
-    'asset_universe:broad_alts':        'You’re comfortable beyond the top six — Stewart Select adds LINK, DOGE, TRX, and HYPE',
-    'asset_universe:majors_only':       'Stewart Select sits just beyond majors-only — extended majors with on-chain Gold defensive',
-    'monitoring_pref:daily':            'Daily engagement fits Stewart Select’s active cadence',
-    'monitoring_pref:weekly':           'Weekly check-ins still suit Stewart Select if you act on rotations promptly',
-    'dd_tolerance:dd_30':               'Stewart Select targets a ~25–30% drawdown — your tolerance lines up',
-    'dd_tolerance:dd_50':               'You can stomach the drawdowns Stewart Select occasionally accepts for upside',
-    'time_commitment:significant':      'Active engagement matches Stewart Select — including comfort with multi-venue execution (HYPE on Hyperliquid)',
-    'time_commitment:moderate':         'A moderate weekly time budget works for Stewart Select if you’re ready to handle HYPE on Hyperliquid',
+    'investment_style:active_rotation': 'You prefer active rotation — Stewart & Co Select is calibrated for the highest risk-adjusted return in the suite',
+    'investment_style:major_rotation':  'You like majors-style rotation — Stewart & Co Select extends to ten sector leaders',
+    'investment_style:mixed':           'Stewart & Co Select can power the active sleeve of a mixed portfolio',
+    'asset_universe:broad_alts':        'You’re comfortable beyond the top six — Stewart & Co Select adds LINK, DOGE, TRX, and HYPE',
+    'asset_universe:majors_only':       'Stewart & Co Select sits just beyond majors-only — extended majors with on-chain Gold defensive',
+    'monitoring_pref:daily':            'Daily engagement fits Stewart & Co Select’s active cadence',
+    'monitoring_pref:weekly':           'Weekly check-ins still suit Stewart & Co Select if you act on rotations promptly',
+    'dd_tolerance:dd_30':               'Stewart & Co Select targets a ~25–30% drawdown — your tolerance lines up',
+    'dd_tolerance:dd_50':               'You can stomach the drawdowns Stewart & Co Select occasionally accepts for upside',
+    'time_commitment:significant':      'Active engagement matches Stewart & Co Select — including comfort with multi-venue execution (HYPE on Hyperliquid)',
+    'time_commitment:moderate':         'A moderate weekly time budget works for Stewart & Co Select if you’re ready to handle HYPE on Hyperliquid',
+  },
+  tfars: {
+    'investment_style:active_rotation': 'You prefer active rotation — Stewart & Co Extended is the apex Calmar of the rotation suite, with ~38 rotations a year',
+    'investment_style:major_rotation':  'You like majors-style rotation — Stewart & Co Extended widens it to a 25-asset deep-history universe',
+    'investment_style:mixed':           'Stewart & Co Extended adds a high-conviction active sleeve to a mixed portfolio',
+    'asset_universe:broad_alts':        'You’re comfortable with a wider universe — Stewart & Co Extended rotates across 25 deep-history assets',
+    'asset_universe:majors_only':       'Stewart & Co Extended sits beyond majors-only — extended sector leaders with regime-gated drawdown protection',
+    'monitoring_pref:daily':            'Daily engagement fits Stewart & Co Extended’s ~38-rotation-a-year cadence',
+    'monitoring_pref:weekly':           'Weekly check-ins still work for Stewart & Co Extended if you act on rotations promptly',
+    'dd_tolerance:dd_30':               'Stewart & Co Extended targets a ~32% drawdown ceiling — your tolerance lines up',
+    'dd_tolerance:dd_50':               'You can stomach the drawdowns Stewart & Co Extended occasionally accepts for its apex Calmar',
+    'time_commitment:significant':      'Active engagement matches Stewart & Co Extended — the most active rotation system after Broad',
+    'time_commitment:moderate':         'A moderate weekly time budget works for Stewart & Co Extended if you’re ready to act on rotations promptly',
   },
 }
 
@@ -160,16 +173,25 @@ function profileReason(systemSlug: string, profile: RiskProfile): string | null 
     return 'Your overall risk profile suits active rotation'
   }
   if (systemSlug === 'mrs' && profile === 'SEMI') {
-    return 'Your balanced risk profile matches MRS’s approach'
+    return 'Your balanced risk profile matches Stewart & Co Majors’ approach'
   }
   if (systemSlug === 'mars' && (profile === 'SEMI' || profile === 'AGGRESSIVE')) {
-    return 'Your risk profile suits Stewart Core’s majors-plus growth tilt'
+    return 'Your risk profile suits Stewart & Co Core’s majors-plus growth tilt'
   }
   if (systemSlug === 'tars' && profile === 'AGGRESSIVE') {
-    return 'Your aggressive profile matches Stewart Select’s extended-majors lineup'
+    return 'Your aggressive profile matches Stewart & Co Select’s extended-majors lineup'
+  }
+  if (systemSlug === 'tfars' && profile === 'AGGRESSIVE') {
+    return 'Your aggressive profile matches Stewart & Co Extended’s 25-asset deep-history rotation'
+  }
+  if (systemSlug === 'tfars' && profile === 'SEMI') {
+    return 'Your balanced profile is a good fit for Stewart & Co Extended’s regime-gated rotation'
+  }
+  if (systemSlug === 'tfars' && profile === 'CONSERVATIVE') {
+    return 'Stewart & Co Extended’s active 25-asset rotation runs hotter than a conservative profile prefers'
   }
   if (systemSlug === 'sdca' && profile === 'CONSERVATIVE') {
-    return 'Your conservative profile matches SDCA’s longer-term approach'
+    return 'Your conservative profile matches Stewart & Co Cycle’s longer-term approach'
   }
   return null
 }
