@@ -6,6 +6,7 @@ import { useRiskProfile } from '@/hooks/useRiskProfile'
 import { RiskOnboardingModal } from './RiskOnboardingModal'
 import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 import { cn } from '@/lib/utils'
+import { brandName } from '@/lib/brand'
 
 const DISMISS_KEY = 'riskOnboarding.dismissedAt'
 
@@ -65,7 +66,7 @@ export function RiskOnboardingGate() {
                 {(() => {
                   const followed = (data.systems || [])
                     .filter((s) => s.assigned)
-                    .map((s) => s.slug.toUpperCase())
+                    .map((s) => brandName(s.slug))
                   if (followed.length === 0) return 'None selected'
                   return followed.join(', ')
                 })()}
@@ -104,7 +105,7 @@ export function RiskOnboardingGate() {
                 <ul className="mt-2 space-y-1">
                   {data.systems.map((s) => (
                     <li key={s.slug}>
-                      <span className="font-medium">{s.slug.toUpperCase()}</span>{' '}
+                      <span className="font-medium">{brandName(s.slug)}</span>{' '}
                       <span className="text-[var(--text-muted)]">
                         — {s.fitLabel} ({s.fitScore}/100){s.assigned ? ' · following' : ''}
                       </span>
