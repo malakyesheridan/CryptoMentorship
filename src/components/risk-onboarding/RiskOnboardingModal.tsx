@@ -16,6 +16,8 @@ import { formatRiskProfileLabel } from '@/lib/riskOnboarding/labels'
 import { useRiskProfile } from '@/hooks/useRiskProfile'
 import { useRiskOnboardingConfig } from '@/hooks/useRiskOnboardingConfig'
 import type { RiskOnboardingAnswers } from '@/lib/riskOnboarding/score'
+import { brandName } from '@/lib/brand'
+import { getSystem } from '@/lib/system-registry'
 
 const LIKERT_OPTIONS: Array<{ id: LikertOption; label: string }> = [
   { id: 'strongly_agree', label: 'Strongly agree' },
@@ -340,13 +342,17 @@ export function RiskOnboardingModal({ open, onOpenChange }: RiskOnboardingModalP
                             className="text-xs font-semibold uppercase tracking-wider"
                             style={{ color: accent }}
                           >
-                            {sys.shortName ?? sys.slug.toUpperCase()}
+                            {brandName(sys.slug)}
                           </div>
-                          {sys.fullName && (
-                            <div className="mt-0.5 text-sm text-[var(--text-muted)] truncate">
-                              {sys.fullName}
-                            </div>
-                          )}
+                          {(() => {
+                            const description =
+                              getSystem(sys.slug)?.description ?? sys.fullName
+                            return description ? (
+                              <div className="mt-0.5 text-sm text-[var(--text-muted)] truncate">
+                                {description}
+                              </div>
+                            ) : null
+                          })()}
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">
