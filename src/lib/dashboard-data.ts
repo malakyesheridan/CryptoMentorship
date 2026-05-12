@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
+import { getActiveSystems } from '@/lib/system-registry'
 
 /**
  * Dashboard data fetching functions — all wrapped in unstable_cache
@@ -55,29 +56,74 @@ export const getLatestDailyUpdate = unstable_cache(
   { revalidate: 60, tags: ['dashboard-daily-update'] }
 )
 
-export const getLatestSignals = unstable_cache(
-  async () => {
-    const signals = await prisma.portfolioDailySignal.findMany({
-      where: {
-        publishedAt: { lte: new Date() },
-      },
-      select: {
-        id: true,
-        tier: true,
-        category: true,
-        riskProfile: true,
-        signal: true,
-        executiveSummary: true,
-        publishedAt: true,
-      },
-      orderBy: { publishedAt: 'desc' },
-      take: 4,
-    })
-    return signals
-  },
-  ['dashboard-signals'],
-  { revalidate: 60, tags: ['dashboard-signals'] }
-)
+/**
+ * Latest portfolio signal per system the user is following.
+ *
+ * Following resolves via UserSystemAssignment with default-all opt-out
+ * semantics (matches the email digest + /portfolio cards):
+ *   - User has NO assignment rows → following every active system.
+ *   - Has rows → only the systems with isActive=true count as followed.
+ *
+ * One row per followed system (latest by publishedAt). Systems with zero
+ * signals in PortfolioDailySignal yet are omitted from the result —
+ * matches the "no card if no data" behaviour the digest already uses.
+ * Output order follows registry sortOrder, so the dashboard matches the
+ * order on /portfolio.
+ */
+export const getLatestSignals = (userId: string) =>
+  unstable_cache(
+    async () => {
+      const registry = getActiveSystems()
+      if (registry.length === 0) return []
+
+      const allAssignments = await prisma.userSystemAssignment.findMany({
+        where: { userId },
+        select: { systemSlug: true, isActive: true },
+      })
+
+      const hasAnyAssignmentRows = allAssignments.length > 0
+      const optInSlugs = new Set(
+        allAssignments.filter((a) => a.isActive).map((a) => a.systemSlug)
+      )
+      const followedSystems = hasAnyAssignmentRows
+        ? registry.filter((s) => optInSlugs.has(s.slug))
+        : registry
+
+      if (followedSystems.length === 0) return []
+
+      const latestPerSystem = await Promise.all(
+        followedSystems.map((sys) =>
+          prisma.portfolioDailySignal.findFirst({
+            where: {
+              category: sys.slug,
+              publishedAt: { lte: new Date() },
+            },
+            select: {
+              id: true,
+              tier: true,
+              category: true,
+              riskProfile: true,
+              signal: true,
+              executiveSummary: true,
+              publishedAt: true,
+            },
+            orderBy: { publishedAt: 'desc' },
+          })
+        )
+      )
+
+      // followedSystems is already sorted by registry sortOrder via
+      // getActiveSystems(), so the surviving signals come out in that order.
+      return latestPerSystem.filter(
+        (s): s is NonNullable<typeof s> => s !== null
+      )
+    },
+    [`dashboard-signals-${userId}`],
+    {
+      revalidate: 60,
+      tags: [`dashboard-signals-${userId}`, 'dashboard-signals'],
+    }
+  )()
 
 export const getAnnouncements = unstable_cache(
   async () => {

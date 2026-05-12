@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     getDashboardUser(sessionUser.id),
     getLatestDailyUpdate(),
-    getLatestSignals(),
+    getLatestSignals(sessionUser.id),
     getAnnouncements(),
   ])
 
